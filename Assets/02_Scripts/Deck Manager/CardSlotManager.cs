@@ -11,6 +11,8 @@ public class CardSlotManager : MonoBehaviour
 
     public IReadOnlyList<CardBase> CurrentCards => _currentCards;
 
+    public int SlotCount => slotCount;
+
     public event Action<int, CardBase> OnSlotChanged;
 
     private void Awake()

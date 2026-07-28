@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1b67752fd9815054a9dd81da6ea1b890, type: 3}
-  m_Name: Quick
+  m_Name: Lucky
   m_EditorClassIdentifier: Assembly-CSharp::ModifierCardData
-  cardName: "\uD035"
+  cardName: "\uB7ED\uD0A4"
   icon: {fileID: 0}
   description: 
-  effectType: 3
-  value: 1
+  effectType: 4
+  value: 0

@@ -3,7 +3,8 @@ using UnityEngine;
 public enum CardCategory
 {
     Modifier,
-    Attribute,
+    Time,
+    Type,
     Action
 }
 

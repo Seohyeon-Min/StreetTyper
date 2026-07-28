@@ -9,11 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1b67752fd9815054a9dd81da6ea1b890, type: 3}
-  m_Name: awsome
-  m_EditorClassIdentifier: Assembly-CSharp::ModifierCardData
-  cardName: "\uC5B4\uC378"
+  m_Script: {fileID: 11500000, guid: f3d7aa169b8e8744b998338c5fb05c1b, type: 3}
+  m_Name: Double
+  m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
+  cardName: "\uB354\uBE14"
   icon: {fileID: 0}
   description: 
-  effectType: 2
-  value: 1
+  effectType: 6
+  statusEffect: 0
+  chancePercent: 0
+  value: 2

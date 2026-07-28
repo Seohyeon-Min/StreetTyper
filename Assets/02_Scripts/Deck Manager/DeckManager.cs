@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class DeckManager : MonoBehaviour
@@ -6,6 +7,8 @@ public class DeckManager : MonoBehaviour
     [SerializeField] private CardInputHandler cardInputHandler;
     [SerializeField] private MainBufferManager mainBufferManager;
     [SerializeField] private InputManager inputManager;
+    [SerializeField] private WordChainManager wordChainManager;
+    [SerializeField] private SkillResolver skillResolver;
 
     [SerializeField] private bool logDebugEvents;
 
@@ -22,6 +25,7 @@ public class DeckManager : MonoBehaviour
         cardInputHandler.OnTypo += HandleTypo;
         mainBufferManager.OnCardAdded += HandleCardAdded;
         mainBufferManager.OnBufferCleared += HandleBufferCleared;
+        wordChainManager.OnChainCompleted += HandleChainCompleted;
     }
 
     private void OnDisable()
@@ -33,6 +37,7 @@ public class DeckManager : MonoBehaviour
         cardInputHandler.OnTypo -= HandleTypo;
         mainBufferManager.OnCardAdded -= HandleCardAdded;
         mainBufferManager.OnBufferCleared -= HandleBufferCleared;
+        wordChainManager.OnChainCompleted -= HandleChainCompleted;
     }
 
     private void HandleCardMatched(CardBase card)
@@ -53,5 +58,14 @@ public class DeckManager : MonoBehaviour
     private void HandleBufferCleared()
     {
         Debug.Log("Buffer cleared");
+    }
+
+    private void HandleChainCompleted(IReadOnlyList<WordInstance> chain)
+    {
+        var action = skillResolver.Resolve(chain);
+        Debug.Log($"Resolved: Damage={action.Damage} Defense={action.Defense} Heal={action.Heal} " +
+                  $"IgnoresDefense={action.IgnoresDefense} BreaksEnemyDefense={action.BreaksEnemyDefense} " +
+                  $"Status={action.StatusEffect} DamageReduction={action.DamageReduction} " +
+                  $"TimerChange={action.TimerChange} LootBonusOnKill={action.LootBonusOnKill}");
     }
 }

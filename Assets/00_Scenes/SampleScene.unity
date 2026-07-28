@@ -954,6 +954,7 @@ GameObject:
   - component: {fileID: 1084949170}
   - component: {fileID: 1084949169}
   - component: {fileID: 1084949173}
+  - component: {fileID: 1084949174}
   m_Layer: 0
   m_Name: Deck Manager
   m_TagString: Untagged
@@ -1058,6 +1059,8 @@ MonoBehaviour:
   cardInputHandler: {fileID: 1084949170}
   mainBufferManager: {fileID: 1084949169}
   inputManager: {fileID: 564520281}
+  wordChainManager: {fileID: 1084949173}
+  skillResolver: {fileID: 1084949174}
   logDebugEvents: 1
 --- !u!114 &1084949173
 MonoBehaviour:
@@ -1097,6 +1100,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8733755d423018f4ea2d78977668a7cb, type: 2}
   - {fileID: 11400000, guid: 20c64e3eba60d7f4e9f319dec87bc545, type: 2}
   logDebugEvents: 1
+--- !u!114 &1084949174
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1084949167}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0ec2c73de4c4c7449bf94a1bf98e18d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkillResolver
 --- !u!1 &1259881541
 GameObject:
   m_ObjectHideFlags: 0

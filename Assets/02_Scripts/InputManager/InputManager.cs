@@ -74,6 +74,8 @@ public class InputManager : MonoBehaviour
         // here too would double-delete already committed characters.
         var isComposing = !string.IsNullOrEmpty(Composition);
 
+        ChangeHangul();
+
         if (Keyboard.current.backspaceKey.wasPressedThisFrame)
         {
             if (!isComposing)
@@ -100,7 +102,7 @@ public class InputManager : MonoBehaviour
 
     private void HandleTextInput(char character)
     {
-        if (!IsAlphabet(character) && !IsHangul(character))
+        if (!IsHangul(character))
             return;
 
         CurrentInput += character;
@@ -122,9 +124,16 @@ public class InputManager : MonoBehaviour
         OnBackspace?.Invoke();
     }
 
-    private static bool IsAlphabet(char character)
+    private static void ChangeHangul()
     {
-        return (character >= 'a' && character <= 'z') || (character >= 'A' && character <= 'Z');
+        if (Keyboard.current.rightAltKey.wasPressedThisFrame){
+            if(Input.imeCompositionMode == IMECompositionMode.Auto){
+                Input.imeCompositionMode = IMECompositionMode.On;
+            } else
+            {
+                Input.imeCompositionMode = IMECompositionMode.Auto;
+            }
+        }
     }
 
     private static bool IsHangul(char character)

@@ -13,11 +13,16 @@ public class CharacterStats : MonoBehaviour
         currentHP = maxHP;
     }
 
-    public void TakeDamage(int damage)
+    // ignoreDefense: 페인트처럼 방어도를 소모하지도, 감산하지도 않고 HP를 직접 깎는 공격용.
+    public void TakeDamage(int damage, bool ignoreDefense = false)
     {
-        int actualDamage = 0;
+        int actualDamage;
 
-        if (defense >= damage)
+        if (ignoreDefense)
+        {
+            actualDamage = damage;
+        }
+        else if (defense >= damage)
         {
             defense -= damage;
             actualDamage = 0;
@@ -37,6 +42,15 @@ public class CharacterStats : MonoBehaviour
         }
 
         Debug.Log(gameObject.name + " took " + actualDamage + " damage. HP left: " + currentHP + " / Defense: " + defense);
+    }
+
+    public void Heal(int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        currentHP = Mathf.Min(currentHP + amount, maxHP);
+        Debug.Log(gameObject.name + " healed " + amount + ". HP: " + currentHP + " / " + maxHP);
     }
 
     public void AddDefense(int amount)

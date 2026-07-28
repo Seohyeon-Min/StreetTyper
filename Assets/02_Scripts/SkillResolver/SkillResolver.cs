@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// 플레이어/적의 실제 상태(힘, 현재 방어도 등)는 전혀 모른 채, 체인에 담긴 단어 값만으로
-// ResolvedAction을 계산한다. 실제 피해 적용은 미래의 Combat system이 담당한다.
+// 체인에 담긴 단어 값 + 시전자의 힘만으로 ResolvedAction을 계산한다.
+// 대상의 방어도나 상태이상은 여기서 모른다 - 그 상호작용은 CombatManager가 담당한다.
 public class SkillResolver : MonoBehaviour
 {
-    public ResolvedAction Resolve(IReadOnlyList<WordInstance> chain)
+    public ResolvedAction Resolve(IReadOnlyList<WordInstance> chain, int casterPower)
     {
         // WordChainManager가 마지막 단어는 항상 Action임을 보장한다.
         var actionCard = (ActionCardData)chain[chain.Count - 1].Card;
@@ -19,7 +19,9 @@ public class SkillResolver : MonoBehaviour
                 powerCount++;
         }
 
-        var totalValue = actionCard.StrengthBonus;
+        // 힘을 먼저 깔고 시작해야 GDD의 "펀치 = 힘+3"이 성립하고,
+        // 뒤에서 곱하는 타격 횟수(트리플 등)도 (힘+보너스) 전체에 걸린다.
+        var totalValue = casterPower + actionCard.StrengthBonus;
         var timerChange = (float)actionCard.TimerDelta;
         var hitMultiplier = 1;
         var lifeStealRate = 0f;

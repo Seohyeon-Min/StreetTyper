@@ -12,6 +12,7 @@ public class StageManager : MonoBehaviour
     public BattleManager battleManager;
     public EnemyManager enemyManager;
     public CharacterStats player;
+    public TimerManager timerManager;
 
     private int currentStageIndex = 0;
     private GameObject currentEnemyObject;
@@ -48,6 +49,10 @@ public class StageManager : MonoBehaviour
         }
 
         battleManager.ResetBattle();
+
+        // 새 스테이지는 플레이어 HP/방어도가 리셋되는 것과 마찬가지로 타이머도 깨끗하게 다시 시작한다.
+        if (timerManager != null)
+            timerManager.RestartTurn();
     }
 
     public void NextStage()

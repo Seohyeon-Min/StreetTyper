@@ -87,33 +87,11 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        if (Keyboard.current.digit1Key.wasPressedThisFrame)
-        {
-            if (player != null && enemyManager.currentEnemy != null)
-            {
-                StartCoroutine(ShowPlayerActionBubble("Take This!"));
-                enemyManager.currentEnemy.TakeDamage(player.power);
-                UpdateUI();
-            }
-        }
-
-        if (Keyboard.current.digit2Key.wasPressedThisFrame)
-        {
-            if (player != null)
-            {
-                StartCoroutine(ShowPlayerActionBubble("Defense!"));
-                player.AddDefense(player.power);
-                UpdateUI();
-            }
-        }
-
+        // 공격/방어는 이제 타이핑(체인 완성)이 담당한다 - OnPlayerActionResolved를 통해 들어온다.
+        // 적 턴 수동 실행만 디버그용으로 남긴다.
         if (Keyboard.current.digit3Key.wasPressedThisFrame)
         {
-            if (player != null && enemyManager.currentEnemy != null)
-            {
-                enemyManager.ExecuteEnemyTurn(player);
-                UpdateUI();
-            }
+            ExecuteEnemyTurn();
         }
     }
 
@@ -130,6 +108,34 @@ public class BattleManager : MonoBehaviour
             playerSpeechBubble.SetActive(false);
         }
     }
+
+    // 체인이 완성되어 CombatManager가 효과를 적용한 직후 호출된다. 타이머가 도는 동안 여러 번
+    // 호출될 수 있으므로 여기서는 턴을 끝내지 않는다 - 말풍선/UI 갱신만 한다.
+    // bubbleText: 스킬 이름이 아니라 방금 적용된 공격력/방어력 수치.
+    public void OnPlayerActionResolved(string bubbleText)
+    {
+        if (isGameOver)
+            return;
+
+        StartCoroutine(ShowPlayerActionBubble(bubbleText));
+        UpdateUI();
+    }
+
+    // 타이머가 0이 되어 플레이어 턴이 끝났을 때 호출된다(DeckManager.HandleTimeExpired 경유).
+    public void ExecuteEnemyTurn()
+    {
+        if (isGameOver)
+            return;
+
+        if (player != null && enemyManager != null && enemyManager.currentEnemy != null)
+        {
+            enemyManager.ExecuteEnemyTurn(player);
+            UpdateUI();
+        }
+    }
+
+    // DeckManager가 타이머 만료 처리 도중(적 턴 전후) 전투가 이미 끝났는지 확인할 때 쓴다.
+    public bool IsGameOver => isGameOver;
 
     public void ResetBattle()
     {

@@ -16,6 +16,9 @@ public class HandFanLayout : MonoBehaviour
     [Tooltip("카드를 연결할 슬롯 매니저. 이 매니저의 슬롯 개수(기본 5)만큼 카드를 만듭니다.")]
     [SerializeField] private CardSlotManager cardSlotManager;
 
+    [Tooltip("각 카드의 타이핑 들림 애니메이션에 쓰입니다. 씬 오브젝트라 프리팹엔 직접 못 넣고 여기서 Bind로 전달합니다.")]
+    [SerializeField] private InputManager inputManager;
+
     [Header("배치")]
     [Tooltip("카드 간 가로 간격. 카드 폭보다 작으면 겹칩니다.")]
     [SerializeField] private float spacing = 180f;
@@ -36,7 +39,8 @@ public class HandFanLayout : MonoBehaviour
     private readonly List<RectTransform> _children = new List<RectTransform>();
     private readonly List<CardSlotView> _cards = new List<CardSlotView>();
 
-    /// <summary>생성된 카드들. 슬롯 인덱스 순서입니다.</summary>
+    /// <summary>생성된 카드들. _children과 같은 순서로 매 프레임 다시 채워집니다
+    /// (centerOnTop이 켜져 있으면 그리기 순서로 형제 인덱스가 바뀌므로, 스폰 순서로 고정해두면 어긋납니다).</summary>
     public IReadOnlyList<CardSlotView> Cards => _cards;
 
     private void Start()
@@ -72,9 +76,7 @@ public class HandFanLayout : MonoBehaviour
             card.name = $"Card {i}";
 
             // Instantiate 직후엔 프리팹의 빈 참조를 그대로 들고 있으므로 여기서 슬롯을 물려줍니다.
-            card.Bind(cardSlotManager, i);
-
-            _cards.Add(card);
+            card.Bind(cardSlotManager, i, inputManager);
         }
     }
 
@@ -93,6 +95,12 @@ public class HandFanLayout : MonoBehaviour
         for (var i = 0; i < count; i++)
         {
             GetTarget(i, count, out var targetPos, out var targetAngle);
+
+            // 타이핑 들림/소모-교체 애니메이션은 CardSlotView가 계산해서 들고 있고,
+            // 실제 위치를 쓰는 건 여기 하나뿐이라 값을 더하기만 하면 된다.
+            var cardView = _cards[i];
+            if (cardView != null)
+                targetPos.y += cardView.VerticalOffset;
 
             var rect = _children[i];
             rect.anchoredPosition = Vector2.Lerp(rect.anchoredPosition, targetPos, t);
@@ -143,6 +151,7 @@ public class HandFanLayout : MonoBehaviour
     private void CollectChildren()
     {
         _children.Clear();
+        _cards.Clear();
 
         for (var i = 0; i < transform.childCount; i++)
         {
@@ -151,7 +160,10 @@ public class HandFanLayout : MonoBehaviour
                 continue;
 
             if (child is RectTransform rect)
+            {
                 _children.Add(rect);
+                _cards.Add(child.GetComponent<CardSlotView>());
+            }
         }
     }
 }

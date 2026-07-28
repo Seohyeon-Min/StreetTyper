@@ -19,7 +19,13 @@ public class BattleManager : MonoBehaviour
     public Slider playerHPBar;
     public Slider enemyHPBar;
 
+    [Header("HP Bar Fill Images (For Color Change)")]
+    public Image playerHPFill;
+    public Image enemyHPFill;
+
     [Header("Defense UI References")]
+    public GameObject playerDefIcon; 
+    public GameObject enemyDefIcon; 
     public TextMeshProUGUI playerDefText;
     public TextMeshProUGUI enemyDefText;
 
@@ -28,7 +34,6 @@ public class BattleManager : MonoBehaviour
     public GameObject enemySpeechBubblePrefab;
     public Transform canvasTransform;
 
-    // Variables to store the instantiated objects and texts
     private GameObject playerSpeechBubble;
     private TextMeshProUGUI playerActionText;
 
@@ -44,7 +49,6 @@ public class BattleManager : MonoBehaviour
     {
         if (resultText != null) resultText.gameObject.SetActive(false);
 
-        // Instantiate Player Speech Bubble
         if (playerSpeechBubblePrefab != null && canvasTransform != null)
         {
             playerSpeechBubble = Instantiate(playerSpeechBubblePrefab, canvasTransform);
@@ -52,7 +56,6 @@ public class BattleManager : MonoBehaviour
             playerSpeechBubble.SetActive(false);
         }
 
-        // Instantiate Enemy Speech Bubble
         if (enemySpeechBubblePrefab != null && canvasTransform != null)
         {
             enemySpeechBubble = Instantiate(enemySpeechBubblePrefab, canvasTransform);
@@ -117,16 +120,13 @@ public class BattleManager : MonoBehaviour
         }
     }
 
-    // Coroutine to show the player's speech bubble temporarily
     IEnumerator ShowPlayerActionBubble(string message)
     {
         if (playerSpeechBubble != null && playerActionText != null)
         {
             playerActionText.text = message;
             playerSpeechBubble.SetActive(true);
-
             yield return new WaitForSeconds(1.0f);
-
             playerSpeechBubble.SetActive(false);
         }
     }
@@ -149,8 +149,8 @@ public class BattleManager : MonoBehaviour
         }
 
         if (playerHPText != null) playerHPText.gameObject.SetActive(false);
-        if (playerDefText != null) playerDefText.gameObject.SetActive(false);
         if (playerHPBar != null) playerHPBar.gameObject.SetActive(false);
+        if (playerDefIcon != null) playerDefIcon.SetActive(false);
         if (playerSpeechBubble != null) playerSpeechBubble.SetActive(false);
     }
 
@@ -160,23 +160,38 @@ public class BattleManager : MonoBehaviour
         if (player != null && player.currentHP > 0)
         {
             if (playerHPText != null) playerHPText.gameObject.SetActive(true);
-            if (playerDefText != null) playerDefText.gameObject.SetActive(true);
-            if (playerHPBar != null) playerHPBar.gameObject.SetActive(true);
-
-            if (playerHPText != null) playerHPText.text = "Player HP: " + player.currentHP + " / Power: " + player.power;
-            if (playerDefText != null) playerDefText.text = "Shield: " + player.defense;
-
             if (playerHPBar != null)
             {
+                playerHPBar.gameObject.SetActive(true);
                 playerHPBar.maxValue = player.maxHP;
                 playerHPBar.value = player.currentHP;
+            }
+
+            if (playerHPText != null) playerHPText.text = player.currentHP + " / " + player.maxHP;
+
+            // Player Defense Logic
+            if (player.defense > 0)
+            {
+                if (playerDefIcon != null) playerDefIcon.SetActive(true); 
+                if (playerDefText != null)
+                {
+                    playerDefText.gameObject.SetActive(true);
+                    playerDefText.text = player.defense.ToString();
+                }
+                if (playerHPFill != null) playerHPFill.color = Color.gray;
+            }
+            else
+            {
+                if (playerDefIcon != null) playerDefIcon.SetActive(false); 
+                if (playerDefText != null) playerDefText.gameObject.SetActive(false);
+                if (playerHPFill != null) playerHPFill.color = Color.green;
             }
         }
         else
         {
             if (playerHPText != null) playerHPText.gameObject.SetActive(false);
-            if (playerDefText != null) playerDefText.gameObject.SetActive(false);
             if (playerHPBar != null) playerHPBar.gameObject.SetActive(false);
+            if (playerDefIcon != null) playerDefIcon.SetActive(false);
             if (playerSpeechBubble != null) playerSpeechBubble.SetActive(false);
         }
 
@@ -186,32 +201,45 @@ public class BattleManager : MonoBehaviour
             EnemyBase enemy = enemyManager.currentEnemy;
 
             if (enemyHPText != null) enemyHPText.gameObject.SetActive(true);
-            if (enemyDefText != null) enemyDefText.gameObject.SetActive(true);
-            if (enemyHPBar != null) enemyHPBar.gameObject.SetActive(true);
-
-            if (enemySpeechBubble != null) enemySpeechBubble.SetActive(true);
-            if (enemyIntentText != null) enemyIntentText.gameObject.SetActive(true);
-
-            if (enemyHPText != null) enemyHPText.text = "Enemy HP: " + enemy.currentHP + " / Power: " + enemy.power;
-            if (enemyDefText != null) enemyDefText.text = "Shield: " + enemy.defense;
-
             if (enemyHPBar != null)
             {
+                enemyHPBar.gameObject.SetActive(true);
                 enemyHPBar.maxValue = enemy.maxHP;
                 enemyHPBar.value = enemy.currentHP;
             }
 
+            if (enemySpeechBubble != null) enemySpeechBubble.SetActive(true);
             if (enemyIntentText != null)
             {
+                enemyIntentText.gameObject.SetActive(true);
                 enemyIntentText.text = enemyManager.GetIntentString();
+            }
+
+            if (enemyHPText != null) enemyHPText.text = enemy.currentHP + " / " + enemy.maxHP;
+
+            // Enemy Defense Logic
+            if (enemy.defense > 0)
+            {
+                if (enemyDefIcon != null) enemyDefIcon.SetActive(true); 
+                if (enemyDefText != null)
+                {
+                    enemyDefText.gameObject.SetActive(true);
+                    enemyDefText.text = enemy.defense.ToString(); 
+                }
+                if (enemyHPFill != null) enemyHPFill.color = Color.gray;
+            }
+            else
+            {
+                if (enemyDefIcon != null) enemyDefIcon.SetActive(false); 
+                if (enemyDefText != null) enemyDefText.gameObject.SetActive(false);
+                if (enemyHPFill != null) enemyHPFill.color = Color.red;
             }
         }
         else
         {
             if (enemyHPText != null) enemyHPText.gameObject.SetActive(false);
-            if (enemyDefText != null) enemyDefText.gameObject.SetActive(false);
             if (enemyHPBar != null) enemyHPBar.gameObject.SetActive(false);
-
+            if (enemyDefIcon != null) enemyDefIcon.SetActive(false);
             if (enemySpeechBubble != null) enemySpeechBubble.SetActive(false);
         }
 

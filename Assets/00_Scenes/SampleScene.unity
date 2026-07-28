@@ -874,7 +874,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 0}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 12
+  m_MaxValue: 7
   m_WholeNumbers: 0
   m_Value: 0
   m_OnValueChanged:
@@ -1732,7 +1732,7 @@ MonoBehaviour:
   m_CaretWidth: 1
   m_ReadOnly: 0
   m_RichText: 1
-  m_GlobalFontAsset: {fileID: 11400000, guid: 6ba02cf74583abb46b75367378d6943e, type: 2}
+  m_GlobalFontAsset: {fileID: 11400000, guid: 53b522988c0e6f94d8a0a2d8ed5d613c, type: 2}
   m_OnFocusSelectAll: 1
   m_ResetOnDeActivation: 1
   m_KeepTextSelectionVisible: 0
@@ -1885,8 +1885,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uD0C0\uC774\uD551!\u200B"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 6ba02cf74583abb46b75367378d6943e, type: 2}
-  m_sharedMaterial: {fileID: -3039384749176537374, guid: 6ba02cf74583abb46b75367378d6943e, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 53b522988c0e6f94d8a0a2d8ed5d613c, type: 2}
+  m_sharedMaterial: {fileID: -5515520142482790835, guid: 53b522988c0e6f94d8a0a2d8ed5d613c, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2204,7 +2204,7 @@ MonoBehaviour:
   enemyManager: {fileID: 1457634979}
   player: {fileID: 108802000}
   turnChangeDelay: 1
-  postAttackDelay: 3
+  postAttackDelay: 2
   logDebugEvents: 1
 --- !u!114 &1084949173
 MonoBehaviour:
@@ -2280,7 +2280,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 663b9a84c40f1b44fb9187d8dad652ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimerManager
-  baseDuration: 12
+  baseDuration: 7
 --- !u!1 &1224752635
 GameObject:
   m_ObjectHideFlags: 0
@@ -2568,8 +2568,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Enter text...
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 6ba02cf74583abb46b75367378d6943e, type: 2}
-  m_sharedMaterial: {fileID: -3039384749176537374, guid: 6ba02cf74583abb46b75367378d6943e, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 53b522988c0e6f94d8a0a2d8ed5d613c, type: 2}
+  m_sharedMaterial: {fileID: -5515520142482790835, guid: 53b522988c0e6f94d8a0a2d8ed5d613c, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2719,8 +2719,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 6ba02cf74583abb46b75367378d6943e, type: 2}
-  m_sharedMaterial: {fileID: -3039384749176537374, guid: 6ba02cf74583abb46b75367378d6943e, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 53b522988c0e6f94d8a0a2d8ed5d613c, type: 2}
+  m_sharedMaterial: {fileID: -5515520142482790835, guid: 53b522988c0e6f94d8a0a2d8ed5d613c, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

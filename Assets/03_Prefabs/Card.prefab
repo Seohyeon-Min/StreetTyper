@@ -126,9 +126,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CardSlotView
   cardSlotManager: {fileID: 0}
+  inputManager: {fileID: 0}
   slotIndex: 0
   nameText: {fileID: 8665756763133006275}
   iconImage: {fileID: 7164996116890189025}
+  typingLiftHeight: 40
+  liftSmoothTime: 0.08
+  exitLiftHeight: 80
+  exitDuration: 0.12
+  enterDuration: 0.15
 --- !u!1 &8132639278168207217
 GameObject:
   m_ObjectHideFlags: 0
@@ -196,8 +202,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: New Text
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 6ba02cf74583abb46b75367378d6943e, type: 2}
-  m_sharedMaterial: {fileID: -3039384749176537374, guid: 6ba02cf74583abb46b75367378d6943e, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 53b522988c0e6f94d8a0a2d8ed5d613c, type: 2}
+  m_sharedMaterial: {fileID: -5515520142482790835, guid: 53b522988c0e6f94d8a0a2d8ed5d613c, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

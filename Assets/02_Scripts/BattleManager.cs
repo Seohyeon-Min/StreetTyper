@@ -38,6 +38,10 @@ public class BattleManager : MonoBehaviour
     [Header("Game Result UI")]
     public TextMeshProUGUI resultText;
 
+    [Header("연출 시간")]
+    [Tooltip("공격 말풍선이 떠 있는 시간(초)")]
+    public float actionBubbleDuration = 1.0f;
+
     private bool isGameOver = false;
 
     void Start()
@@ -103,7 +107,7 @@ public class BattleManager : MonoBehaviour
             playerActionText.text = message;
             playerSpeechBubble.SetActive(true);
 
-            yield return new WaitForSeconds(1.0f);
+            yield return new WaitForSeconds(actionBubbleDuration);
 
             playerSpeechBubble.SetActive(false);
         }

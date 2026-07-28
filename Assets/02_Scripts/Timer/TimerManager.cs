@@ -20,6 +20,11 @@ public class TimerManager : MonoBehaviour
     public event Action<float> OnTimeChanged;
     public event Action OnTimeExpired;
 
+    /// <summary>AddTime/ReduceTime으로 시간이 실제로 증감했을 때만 발생한다(델타 전달).
+    /// Update()의 매 프레임 자연 감소나 StartTimer/RestartTurn의 리셋에서는 발생하지 않는다 -
+    /// UI가 "효과로 시간이 변했다"는 순간만 골라 반응(색 반짝임 등)할 수 있게 하기 위함이다.</summary>
+    public event Action<float> OnTimeAdjusted;
+
     private void Start()
     {
         // 스탠드얼론으로도 굴러가게 자체 시작하지만, 실제 매 턴 재시작은 DeckManager가
@@ -48,6 +53,7 @@ public class TimerManager : MonoBehaviour
 
         RemainingTime = Mathf.Max(0f, RemainingTime + amount);
         OnTimeChanged?.Invoke(RemainingTime);
+        OnTimeAdjusted?.Invoke(amount);
     }
 
     public void ReduceTime(float amount)

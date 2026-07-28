@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -17,6 +18,13 @@ public class DeckManager : MonoBehaviour
     [SerializeField] private BattleManager battleManager;
     [SerializeField] private EnemyManager enemyManager;
     [SerializeField] private CharacterStats player;
+
+    [Header("턴 전환 딜레이")]
+    [Tooltip("타이머가 끝난 뒤 적이 공격하기까지 대기하는 시간(초)")]
+    [SerializeField] private float turnChangeDelay = 2f;
+
+    [Tooltip("적 공격이 끝난 뒤 플레이어 턴이 다시 시작되기까지 대기하는 시간(초)")]
+    [SerializeField] private float postAttackDelay = 4f;
 
     [SerializeField] private bool logDebugEvents;
 
@@ -96,11 +104,17 @@ public class DeckManager : MonoBehaviour
     }
 
     // 플레이어 턴의 입력 제한 시간이 다 됐다. 여기가 실제 턴의 끝 - 미완성 체인은 버리고
-    // 적 턴을 실행한 뒤 다음 플레이어 턴을 위해 타이머를 다시 채운다.
+    // 적 턴을 실행한 뒤 다음 플레이어 턴을 위해 타이머를 다시 채운다. 딜레이가 있어서
+    // 코루틴으로 처리한다.
     private void HandleTimeExpired()
     {
+        StartCoroutine(RunTurnTransition());
+    }
+
+    private IEnumerator RunTurnTransition()
+    {
         if (battleManager.IsGameOver)
-            return;
+            yield break;
 
         if (logDebugEvents)
             Debug.Log("Timer expired - ending player turn");
@@ -108,11 +122,18 @@ public class DeckManager : MonoBehaviour
         inputManager.DisableInput();
         inputManager.ClearInput();
         wordChainManager.ClearChain();
+
+        // "턴이 바뀌었다"는 걸 플레이어가 인지할 시간을 준 뒤 적이 공격한다.
+        yield return new WaitForSeconds(turnChangeDelay);
+
         battleManager.ExecuteEnemyTurn();
 
         // 적 턴에 플레이어가 죽었을 수 있다 - 그러면 다음 턴을 시작하지 않는다.
         if (battleManager.IsGameOver)
-            return;
+            yield break;
+
+        // 공격당한 여운을 두고 나서 플레이어 턴을 다시 연다.
+        yield return new WaitForSeconds(postAttackDelay);
 
         inputManager.EnableInput();
         timerManager.RestartTurn();

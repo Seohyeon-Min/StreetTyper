@@ -16,20 +16,23 @@ public class TimerView : MonoBehaviour
     [SerializeField] private Color decreaseColor = new Color(1f, 0.3f, 0.3f);
     [SerializeField] private float flashDuration = 0.3f;
 
-    private float _previousTime;
-    private bool _hasPreviousTime;
     private Coroutine _flashCoroutine;
 
     private void OnEnable()
     {
         timerManager.OnTimeChanged += HandleTimeChanged;
+        timerManager.OnTimeAdjusted += HandleTimeAdjusted;
     }
 
     private void OnDisable()
     {
         timerManager.OnTimeChanged -= HandleTimeChanged;
+        timerManager.OnTimeAdjusted -= HandleTimeAdjusted;
     }
 
+    // 매 프레임(자연 감소 포함) 발생 - 슬라이더 위치만 갱신한다. 색 반짝임은 여기서 판단하지
+    // 않는다 - 정상적인 카운트다운도 매 프레임 "감소"라서 반짝임이 끝날 틈도 없이 계속
+    // 재시작되어 사실상 항상 빨간색으로 고정돼 버린다.
     private void HandleTimeChanged(float remaining)
     {
         if (slider != null)
@@ -37,21 +40,15 @@ public class TimerView : MonoBehaviour
             slider.maxValue = timerManager.Duration;
             slider.value = remaining;
         }
+    }
 
-        // 턴이 막 시작해 기준값 자체로 리셋된 경우(RestartTurn/StartTimer)는 "시간을 얻었다"는
-        // 의미가 아니므로 반짝이지 않는다 - 단어 효과로 도중에 늘거나 줄 때만 반짝인다.
-        var isFreshTurn = Mathf.Approximately(remaining, timerManager.Duration);
-
-        if (_hasPreviousTime && !isFreshTurn)
-        {
-            if (remaining > _previousTime)
-                Flash(increaseColor);
-            else if (remaining < _previousTime)
-                Flash(decreaseColor);
-        }
-
-        _previousTime = remaining;
-        _hasPreviousTime = true;
+    // AddTime/ReduceTime으로 실제 효과가 적용됐을 때만 발생 - 이때만 반짝인다.
+    private void HandleTimeAdjusted(float delta)
+    {
+        if (delta > 0f)
+            Flash(increaseColor);
+        else if (delta < 0f)
+            Flash(decreaseColor);
     }
 
     private void Flash(Color color)

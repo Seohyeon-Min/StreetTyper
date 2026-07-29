@@ -1,0 +1,431 @@
+fileFormatVersion: 2
+guid: 57f4e2687f0e5974c8d589a4d8c311a5
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2213826294249829870
+    second: DemiOpneEyes_0
+  - first:
+      213: -7805708801354825784
+    second: DemiOpneEyes_1
+  - first:
+      213: -177531262921963033
+    second: DemiOpneEyes_2
+  - first:
+      213: -7763183267134514651
+    second: DemiOpneEyes_3
+  - first:
+      213: -5163273585001641834
+    second: DemiOpneEyes_4
+  - first:
+      213: -864299702474855876
+    second: DemiOpneEyes_5
+  - first:
+      213: -1375123593390217314
+    second: DemiOpneEyes_6
+  - first:
+      213: -416917018653905065
+    second: DemiOpneEyes_7
+  - first:
+      213: -5504714760756974539
+    second: DemiOpneEyes_8
+  - first:
+      213: -8965839188178861594
+    second: DemiOpneEyes_9
+  - first:
+      213: -1564952555216501802
+    second: DemiOpneEyes_10
+  - first:
+      213: 4666631947965573732
+    second: DemiOpneEyes_11
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: DemiOpneEyes_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 615
+        height: 908
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 21ac1d8f6b8e641e0800000000000000
+      internalID: -2213826294249829870
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiOpneEyes_1
+      rect:
+        serializedVersion: 2
+        x: 615
+        y: 0
+        width: 615
+        height: 908
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8cffa1b933d8ca390800000000000000
+      internalID: -7805708801354825784
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiOpneEyes_2
+      rect:
+        serializedVersion: 2
+        x: 1230
+        y: 0
+        width: 615
+        height: 908
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e98209c148498df0800000000000000
+      internalID: -177531262921963033
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiOpneEyes_3
+      rect:
+        serializedVersion: 2
+        x: 1845
+        y: 0
+        width: 615
+        height: 908
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 52ad03c13f1a34490800000000000000
+      internalID: -7763183267134514651
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiOpneEyes_4
+      rect:
+        serializedVersion: 2
+        x: 2460
+        y: 0
+        width: 615
+        height: 908
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 698c1d7d70e5858b0800000000000000
+      internalID: -5163273585001641834
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiOpneEyes_5
+      rect:
+        serializedVersion: 2
+        x: 3075
+        y: 0
+        width: 615
+        height: 908
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3aa286fff36104f0800000000000000
+      internalID: -864299702474855876
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiOpneEyes_6
+      rect:
+        serializedVersion: 2
+        x: 3690
+        y: 0
+        width: 615
+        height: 908
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e97a7b5a0649aece0800000000000000
+      internalID: -1375123593390217314
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiOpneEyes_7
+      rect:
+        serializedVersion: 2
+        x: 4305
+        y: 0
+        width: 615
+        height: 908
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 75fa1523e20d63af0800000000000000
+      internalID: -416917018653905065
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiOpneEyes_8
+      rect:
+        serializedVersion: 2
+        x: 4920
+        y: 0
+        width: 615
+        height: 908
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 53c2b3f17135b93b0800000000000000
+      internalID: -5504714760756974539
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiOpneEyes_9
+      rect:
+        serializedVersion: 2
+        x: 5535
+        y: 0
+        width: 615
+        height: 908
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e1825be2c0f29380800000000000000
+      internalID: -8965839188178861594
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiOpneEyes_10
+      rect:
+        serializedVersion: 2
+        x: 6150
+        y: 0
+        width: 615
+        height: 908
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d30bf741fb284ae0800000000000000
+      internalID: -1564952555216501802
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiOpneEyes_11
+      rect:
+        serializedVersion: 2
+        x: 6765
+        y: 0
+        width: 615
+        height: 908
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46a2af3280533c040800000000000000
+      internalID: 4666631947965573732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 8c01a34865f82c1498e382eca64d0e19
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":12.0,"y":1.0},"gridSpriteSize":{"x":615.0,"y":908.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":7,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      DemiOpneEyes_0: -2213826294249829870
+      DemiOpneEyes_1: -7805708801354825784
+      DemiOpneEyes_10: -1564952555216501802
+      DemiOpneEyes_11: 4666631947965573732
+      DemiOpneEyes_2: -177531262921963033
+      DemiOpneEyes_3: -7763183267134514651
+      DemiOpneEyes_4: -5163273585001641834
+      DemiOpneEyes_5: -864299702474855876
+      DemiOpneEyes_6: -1375123593390217314
+      DemiOpneEyes_7: -416917018653905065
+      DemiOpneEyes_8: -5504714760756974539
+      DemiOpneEyes_9: -8965839188178861594
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

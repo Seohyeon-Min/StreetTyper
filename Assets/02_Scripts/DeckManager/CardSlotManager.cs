@@ -46,6 +46,24 @@ public class CardSlotManager : MonoBehaviour
         FillSlot(index);
     }
 
+    /// <summary>차 있는 슬롯까지 전부 새로 뽑는다. 스테이지가 바뀔 때처럼 손패를 통째로
+    /// 갈아야 하는 경우에만 쓴다 - 평소 보충은 ConsumeSlot이 담당한다.</summary>
+    public void RefillAll()
+    {
+        if (_currentCards == null)
+            return;
+
+        // 사전이 비어 있으면 들고 있던 카드를 null로 지워버리게 되므로 아예 손대지 않는다.
+        if (wordDictionary == null || wordDictionary.Words.Count == 0)
+        {
+            Debug.LogWarning("CardSlotManager: 사전이 비어 있어 손패를 다시 뽑지 않았습니다.", this);
+            return;
+        }
+
+        for (var i = 0; i < _currentCards.Length; i++)
+            FillSlot(i);
+    }
+
     private void HandleWordsChanged()
     {
         // 이미 카드가 들어있는 슬롯은 건드리지 않는다 - 스테이지 보상으로 단어가 늘어도 손패가

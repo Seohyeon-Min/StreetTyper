@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 
@@ -8,6 +9,9 @@ public class StageManager : MonoBehaviour
     public List<GameObject> enemyPrefabs;
     public Transform enemySpawnPoint;
 
+    [Tooltip("스테이지가 열리고 플레이어가 타이핑을 시작할 수 있을 때까지의 대기 시간(초)")]
+    public float stageStartDelay = 2f;
+
     [Header("References")]
     public BattleManager battleManager;
     public EnemyManager enemyManager;
@@ -15,9 +19,12 @@ public class StageManager : MonoBehaviour
     public TimerManager timerManager;
     public InputManager inputManager;
     public WordUnlockManager wordUnlockManager;
+    public CardSlotManager cardSlotManager;
+    public WordChainManager wordChainManager;
 
     private int currentStageIndex = 0;
     private GameObject currentEnemyObject;
+    private Coroutine startRoutine;
 
     void Start()
     {
@@ -56,15 +63,45 @@ public class StageManager : MonoBehaviour
 
         battleManager.ResetBattle();
 
-        // 새 스테이지는 플레이어 HP/방어도가 리셋되는 것과 마찬가지로 타이머도 깨끗하게 다시 시작한다.
+        // 대기 시간 동안엔 타이머가 돌지도, 입력이 들어오지도 않아야 한다.
+        // 둘 다 BeginStageAfterDelay가 끝에서 다시 연다.
+        if (timerManager != null)
+            timerManager.StopTimer();
+
+        if (inputManager != null)
+        {
+            inputManager.DisableInput();
+            inputManager.ClearInput();
+        }
+
+        // 이전 스테이지에서 쌓다 만 조합은 넘겨받지 않는다 - 입력창을 비우는 것과 같은 이유다.
+        if (wordChainManager != null)
+            wordChainManager.ClearChain();
+
+        if (startRoutine != null)
+            StopCoroutine(startRoutine);
+
+        startRoutine = StartCoroutine(BeginStageAfterDelay());
+    }
+
+    // 적이 등장한 뒤 잠깐 두었다가 플레이어 턴을 연다 - 적 턴 이후의 대기와 같은 목적이다.
+    private IEnumerator BeginStageAfterDelay()
+    {
+        yield return new WaitForSeconds(stageStartDelay);
+
+        // 손패는 스테이지마다 새로 뽑는다. 안 그러면 이전 스테이지에서 들고 있던 카드가 그대로 남는다.
+        if (cardSlotManager != null)
+            cardSlotManager.RefillAll();
+
+        // 이전 턴이 타이머 만료(HandleTimeExpired)로 끝났다면 DisableInput()이 걸려 있고,
+        // 그 직후 패배했다면 EnableInput()이 한 번도 안 불렸을 수 있다 - 여기서 확실히 켠다.
+        if (inputManager != null)
+            inputManager.EnableInput();
+
         if (timerManager != null)
             timerManager.RestartTurn();
 
-        // 이전 턴이 타이머 만료(HandleTimeExpired)로 끝났다면 DisableInput()이 걸려있고,
-        // 그 직후 패배했다면 EnableInput()이 한 번도 안 불렸을 수 있다 - 스테이지가 새로
-        // 시작될 땐 무조건 입력이 켜져 있어야 하므로 여기서 확실히 켠다.
-        if (inputManager != null)
-            inputManager.EnableInput();
+        startRoutine = null;
     }
 
     // 스테이지 클리어 지점. BattleManager가 승리 후 1번 키 입력에서만 부르므로

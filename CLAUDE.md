@@ -4,94 +4,141 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-**스트리트타이퍼 (Street Typer)** is a Unity project (Editor **6000.3.19f1**, Universal Render Pipeline, 2D template) — a turn-based "typing action text RPG" prototype (10-day prototype scope per the design doc). Core loop: on the player's turn, 5 word "cards" are shown on screen; the player types them back-to-back with **no spaces or Enter needed** to build a combo before a countdown timer runs out.
+**스트리트타이퍼 (Street Typer)** — Unity 프로젝트 (Editor **6000.3.19f1**, URP, 2D 템플릿). 타이핑 액션 텍스트 RPG 프로토타입(기획서상 10일 스코프). 핵심 루프: 제한 시간 동안 화면의 5개 단어 슬롯을 **띄어쓰기·Enter 없이** 연달아 타이핑해 스킬 조합을 만들고, 액션 단어로 조합을 완성해 적을 공격한다.
 
-**The game is typed in Korean.** Word data, matching, and the input pipeline are all Hangul-based — see the input section below; this is load-bearing, not a localization detail.
+**게임은 한국어로 타이핑한다.** 카드 이름·매칭·입력 파이프라인 전부 한글 기준이며, 이건 로컬라이제이션 문제가 아니라 설계의 핵심이다.
 
-Words fall into 3 categories, mapping 1:1 onto the card data hierarchy:
+기획 문서(`Street_Typer_GDD.pdf`)와 아키텍처 문서(`StreetTyper아키텍쳐 디자인.pdf`)가 저장소 밖에 있다. 아키텍처 문서는 `WordData`/`WordCategory`/`BattleContext`/`Combatant`/`IActionEffect` 같은 계층을 제시하지만 **이 프로젝트는 의도적으로 그걸 따르지 않고** 이미 있는 `CardBase` 계층을 재사용한다(아래 참조). 문서와 코드가 다르면 코드가 맞다.
 
-- **수식어 (Modifier)** — stat amplifiers (슈퍼 +1, 울트라 +2, 파워 amplifies the next modifier, 어썸 scales with success count, 퀵 adds timer time).
-- **속성/특수효과 (Attribute)** — status effects and combat modifiers (burn/paralysis/freeze chance, life drain, damage reduction, crit, repeat-action).
-- **액션 (Action)** — attack/defense words that resolve a combo (펀치/잽/훅/어퍼컷/페인트/뎀프시롤/가드), each with a power bonus, timer delta, and special rules (ignores/breaks defense, combo re-trigger chance).
+## 작업 방식
 
-## Working with this repository
+Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없다.
 
-Unity project, not an npm/CLI project — there are no build/lint/test scripts to invoke from a terminal.
+- **에디터**: 프로젝트 루트를 Unity Hub / Editor `6000.3.19f1`로 연다 (`ProjectSettings/ProjectVersion.txt`와 일치해야 함).
+- **컴파일**: Unity가 포커스/저장 시 자동 컴파일. `dotnet build` 없음 — `Assembly-CSharp.csproj`/`StreetTyper.sln`은 Unity 생성물이고 gitignore되어 있으니 절대 직접 수정하지 말 것. 단일 `Assembly-CSharp` 어셈블리, `.asmdef` 분리 없음.
+- **테스트**: `com.unity.test-framework`는 설치되어 있으나 **테스트 어셈블리가 하나도 없다.** 여기서 "테스트"란 Play Mode 수동 확인이며, 보통 `Debug.Log` 출력을 읽는 것이다(`DeckManager.logDebugEvents`, `WordChainManager.logDebugEvents`, `WordUnlockManager.logDebugEvents`).
+- **실행**: 에디터에서 Play. 헤드리스/CLI 실행 경로 없음.
+- C# `LangVersion` 9.0, .NET Standard 2.1 (Mono) — 그 이상 문법은 컴파일 실패한다.
 
-- **Editor**: open the project root in Unity Hub / Unity Editor `6000.3.19f1` (must match `ProjectSettings/ProjectVersion.txt`).
-- **Compiling**: Unity compiles C# automatically on focus/save. No `dotnet build` step — `Assembly-CSharp.csproj`/`StreetTyper.sln` are Unity-generated and gitignored; never hand-edit them. Single implicit `Assembly-CSharp` assembly, no `.asmdef` split.
-- **Tests**: `com.unity.test-framework` is installed but unused — no test assemblies exist. "Testing" here means manual Play Mode verification, usually by reading `Debug.Log` output (see `DeckManager.logDebugEvents`).
-- **Running**: press Play in the Editor. No headless/CLI run path.
-- C# `LangVersion` 9.0, .NET Standard 2.1 (Mono) — avoid newer C# syntax the compiler will reject.
+## 프로젝트 구조
 
-## Project structure
+최상위 에셋 폴더는 에셋 브라우저 정렬을 위해 `NN_Name` 접두사를 쓴다. 새 폴더도 이 규칙을 따를 것.
 
-Top-level asset folders use an `NN_Name` prefix to control asset-browser ordering; follow that convention for new ones.
+- `Assets/00_Scenes/SampleScene.unity` — **실질적으로 유일한 씬**이자 빌드 설정에 등록된 유일한 씬. 루트: `00_BOOT`, `01_CAMERA`, `02_SYSTEM`, `03_WORLD`, `04_UI`, `05_DEBUG`, `EventSystem`.
+  - `02_SYSTEM`: `InputManager`, `Deck Manager`, `StageManager`, `BattleManager`, `WordDictionary`, `WordUnlockManager`
+  - `03_WORLD`: `player`, `enemySpawnPoint`
+  - `04_UI`: `Card Canvas`(손패·입력창·체인 텍스트), `Field Canvas`(HP/방어도/의도/타이머/결과)
+- `Assets/BattleScene.unity` — 최상위에 있는 **미사용 씬**(빌드 설정 미등록, 병합 잔재). 여기에 작업하지 말 것.
+- `Assets/01_Arts/Fonts/` — Paperlogy 계열 TMP 폰트. **한글 글리프를 포함한 폰트를 써야 한다.** 기본 `LiberationSans SDF`는 라틴 전용이라 한글이 `□`로 나오고 문자당 경고 하나씩 찍힌다.
+- `Assets/03_Prefabs/` — `Card.prefab`(런타임 생성되는 손패 카드), `PlayerSpeechBubble`/`EnemySpeechBubble`, `enemy`/`strongEnemy`(스테이지별 적).
+- `Assets/04_Data/Cards/` — **24개 `CardBase` 에셋**(GDD 4장 단어 사전 전체, 페인풀만 제외). `Assets > Create > Deck Manager > Cards > ...` 메뉴로 만들 것. `.asset` YAML을 손으로 작성하면 스크립트 GUID가 조용히 어긋날 수 있다.
+- `Assets/04_Data/EnemyTutorial.asset` — 유일한 `EnemyData`.
+- `Assets/InputSystem_Actions.inputactions` — Input System 기본 템플릿. **미사용.** 게임플레이 입력은 의도적으로 이걸 거치지 않는다(아래).
 
-- `Assets/00_Scenes/SampleScene.unity` — the only scene. Root convention: `00_BOOT`, `01_CAMERA`, `02_SYSTEM` (`InputManager`, `Deck Manager`), `03_WORLD`, `04_UI` (`Canvas` → `InputField (TMP)`, `Hand`), `05_DEBUG`, `EventSystem`.
-- `Assets/01_Arts/Fonts/` — `Paperlogy-4Regular SDF.asset`, a TMP font asset that **includes Hangul glyphs**. Every `TMP_Text`/`TMP_InputField` showing Korean must use it; the default `LiberationSans SDF` is Latin-only and silently renders Korean as `□` with one console warning per character.
-- `Assets/02_Scripts/` — see Architecture.
-- `Assets/03_Prefabs/Card.prefab` — the runtime-instantiated card (see Hand presentation below).
-- `Assets/04_Data/Cards/` — 8 `CardBase` test assets (파이어, 인텔리, 파워, 퀵, 슈퍼, 어썸, 펀치, 어퍼컷). Create these via `Assets > Create > Deck Manager > Cards > ...`, never by hand-authoring `.asset` YAML — hand-written assets risk silently mismatched script GUIDs. All 8 currently have an empty `icon` and `description`.
-- `Assets/04_Data/EnemyTutorial.asset` — the only `EnemyData`.
-- `Assets/TextMesh Pro/` — imported TMP Essentials resources.
-- `Assets/InputSystem_Actions.inputactions` — the Input System's default template asset. **Unused**; gameplay input deliberately does not go through it (see below). Don't wire gameplay to it.
+## 아키텍처
 
-## Architecture
+### 전체 흐름
 
-### Input pipeline (`02_Scripts/InputManager/`)
+```
+키보드 → InputManager → CardInputHandler(5슬롯 매칭) → WordChainManager(조합 검증)
+   → [액션 단어로 완성] → DeckManager.HandleChainCompleted
+      → SkillResolver(수치 계산) → CombatManager(실제 적용) → BattleManager(UI/말풍선)
+   → [타이머 0] → DeckManager.HandleTimeExpired → 적 턴 → 다음 플레이어 턴
+```
 
-Typing input bypasses Unity's Input Action asset/binding system entirely and polls `UnityEngine.InputSystem.Keyboard.current` directly.
+`DeckManager`는 단순 파사드가 아니라 **전투 배선의 중심**이다 — 체인 완성과 타이머 만료를 받아 나머지 시스템을 순서대로 호출한다.
 
-- **`InputManager`** exposes `CurrentInput` (committed characters since the last clear), `Composition` (in-progress IME text), and events `OnCharacterEntered(char)`, `OnBackspace`, `OnSubmit` (Enter/NumpadEnter), `OnCompositionChanged`, `OnInputCleared`. Control via `EnableInput()`/`DisableInput()`/`ClearInput()`; auto-enables in `Start()`.
-  - **Only Hangul is accepted.** `HandleTextInput` early-returns unless `IsHangul(character)` — Hangul Syllables (가-힣) or Compatibility Jamo (ㄱ-ㅣ). ASCII/English keystrokes are silently dropped and never reach `CurrentInput` or `OnCharacterEntered`. An earlier `IsAlphabet` branch was removed; do not assume English works anywhere in the typing path.
-  - Characters come from `Keyboard.onTextInput` (not raw key polling), which is what yields correctly composed Hangul syllables.
-  - IME composition is handled via `onIMECompositionChange` + `SetIMEEnabled(true)`. Backspace is deliberately suppressed while `Composition` is non-empty, so it edits the IME's own buffer instead of double-deleting committed characters. Backspace has hold-to-repeat (`backspaceRepeatDelay`/`backspaceRepeatInterval`).
-  - `ChangeHangul()` toggles `Input.imeCompositionMode` between `Auto` and `On` on **RightAlt** — a workaround for the IME issue below, not a general keybind.
-  - `OnSubmit` currently has **no subscribers** — a free hook if a submit-based flow is ever needed. Note it does not force the IME to commit its composition.
-- **`InputFieldDisplay`** is a pure view: mirrors `CurrentInput + Composition` into a **read-only** `TMP_InputField` (`readOnly = true` — it must never take its own keyboard/IME focus, since `InputManager` owns the OS-level IME context; making it interactive causes double input). It also calls `Keyboard.current.SetIMECursorPosition(...)`, computed from the TMP text's last-character screen position, so the OS IME overlay draws in the right place.
+### 입력 파이프라인 (`02_Scripts/InputManager/`)
 
-### Deck / card system (`02_Scripts/Deck Manager/`)
+타이핑 입력은 Unity Input Action 에셋/바인딩을 완전히 우회하고 `Keyboard.current`를 직접 쓴다.
 
-- **`Cards/CardBase.cs`** — abstract `ScriptableObject`: `CardName` (the exact word to type *and* the display text *and* the match key), `Icon`, `Description`, abstract `Category`; plus `enum CardCategory { Modifier, Attribute, Action }`. Three concrete subclasses (`ModifierCardData`, `AttributeCardData`, `ActionCardData`) each model a whole category with an effect-type enum + a few numeric fields, rather than one class per word. **Data only — no damage/timer/status execution exists**, deliberately deferred until a combat system consumes it.
-- **`CardSlotManager`** — owns the 5 slots (`CurrentCards`, `SlotCount`, `OnSlotChanged`, `ConsumeSlot(i)`), filling them from a serialized `availableCards` pool uniformly at random. **Duplicates across slots are intentional** — a no-duplicate variant was built and reverted on request; don't "fix" it without checking first.
-- **`CardInputHandler`** — the matching logic. Subscribes only to `InputManager.OnCharacterEntered` (per keystroke; `OnSubmit`/Enter is intentionally not used for matching). Each keystroke: exact match against a current card → consume (buffer + refill + clear input); still a prefix of some card → wait; prefix of nothing → typo → clear buffer + clear input.
-- **`MainBufferManager`** — ordered list of cards matched so far (`AddCard`/`ClearBuffer`, `OnCardAdded`/`OnBufferCleared`). Appends every match regardless of category; it does **not** auto-flush or execute on an Action card.
-- **`DeckManager`** — thin read-only facade (`Slots`/`Input`/`Buffer`) plus a `logDebugEvents` flag that logs match/typo/buffer events. That log is currently the only way to observe buffer state, since no combat/HUD UI exists.
+- **`InputManager`** — `CurrentInput`(커밋된 문자), `Composition`(IME 조합 중 문자), 이벤트 `OnCharacterEntered(char)`/`OnCompositionChanged(string)`/`OnBackspace`/`OnSubmit`/`OnInputCleared`. `EnableInput()`/`DisableInput()`/`ClearInput()`으로 제어.
+  - **한글만 받는다.** `HandleTextInput`이 `IsHangul` 아니면 즉시 리턴 — ASCII/영문은 `CurrentInput`에 도달조차 못 한다. 타이핑 경로 어디에서도 영어가 동작한다고 가정하지 말 것.
+  - 문자는 `Keyboard.onTextInput`에서 온다(키 폴링 아님) — 그래야 조합된 한글 음절이 나온다.
+  - `ChangeHangul()`이 RightAlt로 `Input.imeCompositionMode`를 `Auto`↔`On` 토글한다. **이게 한/영 전환 문제의 해결책이므로 건드리지 말 것.**
+  - `GetLeadConsonant(char)` / `IsValidProgress(committed, composing, target)` 정적 유틸을 제공한다. 후자는 "커밋된 문자열 + 조합 중인 글자가 target 단어를 향해 여전히 유효한가"를 판정하며, **매칭 로직과 손패 애니메이션이 같은 판정을 공유**하도록 하는 단일 기준점이다. 조합 중 글자는 표준 유니코드 한글 분해 공식으로 **초성만** 비교한다(모음 단계까지 검증하지 않는 의도적 절충).
+  - `OnSubmit`(Enter)은 **구독자가 없다** — 매칭은 Enter를 쓰지 않는다.
+- **`InputFieldDisplay`** — 순수 뷰. `CurrentInput + Composition`을 **읽기 전용** `TMP_InputField`에 미러링한다(`readOnly = true` — `InputManager`가 OS IME 컨텍스트를 소유하므로 이게 자체 포커스를 가지면 입력이 두 번 들어간다). `SetIMECursorPosition`으로 OS IME 오버레이 위치도 맞춘다.
 
-These four sit as sibling components on one `Deck Manager` GameObject under `02_SYSTEM`.
+### 덱 / 카드 (`02_Scripts/DeckManager/`)
 
-### Hand presentation (`Deck Manager/HandFanLayout.cs`, `Deck Manager/UI/CardSlotView.cs`)
+> 폴더명은 `DeckManager`(공백 없음)다. 예전엔 `Deck Manager`(공백 포함)였으나 이름이 바뀌었다 — 씬의 GameObject 이름은 여전히 `Deck Manager`(공백 포함)이니 혼동하지 말 것.
 
-- **`HandFanLayout`** (on `04_UI/Canvas/Hand`) instantiates `Card.prefab` once in `Start()`, `cardSlotManager.SlotCount` times, calling `CardSlotView.Bind(manager, i)` on each, then arranges all active `RectTransform` children into a fan in `LateUpdate` (spacing / arc height / tilt / smoothing, optional center-on-top draw ordering). It is `[ExecuteAlways]`, so spawning is guarded by `Application.isPlaying` — otherwise Play Mode cards would accumulate in the saved scene.
-- **`CardSlotView`** displays one slot's `CardName`/`Icon`. Because it is instantiated at runtime, its `OnEnable` fires *before* `Bind()`, so subscription is null-tolerant and idempotent (`Subscribe`/`Unsubscribe`/`_subscribed`) rather than a bare `+=` in `OnEnable`. It hides `iconImage` when the card has no sprite — all test cards currently lack sprites, so cards render as text only until art is added.
-- There are **no `CardSlotView` instances saved in the scene**; every card is spawned. Don't add static card children under `Hand`.
+- **`Cards/CardBase.cs`** — 추상 `ScriptableObject`: `CardName`(타이핑할 단어 = 표시 텍스트 = 매칭 키), `Icon`, `Description`, 추상 `Category`. `enum CardCategory { Modifier, Time, Type, Action }`.
+  - **`Category`는 직렬화되지 않는 계산 프로퍼티다.** 그래서 enum 값을 바꿔도 `.asset` 마이그레이션이 필요 없다.
+  - `AttributeCardData.Category`는 `effectType`에서 계산된다: `RepeatAction`→`Time`, `StatusChance*`/`Bleed`→`Type`, 나머지(`LifeDrain`/`DamageReduction`/`CritMultiplier`)→`Modifier`. 즉 GDD의 "속성 및 특수효과" 한 덩어리가 세 분류로 쪼개진다.
+  - ⚠️ **`AttributeEffectType`에서 `Bleed`를 삭제하지 말 것.** 페인풀이 단어 목록에서 빠져 미사용이지만, 지우면 enum 인덱스가 밀려 `Intelli.asset`(`effectType: 5` = `CritMultiplier`)이 조용히 `RepeatAction`으로 바뀐다. 직렬화되는 건 `effectType`/`actionKind`이니 **이 enum들의 순서는 절대 건드리지 말 것.**
+- **`WordDictionary`** — 플레이어가 *지금* 쓸 수 있는 단어. 직렬화 필드 없는 순수 런타임 상태. `TryGetWord`/`GetRandomWord`/`AddWords`/`Clear`, `OnWordsChanged` 이벤트.
+  - **슬롯 뽑기와 타이핑 검증이 둘 다 여기 하나만 바라본다.** 예전엔 같은 24장이 `CardSlotManager`와 `WordChainManager` 양쪽 인스펙터에 중복돼 있어 "슬롯엔 뜨는데 입력은 안 되는" 버그가 실제로 났었다. 이 단일 출처 구조를 깨지 말 것.
+  - `AddWords`(배치)는 이벤트를 마지막에 **한 번만** 쏜다. 하나씩 넣으면 첫 단어가 들어간 순간 슬롯 5칸이 전부 그 한 단어로 채워진다.
+- **`WordUnlockManager`** — 게임 전체 단어 목록(인스펙터에 24장)과 지급 로직. `WordEntry { card, grantedAtStart }`. `GrantStartingWords()`(런 시작 — 사전을 비우고 `grantedAtStart` 전부 지급), `GrantStageClearReward()`(미보유 중 랜덤 N개). 시작 단어를 별도 리스트로 두지 않고 플래그로 표현하는 게 핵심 — 별도 리스트를 두면 중복 문제가 재발한다.
+- **`CardSlotManager`** — 5슬롯(`CurrentCards`/`SlotCount`/`OnSlotChanged`/`ConsumeSlot`). 사전에서 균등 랜덤으로 뽑으며 **슬롯 간 중복은 의도된 동작**(중복 방지 버전을 만들었다가 요청으로 되돌린 이력이 있으니 확인 없이 "고치지" 말 것).
+  - **채우는 시점이 미묘하다.** 사전은 `StageManager.Start()`가 채우는데 Unity는 모든 `Awake`를 모든 `Start`보다 먼저 돌린다. 그래서 `Awake`에서는 배열만 잡고, `OnWordsChanged`를 받아 **빈 슬롯만** 채운다. 이 구조를 `Awake` 직접 채우기로 되돌리면 반드시 빈 사전을 보게 된다.
+- **`CardInputHandler`** — 매칭 로직. `OnCharacterEntered`와 `OnCompositionChanged`를 **둘 다** 구독한다.
+  - 조합 중에도 평가해야 하는 이유: 퀵/잽/훅 같은 **한 음절 단어는 뒤에 이어질 음절이 없어 IME가 영원히 커밋하지 않는다.** 커밋만 기다리면 이 단어들은 절대 완성되지 않는다.
+  - 커밋 경로에서는 조합 문자열을 빈 문자열로 넘긴다 — 커밋 순간 `Composition`이 아직 옛 값을 들고 있어 "펀펀"처럼 중복될 수 있기 때문.
+  - `_pendingEcho`: 조합 중 매칭으로 슬롯을 소비하면 OS IME는 그 글자를 아직 붙잡고 있어 다음 입력 때 뒤늦게 커밋되어 돌아온다. 그 메아리를 한 번만 걸러낸다. **IME 설정을 건드려 해결하려 하지 말 것.**
+- **`MainBufferManager`** — 매칭된 카드의 단순 목록. 화면 표시/디버그용이며 `WordChainManager`와 별개로 유지된다.
+- **`HandFanLayout`** (`04_UI/Card Canvas/Hand`) — `Card.prefab`을 `SlotCount`만큼 생성하고 `CardSlotView.Bind(manager, i, inputManager)` 호출 후, `LateUpdate`에서 부채꼴 배치. `[ExecuteAlways]`라 생성은 `Application.isPlaying`으로 가드된다.
+  - **위치를 쓰는 건 여기 하나뿐이다.** `CardSlotView`는 `VerticalOffset`(떠 있어야 할 높이)만 계산해 들고 있고, `HandFanLayout`이 부채꼴 목표에 더한다. `CardSlotView`가 자기 `anchoredPosition`을 직접 만지면 같은 프레임에 두 스크립트가 경쟁한다.
+  - `CollectChildren()`이 `_children`과 `_cards`를 같은 루프에서 나란히 재수집한다 — `centerOnTop`이 형제 순서를 바꾸므로 스폰 순서로 고정해두면 어긋난다.
+- **`UI/CardSlotView`** — 한 슬롯의 표시 + 타이핑 들림/교체 애니메이션. 런타임 생성이라 `OnEnable`이 `Bind`보다 먼저 돌므로 구독이 null 관용적이고 멱등하다(`Subscribe`/`Unsubscribe`/`_subscribed`).
+  - `SetCard`는 `card.Icon`이 없으면 **프리팹에 박아둔 스프라이트를 그대로 둔다.** 카드 데이터에 아이콘이 없는 게 현재 정상 상태이고, 예전엔 이걸 null로 덮어써서 Play 시작과 동시에 카드 프레임이 사라졌었다.
+- **`DeckManager`** — 파사드 + **전투 배선**. `HandleChainCompleted`(계산→적용→타이머 반영→UI→체인 비우기)와 `HandleTimeExpired`(코루틴으로 딜레이를 두고 턴 전환)를 소유한다. `turnChangeDelay`/`postAttackDelay`가 인스펙터에 노출된다.
 
-### Combat scaffolding (`02_Scripts/BattleManager.cs`, `Character/`, `Enemy/`)
+### 조합 (`02_Scripts/WordChainManager/`)
 
-Exists as code but is **not present in `SampleScene`** — no GameObject carries `BattleManager`, `CharacterStats`, `EnemyManager`, or `EnemyBase`, and nothing connects them to the deck system. Treat it as an unwired sketch, not a working system.
+- **`WordChainManager`** — 현재 조합(체인) 상태. `SubmitWord(string)` → `WordSubmitResult`. 규칙: `Modifier` 무제한 · `Time` 최대 1 · `Type` 최대 1 · `Action` 정확히 1개이며 마지막(넣는 순간 완성). 같은 단어 중복 불가.
+  - **오타가 나도 체인은 지우지 않는다.** GDD의 "오타 페널티: 조합 전부 초기화"는 의도적으로 적용하지 않기로 한 결정이다. 체인은 완성되어 `OnChainCompleted`로 넘어간 뒤 `DeckManager`가 `ClearChain()`을 부를 때만 비워진다.
+  - 완성된 체인에 유효한 새 단어가 들어오면 그 순간을 다음 체인 시작으로 보고 자동으로 비운다.
+- **`WordInstance`** — `CardBase`를 감싸는 얇은 래퍼. `UpgradeLevel`/`UseCount`/`PermanentValueBonus`는 아직 아무도 채우지 않는다.
+- **`UI/WordChainView`** — 체인 단어를 공백으로 이어 표시하는 순수 뷰.
 
-- `CharacterStats` — public `maxHP`/`currentHP`/`power`/`defense`, `TakeDamage` (defense absorbs first), `AddDefense`, `IncreasePower`, private `Die()` → `Destroy(gameObject)` (which is why callers null-check every frame).
-- `EnemyBase : CharacterStats` copies stats from an `EnemyData` SO in `Start()`. `EnemyManager` rolls a weighted intent (`ActionType { Attack, Defend, Buff }`), exposes `GetIntentString()`, and resolves it in `ExecuteEnemyTurn(player)`.
-- `BattleManager` is a debug harness: digit1 = damage enemy, digit2 = player defends, digit3 = enemy turn. All fields are `public` and it drives `TextMeshProUGUI` directly — it predates the conventions below and is not a style reference.
+### 전투 (`02_Scripts/SkillResolver/`, `Combat/`, `Character/`, `Enemy/`, `BattleManager.cs`, `StageManager.cs`)
 
-Note there are already two unrelated action enums: `ActionKind { Attack, Defense }` (cards) and `EnemyManager.ActionType { Attack, Defend, Buff }` (enemy AI).
+**이제 전부 씬에 배치되어 실제로 동작한다.** (예전엔 미배선 스케치였다.)
 
-### Not implemented yet
+- **`SkillResolver.Resolve(chain, casterPower)` → `ResolvedAction`** — 체인 단어값 + 시전자의 힘만으로 계산하며 **대상의 방어도나 상태는 모른다.** 타격 횟수(더블/트리플/뎀프시롤)와 치명타(인텔리) 확률을 여기서 즉시 굴려 최종 정수로 접는다. 파워는 타이핑 순서와 무관하게 적용되도록 다른 계산 전에 개수부터 센다.
+- **`ResolvedAction`** — `Damage`/`Defense`/`Heal`/`IgnoresDefense`/`BreaksEnemyDefense`/`StatusEffect`/`DamageReduction`/`TimerChange`/`LootBonusOnKill`. **소비할 시스템이 없어도 계산해서 싣는다**는 원칙이다 — 아직 안 읽히는 값이 있을 뿐 계산이 빠진 게 아니다.
+- **`CombatManager.ExecutePlayerAction`** — 상대가 있어야 알 수 있는 것만 처리(방어도 파괴, 피해 적용, 방어/회복). 아직 소비처가 없는 값들은 `LogPendingEffects`가 `[미구현]` 로그로 남긴다.
+- **`CharacterStats`** — `TakeDamage(damage, ignoreDefense = false)`, `Heal`, `AddDefense`, `IncreasePower`, private `Die()` → `Destroy(gameObject)`(그래서 호출자들이 매 프레임 null 체크한다).
+- **`EnemyManager`** — 가중치로 다음 의도를 굴리고(`ActionType { Attack, Defend, Buff }`) `ExecuteEnemyTurn(player)`에서 실행. **액션 enum이 두 개 있다**: 카드의 `ActionKind { Attack, Defense }`와 이것.
+- **`BattleManager`** — HP/방어도/의도 UI, 말풍선, 승패 판정. `OnPlayerActionResolved(bubbleText)`는 **턴을 끝내지 않는다**(타이머가 도는 동안 여러 번 호출됨). 적 턴은 `ExecuteEnemyTurn()`으로 분리되어 있고 `DeckManager`가 부른다. 말풍선엔 스킬 이름이 아니라 적용된 수치가 뜬다.
+- **`StageManager`** — `enemyPrefabs` 리스트를 인덱스로 참조. `Start()`에서 시작 단어 지급 후 `LoadStage(0)`, `NextStage()`에서 클리어 보상 지급 후 다음 스테이지. `RestartStage()`(사망 재시작)는 사전을 건드리지 않아 얻은 단어가 유지된다.
 
-No countdown timer, damage math, status effects, crit, life drain, or combo resolution exists. `ActionCardData.TimerDelta` and `ModifierEffectType.TimerBonus` are dead data. `02_Scripts/WordChainManager/WordChainManager.cs` is an untouched Unity template stub — planned, not started, referenced by nothing.
+### 타이머 (`02_Scripts/Timer/`)
 
-## Conventions
+- **`TimerManager`** — `baseDuration`(기본 10초) 카운트다운. 이벤트가 **두 개**인 게 핵심이다:
+  - `OnTimeChanged(remaining)` — 매 프레임(자연 감소 포함). 슬라이더 위치 갱신용.
+  - `OnTimeAdjusted(delta)` — `AddTime`/`ReduceTime`로 **효과에 의해** 증감했을 때만. 색 반짝임용.
+  - 이 둘을 합치면 정상 카운트다운도 매 프레임 "감소"로 잡혀 반짝임이 끝날 틈 없이 재시작되어 **항상 빨간색으로 고정**된다. 실제로 겪었던 버그다.
+- **`UI/TimerView`** — 슬라이더 + 증가 초록 / 감소 빨강 반짝임.
 
-- No C# namespaces — everything is in the global namespace.
-- No singletons / service locators / DI: every cross-component dependency is a `[SerializeField]` reference wired by hand in the Inspector. When a dependency can only be known at runtime, add an explicit `Bind(...)` method (see `CardSlotView`) rather than a lookup.
-- Logic vs. view separation: "manager" scripts own state and decisions; "view" scripts (`InputFieldDisplay`, `CardSlotView`) only mirror that state onto UI and never make gameplay decisions.
-- Event-driven wiring with plain C# `event Action`/`event Action<T>`, subscribed in `OnEnable` and unsubscribed in `OnDisable`.
-- Newer scripts use `[SerializeField] private` fields with `[Header]`/`[Tooltip]`, expression-bodied read-only properties, and Korean tooltips/comments. Match the file you're editing.
-- When a required Inspector reference is missing, log a `Debug.LogWarning(..., this)` naming the field instead of returning silently — a silent `return` is very hard to diagnose in the Editor.
-- Some names reflect deliberate choices (the `Deck Manager` folder has a space) — not typos to fix. Past real typos (`InputManger` → `InputManager`, `DeckManger.cs` → `DeckManager.cs`) were corrected once; don't reintroduce drift or rename further without being asked.
+### 에디터 도구 (`02_Scripts/DeckManager/Editor/`)
 
-## Known issues
+둘 다 손으로 24줄을 드래그하다 빠뜨리거나 중복시키는 사고를 막기 위한 1회성 도구다(실제로 어퍼컷 11중복 + 3장 누락이 났던 적 있다).
 
-- **한/영 IME toggle**: the OS Hangul/English toggle key sometimes stops working while the Unity window has focus (it works fine in other apps on the same machine, including Unity's own Inspector fields). It is **not Editor-only** — it reproduces in standalone builds too, confirmed via `Player.log`, so it is not a Play Mode quirk. A native workaround (`GetAsyncKeyState` on `VK_HANGUL` + `ImmSimulateHotKey` via P/Invoke) was tried, had no effect, and was reverted. `ChangeHangul()` (RightAlt) is the current stopgap. Root cause unresolved — don't blindly re-attempt the P/Invoke fix; Unity's Input System raw-input handling needs deeper investigation first.
-- **Last Hangul syllable may never match**: `OnCharacterEntered`/`CurrentInput` only see IME-*committed* characters; in-progress jamo live in `Composition`, which `CardInputHandler` never reads. Every syllable but the last commits when the next one starts composing — but the word's **final syllable has no following keystroke to force a commit**, so it can sit in `Composition` indefinitely and the card silently never matches, no matter how correctly it was typed. Not fixed. A fix means matching against `CurrentInput + Composition`, which changes core matching behavior — confirm the approach before doing it.
+- `CardDataSeeder` — `Tools > Deck Manager > Seed Missing Word Cards`. 카드 `.asset`을 `AssetDatabase`로 생성.
+- `WordUnlockPopulator` — `Tools > Deck Manager > Populate Word Unlock Manager`. 씬의 `WordUnlockManager`에 24장을 채우고 시작 9장에 체크. 씬 컴포넌트라 `EditorSceneManager.MarkSceneDirty`가 필요하다.
+
+### 아직 없는 것
+
+상태이상 실제 부여(`StatusEffect`는 계산만 됨), 데빌의 받는 피해 감소, 럭키 보상, 어썸 누적 카운트(0 고정 + TODO 주석), 플레이어 단어 선택 UI(지금은 클리어 시 자동 지급), 단어 강화/합성, 단어별 사용 횟수 제한, 저장/불러오기, `StageData` SO.
+
+## 컨벤션
+
+- C# 네임스페이스 없음 — 전부 전역 네임스페이스.
+- 싱글턴/서비스 로케이터/DI 없음: 모든 컴포넌트 간 의존은 인스펙터에서 손으로 연결하는 `[SerializeField]` 참조. 런타임에만 알 수 있는 의존은 `Bind(...)` 메서드를 명시적으로 둔다(`CardSlotView` 참조) — 조회하지 말 것.
+- 씬 오브젝트 참조는 프리팹 에셋에 저장되지 않는다. 프리팹이 씬 컴포넌트를 필요로 하면 스포너가 `Bind()`로 넘겨준다(`HandFanLayout` → `CardSlotView`의 `InputManager`).
+- 로직 vs 뷰 분리: "매니저"가 상태와 판단을 소유하고, "뷰"(`InputFieldDisplay`/`CardSlotView`/`WordChainView`/`TimerView`)는 그걸 UI에 비추기만 하며 게임 판단을 하지 않는다.
+- 이벤트는 평범한 C# `event Action`/`event Action<T>`, `OnEnable`에서 구독하고 `OnDisable`에서 해제.
+- 새 스크립트는 `[SerializeField] private` + `[Header]`/`[Tooltip]`, 식 본문 읽기 전용 프로퍼티, 한글 주석. 편집 중인 파일의 스타일에 맞출 것. (`BattleManager`/`StageManager`/`EnemyManager`는 이 컨벤션보다 먼저 작성된 코드라 스타일 참고 대상이 아니다.)
+- 인스펙터 참조가 비어 있으면 조용히 `return`하지 말고 필드명을 담은 `Debug.LogWarning(..., this)`를 남길 것 — 에디터에서 조용한 실패는 진단이 매우 어렵다. **실제로 이번 프로젝트에서 연결 누락으로 인한 "아무 일도 안 일어남" 버그가 여러 번 났다.**
+- 이름이 의도적인 경우가 있다(씬의 `Deck Manager` GameObject는 공백 포함). 과거 진짜 오타(`InputManger`, `DeckManger.cs`)는 이미 수정됐으니 추가로 이름을 바꾸지 말 것.
+
+## 알려진 이슈
+
+- **한/영 IME 토글** — `ChangeHangul()`(RightAlt로 `Input.imeCompositionMode` 토글)로 **해결됨.** 이 메서드를 제거하면 재발한다. 과거에 시도했다 되돌린 P/Invoke(`GetAsyncKeyState` + `ImmSimulateHotKey`) 방식은 효과가 없었으니 다시 시도하지 말 것.
+- **한 음절 단어 미매칭** — `CardInputHandler`가 `OnCompositionChanged`도 구독하고 `CurrentInput + Composition`으로 매칭하도록 바꿔 **해결됨.** 커밋만 기다리는 구조로 되돌리면 퀵/잽/훅이 다시 완성 불가가 된다.
+- **손패 들림 판정의 절충** — 조합 중 글자는 초성만 비교한다. 모음을 잘못 짚어도 초성이 같으면 카드가 계속 떠 있다. 정밀 검증은 유니코드 분해가 훨씬 깊어져 의도적으로 하지 않았다.
+- **`Colorful`(컬러풀)의 단순화** — GDD는 "화상 > 마비 > 얼음 순으로 전부 부여"지만 `StatusEffectType`이 단일 값이라 셋을 동시에 담을 수 없다. 지금은 우선순위가 가장 높은 화상 하나만 나오게 단순화되어 있다. 상태이상 다중 적용이 필요해지면 `ResolvedAction.StatusEffect`를 리스트로 바꿔야 한다.

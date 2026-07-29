@@ -6,8 +6,8 @@ using UnityEngine;
 // 분류는 CardBase.Category(Modifier/Time/Type/Action) 하나만 사용한다 - 별도 WordData 계층을 두지 않는다.
 public class WordChainManager : MonoBehaviour
 {
-    [Tooltip("플레이어가 보유한 단어(카드) 목록. 사전 시스템이 생기면 이 필드 대신 DeckManager 질의로 교체됩니다.")]
-    [SerializeField] private List<CardBase> wordDictionary;
+    [Tooltip("플레이어가 현재 보유한 단어 사전. 여기 없는 단어는 타이핑해도 체인에 들어가지 않습니다.")]
+    [SerializeField] private WordDictionary wordDictionary;
 
     [SerializeField] private bool logDebugEvents;
 
@@ -140,19 +140,13 @@ public class WordChainManager : MonoBehaviour
         }
     }
 
-    // 사전 조회를 한 곳에 가둬서, 나중에 DeckManager 질의로 바뀌어도 SubmitWord는 손댈 필요가 없다.
-    // 단어별 사용 횟수 검사도 사전이 생기면 여기에 추가된다 - 지금은 보유 여부만 본다.
+    // 사전 조회를 한 곳에 가둬둬서 SubmitWord는 사전이 어떻게 생겼는지 몰라도 된다.
+    // 단어별 사용 횟수 제한이 생기면 그 검사도 여기에 붙는다 - 지금은 보유 여부만 본다.
     private CardBase ResolveWord(string input)
     {
         if (wordDictionary == null)
             return null;
 
-        for (var i = 0; i < wordDictionary.Count; i++)
-        {
-            if (wordDictionary[i] != null && wordDictionary[i].CardName == input)
-                return wordDictionary[i];
-        }
-
-        return null;
+        return wordDictionary.TryGetWord(input, out var card) ? card : null;
     }
 }

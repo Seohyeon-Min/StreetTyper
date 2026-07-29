@@ -771,6 +771,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 360981736}
   m_CullTransparentMesh: 1
+--- !u!1 &390248572
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 390248574}
+  - component: {fileID: 390248573}
+  m_Layer: 0
+  m_Name: WordDictionary
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &390248573
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 390248572}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4d91238810d7954e83fc3f9d1546a11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WordDictionary
+--- !u!4 &390248574
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 390248572}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2092489548}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &443029972
 GameObject:
   m_ObjectHideFlags: 0
@@ -1252,6 +1296,102 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2092489548}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &569780930
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 569780931}
+  - component: {fileID: 569780932}
+  m_Layer: 0
+  m_Name: WordUnlockManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &569780931
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 569780930}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2092489548}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &569780932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 569780930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e048291ac0c8268459872f9f24f1fe88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WordUnlockManager
+  wordDictionary: {fileID: 390248573}
+  allWords:
+  - card: {fileID: 11400000, guid: 9e2f383c1bb5af64ebf734cbdd516bc8, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: 42294bce3b52db844bd4c9f6908f200b, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: a1e4ab4e4b9280648bc3ed3ea83661d2, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: 550cd22b71f28564eb93a3b05ef7ade5, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: a294a8663ebb4cc44867af0a808f9dc0, type: 2}
+    grantedAtStart: 1
+  - card: {fileID: 11400000, guid: 3152f6cd089795341b1d2e3db74919db, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: 28de61c5c6c116f44aac5e78f18b9ea8, type: 2}
+    grantedAtStart: 1
+  - card: {fileID: 11400000, guid: 68ffc13f1b847dd408e66795a9d0c8f3, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: 6c3f00b5542e00b419bf0084c5b8b543, type: 2}
+    grantedAtStart: 1
+  - card: {fileID: 11400000, guid: a4bdb00105f4371489deecacbca2b508, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: 5302850458d0f1e4cb53c9afaed7133a, type: 2}
+    grantedAtStart: 1
+  - card: {fileID: 11400000, guid: 72a676fc88c86f1479ba51f926939806, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: ca216c5e2d0418447a79ffc7dcdc529d, type: 2}
+    grantedAtStart: 1
+  - card: {fileID: 11400000, guid: 8289318b2aa55c541bf9e35c213debfc, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: 04468dd861b87cf4398a19018c2642e7, type: 2}
+    grantedAtStart: 1
+  - card: {fileID: 11400000, guid: 397b868cc11e6f44e9ef45b7547f1845, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: 9124a4b7aa2ccc148a336580261528ad, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: f260a2519e5c8534d8d45320b165d5dc, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: 77f0808f38ba2734a96e198d7da6f8bd, type: 2}
+    grantedAtStart: 1
+  - card: {fileID: 11400000, guid: 3b3313ca93bbdb248b6e94f68a9cb056, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: 0ac6a0250084a19409d15d08b992aea0, type: 2}
+    grantedAtStart: 1
+  - card: {fileID: 11400000, guid: a40147bfb531ad24fafdfe7ee49cad76, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: 8733755d423018f4ea2d78977668a7cb, type: 2}
+    grantedAtStart: 1
+  - card: {fileID: 11400000, guid: 20c64e3eba60d7f4e9f319dec87bc545, type: 2}
+    grantedAtStart: 0
+  wordsPerReward: 3
+  logDebugEvents: 1
 --- !u!1 &600600090
 GameObject:
   m_ObjectHideFlags: 0
@@ -1365,6 +1505,7 @@ MonoBehaviour:
   player: {fileID: 108802000}
   timerManager: {fileID: 1084949176}
   inputManager: {fileID: 564520281}
+  wordUnlockManager: {fileID: 569780932}
 --- !u!4 &605809009
 Transform:
   m_ObjectHideFlags: 0
@@ -2154,31 +2295,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4094ea858a95b441acc1bc666b0eefd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CardSlotManager
-  availableCards:
-  - {fileID: 11400000, guid: 9e2f383c1bb5af64ebf734cbdd516bc8, type: 2}
-  - {fileID: 11400000, guid: 42294bce3b52db844bd4c9f6908f200b, type: 2}
-  - {fileID: 11400000, guid: a1e4ab4e4b9280648bc3ed3ea83661d2, type: 2}
-  - {fileID: 11400000, guid: 550cd22b71f28564eb93a3b05ef7ade5, type: 2}
-  - {fileID: 11400000, guid: a294a8663ebb4cc44867af0a808f9dc0, type: 2}
-  - {fileID: 11400000, guid: 3152f6cd089795341b1d2e3db74919db, type: 2}
-  - {fileID: 11400000, guid: 28de61c5c6c116f44aac5e78f18b9ea8, type: 2}
-  - {fileID: 11400000, guid: 68ffc13f1b847dd408e66795a9d0c8f3, type: 2}
-  - {fileID: 11400000, guid: 6c3f00b5542e00b419bf0084c5b8b543, type: 2}
-  - {fileID: 11400000, guid: a4bdb00105f4371489deecacbca2b508, type: 2}
-  - {fileID: 11400000, guid: 72a676fc88c86f1479ba51f926939806, type: 2}
-  - {fileID: 11400000, guid: ca216c5e2d0418447a79ffc7dcdc529d, type: 2}
-  - {fileID: 11400000, guid: 04468dd861b87cf4398a19018c2642e7, type: 2}
-  - {fileID: 11400000, guid: 397b868cc11e6f44e9ef45b7547f1845, type: 2}
-  - {fileID: 11400000, guid: f260a2519e5c8534d8d45320b165d5dc, type: 2}
-  - {fileID: 11400000, guid: 77f0808f38ba2734a96e198d7da6f8bd, type: 2}
-  - {fileID: 11400000, guid: 3b3313ca93bbdb248b6e94f68a9cb056, type: 2}
-  - {fileID: 11400000, guid: 0ac6a0250084a19409d15d08b992aea0, type: 2}
-  - {fileID: 11400000, guid: a40147bfb531ad24fafdfe7ee49cad76, type: 2}
-  - {fileID: 11400000, guid: 8733755d423018f4ea2d78977668a7cb, type: 2}
-  - {fileID: 11400000, guid: 20c64e3eba60d7f4e9f319dec87bc545, type: 2}
-  - {fileID: 11400000, guid: 5302850458d0f1e4cb53c9afaed7133a, type: 2}
-  - {fileID: 11400000, guid: 8289318b2aa55c541bf9e35c213debfc, type: 2}
-  - {fileID: 11400000, guid: 9124a4b7aa2ccc148a336580261528ad, type: 2}
+  wordDictionary: {fileID: 390248573}
   slotCount: 5
 --- !u!114 &1084949172
 MonoBehaviour:
@@ -2218,31 +2335,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 989ac508b5527324b8bd307cae427217, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WordChainManager
-  wordDictionary:
-  - {fileID: 11400000, guid: 9e2f383c1bb5af64ebf734cbdd516bc8, type: 2}
-  - {fileID: 11400000, guid: 42294bce3b52db844bd4c9f6908f200b, type: 2}
-  - {fileID: 11400000, guid: a1e4ab4e4b9280648bc3ed3ea83661d2, type: 2}
-  - {fileID: 11400000, guid: 550cd22b71f28564eb93a3b05ef7ade5, type: 2}
-  - {fileID: 11400000, guid: a294a8663ebb4cc44867af0a808f9dc0, type: 2}
-  - {fileID: 11400000, guid: 3152f6cd089795341b1d2e3db74919db, type: 2}
-  - {fileID: 11400000, guid: 28de61c5c6c116f44aac5e78f18b9ea8, type: 2}
-  - {fileID: 11400000, guid: 68ffc13f1b847dd408e66795a9d0c8f3, type: 2}
-  - {fileID: 11400000, guid: 6c3f00b5542e00b419bf0084c5b8b543, type: 2}
-  - {fileID: 11400000, guid: a4bdb00105f4371489deecacbca2b508, type: 2}
-  - {fileID: 11400000, guid: 5302850458d0f1e4cb53c9afaed7133a, type: 2}
-  - {fileID: 11400000, guid: 72a676fc88c86f1479ba51f926939806, type: 2}
-  - {fileID: 11400000, guid: ca216c5e2d0418447a79ffc7dcdc529d, type: 2}
-  - {fileID: 11400000, guid: 8289318b2aa55c541bf9e35c213debfc, type: 2}
-  - {fileID: 11400000, guid: 04468dd861b87cf4398a19018c2642e7, type: 2}
-  - {fileID: 11400000, guid: 397b868cc11e6f44e9ef45b7547f1845, type: 2}
-  - {fileID: 11400000, guid: 9124a4b7aa2ccc148a336580261528ad, type: 2}
-  - {fileID: 11400000, guid: f260a2519e5c8534d8d45320b165d5dc, type: 2}
-  - {fileID: 11400000, guid: 77f0808f38ba2734a96e198d7da6f8bd, type: 2}
-  - {fileID: 11400000, guid: 3b3313ca93bbdb248b6e94f68a9cb056, type: 2}
-  - {fileID: 11400000, guid: 0ac6a0250084a19409d15d08b992aea0, type: 2}
-  - {fileID: 11400000, guid: a40147bfb531ad24fafdfe7ee49cad76, type: 2}
-  - {fileID: 11400000, guid: 8733755d423018f4ea2d78977668a7cb, type: 2}
-  - {fileID: 11400000, guid: 20c64e3eba60d7f4e9f319dec87bc545, type: 2}
+  wordDictionary: {fileID: 390248573}
   logDebugEvents: 1
 --- !u!114 &1084949174
 MonoBehaviour:
@@ -3617,6 +3710,8 @@ Transform:
   - {fileID: 1084949168}
   - {fileID: 605809009}
   - {fileID: 1457634978}
+  - {fileID: 390248574}
+  - {fileID: 569780931}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2110709450

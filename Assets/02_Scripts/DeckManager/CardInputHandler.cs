@@ -67,7 +67,8 @@ public class CardInputHandler : MonoBehaviour
 
         for (var i = 0; i < cards.Count; i++)
         {
-            if (cards[i].CardName != typed)
+            // 사전이 아직 비어 있으면 슬롯이 null일 수 있다.
+            if (cards[i] == null || cards[i].CardName != typed)
                 continue;
 
             var matched = cards[i];
@@ -90,7 +91,7 @@ public class CardInputHandler : MonoBehaviour
 
         for (var i = 0; i < cards.Count; i++)
         {
-            if (InputManager.IsValidProgress(committed, composing, cards[i].CardName))
+            if (cards[i] != null && InputManager.IsValidProgress(committed, composing, cards[i].CardName))
                 return;
         }
 

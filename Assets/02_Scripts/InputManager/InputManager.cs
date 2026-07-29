@@ -134,12 +134,7 @@ public class InputManager : MonoBehaviour
     private static void ChangeHangul()
     {
         if (Keyboard.current.rightAltKey.wasPressedThisFrame){
-            if(Input.imeCompositionMode == IMECompositionMode.Auto){
                 Input.imeCompositionMode = IMECompositionMode.On;
-            } else
-            {
-                Input.imeCompositionMode = IMECompositionMode.Auto;
-            }
         }
     }
 

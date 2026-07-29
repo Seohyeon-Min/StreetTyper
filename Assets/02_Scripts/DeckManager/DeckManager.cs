@@ -37,6 +37,7 @@ public class DeckManager : MonoBehaviour
         // 게임플레이 배선은 디버그 로그 여부와 무관하게 항상 걸려 있어야 한다.
         wordChainManager.OnChainCompleted += HandleChainCompleted;
         timerManager.OnTimeExpired += HandleTimeExpired;
+        battleManager.OnBattleEnded += HandleBattleEnded;
 
         if (!logDebugEvents)
             return;
@@ -51,6 +52,7 @@ public class DeckManager : MonoBehaviour
     {
         wordChainManager.OnChainCompleted -= HandleChainCompleted;
         timerManager.OnTimeExpired -= HandleTimeExpired;
+        battleManager.OnBattleEnded -= HandleBattleEnded;
 
         if (!logDebugEvents)
             return;
@@ -98,9 +100,12 @@ public class DeckManager : MonoBehaviour
         }
 
         combatManager.ExecutePlayerAction(action, player, enemyManager.currentEnemy);
-        timerManager.AddTime(action.TimerChange);
         battleManager.OnPlayerActionResolved(BuildBubbleText(action));
         wordChainManager.ClearChain();
+
+        // 반드시 마지막에 반영한다 - 훅/어퍼컷처럼 시간을 깎는 조합이 남은 시간을 0으로 만들면
+        // 이 호출 안에서 곧바로 OnTimeExpired -> 턴 전환이 시작되기 때문이다.
+        timerManager.AddTime(action.TimerChange);
     }
 
     // 플레이어 턴의 입력 제한 시간이 다 됐다. 여기가 실제 턴의 끝 - 미완성 체인은 버리고
@@ -111,16 +116,27 @@ public class DeckManager : MonoBehaviour
         StartCoroutine(RunTurnTransition());
     }
 
+    // 승패가 갈린 순간. 결과 화면에서 다음 스테이지로 넘어가기 전까지는 타이머도 멈추고
+    // 입력도 받지 않아야 한다 - 안 그러면 적이 죽은 뒤에도 타이머가 0까지 흐르는 동안 타이핑이 먹힌다.
+    private void HandleBattleEnded()
+    {
+        timerManager.StopTimer();
+        inputManager.DisableInput();
+        inputManager.ClearInput();
+    }
+
     private IEnumerator RunTurnTransition()
     {
+        // 게임오버 여부와 무관하게 입력부터 잠근다 - 타이머가 다 됐는데 계속 타이핑되면 안 된다.
+        inputManager.DisableInput();
+        inputManager.ClearInput();
+
         if (battleManager.IsGameOver)
             yield break;
 
         if (logDebugEvents)
             Debug.Log("Timer expired - ending player turn");
 
-        inputManager.DisableInput();
-        inputManager.ClearInput();
         wordChainManager.ClearChain();
 
         // "턴이 바뀌었다"는 걸 플레이어가 인지할 시간을 준 뒤 적이 공격한다.

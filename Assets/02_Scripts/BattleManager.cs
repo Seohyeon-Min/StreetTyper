@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using TMPro;
 using UnityEngine.InputSystem;
@@ -48,6 +49,10 @@ public class BattleManager : MonoBehaviour
     public float actionBubbleDuration = 1.0f;
 
     private bool isGameOver = false;
+
+    // 승패가 갈린 순간 딱 한 번 발생한다. DeckManager가 받아서 입력과 타이머를 즉시 잠근다 -
+    // 안 그러면 적이 죽은 뒤에도 타이머가 계속 흐르고 그동안 타이핑이 먹힌다.
+    public event Action OnBattleEnded;
 
     void Start()
     {
@@ -153,7 +158,10 @@ public class BattleManager : MonoBehaviour
 
     public void ShowGameClear()
     {
+        bool wasOver = isGameOver;
         isGameOver = true;
+        if (!wasOver) OnBattleEnded?.Invoke();
+
         if (resultText != null)
         {
             resultText.text = "ALL STAGES CLEARED!";
@@ -272,7 +280,12 @@ public class BattleManager : MonoBehaviour
 
     void ShowResult(string message)
     {
+        // CheckGameState는 UpdateUI마다 불리므로 여기도 여러 번 들어온다 -
+        // 전환되는 순간에만 이벤트를 쏜다.
+        bool wasOver = isGameOver;
         isGameOver = true;
+        if (!wasOver) OnBattleEnded?.Invoke();
+
         if (resultText != null)
         {
             resultText.text = message;

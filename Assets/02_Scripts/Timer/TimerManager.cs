@@ -54,6 +54,11 @@ public class TimerManager : MonoBehaviour
         RemainingTime = Mathf.Max(0f, RemainingTime + amount);
         OnTimeChanged?.Invoke(RemainingTime);
         OnTimeAdjusted?.Invoke(amount);
+
+        // 훅/어퍼컷처럼 시간을 깎는 단어가 남은 시간을 0으로 만들 수 있다. 여기서 만료를
+        // 확인하지 않으면 타이머가 0에 멈춘 채 턴이 끝나지 않는다(입력도 계속 열려 있게 된다).
+        // GDD가 말하는 "타이머가 깎여 턴이 더 빨리 끝나는 리스크"가 바로 이 경로다.
+        CheckExpired();
     }
 
     public void ReduceTime(float amount)
@@ -68,17 +73,24 @@ public class TimerManager : MonoBehaviour
 
     private void Update()
     {
-        if (!_running || RemainingTime <= 0f)
+        if (!_running)
             return;
 
         RemainingTime = Mathf.Max(0f, RemainingTime - Time.deltaTime);
         OnTimeChanged?.Invoke(RemainingTime);
 
-        if (RemainingTime <= 0f && !_expiredFired)
-        {
-            _expiredFired = true;
-            _running = false;
-            OnTimeExpired?.Invoke();
-        }
+        CheckExpired();
+    }
+
+    // 자연 감소(Update)와 단어 효과(AddTime) 양쪽에서 부르는 단일 만료 판정.
+    // 한쪽에만 두면 다른 경로로 0이 됐을 때 턴이 끝나지 않는다.
+    private void CheckExpired()
+    {
+        if (_expiredFired || RemainingTime > 0f)
+            return;
+
+        _expiredFired = true;
+        _running = false;
+        OnTimeExpired?.Invoke();
     }
 }

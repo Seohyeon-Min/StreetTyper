@@ -20,57 +20,29 @@ public class BattleManager : MonoBehaviour
     public Slider playerHPBar;
     public Slider enemyHPBar;
 
-    [Header("HP Bar Fill Images (For Color Change)")]
+    [Header("HP Bar Fill Images")]
     public Image playerHPFill;
     public Image enemyHPFill;
 
     [Header("Defense UI References")]
-    public GameObject playerDefIcon; 
-    public GameObject enemyDefIcon; 
+    public GameObject playerDefIcon;
+    public GameObject enemyDefIcon;
     public TextMeshProUGUI playerDefText;
     public TextMeshProUGUI enemyDefText;
-
-    [Header("Speech Bubble Prefabs")]
-    public GameObject playerSpeechBubblePrefab;
-    public GameObject enemySpeechBubblePrefab;
-    public Transform canvasTransform;
-
-    private GameObject playerSpeechBubble;
-    private TextMeshProUGUI playerActionText;
-
-    private GameObject enemySpeechBubble;
-    private TextMeshProUGUI enemyIntentText;
 
     [Header("Game Result UI")]
     public TextMeshProUGUI resultText;
 
-    [Header("연출 시간")]
-    [Tooltip("공격 말풍선이 떠 있는 시간(초)")]
+    [Header("Duration")]
     public float actionBubbleDuration = 1.0f;
 
     private bool isGameOver = false;
 
-    // 승패가 갈린 순간 딱 한 번 발생한다. DeckManager가 받아서 입력과 타이머를 즉시 잠근다 -
-    // 안 그러면 적이 죽은 뒤에도 타이머가 계속 흐르고 그동안 타이핑이 먹힌다.
     public event Action OnBattleEnded;
 
     void Start()
     {
         if (resultText != null) resultText.gameObject.SetActive(false);
-
-        if (playerSpeechBubblePrefab != null && canvasTransform != null)
-        {
-            playerSpeechBubble = Instantiate(playerSpeechBubblePrefab, canvasTransform);
-            playerActionText = playerSpeechBubble.GetComponentInChildren<TextMeshProUGUI>();
-            playerSpeechBubble.SetActive(false);
-        }
-
-        if (enemySpeechBubblePrefab != null && canvasTransform != null)
-        {
-            enemySpeechBubble = Instantiate(enemySpeechBubblePrefab, canvasTransform);
-            enemyIntentText = enemySpeechBubble.GetComponentInChildren<TextMeshProUGUI>();
-            enemySpeechBubble.SetActive(false);
-        }
 
         if (enemyManager != null)
         {
@@ -99,40 +71,25 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        // 공격/방어는 이제 타이핑(체인 완성)이 담당한다 - OnPlayerActionResolved를 통해 들어온다.
-        // 적 턴 수동 실행만 디버그용으로 남긴다.
         if (Keyboard.current.digit3Key.wasPressedThisFrame)
         {
             ExecuteEnemyTurn();
         }
     }
 
-    IEnumerator ShowPlayerActionBubble(string message)
-    {
-        if (playerSpeechBubble != null && playerActionText != null)
-        {
-            playerActionText.text = message;
-            playerSpeechBubble.SetActive(true);
-
-            yield return new WaitForSeconds(actionBubbleDuration);
-
-            playerSpeechBubble.SetActive(false);
-        }
-    }
-
-    // 체인이 완성되어 CombatManager가 효과를 적용한 직후 호출된다. 타이머가 도는 동안 여러 번
-    // 호출될 수 있으므로 여기서는 턴을 끝내지 않는다 - 말풍선/UI 갱신만 한다.
-    // bubbleText: 스킬 이름이 아니라 방금 적용된 공격력/방어력 수치.
     public void OnPlayerActionResolved(string bubbleText)
     {
         if (isGameOver)
             return;
 
-        StartCoroutine(ShowPlayerActionBubble(bubbleText));
+        if (SpeechBubbleManager.Instance != null && player != null)
+        {
+            SpeechBubbleManager.Instance.ShowBubble(bubbleText, player.transform.position, true, actionBubbleDuration);
+        }
+
         UpdateUI();
     }
 
-    // 타이머가 0이 되어 플레이어 턴이 끝났을 때 호출된다(DeckManager.HandleTimeExpired 경유).
     public void ExecuteEnemyTurn()
     {
         if (isGameOver)
@@ -141,18 +98,22 @@ public class BattleManager : MonoBehaviour
         if (player != null && enemyManager != null && enemyManager.currentEnemy != null)
         {
             enemyManager.ExecuteEnemyTurn(player);
+
+            if (SpeechBubbleManager.Instance != null)
+            {
+                SpeechBubbleManager.Instance.ShowBubble(enemyManager.GetIntentString(), enemyManager.currentEnemy.transform.position, false, actionBubbleDuration);
+            }
+
             UpdateUI();
         }
     }
 
-    // DeckManager가 타이머 만료 처리 도중(적 턴 전후) 전투가 이미 끝났는지 확인할 때 쓴다.
     public bool IsGameOver => isGameOver;
 
     public void ResetBattle()
     {
         isGameOver = false;
         if (resultText != null) resultText.gameObject.SetActive(false);
-        if (playerSpeechBubble != null) playerSpeechBubble.SetActive(false);
         UpdateUI();
     }
 
@@ -171,12 +132,10 @@ public class BattleManager : MonoBehaviour
         if (playerHPText != null) playerHPText.gameObject.SetActive(false);
         if (playerHPBar != null) playerHPBar.gameObject.SetActive(false);
         if (playerDefIcon != null) playerDefIcon.SetActive(false);
-        if (playerSpeechBubble != null) playerSpeechBubble.SetActive(false);
     }
 
     void UpdateUI()
     {
-        // Update Player UI
         if (player != null && player.currentHP > 0)
         {
             if (playerHPText != null) playerHPText.gameObject.SetActive(true);
@@ -189,10 +148,9 @@ public class BattleManager : MonoBehaviour
 
             if (playerHPText != null) playerHPText.text = player.currentHP + " / " + player.maxHP;
 
-            // Player Defense Logic
             if (player.defense > 0)
             {
-                if (playerDefIcon != null) playerDefIcon.SetActive(true); 
+                if (playerDefIcon != null) playerDefIcon.SetActive(true);
                 if (playerDefText != null)
                 {
                     playerDefText.gameObject.SetActive(true);
@@ -202,7 +160,7 @@ public class BattleManager : MonoBehaviour
             }
             else
             {
-                if (playerDefIcon != null) playerDefIcon.SetActive(false); 
+                if (playerDefIcon != null) playerDefIcon.SetActive(false);
                 if (playerDefText != null) playerDefText.gameObject.SetActive(false);
                 if (playerHPFill != null) playerHPFill.color = Color.green;
             }
@@ -212,10 +170,8 @@ public class BattleManager : MonoBehaviour
             if (playerHPText != null) playerHPText.gameObject.SetActive(false);
             if (playerHPBar != null) playerHPBar.gameObject.SetActive(false);
             if (playerDefIcon != null) playerDefIcon.SetActive(false);
-            if (playerSpeechBubble != null) playerSpeechBubble.SetActive(false);
         }
 
-        // Update Enemy UI
         if (enemyManager != null && enemyManager.currentEnemy != null && enemyManager.currentEnemy.currentHP > 0)
         {
             EnemyBase enemy = enemyManager.currentEnemy;
@@ -228,29 +184,21 @@ public class BattleManager : MonoBehaviour
                 enemyHPBar.value = enemy.currentHP;
             }
 
-            if (enemySpeechBubble != null) enemySpeechBubble.SetActive(true);
-            if (enemyIntentText != null)
-            {
-                enemyIntentText.gameObject.SetActive(true);
-                enemyIntentText.text = enemyManager.GetIntentString();
-            }
-
             if (enemyHPText != null) enemyHPText.text = enemy.currentHP + " / " + enemy.maxHP;
 
-            // Enemy Defense Logic
             if (enemy.defense > 0)
             {
-                if (enemyDefIcon != null) enemyDefIcon.SetActive(true); 
+                if (enemyDefIcon != null) enemyDefIcon.SetActive(true);
                 if (enemyDefText != null)
                 {
                     enemyDefText.gameObject.SetActive(true);
-                    enemyDefText.text = enemy.defense.ToString(); 
+                    enemyDefText.text = enemy.defense.ToString();
                 }
                 if (enemyHPFill != null) enemyHPFill.color = Color.gray;
             }
             else
             {
-                if (enemyDefIcon != null) enemyDefIcon.SetActive(false); 
+                if (enemyDefIcon != null) enemyDefIcon.SetActive(false);
                 if (enemyDefText != null) enemyDefText.gameObject.SetActive(false);
                 if (enemyHPFill != null) enemyHPFill.color = Color.red;
             }
@@ -260,7 +208,6 @@ public class BattleManager : MonoBehaviour
             if (enemyHPText != null) enemyHPText.gameObject.SetActive(false);
             if (enemyHPBar != null) enemyHPBar.gameObject.SetActive(false);
             if (enemyDefIcon != null) enemyDefIcon.SetActive(false);
-            if (enemySpeechBubble != null) enemySpeechBubble.SetActive(false);
         }
 
         CheckGameState();
@@ -280,8 +227,6 @@ public class BattleManager : MonoBehaviour
 
     void ShowResult(string message)
     {
-        // CheckGameState는 UpdateUI마다 불리므로 여기도 여러 번 들어온다 -
-        // 전환되는 순간에만 이벤트를 쏜다.
         bool wasOver = isGameOver;
         isGameOver = true;
         if (!wasOver) OnBattleEnded?.Invoke();

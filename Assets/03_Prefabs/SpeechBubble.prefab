@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: New Text
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 53b522988c0e6f94d8a0a2d8ed5d613c, type: 2}
+  m_sharedMaterial: {fileID: -5515520142482790835, guid: 53b522988c0e6f94d8a0a2d8ed5d613c, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -170,9 +170,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 3573325760153796576}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0}
-  m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -12, y: -3}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 88, y: -3}
   m_SizeDelta: {x: 10, y: 14}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5848633084995792024
@@ -270,9 +270,9 @@ RectTransform:
   - {fileID: 7135267159395135607}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 400, y: 65}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 1, y: 0}
 --- !u!222 &3761584732697140561
@@ -367,5 +367,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpeechBubble
   bubbleText: {fileID: 2668929670146781178}
   tailTransform: {fileID: 7621623833116908542}
-  playerTailPos: {x: -50, y: -3}
-  enemyTailPos: {x: -250, y: -3}
+  playerTailPos: {x: 10, y: -3}
+  enemyTailPos: {x: -10, y: -3}

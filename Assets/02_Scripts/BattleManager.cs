@@ -8,6 +8,7 @@ public class BattleManager : MonoBehaviour
     [Header("Managers")]
     public EnemyManager enemyManager;
     public StageManager stageManager;
+    public EventManager eventManager;
 
     [Header("Player Reference")]
     public CharacterStats player;
@@ -23,9 +24,18 @@ public class BattleManager : MonoBehaviour
     public float actionBubbleDuration = 1.0f;
 
     private bool isGameOver = false;
+    private bool isEventTriggered = false;
 
     private GameObject enemyIntentBubbleObj;
     private SpeechBubble enemyIntentBubble;
+
+    // 엄마용 전투 전용 변수
+    private int mdTurnCount = 0;
+    private string mdIntentString = "어디 한번 실력을 보여보거라!";
+    private int savedMDDamage = 0;
+
+    //   추가: 대기열 상태 확인용 변수
+    private bool isWaitingForDragonEnd = false;
 
     public event Action OnBattleEnded;
 
@@ -56,19 +66,16 @@ public class BattleManager : MonoBehaviour
         {
             if (Keyboard.current.digit1Key.wasPressedThisFrame)
             {
-                if (player == null || player.currentHP <= 0)
-                {
-                    stageManager.RestartStage();
-                }
-                else
-                {
-                    stageManager.NextStage();
-                }
+                if (player == null || player.currentHP <= 0) stageManager.RestartStage();
+                else stageManager.NextStage();
             }
             return;
         }
 
-        // 기존 숫자키 배틀 디버그
+        // 이벤트 중이거나 엄마용 대기시간 중일 때는 키보드 입력 차단
+        if (eventManager != null && eventManager.IsEventActive) return;
+        if (isWaitingForDragonEnd) return; //   추가됨
+
         if (Keyboard.current.digit1Key.wasPressedThisFrame)
         {
             if (enemyManager != null && enemyManager.currentEnemy != null)
@@ -94,23 +101,6 @@ public class BattleManager : MonoBehaviour
         {
             ExecuteEnemyTurn();
         }
-
-        // ★ 실제 캐릭터 위치 기반 말풍선 오프셋 디버그 (F1, F2) ★
-        if (Keyboard.current.f1Key.wasPressedThisFrame)
-        {
-            if (player != null && SpeechBubbleManager.Instance != null)
-            {
-                SpeechBubbleManager.Instance.ShowBubble("Player Pos Test!", player.transform.position, true, 2.0f);
-            }
-        }
-
-        if (Keyboard.current.f2Key.wasPressedThisFrame)
-        {
-            if (enemyManager != null && enemyManager.currentEnemy != null && SpeechBubbleManager.Instance != null)
-            {
-                SpeechBubbleManager.Instance.ShowBubble("Enemy Pos Test!", enemyManager.currentEnemy.transform.position, false, 2.0f);
-            }
-        }
     }
 
     public void OnPlayerActionResolved(string bubbleText)
@@ -131,8 +121,49 @@ public class BattleManager : MonoBehaviour
 
         if (player != null && enemyManager != null && enemyManager.currentEnemy != null)
         {
-            enemyManager.ExecuteEnemyTurn(player);
+            if (enemyManager.currentEnemy.isMotherDragon)
+            {
+                mdTurnCount++;
+                if (mdTurnCount == 1) mdIntentString = "제법이구나!";
+                else if (mdTurnCount == 2) mdIntentString = "조금 더 힘을 끌어내 보거라!";
+                else if (mdTurnCount >= 3)
+                {
+                    mdIntentString = "훌륭하다. 여기까지 하마!";
+
+                    //   수정됨: 즉시 죽이지 않고 입력 차단 후 1.5초 대기 함수 실행
+                    isWaitingForDragonEnd = true;
+                    Invoke("FinishMotherDragonBattle", 1.5f);
+                }
+
+                if (SpeechBubbleManager.Instance != null)
+                {
+                    SpeechBubbleManager.Instance.ShowBubble(mdIntentString, enemyManager.currentEnemy.transform.position, false, actionBubbleDuration);
+                }
+            }
+            else
+            {
+                enemyManager.ExecuteEnemyTurn(player);
+
+                if (SpeechBubbleManager.Instance != null)
+                {
+                    SpeechBubbleManager.Instance.ShowBubble(enemyManager.GetIntentString(), enemyManager.currentEnemy.transform.position, false, actionBubbleDuration);
+                }
+            }
+
             UpdateUI();
+        }
+    }
+
+    //   추가된 함수: 1.5초 뒤에 실행되어 전투를 마무리합니다.
+    private void FinishMotherDragonBattle()
+    {
+        if (enemyManager != null && enemyManager.currentEnemy != null)
+        {
+            savedMDDamage = enemyManager.currentEnemy.maxHP - enemyManager.currentEnemy.currentHP;
+            enemyManager.currentEnemy.currentHP = 0;
+            isWaitingForDragonEnd = false;
+
+            UpdateUI(); // 이 순간 CheckGameState()가 발동하면서 이벤트 창으로 넘어감
         }
     }
 
@@ -141,6 +172,12 @@ public class BattleManager : MonoBehaviour
     public void ResetBattle()
     {
         isGameOver = false;
+        isEventTriggered = false;
+        mdTurnCount = 0;
+        mdIntentString = "어디 한번 실력을 보여보거라!";
+        savedMDDamage = 0;
+        isWaitingForDragonEnd = false; //   추가됨
+
         if (resultText != null) resultText.gameObject.SetActive(false);
         UpdateUI();
     }
@@ -161,7 +198,7 @@ public class BattleManager : MonoBehaviour
         if (enemyIntentBubbleObj != null) enemyIntentBubbleObj.SetActive(false);
     }
 
-    void UpdateUI()
+    public void UpdateUI()
     {
         if (player != null && player.currentHP > 0)
         {
@@ -183,7 +220,9 @@ public class BattleManager : MonoBehaviour
             if (enemyIntentBubbleObj != null && enemyIntentBubble != null)
             {
                 enemyIntentBubbleObj.SetActive(true);
-                enemyIntentBubble.Setup(enemyManager.GetIntentString(), false);
+
+                string currentIntent = enemy.isMotherDragon ? mdIntentString : enemyManager.GetIntentString();
+                enemyIntentBubble.Setup(currentIntent, false);
 
                 if (SpeechBubbleManager.Instance != null)
                 {
@@ -205,15 +244,38 @@ public class BattleManager : MonoBehaviour
     {
         if (player == null || player.currentHP <= 0)
         {
-            ShowResult("DEFEAT...\n\nPress '1' to Restart");
+            if (!isGameOver) ShowResult("DEFEAT...\n\nPress '1' to Restart");
         }
         else if (enemyManager != null && enemyManager.currentEnemy != null && enemyManager.currentEnemy.currentHP <= 0)
         {
-            ShowResult("VICTORY!\n\nPress '1' for Next Stage");
+            if (!isEventTriggered)
+            {
+                isEventTriggered = true;
+
+                bool isMD = enemyManager.currentEnemy.isMotherDragon;
+                int healAmount = 0;
+
+                if (isMD)
+                {
+                    if (savedMDDamage == 0) savedMDDamage = enemyManager.currentEnemy.maxHP;
+                    healAmount = savedMDDamage;
+                }
+
+                enemyManager.currentEnemy.gameObject.SetActive(false);
+
+                if (eventManager != null)
+                {
+                    eventManager.StartEvent(isMD, healAmount);
+                }
+                else
+                {
+                    ShowResult("VICTORY!\n\nPress '1' for Next Stage");
+                }
+            }
         }
     }
 
-    void ShowResult(string message)
+    public void ShowResult(string message)
     {
         bool wasOver = isGameOver;
         isGameOver = true;

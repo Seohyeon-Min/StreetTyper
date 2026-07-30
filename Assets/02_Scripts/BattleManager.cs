@@ -2,80 +2,59 @@ using System;
 using UnityEngine;
 using TMPro;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
-using System.Collections;
 
 public class BattleManager : MonoBehaviour
 {
     [Header("Managers")]
     public EnemyManager enemyManager;
     public StageManager stageManager;
+    public EventManager eventManager;
 
     [Header("Player Reference")]
     public CharacterStats player;
 
-    [Header("HP UI References")]
-    public TextMeshProUGUI playerHPText;
-    public TextMeshProUGUI enemyHPText;
-    public Slider playerHPBar;
-    public Slider enemyHPBar;
-
-    [Header("HP Bar Fill Images (For Color Change)")]
-    public Image playerHPFill;
-    public Image enemyHPFill;
-
-    [Header("Defense UI References")]
-    public GameObject playerDefIcon; 
-    public GameObject enemyDefIcon; 
-    public TextMeshProUGUI playerDefText;
-    public TextMeshProUGUI enemyDefText;
-
-    [Header("Speech Bubble Prefabs")]
-    public GameObject playerSpeechBubblePrefab;
-    public GameObject enemySpeechBubblePrefab;
-    public Transform canvasTransform;
-
-    private GameObject playerSpeechBubble;
-    private TextMeshProUGUI playerActionText;
-
-    private GameObject enemySpeechBubble;
-    private TextMeshProUGUI enemyIntentText;
+    [Header("Health Bar UI")]
+    public HealthBarUI playerHealthBar;
+    public HealthBarUI enemyHealthBar;
 
     [Header("Game Result UI")]
     public TextMeshProUGUI resultText;
 
-    [Header("연출 시간")]
-    [Tooltip("공격 말풍선이 떠 있는 시간(초)")]
+    [Header("Duration")]
     public float actionBubbleDuration = 1.0f;
 
     private bool isGameOver = false;
+    private bool isEventTriggered = false;
 
-    // 승패가 갈린 순간 딱 한 번 발생한다. DeckManager가 받아서 입력과 타이머를 즉시 잠근다 -
-    // 안 그러면 적이 죽은 뒤에도 타이머가 계속 흐르고 그동안 타이핑이 먹힌다.
+    private GameObject enemyIntentBubbleObj;
+    private SpeechBubble enemyIntentBubble;
+
+    // 엄마용 전투 전용 변수
+    private int mdTurnCount = 0;
+    private string mdIntentString = "어디 한번 실력을 보여보거라!";
+    private int savedMDDamage = 0;
+
+    //   추가: 대기열 상태 확인용 변수
+    private bool isWaitingForDragonEnd = false;
+
     public event Action OnBattleEnded;
 
     void Start()
     {
         if (resultText != null) resultText.gameObject.SetActive(false);
 
-        if (playerSpeechBubblePrefab != null && canvasTransform != null)
+        if (SpeechBubbleManager.Instance != null)
         {
-            playerSpeechBubble = Instantiate(playerSpeechBubblePrefab, canvasTransform);
-            playerActionText = playerSpeechBubble.GetComponentInChildren<TextMeshProUGUI>();
-            playerSpeechBubble.SetActive(false);
-        }
-
-        if (enemySpeechBubblePrefab != null && canvasTransform != null)
-        {
-            enemySpeechBubble = Instantiate(enemySpeechBubblePrefab, canvasTransform);
-            enemyIntentText = enemySpeechBubble.GetComponentInChildren<TextMeshProUGUI>();
-            enemySpeechBubble.SetActive(false);
+            enemyIntentBubbleObj = Instantiate(SpeechBubbleManager.Instance.speechBubblePrefab, SpeechBubbleManager.Instance.canvasTransform);
+            enemyIntentBubble = enemyIntentBubbleObj.GetComponent<SpeechBubble>();
+            enemyIntentBubbleObj.SetActive(false);
         }
 
         if (enemyManager != null)
         {
             enemyManager.GenerateNextAction();
         }
+
         UpdateUI();
     }
 
@@ -92,72 +71,119 @@ public class BattleManager : MonoBehaviour
         {
             if (Keyboard.current.digit1Key.wasPressedThisFrame)
             {
-                if (player == null || player.currentHP <= 0)
-                {
-                    stageManager.RestartStage();
-                }
-                else
-                {
-                    stageManager.NextStage();
-                }
+                if (player == null || player.currentHP <= 0) stageManager.RestartStage();
+                else stageManager.NextStage();
             }
             return;
         }
 
-        // 공격/방어는 이제 타이핑(체인 완성)이 담당한다 - OnPlayerActionResolved를 통해 들어온다.
-        // 적 턴 수동 실행만 디버그용으로 남긴다.
+        // 이벤트 중이거나 엄마용 대기시간 중일 때는 키보드 입력 차단
+        if (eventManager != null && eventManager.IsEventActive) return;
+        if (isWaitingForDragonEnd) return; //   추가됨
+
+        if (Keyboard.current.digit1Key.wasPressedThisFrame)
+        {
+            if (enemyManager != null && enemyManager.currentEnemy != null)
+            {
+                enemyManager.currentEnemy.currentHP -= 10;
+                if (enemyManager.currentEnemy.currentHP < 0)
+                    enemyManager.currentEnemy.currentHP = 0;
+
+                OnPlayerActionResolved("Attack 10!");
+            }
+        }
+
+        if (Keyboard.current.digit2Key.wasPressedThisFrame)
+        {
+            if (player != null)
+            {
+                player.defense += 10;
+                OnPlayerActionResolved("Defense 10!");
+            }
+        }
+
         if (Keyboard.current.digit3Key.wasPressedThisFrame)
         {
             ExecuteEnemyTurn();
         }
     }
 
-    IEnumerator ShowPlayerActionBubble(string message)
-    {
-        if (playerSpeechBubble != null && playerActionText != null)
-        {
-            playerActionText.text = message;
-            playerSpeechBubble.SetActive(true);
-
-            yield return new WaitForSeconds(actionBubbleDuration);
-
-            playerSpeechBubble.SetActive(false);
-        }
-    }
-
-    // 체인이 완성되어 CombatManager가 효과를 적용한 직후 호출된다. 타이머가 도는 동안 여러 번
-    // 호출될 수 있으므로 여기서는 턴을 끝내지 않는다 - 말풍선/UI 갱신만 한다.
-    // bubbleText: 스킬 이름이 아니라 방금 적용된 공격력/방어력 수치.
     public void OnPlayerActionResolved(string bubbleText)
     {
-        if (isGameOver)
-            return;
+        if (isGameOver) return;
 
-        StartCoroutine(ShowPlayerActionBubble(bubbleText));
+        if (SpeechBubbleManager.Instance != null && player != null)
+        {
+            SpeechBubbleManager.Instance.ShowBubble(bubbleText, player.transform.position, true, actionBubbleDuration);
+        }
+
         UpdateUI();
     }
 
-    // 타이머가 0이 되어 플레이어 턴이 끝났을 때 호출된다(DeckManager.HandleTimeExpired 경유).
     public void ExecuteEnemyTurn()
     {
-        if (isGameOver)
-            return;
+        if (isGameOver) return;
 
         if (player != null && enemyManager != null && enemyManager.currentEnemy != null)
         {
-            enemyManager.ExecuteEnemyTurn(player);
+            if (enemyManager.currentEnemy.isMotherDragon)
+            {
+                mdTurnCount++;
+                if (mdTurnCount == 1) mdIntentString = "제법이구나!";
+                else if (mdTurnCount == 2) mdIntentString = "조금 더 힘을 끌어내 보거라!";
+                else if (mdTurnCount >= 3)
+                {
+                    mdIntentString = "훌륭하다. 여기까지 하마!";
+
+                    //   수정됨: 즉시 죽이지 않고 입력 차단 후 1.5초 대기 함수 실행
+                    isWaitingForDragonEnd = true;
+                    Invoke("FinishMotherDragonBattle", 1.5f);
+                }
+
+                if (SpeechBubbleManager.Instance != null)
+                {
+                    SpeechBubbleManager.Instance.ShowBubble(mdIntentString, enemyManager.currentEnemy.transform.position, false, actionBubbleDuration);
+                }
+            }
+            else
+            {
+                enemyManager.ExecuteEnemyTurn(player);
+
+                if (SpeechBubbleManager.Instance != null)
+                {
+                    SpeechBubbleManager.Instance.ShowBubble(enemyManager.GetIntentString(), enemyManager.currentEnemy.transform.position, false, actionBubbleDuration);
+                }
+            }
+
             UpdateUI();
         }
     }
 
-    // DeckManager가 타이머 만료 처리 도중(적 턴 전후) 전투가 이미 끝났는지 확인할 때 쓴다.
+    //   추가된 함수: 1.5초 뒤에 실행되어 전투를 마무리합니다.
+    private void FinishMotherDragonBattle()
+    {
+        if (enemyManager != null && enemyManager.currentEnemy != null)
+        {
+            savedMDDamage = enemyManager.currentEnemy.maxHP - enemyManager.currentEnemy.currentHP;
+            enemyManager.currentEnemy.currentHP = 0;
+            isWaitingForDragonEnd = false;
+
+            UpdateUI(); // 이 순간 CheckGameState()가 발동하면서 이벤트 창으로 넘어감
+        }
+    }
+
     public bool IsGameOver => isGameOver;
 
     public void ResetBattle()
     {
         isGameOver = false;
+        isEventTriggered = false;
+        mdTurnCount = 0;
+        mdIntentString = "어디 한번 실력을 보여보거라!";
+        savedMDDamage = 0;
+        isWaitingForDragonEnd = false; //   추가됨
+
         if (resultText != null) resultText.gameObject.SetActive(false);
-        if (playerSpeechBubble != null) playerSpeechBubble.SetActive(false);
         UpdateUI();
     }
 
@@ -173,99 +199,47 @@ public class BattleManager : MonoBehaviour
             resultText.gameObject.SetActive(true);
         }
 
-        if (playerHPText != null) playerHPText.gameObject.SetActive(false);
-        if (playerHPBar != null) playerHPBar.gameObject.SetActive(false);
-        if (playerDefIcon != null) playerDefIcon.SetActive(false);
-        if (playerSpeechBubble != null) playerSpeechBubble.SetActive(false);
+        if (playerHealthBar != null) playerHealthBar.Hide();
+        if (enemyIntentBubbleObj != null) enemyIntentBubbleObj.SetActive(false);
     }
 
-    void UpdateUI()
+    public void UpdateUI()
     {
-        // Update Player UI
         if (player != null && player.currentHP > 0)
         {
-            if (playerHPText != null) playerHPText.gameObject.SetActive(true);
-            if (playerHPBar != null)
-            {
-                playerHPBar.gameObject.SetActive(true);
-                playerHPBar.maxValue = player.maxHP;
-                playerHPBar.value = player.currentHP;
-            }
-
-            if (playerHPText != null) playerHPText.text = player.currentHP + " / " + player.maxHP;
-
-            // Player Defense Logic
-            if (player.defense > 0)
-            {
-                if (playerDefIcon != null) playerDefIcon.SetActive(true); 
-                if (playerDefText != null)
-                {
-                    playerDefText.gameObject.SetActive(true);
-                    playerDefText.text = player.defense.ToString();
-                }
-                if (playerHPFill != null) playerHPFill.color = Color.gray;
-            }
-            else
-            {
-                if (playerDefIcon != null) playerDefIcon.SetActive(false); 
-                if (playerDefText != null) playerDefText.gameObject.SetActive(false);
-                if (playerHPFill != null) playerHPFill.color = Color.green;
-            }
+            if (playerHealthBar != null)
+                playerHealthBar.UpdateUI(player.currentHP, player.maxHP, player.defense);
         }
         else
         {
-            if (playerHPText != null) playerHPText.gameObject.SetActive(false);
-            if (playerHPBar != null) playerHPBar.gameObject.SetActive(false);
-            if (playerDefIcon != null) playerDefIcon.SetActive(false);
-            if (playerSpeechBubble != null) playerSpeechBubble.SetActive(false);
+            if (playerHealthBar != null) playerHealthBar.Hide();
         }
 
-        // Update Enemy UI
         if (enemyManager != null && enemyManager.currentEnemy != null && enemyManager.currentEnemy.currentHP > 0)
         {
             EnemyBase enemy = enemyManager.currentEnemy;
 
-            if (enemyHPText != null) enemyHPText.gameObject.SetActive(true);
-            if (enemyHPBar != null)
-            {
-                enemyHPBar.gameObject.SetActive(true);
-                enemyHPBar.maxValue = enemy.maxHP;
-                enemyHPBar.value = enemy.currentHP;
-            }
+            if (enemyHealthBar != null)
+                enemyHealthBar.UpdateUI(enemy.currentHP, enemy.maxHP, enemy.defense);
 
-            if (enemySpeechBubble != null) enemySpeechBubble.SetActive(true);
-            if (enemyIntentText != null)
+            if (enemyIntentBubbleObj != null && enemyIntentBubble != null)
             {
-                enemyIntentText.gameObject.SetActive(true);
-                enemyIntentText.text = enemyManager.GetIntentString();
-            }
+                enemyIntentBubbleObj.SetActive(true);
 
-            if (enemyHPText != null) enemyHPText.text = enemy.currentHP + " / " + enemy.maxHP;
+                string currentIntent = enemy.isMotherDragon ? mdIntentString : enemyManager.GetIntentString();
+                enemyIntentBubble.Setup(currentIntent, false);
 
-            // Enemy Defense Logic
-            if (enemy.defense > 0)
-            {
-                if (enemyDefIcon != null) enemyDefIcon.SetActive(true); 
-                if (enemyDefText != null)
+                if (SpeechBubbleManager.Instance != null)
                 {
-                    enemyDefText.gameObject.SetActive(true);
-                    enemyDefText.text = enemy.defense.ToString(); 
+                    enemyIntentBubbleObj.GetComponent<RectTransform>().position =
+                        SpeechBubbleManager.Instance.GetBubbleScreenPosition(enemy.transform.position, false);
                 }
-                if (enemyHPFill != null) enemyHPFill.color = Color.gray;
-            }
-            else
-            {
-                if (enemyDefIcon != null) enemyDefIcon.SetActive(false); 
-                if (enemyDefText != null) enemyDefText.gameObject.SetActive(false);
-                if (enemyHPFill != null) enemyHPFill.color = Color.red;
             }
         }
         else
         {
-            if (enemyHPText != null) enemyHPText.gameObject.SetActive(false);
-            if (enemyHPBar != null) enemyHPBar.gameObject.SetActive(false);
-            if (enemyDefIcon != null) enemyDefIcon.SetActive(false);
-            if (enemySpeechBubble != null) enemySpeechBubble.SetActive(false);
+            if (enemyHealthBar != null) enemyHealthBar.Hide();
+            if (enemyIntentBubbleObj != null) enemyIntentBubbleObj.SetActive(false);
         }
 
         CheckGameState();
@@ -275,18 +249,39 @@ public class BattleManager : MonoBehaviour
     {
         if (player == null || player.currentHP <= 0)
         {
-            ShowResult("DEFEAT...\n\nPress '1' to Restart");
+            if (!isGameOver) ShowResult("DEFEAT...\n\nPress '1' to Restart");
         }
         else if (enemyManager != null && enemyManager.currentEnemy != null && enemyManager.currentEnemy.currentHP <= 0)
         {
-            ShowResult("VICTORY!\n\nPress '1' for Next Stage");
+            if (!isEventTriggered)
+            {
+                isEventTriggered = true;
+
+                bool isMD = enemyManager.currentEnemy.isMotherDragon;
+                int healAmount = 0;
+
+                if (isMD)
+                {
+                    if (savedMDDamage == 0) savedMDDamage = enemyManager.currentEnemy.maxHP;
+                    healAmount = savedMDDamage;
+                }
+
+                enemyManager.currentEnemy.gameObject.SetActive(false);
+
+                if (eventManager != null)
+                {
+                    eventManager.StartEvent(isMD, healAmount);
+                }
+                else
+                {
+                    ShowResult("VICTORY!\n\nPress '1' for Next Stage");
+                }
+            }
         }
     }
 
-    void ShowResult(string message)
+    public void ShowResult(string message)
     {
-        // CheckGameState는 UpdateUI마다 불리므로 여기도 여러 번 들어온다 -
-        // 전환되는 순간에만 이벤트를 쏜다.
         bool wasOver = isGameOver;
         isGameOver = true;
         if (!wasOver) OnBattleEnded?.Invoke();

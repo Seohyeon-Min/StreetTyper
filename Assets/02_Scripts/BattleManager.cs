@@ -83,6 +83,11 @@ public class BattleManager : MonoBehaviour
     {
         if (Keyboard.current == null) return;
 
+        // 일시정지 중에는 디버그 키가 먹히면 안 된다 - 메뉴 뒤에서 스테이지가 넘어가 버린다.
+        // PauseManager를 참조하지 않고 timeScale을 보는 이유: BattleManager는 프리팹이고
+        // PauseManager는 씬 오브젝트라, 참조로 엮으면 씬 인스턴스 오버라이드가 하나 더 생긴다.
+        if (Mathf.Approximately(Time.timeScale, 0f)) return;
+
         if (isGameOver)
         {
             if (Keyboard.current.digit1Key.wasPressedThisFrame)

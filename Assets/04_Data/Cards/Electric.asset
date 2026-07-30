@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3d7aa169b8e8744b998338c5fb05c1b, type: 3}
   m_Name: Electric
   m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
-  cardName: "\uC77C\uB809\uD2B8\uB9AD"
+  cardName: "\uC36C\uB354"
   icon: {fileID: 0}
   description: 
   effectType: 0

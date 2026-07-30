@@ -28,7 +28,9 @@ public class CardSlotManager : MonoBehaviour
 
     public void ConsumeSlot(int index)
     {
-        FillSlot(index);
+        // 방금 타이핑으로 쓴 카드가 같은 자리에 곧바로 다시 올라오지 않게 한다.
+        // 슬롯 간 중복(다른 칸에 같은 단어)은 의도된 동작이라 그대로 둔다.
+        FillSlot(index, excludeCurrent: true);
     }
 
     /// <summary>차 있는 슬롯까지 전부 새로 뽑는다. 스테이지가 바뀔 때처럼 손패를 통째로
@@ -45,13 +47,21 @@ public class CardSlotManager : MonoBehaviour
             return;
         }
 
+        // 손패를 통째로 가는 경우엔 제외 없이 완전 랜덤으로 뽑는다.
         for (var i = 0; i < _currentCards.Length; i++)
-            FillSlot(i);
+            FillSlot(i, excludeCurrent: false);
     }
 
-    private void FillSlot(int index)
+    private void FillSlot(int index, bool excludeCurrent)
     {
-        var card = wordDictionary != null ? wordDictionary.GetRandomWord() : null;
+        CardBase card = null;
+        if (wordDictionary != null)
+        {
+            // 제외 대상은 슬롯을 덮어쓰기 전에 읽어야 한다.
+            card = excludeCurrent
+                ? wordDictionary.GetRandomWord(_currentCards[index])
+                : wordDictionary.GetRandomWord();
+        }
 
         // 사전이 아직 비어 있다면 빈 슬롯을 그대로 두고 이벤트도 쏘지 않는다.
         if (card == null && _currentCards[index] == null)

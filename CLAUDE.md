@@ -33,10 +33,14 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - `Assets/00_Scenes/SampleScene.unity` — **실질적으로 유일한 씬**이자 빌드 설정에 등록된 유일한 씬. 루트: `00_BOOT`, `01_CAMERA`, `02_SYSTEM`, `03_WORLD`, `04_UI`, `05_DEBUG`, `EventSystem`.
   - `02_SYSTEM`: `InputManager`, `Deck Manager`, `StageManager`, `BattleManager`, `WordDictionary`, `WordUnlockManager` — **여섯 개 전부 프리팹 인스턴스**다(아래 `03_Prefabs/Managers/` 참조).
   - `03_WORLD`: `player`(자식 `PlayerVisual`/`PlayerBlink`가 눈 깜빡임 담당), `enemySpawnPoint`
-  - `04_UI`: `Card Canvas`(손패·입력창·체인 텍스트), `Field Canvas`(HP/방어도/의도/타이머/결과). 둘 다 Screen Space Overlay이고 **Canvas Scaler 설정이 같아야 한다** — Scale With Screen Size / 1920×1080 / Match Width Or Height 0.5. 예전엔 `Field Canvas`만 Constant Pixel Size라 해상도가 바뀌면 HP·타이머 UI만 어긋났다. 새 캔버스를 만들면 이 설정을 복사할 것.
-    - 입력창(`Card Canvas > InputField (TMP)`)은 이름만 남은 **TMP 라벨**이다. `TMP_InputField`가 아니며 클릭 대상이 아니다(이유는 아래 `InputFieldDisplay` 참조).
+  - `04_UI`: `Card Canvas`(`InputFieldDisplay`=입력창 · `Hand`=손패 · `WordChainText (TMP)` · `Timer Bar`), `Field Canvas`(`playerHPBar`/`enemyHPBar`+HP 텍스트 · `PlayerDefIcon`/`EnemyDefIcon` · `Result Text`). 적 의도는 씬 오브젝트가 아니라 **런타임에 생성되는 `EnemySpeechBubble`**에 뜬다(`BattleManager`가 `GetComponentInChildren`으로 텍스트를 잡는다).
+    - 둘 다 Screen Space Overlay이고 **Canvas Scaler 설정이 같아야 한다** — Scale With Screen Size / 1920×1080 / Match Width Or Height 0.5. 예전엔 `Field Canvas`만 Constant Pixel Size라 해상도가 바뀌면 HP UI만 어긋났다. 새 캔버스를 만들면 이 설정을 복사할 것.
+    - 입력창 오브젝트는 `Card Canvas > InputFieldDisplay`(자식 `Text Area > Text`)다. 이름과 달리 **`TMP_InputField`가 아니라 TMP 라벨**이며 클릭 대상이 아니다(이유는 아래 `InputFieldDisplay` 참조). `Text Area` 래퍼와 그 `RectMask2D`는 예전 입력 필드의 잔재지만 클리핑 용도로 남겨두었다.
+    - HP 슬라이더 내부(`Background`/`Fill Area`/`Fill`)의 RectTransform 값은 **`Slider` 컴포넌트가 구동한다** — 인스펙터에서 잠겨 보이는 게 정상이고 손으로 맞추려 하지 말 것.
 - `Assets/BattleScene.unity` — 최상위에 있는 **미사용 씬**(빌드 설정 미등록, 병합 잔재). 여기에 작업하지 말 것.
 - `Assets/01_Arts/Fonts/` — Paperlogy 계열 TMP 폰트. **한글 글리프를 포함한 폰트를 써야 한다.** 기본 `LiberationSans SDF`는 라틴 전용이라 한글이 `□`로 나오고 문자당 경고 하나씩 찍힌다.
+  - 현재 한글이 흐르는 세 곳은 이미 Paperlogy다: 입력창 `Text`, `WordChainText (TMP)`, `Card.prefab > NameText`.
+  - **아직 `LiberationSans SDF`인 곳이 7군데 있다**: `Result Text`, `playerHP`, `enemyHP`, `PlayerDef`, `EnemyDef `, `EnemySpeechBubble > EnemyIntent`, `PlayerSpeechBubble > PlayerActionText`. 지금은 이들이 숫자나 영어("VICTORY!", "Intent: Attack (5)")만 표시해 문제가 없지만, **여기에 한글을 넣는 순간 전부 `□`가 된다.** 결과/의도 문구를 한글화할 계획이면 폰트부터 교체할 것.
 - `Assets/01_Arts/Demi/` — 플레이어 캐릭터 스프라이트(`DemiOpenEyes`/`DemiClosedEyes`, Git LFS)와 애니메이터 컨트롤러·애님 클립. **눈 뜬/감은 스프라이트를 각각 별도 오브젝트로 겹쳐두고 각자 애니메이터로 깜빡임을 만드는 구조**다(씬의 `player > PlayerVisual` / `PlayerBlink`). 컨트롤러 파일명 `DemiOpneEyes_0`의 오타는 그대로 두었다.
 - `Assets/03_Prefabs/` — `Card.prefab`(런타임 생성되는 손패 카드), `PlayerSpeechBubble`/`EnemySpeechBubble`, `enemy`/`strongEnemy`(스테이지별 적).
 - `Assets/03_Prefabs/Managers/` — `02_SYSTEM`의 매니저 여섯 개(`InputManager`/`Deck Manager`/`StageManager`/`BattleManager`/`WordDictionary`/`WordUnlockManager`)를 씬에서 뽑아낸 프리팹. **씬은 이걸 인스턴스로 들고 있고, 매니저끼리와 씬 오브젝트를 향한 인스펙터 연결은 전부 프리팹 인스턴스 오버라이드로 저장된다**(`SampleScene.unity`의 `m_Modifications` 안 `objectReference`). 자세한 주의점은 컨벤션 절 참조.
@@ -51,11 +55,17 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 ```
 키보드 → InputManager → CardInputHandler(5슬롯 매칭) → WordChainManager(조합 검증)
    → [액션 단어로 완성] → DeckManager.HandleChainCompleted
-      → SkillResolver(수치 계산) → CombatManager(실제 적용) → BattleManager(UI/말풍선)
-   → [타이머 0] → DeckManager.HandleTimeExpired → 적 턴 → 다음 플레이어 턴
+      → SkillResolver(수치 계산) → PendingActionManager(쌓아둠, 아직 적용 안 함)
+      → TimerManager.AddTime(시간 증감만 즉시)
+   → [타이머 0] → DeckManager.HandleTimeExpired
+      → PlayPendingActions(쌓인 순서대로 0.3초 간격)
+         → CombatManager(실제 적용) → BattleManager(UI/말풍선)
+      → 손패 리롤 → 적 턴 → 다음 플레이어 턴
 ```
 
 `DeckManager`는 단순 파사드가 아니라 **전투 배선의 중심**이다 — 체인 완성과 타이머 만료를 받아 나머지 시스템을 순서대로 호출한다.
+
+⚠️ **체인을 완성해도 그 자리에서 피해가 들어가지 않는다.** 한 턴 동안 완성한 조합은 `PendingActionManager`에 쌓이기만 하고, 턴이 끝날 때 한꺼번에 재생된다. **유일한 예외가 `TimerChange`(잽/훅/퀵/어퍼컷)**로, 이건 남은 시간을 늘리거나 깎는 리스크라 즉시 반영해야 의미가 있다.
 
 ### 턴 전환 딜레이 — 애니메이션 자리를 미리 잡아둔 값이다
 
@@ -67,6 +77,9 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 | `DeckManager.postAttackDelay` | 4 | 2 | 적 공격 → 플레이어 턴 재개까지 |
 | `StageManager.stageStartDelay` | 2 | 2 | 스테이지 등장 → 플레이어 턴 시작까지 |
 | `BattleManager.actionBubbleDuration` | 1 | 1 | 공격 말풍선이 떠 있는 시간 |
+| `DeckManager.pendingActionInterval` | 0.3 | — | 쌓인 공격이 하나씩 터지는 간격 |
+
+`pendingActionInterval`은 위의 다른 값들과 성격이 다르다 — **자리만 비워둔 값이 아니라 실제로 연출이 일어나는 구간**이다(쌓인 공격이 하나씩 적용되며 HP가 계단식으로 줄어든다).
 
 대기 중에는 **입력이 잠기고 타이머도 멈춘다**(`DisableInput` + `StopTimer`). 대기가 끝나는 쪽에서 다시 열어주므로, 새 대기 구간을 추가할 땐 반드시 짝을 맞출 것.
 
@@ -102,6 +115,8 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - **슬롯 뽑기와 타이핑 검증이 둘 다 여기 하나만 바라본다.** 예전엔 같은 24장이 `CardSlotManager`와 `WordChainManager` 양쪽 인스펙터에 중복돼 있어 "슬롯엔 뜨는데 입력은 안 되는" 버그가 실제로 났었다. 이 단일 출처 구조를 깨지 말 것.
   - `AddWords`(배치)는 이벤트를 마지막에 **한 번만** 쏜다. `OnWordsChanged`는 현재 구독자가 없지만(손패는 스테이지 시작 때만 뽑는다), 사전 UI 같은 게 붙을 때를 대비해 배치 단위로 유지한다.
 - **`WordUnlockManager`** — 게임 전체 단어 목록(인스펙터에 24장)과 지급 로직. `WordEntry { card, grantedAtStart }`. `GrantStartingWords()`(런 시작 — 사전을 비우고 `grantedAtStart` 전부 지급), `GrantStageClearReward()`(미보유 중 랜덤 N개). 시작 단어를 별도 리스트로 두지 않고 플래그로 표현하는 게 핵심 — 별도 리스트를 두면 중복 문제가 재발한다.
+  - **시작 단어는 현재 3장이다: 가드 · 펀치 · 슈퍼**(액션 2 + 모디파이어 1의 최소 조합). 예전엔 9장이었고, 프리팹 기본값은 아직 9장 그대로다 — **지금의 3장은 `SampleScene.unity`의 인스턴스 오버라이드로만 존재한다.** 시작 단어를 바꾸려면 프리팹이 아니라 **씬 인스턴스**에서 체크박스를 만지고 씬을 커밋할 것(위 매니저 프리팹 주의사항과 같은 이유).
+  - 액션 단어(`Category == Action`)가 시작 목록에 최소 하나는 있어야 한다. 액션 단어로만 체인이 완성되므로, 전부 빼면 **어떤 조합도 완성할 수 없어 공격이 영원히 불가능해진다.**
 - **`CardSlotManager`** — 5슬롯(`CurrentCards`/`SlotCount`/`OnSlotChanged`/`ConsumeSlot`/`RefillAll`). 사전에서 균등 랜덤으로 뽑으며 **슬롯 간 중복은 의도된 동작**(중복 방지 버전을 만들었다가 요청으로 되돌린 이력이 있으니 확인 없이 "고치지" 말 것).
   - `ConsumeSlot`(한 칸 보충)과 `RefillAll`(손패 통째로 교체)은 쓰임이 다르다. `RefillAll`은 스테이지 전환처럼 손패를 갈아엎을 때만 쓰며, 사전이 비어 있으면 들고 있던 카드를 null로 지워버리므로 아예 손대지 않고 경고만 남긴다.
   - **손패가 채워지는 경로는 이 둘뿐이다.** `Awake`는 배열만 잡고 채우지 않으며, 사전이 채워질 때 자동으로 뽑지도 않는다. 예전엔 `WordDictionary.OnWordsChanged`를 구독해 빈 슬롯을 채웠는데, 그러면 게임 시작 시 `GrantStartingWords()` 시점에 손패가 먼저 나왔다가 `stageStartDelay` 뒤 `RefillAll()`이 **다시 뽑아** 눈에 보이는 리롤이 생긴다. 그 구독을 되살리지 말 것.
@@ -133,8 +148,14 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 
 - **`SkillResolver.Resolve(chain, casterPower)` → `ResolvedAction`** — 체인 단어값 + 시전자의 힘만으로 계산하며 **대상의 방어도나 상태는 모른다.** 타격 횟수(더블/트리플/뎀프시롤)와 치명타(인텔리) 확률을 여기서 즉시 굴려 최종 정수로 접는다. 파워는 타이핑 순서와 무관하게 적용되도록 다른 계산 전에 개수부터 센다.
 - **`ResolvedAction`** — `Damage`/`Defense`/`Heal`/`IgnoresDefense`/`BreaksEnemyDefense`/`StatusEffect`/`DamageReduction`/`TimerChange`/`LootBonusOnKill`. **소비할 시스템이 없어도 계산해서 싣는다**는 원칙이다 — 아직 안 읽히는 값이 있을 뿐 계산이 빠진 게 아니다.
-- **`CombatManager.ExecutePlayerAction`** — 상대가 있어야 알 수 있는 것만 처리(방어도 파괴, 피해 적용, 방어/회복). 아직 소비처가 없는 값들은 `LogPendingEffects`가 `[미구현]` 로그로 남긴다.
+- **`CombatManager.ExecutePlayerAction`** — 상대가 있어야 알 수 있는 것만 처리(방어도 파괴, 피해 적용, 방어/회복). 아직 소비처가 없는 값들은 `LogPendingEffects`가 `[미구현]` 로그로 남긴다. **`TimerChange`는 여기서 읽지 않는다** — `DeckManager`가 체인 완성 시점에 직접 소비하므로, 여기에 타이머 처리를 추가하면 이중 적용이 된다.
+- **`PendingActionManager`** (`Combat/`) — 한 턴 동안 완성된 조합의 `{ SkillName, ResolvedAction }` 쌍을 쌓아두는 **순수 보관소**. `Enqueue`/`TryDequeue`/`Clear` + `OnActionQueued`/`OnActionDequeued`/`OnCleared`. 먼저 완성한 조합이 먼저 나가는 **FIFO**다(화면엔 "쌓이는" 것처럼 보이지만 재생 순서는 쌓인 순서 그대로).
+  - **적용도 재생도 하지 않는다.** 꺼내서 `CombatManager`에 넘기고 사이에 간격을 두는 건 `DeckManager.PlayPendingActions`다 — 전투 배선을 `DeckManager` 한 곳에 유지하려는 의도적 분리다.
+  - ⚠️ **`HandleChainCompleted`에서 `Enqueue`는 반드시 `timerManager.AddTime`보다 먼저 와야 한다.** `AddTime`이 남은 시간을 0으로 만들면 그 호출 안에서 곧바로 턴 전환 코루틴이 시작되기 때문이다. 순서가 뒤바뀌면 **훅으로 타이머를 깎아 턴을 끝낸 그 조합만 재생 목록에서 빠진다.**
+  - 재생 중 적이 죽으면 남은 것을 버리고 즉시 중단한다(`Die()`가 `Destroy`를 부르므로 이후 공격은 대상이 없다). `HandleBattleEnded`와 `StageManager.LoadStage`에서도 비워, 지난 판 공격이 다음 스테이지로 넘어가지 않게 한다.
+  - **`UI/PendingActionView`** — 쌓인 문장을 플레이어 옆에 세로로 보여주는 순수 뷰. 프리팹을 `Instantiate`해 목록을 만들고, 꺼내진 항목은 맨 앞부터 지운다(FIFO라 순서만 맞으면 정확하다). 한글 문장이 들어가므로 **라벨 폰트는 Paperlogy여야 한다.**
 - **`CharacterStats`** — `TakeDamage(damage, ignoreDefense = false)`, `Heal`, `AddDefense`, `IncreasePower`, private `Die()` → `Destroy(gameObject)`(그래서 호출자들이 매 프레임 null 체크한다).
+- **`EnemyBase : CharacterStats`** — `EnemyData`(SO)를 런타임 스탯으로 옮기는 다리. `Start()`에서 `maxHP`/`power`/`gameObject.name`을 에셋값으로 덮어쓴다. **`enemyData`가 비어 있으면 `base.Start()`로 폴백**해 프리팹에 박힌 인스펙터 값을 그대로 쓰므로, 적이 엉뚱한 체력으로 나오면 프리팹의 `enemyData` 연결부터 확인할 것(조용히 넘어간다). `enemyManager.currentEnemy`의 타입이자 `StageManager`가 스폰 직후 `GetComponent`로 집어오는 타입이다.
 - **`EnemyManager`** — 가중치로 다음 의도를 굴리고(`ActionType { Attack, Defend, Buff }`) `ExecuteEnemyTurn(player)`에서 실행. **액션 enum이 두 개 있다**: 카드의 `ActionKind { Attack, Defense }`와 이것.
 - **`BattleManager`** — HP/방어도/의도 UI, 말풍선, 승패 판정. `OnPlayerActionResolved(bubbleText)`는 **턴을 끝내지 않는다**(타이머가 도는 동안 여러 번 호출됨). 적 턴은 `ExecuteEnemyTurn()`으로 분리되어 있고 `DeckManager`가 부른다. 말풍선엔 스킬 이름이 아니라 적용된 수치가 뜬다.
   - `OnBattleEnded` 이벤트는 `isGameOver`가 **false→true로 바뀌는 순간에만** 발생한다. `CheckGameState`가 `UpdateUI`마다 불려 `ShowResult`도 반복 호출되므로, 가드 없이 쏘면 매 프레임 발생한다.
@@ -159,7 +180,9 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 둘 다 손으로 24줄을 드래그하다 빠뜨리거나 중복시키는 사고를 막기 위한 1회성 도구다(실제로 어퍼컷 11중복 + 3장 누락이 났던 적 있다).
 
 - `CardDataSeeder` — `Tools > Deck Manager > Seed Missing Word Cards`. 카드 `.asset`을 `AssetDatabase`로 생성.
-- `WordUnlockPopulator` — `Tools > Deck Manager > Populate Word Unlock Manager`. 씬의 `WordUnlockManager`에 24장을 채우고 시작 9장에 체크. 씬 컴포넌트라 `EditorSceneManager.MarkSceneDirty`가 필요하다.
+- `WordUnlockPopulator` — `Tools > Deck Manager > Populate Word Unlock Manager`. 씬의 `WordUnlockManager`에 카드를 채운다. 씬 컴포넌트라 `EditorSceneManager.MarkSceneDirty`가 필요하다.
+  - **이미 목록에 있는 카드는 건너뛴다** — 24장이 다 들어있는 지금 다시 눌러도 아무것도 덮어쓰지 않으니, 손으로 맞춘 `grantedAtStart` 체크는 안전하다. 새 카드를 만든 뒤 추가로 채울 때만 의미가 있다.
+  - ⚠️ 코드에 하드코딩된 `StartingWordNames`(9장)는 **씬의 실제 시작 단어 3장과 다르다.** 새로 추가되는 카드에만 적용되는 값이라 지금은 무해하지만, 이걸 시작 단어의 출처로 읽지 말 것 — 실제 출처는 씬의 `grantedAtStart`다.
 
 ### 아직 없는 것
 

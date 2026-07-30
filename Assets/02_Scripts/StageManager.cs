@@ -21,6 +21,7 @@ public class StageManager : MonoBehaviour
     public WordUnlockManager wordUnlockManager;
     public CardSlotManager cardSlotManager;
     public WordChainManager wordChainManager;
+    public PendingActionManager pendingActionManager;
 
     private int currentStageIndex = 0;
     private GameObject currentEnemyObject;
@@ -65,8 +66,10 @@ public class StageManager : MonoBehaviour
 
         // 대기 시간 동안엔 타이머가 돌지도, 입력이 들어오지도 않아야 한다.
         // 둘 다 BeginStageAfterDelay가 끝에서 다시 연다.
+        // ResetToFull은 정지까지 겸하므로(StopTimer 대체) 게이지가 0이 아니라
+        // 가득 찬 상태로 멈춰 있게 된다.
         if (timerManager != null)
-            timerManager.StopTimer();
+            timerManager.ResetToFull();
 
         if (inputManager != null)
         {
@@ -77,6 +80,10 @@ public class StageManager : MonoBehaviour
         // 이전 스테이지에서 쌓다 만 조합은 넘겨받지 않는다 - 입력창을 비우는 것과 같은 이유다.
         if (wordChainManager != null)
             wordChainManager.ClearChain();
+
+        // 아직 터지지 않은 공격도 같이 버린다 - 새 적에게 지난 스테이지의 공격이 들어가면 안 된다.
+        if (pendingActionManager != null)
+            pendingActionManager.Clear();
 
         if (startRoutine != null)
             StopCoroutine(startRoutine);

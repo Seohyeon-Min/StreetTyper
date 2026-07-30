@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using TMPro;
 using UnityEngine.InputSystem;
+using FMODUnity;
 
 public class BattleManager : MonoBehaviour
 {
@@ -22,6 +23,10 @@ public class BattleManager : MonoBehaviour
 
     [Header("Duration")]
     public float actionBubbleDuration = 1.0f;
+
+    [Header("FMOD Sounds")]
+    public EventReference attackSound;
+    public EventReference battleBGM;
 
     private bool isGameOver = false;
     private bool isEventTriggered = false;
@@ -54,7 +59,7 @@ public class BattleManager : MonoBehaviour
         {
             enemyManager.GenerateNextAction();
         }
-
+        SoundManager.Instance.PlayBGM(battleBGM);
         UpdateUI();
     }
 
@@ -89,6 +94,7 @@ public class BattleManager : MonoBehaviour
                 if (enemyManager.currentEnemy.currentHP < 0)
                     enemyManager.currentEnemy.currentHP = 0;
 
+                SoundManager.Instance.PlaySFX(attackSound);
                 OnPlayerActionResolved("Attack 10!");
             }
         }

@@ -257,8 +257,8 @@ GameObject:
   m_Component:
   - component: {fileID: 340265438}
   - component: {fileID: 340265437}
-  - component: {fileID: 340265436}
   - component: {fileID: 340265435}
+  - component: {fileID: 340265439}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -310,14 +310,6 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
---- !u!81 &340265436
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 340265434}
-  m_Enabled: 1
 --- !u!20 &340265437
 Camera:
   m_ObjectHideFlags: 0
@@ -384,6 +376,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &340265439
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 340265434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86c6556701af9e04380698b89f691b6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FMODUnity::FMODUnity.StudioListener
+  nonRigidbodyVelocity: 0
+  attenuationObject: {fileID: 0}
 --- !u!1 &561635892
 GameObject:
   m_ObjectHideFlags: 0
@@ -502,6 +508,20 @@ MonoBehaviour:
   enemyHealthBar: {fileID: 1141222963}
   resultText: {fileID: 1970771455}
   actionBubbleDuration: 1
+  attackSound:
+    Guid:
+      Data1: 0
+      Data2: 0
+      Data3: 0
+      Data4: 0
+    Path: 
+  battleBGM:
+    Guid:
+      Data1: 0
+      Data2: 0
+      Data3: 0
+      Data4: 0
+    Path: 
 --- !u!4 &563444697
 Transform:
   m_ObjectHideFlags: 0

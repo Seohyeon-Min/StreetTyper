@@ -609,8 +609,8 @@ MonoBehaviour:
   switchSettingsMigration: 1
   HasSourceProject: 1
   HasPlatforms: 1
-  sourceProjectPath: 
-  sourceBankPath: 
+  sourceProjectPath: Assets/05_Sounds/FMOD/StreetTyperFMOD/StreetTyperFMOD.fspro
+  sourceBankPath: Assets/05_Sounds/FMOD/StreetTyperFMOD/Build
   sourceBankPathUnformatted: 
   BankRefreshCooldown: 5
   ShowBankRefreshWindow: 1
@@ -643,10 +643,10 @@ MonoBehaviour:
   StopEventsOutsideMaxDistance: 0
   BoltUnitOptionsBuildPending: 0
   EnableErrorCallback: 0
-  SharedLibraryUpdateStage: 3
-  SharedLibraryTimeSinceStart: 17390.797192100003
+  SharedLibraryUpdateStage: 0
+  SharedLibraryTimeSinceStart: 0
   CurrentVersion: 131860
-  HideSetupWizard: 0
+  HideSetupWizard: 1
   LastEventReferenceScanVersion: 131860
   Platforms:
   - {fileID: -3992237664732910309}

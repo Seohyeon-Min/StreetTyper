@@ -59,7 +59,10 @@ public class BattleManager : MonoBehaviour
         {
             enemyManager.GenerateNextAction();
         }
-        SoundManager.Instance.PlayBGM(battleBGM);
+        // 여기서 예외가 나면 아래 UpdateUI()까지 막혀 첫 프레임에 HP가 표시되지 않는다.
+        if (SoundManager.Instance != null)
+            SoundManager.Instance.PlayBGM(battleBGM);
+
         UpdateUI();
     }
 
@@ -94,7 +97,11 @@ public class BattleManager : MonoBehaviour
                 if (enemyManager.currentEnemy.currentHP < 0)
                     enemyManager.currentEnemy.currentHP = 0;
 
-                SoundManager.Instance.PlaySFX(attackSound);
+                // SoundManager는 씬에 없을 수 있다(아직 작업 중인 시스템이라 배치되지 않은 상태).
+                // 싱글턴이라 Instance가 null인 채로 호출하면 여기서 NullReferenceException이 난다.
+                if (SoundManager.Instance != null)
+                    SoundManager.Instance.PlaySFX(attackSound);
+
                 OnPlayerActionResolved("Attack 10!");
             }
         }

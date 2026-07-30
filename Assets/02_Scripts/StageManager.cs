@@ -23,6 +23,9 @@ public class StageManager : MonoBehaviour
     public WordChainManager wordChainManager;
     public PendingActionManager pendingActionManager;
 
+    [Tooltip("적 HP 바의 위치 추종 컴포넌트. 적은 스테이지마다 새로 스폰되므로 여기서 대상을 넘겨준다.")]
+    public WorldAnchoredUI enemyHealthBarAnchor;
+
     private int currentStageIndex = 0;
     private GameObject currentEnemyObject;
     private Coroutine startRoutine;
@@ -56,6 +59,13 @@ public class StageManager : MonoBehaviour
 
         enemyManager.currentEnemy = newEnemyBase;
         enemyManager.GenerateNextAction();
+
+        // 적 HP 바가 방금 스폰된 적을 따라가게 한다. 뷰가 스스로 적을 찾아다니지 않도록
+        // 스포너가 넘겨주는 기존 방식(HandFanLayout -> CardSlotView.Bind)과 같다.
+        if (enemyHealthBarAnchor != null)
+            enemyHealthBarAnchor.Bind(currentEnemyObject.transform);
+        else
+            Debug.LogWarning("StageManager: enemyHealthBarAnchor가 연결되지 않아 적 HP 바가 따라오지 않습니다.", this);
 
         if (player != null)
         {

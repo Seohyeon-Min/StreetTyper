@@ -561,8 +561,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StageManager
   enemyPrefabs:
-  - {fileID: 6201447247898099441, guid: 71523482895db8d4ca417e23e6d25046, type: 3}
   - {fileID: 6201447247898099441, guid: 537d28c9ef879924ba190036c02015ae, type: 3}
+  - {fileID: 6201447247898099441, guid: 71523482895db8d4ca417e23e6d25046, type: 3}
   - {fileID: 6201447247898099441, guid: f468762efc46dc34ebeef2cf41689bf7, type: 3}
   enemySpawnPoint: {fileID: 1905366246}
   stageStartDelay: 2

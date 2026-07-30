@@ -2,8 +2,6 @@ using System;
 using UnityEngine;
 using TMPro;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
-using System.Collections;
 
 public class BattleManager : MonoBehaviour
 {
@@ -14,21 +12,9 @@ public class BattleManager : MonoBehaviour
     [Header("Player Reference")]
     public CharacterStats player;
 
-    [Header("HP UI References")]
-    public TextMeshProUGUI playerHPText;
-    public TextMeshProUGUI enemyHPText;
-    public Slider playerHPBar;
-    public Slider enemyHPBar;
-
-    [Header("HP Bar Fill Images")]
-    public Image playerHPFill;
-    public Image enemyHPFill;
-
-    [Header("Defense UI References")]
-    public GameObject playerDefIcon;
-    public GameObject enemyDefIcon;
-    public TextMeshProUGUI playerDefText;
-    public TextMeshProUGUI enemyDefText;
+    [Header("Health Bar UI")]
+    public HealthBarUI playerHealthBar;
+    public HealthBarUI enemyHealthBar;
 
     [Header("Game Result UI")]
     public TextMeshProUGUI resultText;
@@ -38,16 +24,27 @@ public class BattleManager : MonoBehaviour
 
     private bool isGameOver = false;
 
+    private GameObject enemyIntentBubbleObj;
+    private SpeechBubble enemyIntentBubble;
+
     public event Action OnBattleEnded;
 
     void Start()
     {
         if (resultText != null) resultText.gameObject.SetActive(false);
 
+        if (SpeechBubbleManager.Instance != null)
+        {
+            enemyIntentBubbleObj = Instantiate(SpeechBubbleManager.Instance.speechBubblePrefab, SpeechBubbleManager.Instance.canvasTransform);
+            enemyIntentBubble = enemyIntentBubbleObj.GetComponent<SpeechBubble>();
+            enemyIntentBubbleObj.SetActive(false);
+        }
+
         if (enemyManager != null)
         {
             enemyManager.GenerateNextAction();
         }
+
         UpdateUI();
     }
 
@@ -71,16 +68,54 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
+        // 기존 숫자키 배틀 디버그
+        if (Keyboard.current.digit1Key.wasPressedThisFrame)
+        {
+            if (enemyManager != null && enemyManager.currentEnemy != null)
+            {
+                enemyManager.currentEnemy.currentHP -= 10;
+                if (enemyManager.currentEnemy.currentHP < 0)
+                    enemyManager.currentEnemy.currentHP = 0;
+
+                OnPlayerActionResolved("Attack 10!");
+            }
+        }
+
+        if (Keyboard.current.digit2Key.wasPressedThisFrame)
+        {
+            if (player != null)
+            {
+                player.defense += 10;
+                OnPlayerActionResolved("Defense 10!");
+            }
+        }
+
         if (Keyboard.current.digit3Key.wasPressedThisFrame)
         {
             ExecuteEnemyTurn();
+        }
+
+        // ★ 실제 캐릭터 위치 기반 말풍선 오프셋 디버그 (F1, F2) ★
+        if (Keyboard.current.f1Key.wasPressedThisFrame)
+        {
+            if (player != null && SpeechBubbleManager.Instance != null)
+            {
+                SpeechBubbleManager.Instance.ShowBubble("Player Pos Test!", player.transform.position, true, 2.0f);
+            }
+        }
+
+        if (Keyboard.current.f2Key.wasPressedThisFrame)
+        {
+            if (enemyManager != null && enemyManager.currentEnemy != null && SpeechBubbleManager.Instance != null)
+            {
+                SpeechBubbleManager.Instance.ShowBubble("Enemy Pos Test!", enemyManager.currentEnemy.transform.position, false, 2.0f);
+            }
         }
     }
 
     public void OnPlayerActionResolved(string bubbleText)
     {
-        if (isGameOver)
-            return;
+        if (isGameOver) return;
 
         if (SpeechBubbleManager.Instance != null && player != null)
         {
@@ -92,18 +127,11 @@ public class BattleManager : MonoBehaviour
 
     public void ExecuteEnemyTurn()
     {
-        if (isGameOver)
-            return;
+        if (isGameOver) return;
 
         if (player != null && enemyManager != null && enemyManager.currentEnemy != null)
         {
             enemyManager.ExecuteEnemyTurn(player);
-
-            if (SpeechBubbleManager.Instance != null)
-            {
-                SpeechBubbleManager.Instance.ShowBubble(enemyManager.GetIntentString(), enemyManager.currentEnemy.transform.position, false, actionBubbleDuration);
-            }
-
             UpdateUI();
         }
     }
@@ -129,85 +157,45 @@ public class BattleManager : MonoBehaviour
             resultText.gameObject.SetActive(true);
         }
 
-        if (playerHPText != null) playerHPText.gameObject.SetActive(false);
-        if (playerHPBar != null) playerHPBar.gameObject.SetActive(false);
-        if (playerDefIcon != null) playerDefIcon.SetActive(false);
+        if (playerHealthBar != null) playerHealthBar.Hide();
+        if (enemyIntentBubbleObj != null) enemyIntentBubbleObj.SetActive(false);
     }
 
     void UpdateUI()
     {
         if (player != null && player.currentHP > 0)
         {
-            if (playerHPText != null) playerHPText.gameObject.SetActive(true);
-            if (playerHPBar != null)
-            {
-                playerHPBar.gameObject.SetActive(true);
-                playerHPBar.maxValue = player.maxHP;
-                playerHPBar.value = player.currentHP;
-            }
-
-            if (playerHPText != null) playerHPText.text = player.currentHP + " / " + player.maxHP;
-
-            if (player.defense > 0)
-            {
-                if (playerDefIcon != null) playerDefIcon.SetActive(true);
-                if (playerDefText != null)
-                {
-                    playerDefText.gameObject.SetActive(true);
-                    playerDefText.text = player.defense.ToString();
-                }
-                if (playerHPFill != null) playerHPFill.color = Color.gray;
-            }
-            else
-            {
-                if (playerDefIcon != null) playerDefIcon.SetActive(false);
-                if (playerDefText != null) playerDefText.gameObject.SetActive(false);
-                if (playerHPFill != null) playerHPFill.color = Color.green;
-            }
+            if (playerHealthBar != null)
+                playerHealthBar.UpdateUI(player.currentHP, player.maxHP, player.defense);
         }
         else
         {
-            if (playerHPText != null) playerHPText.gameObject.SetActive(false);
-            if (playerHPBar != null) playerHPBar.gameObject.SetActive(false);
-            if (playerDefIcon != null) playerDefIcon.SetActive(false);
+            if (playerHealthBar != null) playerHealthBar.Hide();
         }
 
         if (enemyManager != null && enemyManager.currentEnemy != null && enemyManager.currentEnemy.currentHP > 0)
         {
             EnemyBase enemy = enemyManager.currentEnemy;
 
-            if (enemyHPText != null) enemyHPText.gameObject.SetActive(true);
-            if (enemyHPBar != null)
-            {
-                enemyHPBar.gameObject.SetActive(true);
-                enemyHPBar.maxValue = enemy.maxHP;
-                enemyHPBar.value = enemy.currentHP;
-            }
+            if (enemyHealthBar != null)
+                enemyHealthBar.UpdateUI(enemy.currentHP, enemy.maxHP, enemy.defense);
 
-            if (enemyHPText != null) enemyHPText.text = enemy.currentHP + " / " + enemy.maxHP;
-
-            if (enemy.defense > 0)
+            if (enemyIntentBubbleObj != null && enemyIntentBubble != null)
             {
-                if (enemyDefIcon != null) enemyDefIcon.SetActive(true);
-                if (enemyDefText != null)
+                enemyIntentBubbleObj.SetActive(true);
+                enemyIntentBubble.Setup(enemyManager.GetIntentString(), false);
+
+                if (SpeechBubbleManager.Instance != null)
                 {
-                    enemyDefText.gameObject.SetActive(true);
-                    enemyDefText.text = enemy.defense.ToString();
+                    enemyIntentBubbleObj.GetComponent<RectTransform>().position =
+                        SpeechBubbleManager.Instance.GetBubbleScreenPosition(enemy.transform.position, false);
                 }
-                if (enemyHPFill != null) enemyHPFill.color = Color.gray;
-            }
-            else
-            {
-                if (enemyDefIcon != null) enemyDefIcon.SetActive(false);
-                if (enemyDefText != null) enemyDefText.gameObject.SetActive(false);
-                if (enemyHPFill != null) enemyHPFill.color = Color.red;
             }
         }
         else
         {
-            if (enemyHPText != null) enemyHPText.gameObject.SetActive(false);
-            if (enemyHPBar != null) enemyHPBar.gameObject.SetActive(false);
-            if (enemyDefIcon != null) enemyDefIcon.SetActive(false);
+            if (enemyHealthBar != null) enemyHealthBar.Hide();
+            if (enemyIntentBubbleObj != null) enemyIntentBubbleObj.SetActive(false);
         }
 
         CheckGameState();

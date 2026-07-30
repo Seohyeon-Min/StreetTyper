@@ -272,7 +272,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 300, y: 65}
+  m_AnchoredPosition: {x: 400, y: 65}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 1, y: 0}
 --- !u!222 &3761584732697140561
@@ -365,7 +365,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4646d3cd344b744ea0735bda6370a4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpeechBubble
-  bubbleText: {fileID: 0}
-  tailTransform: {fileID: 0}
-  rightTailPos: {x: 50, y: -10}
-  leftTailPos: {x: -50, y: -10}
+  bubbleText: {fileID: 2668929670146781178}
+  tailTransform: {fileID: 7621623833116908542}
+  playerTailPos: {x: -50, y: -3}
+  enemyTailPos: {x: -250, y: -3}

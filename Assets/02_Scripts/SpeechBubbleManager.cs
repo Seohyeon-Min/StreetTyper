@@ -8,6 +8,9 @@ public class SpeechBubbleManager : MonoBehaviour
     public GameObject speechBubblePrefab;
     public Transform canvasTransform;
 
+    public Vector3 playerOffset = new Vector3(2.0f, 2.5f, 0);
+    public Vector3 enemyOffset = new Vector3(-2.0f, 2.5f, 0);
+
     private void Awake()
     {
         if (Instance == null)
@@ -20,12 +23,18 @@ public class SpeechBubbleManager : MonoBehaviour
         }
     }
 
-    public void ShowBubble(string message, Vector3 worldPosition, bool isRightSide, float duration = 1.0f)
+    public Vector3 GetBubbleScreenPosition(Vector3 worldPosition, bool isPlayer)
     {
-        StartCoroutine(ShowBubbleRoutine(message, worldPosition, isRightSide, duration));
+        Vector3 offset = isPlayer ? playerOffset : enemyOffset;
+        return Camera.main.WorldToScreenPoint(worldPosition + offset);
     }
 
-    private IEnumerator ShowBubbleRoutine(string message, Vector3 worldPosition, bool isRightSide, float duration)
+    public void ShowBubble(string message, Vector3 worldPosition, bool isPlayer, float duration = 1.0f)
+    {
+        StartCoroutine(ShowBubbleRoutine(message, worldPosition, isPlayer, duration));
+    }
+
+    private IEnumerator ShowBubbleRoutine(string message, Vector3 worldPosition, bool isPlayer, float duration)
     {
         if (speechBubblePrefab == null || canvasTransform == null) yield break;
 
@@ -34,16 +43,13 @@ public class SpeechBubbleManager : MonoBehaviour
         SpeechBubble bubbleScript = bubbleObj.GetComponent<SpeechBubble>();
         if (bubbleScript != null)
         {
-            bubbleScript.Setup(message, isRightSide);
+            bubbleScript.Setup(message, isPlayer);
         }
-
-        Vector3 offset = isRightSide ? new Vector3(2.0f, 2.5f, 0) : new Vector3(-2.0f, 2.5f, 0);
-        Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition + offset);
 
         RectTransform rectTransform = bubbleObj.GetComponent<RectTransform>();
         if (rectTransform != null)
         {
-            rectTransform.position = screenPos;
+            rectTransform.position = GetBubbleScreenPosition(worldPosition, isPlayer);
         }
 
         bubbleObj.SetActive(true);

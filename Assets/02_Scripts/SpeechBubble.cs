@@ -6,10 +6,10 @@ public class SpeechBubble : MonoBehaviour
     public TextMeshProUGUI bubbleText;
     public RectTransform tailTransform;
 
-    public Vector2 rightTailPos = new Vector2(50f, -10f);
-    public Vector2 leftTailPos = new Vector2(-50f, -10f);
+    public Vector2 playerTailPos = new Vector2(-15f, -15f);
+    public Vector2 enemyTailPos = new Vector2(15f, -15f);
 
-    public void Setup(string message, bool isRightSide)
+    public void Setup(string message, bool isPlayer)
     {
         if (bubbleText != null)
         {
@@ -18,14 +18,14 @@ public class SpeechBubble : MonoBehaviour
 
         if (tailTransform != null)
         {
-            if (isRightSide)
+            if (isPlayer)
             {
-                tailTransform.anchoredPosition = rightTailPos;
+                tailTransform.anchoredPosition = playerTailPos;
                 tailTransform.localScale = new Vector3(1f, 1f, 1f);
             }
             else
             {
-                tailTransform.anchoredPosition = leftTailPos;
+                tailTransform.anchoredPosition = enemyTailPos;
                 tailTransform.localScale = new Vector3(-1f, 1f, 1f);
             }
         }

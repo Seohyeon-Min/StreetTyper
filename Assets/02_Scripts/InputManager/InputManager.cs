@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
@@ -17,8 +18,12 @@ public class InputManager : MonoBehaviour
     [SerializeField] private float backspaceRepeatDelay = 0.4f;
     [SerializeField] private float backspaceRepeatInterval = 0.05f;
 
+    [Tooltip("한글 모드 강제를 다시 걸기까지의 최소 간격(초). 영문이 연타로 들어와도 IMM32 호출이 폭주하지 않게 한다.")]
+    [SerializeField] private float imeForceCooldown = 0.2f;
+
     private bool _inputEnabled;
     private float _backspaceRepeatTimer;
+    private float _lastImeForceTime = float.NegativeInfinity;
 
     private void Start()
     {
@@ -28,6 +33,16 @@ public class InputManager : MonoBehaviour
     private void OnDestroy()
     {
         DisableInput();
+    }
+
+    // 창을 다시 활성화하면 IME 상태가 그동안 다른 앱에서 영문으로 바뀌어 있을 수 있다.
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus || !_inputEnabled)
+            return;
+
+        Input.imeCompositionMode = IMECompositionMode.On;
+        ForceHangulMode();
     }
 
     public void EnableInput()
@@ -41,6 +56,18 @@ public class InputManager : MonoBehaviour
             Keyboard.current.onIMECompositionChange += HandleCompositionChange;
             Keyboard.current.SetIMEEnabled(true);
         }
+
+        // 조합을 상시 켜둔다. 기본값 Auto는 "텍스트 필드가 선택된 동안"에만 IME를 켜므로,
+        // 이 줄이 없으면 플레이어가 입력창을 클릭해 TMP가 대신 On으로 바꿔주기 전까지 한글이
+        // 조합되지 않는다. 턴 전환마다 EnableInput이 불리므로 여기가 자동 복구 지점이 된다.
+        Input.imeCompositionMode = IMECompositionMode.On;
+
+        // 방금 켠 IME는 이 프레임엔 아직 창에 붙지 않아 ImmGetContext가 빈 컨텍스트를 준다.
+        // 한 프레임 뒤에 강제한다.
+        if (isActiveAndEnabled)
+            StartCoroutine(ForceHangulModeNextFrame());
+        else
+            ForceHangulMode();
     }
 
     public void DisableInput()
@@ -81,8 +108,6 @@ public class InputManager : MonoBehaviour
         // here too would double-delete already committed characters.
         var isComposing = !string.IsNullOrEmpty(Composition);
 
-        ChangeHangul();
-
         if (Keyboard.current.backspaceKey.wasPressedThisFrame)
         {
             if (!isComposing)
@@ -110,10 +135,36 @@ public class InputManager : MonoBehaviour
     private void HandleTextInput(char character)
     {
         if (!IsHangul(character))
+        {
+            // 라틴 글자가 들어왔다는 건 IME가 영문 모드로 빠졌다는 뜻이다(플레이어가 한/영을
+            // 눌렀거나 다른 앱에서 그 상태로 돌아왔거나). 이 글자는 버리고 곧바로 한글 모드를
+            // 되돌려, 한 글자만 잃고 계속 타이핑할 수 있게 한다. 한/영 키 자체는 Windows IME가
+            // 앱보다 먼저 처리하므로 막을 수 없고, 이 자가 복구가 그 대체책이다.
+            // 숫자/공백까지 여기서 IME를 건드리면 조합 중인 글자가 끊길 수 있어 라틴 글자만 본다.
+            if (IsLatinLetter(character))
+                ForceHangulMode();
+
             return;
+        }
 
         CurrentInput += character;
         OnCharacterEntered?.Invoke(character);
+    }
+
+    private IEnumerator ForceHangulModeNextFrame()
+    {
+        yield return null;
+        ForceHangulMode();
+    }
+
+    private void ForceHangulMode()
+    {
+        // 조합 중에 변환 상태를 다시 쓰면 진행 중인 글자가 끊길 수 있으니 쿨다운으로 묶는다.
+        if (Time.unscaledTime - _lastImeForceTime < imeForceCooldown)
+            return;
+
+        _lastImeForceTime = Time.unscaledTime;
+        HangulImeMode.Force();
     }
 
     private void HandleCompositionChange(IMECompositionString composition)
@@ -131,18 +182,18 @@ public class InputManager : MonoBehaviour
         OnBackspace?.Invoke();
     }
 
-    private static void ChangeHangul()
-    {
-        if (Keyboard.current.rightAltKey.wasPressedThisFrame){
-                Input.imeCompositionMode = IMECompositionMode.On;
-        }
-    }
-
     private static bool IsHangul(char character)
     {
         // Hangul Syllables (가-힣) + Hangul Compatibility Jamo (ㄱ-ㅣ)
         return (character >= '가' && character <= '힣') ||
                (character >= 'ㄱ' && character <= 'ㅣ');
+    }
+
+    // IME가 영문 모드로 빠졌다는 신호. 숫자/기호는 한글 모드에서도 그대로 들어오므로 제외한다.
+    private static bool IsLatinLetter(char character)
+    {
+        return (character >= 'a' && character <= 'z') ||
+               (character >= 'A' && character <= 'Z');
     }
 
     // 표준 유니코드 한글 음절 분해 공식의 초성 테이블. 순서가 정해져 있어 임의로 바꾸면 안 된다.

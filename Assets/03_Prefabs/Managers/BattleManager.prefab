@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3877965045486762055
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1326174639955142419}
+  - component: {fileID: 4261486253533367432}
+  - component: {fileID: 8898755630797020058}
+  m_Layer: 0
+  m_Name: BattleManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1326174639955142419
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3877965045486762055}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4261486253533367432
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3877965045486762055}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 385f77dd923a07845b89f2868148f50f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BattleManager
+  enemyManager: {fileID: 8898755630797020058}
+  stageManager: {fileID: 0}
+  player: {fileID: 0}
+  playerHPText: {fileID: 0}
+  enemyHPText: {fileID: 0}
+  playerHPBar: {fileID: 0}
+  enemyHPBar: {fileID: 0}
+  playerHPFill: {fileID: 0}
+  enemyHPFill: {fileID: 0}
+  playerDefIcon: {fileID: 0}
+  enemyDefIcon: {fileID: 0}
+  playerDefText: {fileID: 0}
+  enemyDefText: {fileID: 0}
+  playerSpeechBubblePrefab: {fileID: 421561903031249327, guid: ed42faf9df11d1b449d4840e0ebf3902, type: 3}
+  enemySpeechBubblePrefab: {fileID: 2888076677979763702, guid: ececaf37a69079c4f90e6f39dc5990d0, type: 3}
+  canvasTransform: {fileID: 0}
+  resultText: {fileID: 0}
+  actionBubbleDuration: 1
+--- !u!114 &8898755630797020058
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3877965045486762055}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c021042018f91fd47a78c4c7bbb98646, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyManager
+  currentEnemy: {fileID: 0}
+  nextAction: 0

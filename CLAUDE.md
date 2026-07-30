@@ -18,12 +18,6 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - **컴파일**: Unity가 포커스/저장 시 자동 컴파일. `dotnet build` 없음 — `Assembly-CSharp.csproj`/`StreetTyper.sln`은 Unity 생성물이고 gitignore되어 있으니 절대 직접 수정하지 말 것. 단일 `Assembly-CSharp` 어셈블리, `.asmdef` 분리 없음.
 - **테스트**: `com.unity.test-framework`는 설치되어 있으나 **테스트 어셈블리가 하나도 없다.** 여기서 "테스트"란 Play Mode 수동 확인이며, 보통 `Debug.Log` 출력을 읽는 것이다(`DeckManager.logDebugEvents`, `WordChainManager.logDebugEvents`, `WordUnlockManager.logDebugEvents`).
 - **실행**: 에디터에서 Play. 헤드리스/CLI 실행 경로 없음.
-- **빌드**: `File > Build Profiles`로 Windows 스탠드얼론을 뽑아 `Build/StreetTyper.exe`로 내보내 왔다(`Build/`는 gitignore). CLI 빌드 스크립트는 없다.
-  - **IME 관련 동작은 에디터 Play만으로 검증하면 안 된다.** 에디터와 빌드가 다르게 동작한 이력이 있어 스탠드얼론에서 재확인해야 한다.
-  - 빌드 런타임 로그: `%USERPROFILE%\AppData\LocalLow\DefaultCompany\StreetTyper\Player.log` (회사/제품명이 `DefaultCompany`/`StreetTyper` 기본값 그대로다). 에디터 로그는 `%LOCALAPPDATA%\Unity\Editor\Editor.log`, 임포트 워커 로그는 저장소의 `Logs/`.
-- **디버그 키**(`BattleManager.Update`, `Keyboard.current` 직접 폴링):
-  - `1` — 결과 화면에서만 동작. 승리면 `StageManager.NextStage()`(= 클리어 보상 지급), 패배면 `RestartStage()`. **스테이지를 넘기는 유일한 입력이다.**
-  - `3` — 적 턴 즉시 실행(`ExecuteEnemyTurn`). 타이머를 기다리지 않고 적 행동을 보려는 디버그용.
 - C# `LangVersion` 9.0, .NET Standard 2.1 (Mono) — 그 이상 문법은 컴파일 실패한다.
 
 ## 프로젝트 구조
@@ -31,15 +25,13 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 최상위 에셋 폴더는 에셋 브라우저 정렬을 위해 `NN_Name` 접두사를 쓴다. 새 폴더도 이 규칙을 따를 것.
 
 - `Assets/00_Scenes/SampleScene.unity` — **실질적으로 유일한 씬**이자 빌드 설정에 등록된 유일한 씬. 루트: `00_BOOT`, `01_CAMERA`, `02_SYSTEM`, `03_WORLD`, `04_UI`, `05_DEBUG`, `EventSystem`.
-  - `02_SYSTEM`: `InputManager`, `Deck Manager`, `StageManager`, `BattleManager`, `WordDictionary`, `WordUnlockManager` — **여섯 개 전부 프리팹 인스턴스**다(아래 `03_Prefabs/Managers/` 참조).
+  - `02_SYSTEM`: `InputManager`, `Deck Manager`, `StageManager`, `BattleManager`, `WordDictionary`, `WordUnlockManager`
   - `03_WORLD`: `player`(자식 `PlayerVisual`/`PlayerBlink`가 눈 깜빡임 담당), `enemySpawnPoint`
-  - `04_UI`: `Card Canvas`(손패·입력창·체인 텍스트), `Field Canvas`(HP/방어도/의도/타이머/결과). 둘 다 Screen Space Overlay이고 **Canvas Scaler 설정이 같아야 한다** — Scale With Screen Size / 1920×1080 / Match Width Or Height 0.5. 예전엔 `Field Canvas`만 Constant Pixel Size라 해상도가 바뀌면 HP·타이머 UI만 어긋났다. 새 캔버스를 만들면 이 설정을 복사할 것.
-    - 입력창(`Card Canvas > InputField (TMP)`)은 이름만 남은 **TMP 라벨**이다. `TMP_InputField`가 아니며 클릭 대상이 아니다(이유는 아래 `InputFieldDisplay` 참조).
+  - `04_UI`: `Card Canvas`(손패·입력창·체인 텍스트), `Field Canvas`(HP/방어도/의도/타이머/결과)
 - `Assets/BattleScene.unity` — 최상위에 있는 **미사용 씬**(빌드 설정 미등록, 병합 잔재). 여기에 작업하지 말 것.
 - `Assets/01_Arts/Fonts/` — Paperlogy 계열 TMP 폰트. **한글 글리프를 포함한 폰트를 써야 한다.** 기본 `LiberationSans SDF`는 라틴 전용이라 한글이 `□`로 나오고 문자당 경고 하나씩 찍힌다.
 - `Assets/01_Arts/Demi/` — 플레이어 캐릭터 스프라이트(`DemiOpenEyes`/`DemiClosedEyes`, Git LFS)와 애니메이터 컨트롤러·애님 클립. **눈 뜬/감은 스프라이트를 각각 별도 오브젝트로 겹쳐두고 각자 애니메이터로 깜빡임을 만드는 구조**다(씬의 `player > PlayerVisual` / `PlayerBlink`). 컨트롤러 파일명 `DemiOpneEyes_0`의 오타는 그대로 두었다.
 - `Assets/03_Prefabs/` — `Card.prefab`(런타임 생성되는 손패 카드), `PlayerSpeechBubble`/`EnemySpeechBubble`, `enemy`/`strongEnemy`(스테이지별 적).
-- `Assets/03_Prefabs/Managers/` — `02_SYSTEM`의 매니저 여섯 개(`InputManager`/`Deck Manager`/`StageManager`/`BattleManager`/`WordDictionary`/`WordUnlockManager`)를 씬에서 뽑아낸 프리팹. **씬은 이걸 인스턴스로 들고 있고, 매니저끼리와 씬 오브젝트를 향한 인스펙터 연결은 전부 프리팹 인스턴스 오버라이드로 저장된다**(`SampleScene.unity`의 `m_Modifications` 안 `objectReference`). 자세한 주의점은 컨벤션 절 참조.
 - `Assets/04_Data/Cards/` — **24개 `CardBase` 에셋**(GDD 4장 단어 사전 전체, 페인풀만 제외). `Assets > Create > Deck Manager > Cards > ...` 메뉴로 만들 것. `.asset` YAML을 손으로 작성하면 스크립트 GUID가 조용히 어긋날 수 있다.
 - `Assets/04_Data/EnemyTutorial.asset` — 유일한 `EnemyData`.
 - `Assets/InputSystem_Actions.inputactions` — Input System 기본 템플릿. **미사용.** 게임플레이 입력은 의도적으로 이걸 거치지 않는다(아래).
@@ -77,18 +69,10 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - **`InputManager`** — `CurrentInput`(커밋된 문자), `Composition`(IME 조합 중 문자), 이벤트 `OnCharacterEntered(char)`/`OnCompositionChanged(string)`/`OnBackspace`/`OnSubmit`/`OnInputCleared`. `EnableInput()`/`DisableInput()`/`ClearInput()`으로 제어.
   - **한글만 받는다.** `HandleTextInput`이 `IsHangul` 아니면 즉시 리턴 — ASCII/영문은 `CurrentInput`에 도달조차 못 한다. 타이핑 경로 어디에서도 영어가 동작한다고 가정하지 말 것.
   - 문자는 `Keyboard.onTextInput`에서 온다(키 폴링 아님) — 그래야 조합된 한글 음절이 나온다.
-  - **IME 상태를 이 클래스가 전부 소유한다.** 플레이어가 입력창을 클릭하거나 한/영을 누르는 준비 동작 없이 Play 직후 바로 타이핑되게 하는 게 목표이며, 성질이 다른 두 가지를 각각 처리한다.
-    - *조합 활성화*(Unity 소유): `EnableInput()`이 `Keyboard.current.SetIMEEnabled(true)` + `Input.imeCompositionMode = On`. **`imeCompositionMode`를 `On`으로 고정하는 게 핵심이다** — 기본값 `Auto`는 "텍스트 필드가 선택된 동안"에만 IME를 켜므로, 예전엔 입력창을 클릭해 TMP가 대신 `On`으로 바꿔주기 전까지 한글이 조합되지 않았다. `DisableInput()`은 `SetIMEEnabled(false)`로 되돌린다(입력이 잠긴 동안 OS 조합 오버레이가 뜨는 걸 막는다).
-    - *변환 모드*(Windows IME 소유, 한글↔영문): Unity API로는 불가능해 `HangulImeMode.Force()`(IMM32)로 강제한다.
-  - **`HangulImeMode`** — `GetActiveWindow` → `ImmGetContext` → `ImmSetOpenStatus` + `ImmSetConversionStatus(IME_CMODE_NATIVE, IME_SMODE_NONE)`. `IME_CMODE_FULLSHAPE`는 **넣지 말 것**(전각이 된다). `#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN` 가드, 그 외 플랫폼은 no-op. 실패 로그는 **첫 번째 실패만** 남긴다(재적용 지점이 많아 그대로 두면 폭주한다).
-    - IME를 켠 **뒤에** 불러야 한다. 꺼진 상태에서는 창에 IME 컨텍스트가 붙어 있지 않아 `ImmGetContext`가 0을 준다 — 그래서 `EnableInput()`은 코루틴으로 **1프레임 뒤** 강제한다.
-    - 재적용 지점 세 곳: `EnableInput()`(턴마다), `OnApplicationFocus(true)`(alt-tab 복귀), 그리고 **자가 복구** — `HandleTextInput`에 라틴 글자가 들어오면 IME가 영문으로 빠진 것이므로 그 자리에서 다시 강제한다. 한/영 키는 Windows IME가 앱보다 먼저 처리해 차단할 수 없고, 이 자가 복구가 그 대체책이다(한 글자만 잃는다).
-    - 자가 복구는 **라틴 글자만** 신호로 본다. 숫자·공백까지 포함하면 결과 화면의 `1`/`3` 같은 입력에도 IMM32를 건드려 조합 중인 글자가 끊길 수 있다. 과호출 방지로 `imeForceCooldown`(기본 0.2초) 가드가 있다.
-    - 과거의 `ChangeHangul()`(RightAlt에서 `imeCompositionMode = On`)은 **삭제됐다.** 그건 한/영 토글이 아니라 조합 활성화를 늦게 켜주는 코드였고, "Alt를 눌러야 타이핑이 시작되는" 증상의 원인이었다. 되살리지 말 것.
+  - `ChangeHangul()`이 RightAlt로 `Input.imeCompositionMode`를 `Auto`↔`On` 토글한다. **이게 한/영 전환 문제의 해결책이므로 건드리지 말 것.**
   - `GetLeadConsonant(char)` / `IsValidProgress(committed, composing, target)` 정적 유틸을 제공한다. 후자는 "커밋된 문자열 + 조합 중인 글자가 target 단어를 향해 여전히 유효한가"를 판정하며, **매칭 로직과 손패 애니메이션이 같은 판정을 공유**하도록 하는 단일 기준점이다. 조합 중 글자는 표준 유니코드 한글 분해 공식으로 **초성만** 비교한다(모음 단계까지 검증하지 않는 의도적 절충).
   - `OnSubmit`(Enter)은 **구독자가 없다** — 매칭은 Enter를 쓰지 않는다.
-- **`InputFieldDisplay`** — 순수 뷰. `CurrentInput + Composition`을 `TextMeshProUGUI`에 미러링한다(라벨은 `GetComponent`가 아니라 인스펙터의 `text` 필드로 연결하므로 라벨과 다른 오브젝트에 붙어도 된다). **`TMP_InputField`가 아니라 그냥 라벨인 게 의도다** — 입력 필드는 선택될 때 `imeCompositionMode`를 `On`, 해제될 때 `Auto`로 되돌려 `InputManager`가 소유해야 할 IME 상태를 뺏어가고, 클릭 가능한 UI가 되어 "여길 눌러야 하나?" 하는 오해를 만든다. 예전엔 `TMP_InputField` + `readOnly = true` 우회를 썼는데, 클릭해서 활성화한 뒤 포커스가 빠지면 입력이 죽는 문제가 있어 라벨로 교체했다. **입력 필드로 되돌리지 말 것.**
-  - `SetIMECursorPosition`으로 OS IME 오버레이(조합 중인 밑줄 글자) 위치를 텍스트 끝에 맞춘다. `WorldToScreenPoint`는 좌하단 원점, `SetIMECursorPosition`은 좌상단 원점이라 Y를 뒤집는 코드가 필요하다.
+- **`InputFieldDisplay`** — 순수 뷰. `CurrentInput + Composition`을 **읽기 전용** `TMP_InputField`에 미러링한다(`readOnly = true` — `InputManager`가 OS IME 컨텍스트를 소유하므로 이게 자체 포커스를 가지면 입력이 두 번 들어간다). `SetIMECursorPosition`으로 OS IME 오버레이 위치도 맞춘다.
 
 ### 덱 / 카드 (`02_Scripts/DeckManager/`)
 
@@ -172,10 +156,6 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - C# 네임스페이스 없음 — 전부 전역 네임스페이스.
 - 싱글턴/서비스 로케이터/DI 없음: 모든 컴포넌트 간 의존은 인스펙터에서 손으로 연결하는 `[SerializeField]` 참조. 런타임에만 알 수 있는 의존은 `Bind(...)` 메서드를 명시적으로 둔다(`CardSlotView` 참조) — 조회하지 말 것.
 - 씬 오브젝트 참조는 프리팹 에셋에 저장되지 않는다. 프리팹이 씬 컴포넌트를 필요로 하면 스포너가 `Bind()`로 넘겨준다(`HandFanLayout` → `CardSlotView`의 `InputManager`).
-- ⚠️ **매니저 프리팹의 인스펙터 연결은 프리팹이 아니라 씬 인스턴스에 있다.** `03_Prefabs/Managers/`의 넷은 서로와 씬 오브젝트(`player`/`enemySpawnPoint`/각종 UI)를 참조하는데, 그 참조는 프리팹 에셋에 담길 수 없으므로 전부 인스턴스 오버라이드로만 존재한다. 따라서:
-  - 인스턴스에서 **Apply / Apply All을 누르지 말 것** — 씬 참조가 프리팹 쪽에서 null이 되고, 그 프리팹을 다시 인스턴스화하면 "아무 일도 안 일어남" 상태가 된다. 프리팹은 Override 상태로 두는 게 정상이다.
-  - 프리팹을 다시 씬에 끌어다 놓으면 참조가 하나도 안 붙어 온다. 연결을 손으로 전부 다시 채워야 한다.
-  - 매니저에 `[SerializeField]`를 추가했다면 프리팹이 아니라 **씬 인스턴스에서** 채우고 `SampleScene.unity`를 커밋할 것.
 - 로직 vs 뷰 분리: "매니저"가 상태와 판단을 소유하고, "뷰"(`InputFieldDisplay`/`CardSlotView`/`WordChainView`/`TimerView`)는 그걸 UI에 비추기만 하며 게임 판단을 하지 않는다.
 - 이벤트는 평범한 C# `event Action`/`event Action<T>`, `OnEnable`에서 구독하고 `OnDisable`에서 해제.
 - 새 스크립트는 `[SerializeField] private` + `[Header]`/`[Tooltip]`, 식 본문 읽기 전용 프로퍼티, 한글 주석. 편집 중인 파일의 스타일에 맞출 것. (`BattleManager`/`StageManager`/`EnemyManager`는 이 컨벤션보다 먼저 작성된 코드라 스타일 참고 대상이 아니다.)
@@ -184,12 +164,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 
 ## 알려진 이슈
 
-- **한/영 IME — 해결됨.** 증상은 두 갈래였는데 원인이 하나였다.
-  - "Play 직후엔 입력창을 클릭하거나 Alt를 눌러야 조합이 시작된다" → `imeCompositionMode`가 기본값 `Auto`였던 탓이다. **`EnableInput()`에서 `On`으로 고정**하고, 그 값을 되돌리는 주범이던 `TMP_InputField`를 라벨로 교체해 해결했다.
-  - "IME가 영문 모드면 아무것도 입력되지 않는다" → `HangulImeMode`(IMM32 `ImmSetConversionStatus`)로 한글 모드를 강제하고, 라틴 글자가 들어오면 자가 복구한다.
-  - **되돌리면 재발하는 것들**: `imeCompositionMode = On` 고정, `TMP_InputField`를 쓰지 않는 결정, `HangulImeMode` 재적용 지점 세 곳. 셋 중 하나만 빠져도 "클릭해야 입력됨" 또는 "영문일 때 먹통"이 그대로 돌아온다.
-  - 이미 시도했다 되돌린 것: P/Invoke `ImmSimulateHotKey`(한/영 핫키 시뮬레이션) — 효과 없었으니 다시 시도하지 말 것. 지금 쓰는 `ImmSetConversionStatus`는 핫키를 흉내내지 않고 변환 상태를 직접 쓰는 다른 API다.
-  - **앞으로 IME 쪽을 건드리면 반드시 빌드에서 재검증할 것.** 이 문제는 과거에 **에디터 전용이 아니라 스탠드얼론에서도 재현된 이력**이 있다. `HangulImeMode`가 실패하면 `Player.log`에 경고 한 줄이 남는다(첫 실패만). 실패 시의 폴백은 비한글 입력 감지 시 "한/영 키를 눌러주세요" 힌트를 띄우는 것 — 클릭 단계는 이미 없어졌으므로 그때도 남는 건 한/영 한 번뿐이다.
+- **한/영 IME 토글** — `ChangeHangul()`(RightAlt로 `Input.imeCompositionMode` 토글)로 **해결됨.** 이 메서드를 제거하면 재발한다. 과거에 시도했다 되돌린 P/Invoke(`GetAsyncKeyState` + `ImmSimulateHotKey`) 방식은 효과가 없었으니 다시 시도하지 말 것.
 - **한 음절 단어 미매칭** — `CardInputHandler`가 `OnCompositionChanged`도 구독하고 `CurrentInput + Composition`으로 매칭하도록 바꿔 **해결됨.** 커밋만 기다리는 구조로 되돌리면 퀵/잽/훅이 다시 완성 불가가 된다.
 - **손패 들림 판정의 절충** — 조합 중 글자는 초성만 비교한다. 모음을 잘못 짚어도 초성이 같으면 카드가 계속 떠 있다. 정밀 검증은 유니코드 분해가 훨씬 깊어져 의도적으로 하지 않았다.
 - **`Colorful`(컬러풀)의 단순화** — GDD는 "화상 > 마비 > 얼음 순으로 전부 부여"지만 `StatusEffectType`이 단일 값이라 셋을 동시에 담을 수 없다. 지금은 우선순위가 가장 높은 화상 하나만 나오게 단순화되어 있다. 상태이상 다중 적용이 필요해지면 `ResolvedAction.StatusEffect`를 리스트로 바꿔야 한다.

@@ -2,30 +2,21 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>
-/// 순수 뷰. InputManager의 커밋된 문자 + 조합 중인 문자를 TMP 라벨에 비춘다.
-///
-/// 일부러 TMP_InputField가 아니라 그냥 TextMeshProUGUI다. 입력 필드를 쓰면 (1) 선택될 때
-/// imeCompositionMode를 On으로, 해제될 때 Auto로 되돌려 InputManager가 소유해야 할 IME 상태를
-/// 뺏어가고, (2) 클릭 가능한 UI가 되어 플레이어가 "입력창을 눌러야 하나?" 하고 헷갈린다.
-/// 타이핑은 씬 어디에도 포커스 없이 InputManager가 직접 받는다.
-/// </summary>
+[RequireComponent(typeof(TMP_InputField))]
 public class InputFieldDisplay : MonoBehaviour
 {
     [SerializeField] private InputManager inputManager;
 
-    [Tooltip("타이핑한 글자를 비출 TMP 라벨. 입력 필드가 아니라 그냥 텍스트여야 한다.")]
-    [SerializeField] private TextMeshProUGUI text;
+    private TMP_InputField _inputField;
+
+    private void Awake()
+    {
+        _inputField = GetComponent<TMP_InputField>();
+        _inputField.readOnly = true;
+    }
 
     private void OnEnable()
     {
-        if (inputManager == null || text == null)
-        {
-            Debug.LogWarning($"{nameof(InputFieldDisplay)}: " +
-                             $"{(inputManager == null ? nameof(inputManager) : nameof(text))}가 비어 있어 입력창이 갱신되지 않는다.", this);
-            return;
-        }
-
         inputManager.OnCharacterEntered += HandleCharacterEntered;
         inputManager.OnBackspace += Refresh;
         inputManager.OnCompositionChanged += HandleCompositionChanged;
@@ -34,9 +25,6 @@ public class InputFieldDisplay : MonoBehaviour
 
     private void OnDisable()
     {
-        if (inputManager == null || text == null)
-            return;
-
         inputManager.OnCharacterEntered -= HandleCharacterEntered;
         inputManager.OnBackspace -= Refresh;
         inputManager.OnCompositionChanged -= HandleCompositionChanged;
@@ -55,7 +43,7 @@ public class InputFieldDisplay : MonoBehaviour
 
     private void Refresh()
     {
-        text.text = inputManager.CurrentInput + inputManager.Composition;
+        _inputField.SetTextWithoutNotify(inputManager.CurrentInput + inputManager.Composition);
         UpdateImeCursorPosition();
     }
 
@@ -67,10 +55,11 @@ public class InputFieldDisplay : MonoBehaviour
         if (Keyboard.current == null)
             return;
 
-        text.ForceMeshUpdate();
+        var textComponent = _inputField.textComponent;
+        textComponent.ForceMeshUpdate();
 
-        var rectTransform = text.rectTransform;
-        var textInfo = text.textInfo;
+        var rectTransform = textComponent.rectTransform;
+        var textInfo = textComponent.textInfo;
 
         Vector3 worldPoint;
         if (textInfo.characterCount > 0)

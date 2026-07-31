@@ -271,7 +271,21 @@ public class DeckManager : MonoBehaviour
             {
                 SoundManager.Instance.PlaySFX(battleManager.attackSound);
             }
+            // ========== 타격감 연출 추가 ==========
+            if (actionEntry.Action.Damage > 0 && enemyManager.currentEnemy != null)
+            {
+                // 1. 카메라 쉐이크 (0.1초 동안 0.8 강도로 흔들림)
+                if (CameraShake.Instance != null)
+                {
+                    CameraShake.Instance.Shake(0.1f, 0.8f);
+                }
 
+                // 2. 플로팅 데미지 띄우기
+                if (FloatingDamageManager.Instance != null)
+                {
+                    FloatingDamageManager.Instance.ShowDamage(actionEntry.Action.Damage, enemyManager.currentEnemy.transform.position);
+                }
+            }
             // 데미지 및 UI 텍스트 처리
             combatManager.ExecutePlayerAction(actionEntry.Action, player, enemyManager.currentEnemy);
 
@@ -288,7 +302,7 @@ public class DeckManager : MonoBehaviour
                     wordUnlockManager.AddLuckyBonus();
             }
 
-            battleManager.OnPlayerActionResolved(BuildBubbleText(actionEntry.Action));
+            //battleManager.OnPlayerActionResolved(BuildBubbleText(actionEntry.Action));
 
             // 도중에 적이 죽거나 전투가 끝났다면 콤보 즉시 중단 (럭키는 위에서 이미 처리했다)
             if (battleManager.IsGameOver || enemyManager.currentEnemy == null)

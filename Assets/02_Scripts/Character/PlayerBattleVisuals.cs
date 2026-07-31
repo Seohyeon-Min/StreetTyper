@@ -25,8 +25,11 @@ public class PlayerBattleVisuals : MonoBehaviour
         float time = 0;
         Vector3 startPos = transform.position;
         // 적의 위치에서 x축으로 dashOffset만큼 왼쪽(-)에 서기
-        Vector3 targetPos = enemyManager.currentEnemy.transform.position + new Vector3(-dashOffset, 0, 0);
-
+        Vector3 targetPos = new Vector3(
+                    enemyManager.currentEnemy.transform.position.x - dashOffset,
+                    originalPosition.y,
+                    originalPosition.z
+                );
         while (time < duration)
         {
             transform.position = Vector3.Lerp(startPos, targetPos, time / duration);

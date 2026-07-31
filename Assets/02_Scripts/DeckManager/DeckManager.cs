@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using FMODUnity;
 
 public class DeckManager : MonoBehaviour
 {
@@ -233,6 +234,11 @@ public class DeckManager : MonoBehaviour
             if (playerVisuals != null)
             {
                 playerVisuals.PlayAttackAnimation(i == 0, animSpeedMultiplier);
+            }
+
+            if (SoundManager.Instance != null && battleManager != null)
+            {
+                SoundManager.Instance.PlaySFX(battleManager.attackSound);
             }
 
             // 데미지 및 UI 텍스트 처리

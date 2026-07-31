@@ -18,6 +18,7 @@ public class DeckManager : MonoBehaviour
     [SerializeField] private BattleManager battleManager;
     [SerializeField] private EnemyManager enemyManager;
     [SerializeField] private CharacterStats player;
+    [SerializeField] private PlayerBattleVisuals playerVisuals;
 
     [Tooltip("턴이 도는 동안 완성된 조합을 쌓아두는 곳. 실제 적용은 턴이 끝날 때 한다.")]
     [SerializeField] private PendingActionManager pendingActionManager;
@@ -190,24 +191,73 @@ public class DeckManager : MonoBehaviour
     // 그 뒤의 공격은 대상이 없어 어차피 헛돌고, 결과 화면이 뜬 뒤에도 타격이 이어지면 어색하다.
     private IEnumerator PlayPendingActions()
     {
+        // 1. 큐에 쌓인 액션을 모두 꺼내서 리스트로 옮깁니다. (총 개수를 미리 알기 위해)
+        List<PendingActionManager.Entry> actions = new List<PendingActionManager.Entry>();
         while (pendingActionManager.TryDequeue(out var entry))
         {
-            combatManager.ExecutePlayerAction(entry.Action, player, enemyManager.currentEnemy);
+            actions.Add(entry);
+        }
 
-            // OnPlayerActionResolved가 UpdateUI -> CheckGameState를 거치므로,
-            // 바로 아래의 IsGameOver는 이번 타격 결과가 반영된 값이다.
-            battleManager.OnPlayerActionResolved(BuildBubbleText(entry.Action));
+        int totalActions = actions.Count;
+        if (totalActions == 0) yield break;
 
-            if (battleManager.IsGameOver || enemyManager.currentEnemy == null)
+        // 2. 다이나믹 배속 계산 (최대 4초 룰)
+        float maxTotalTime = 3.9f;
+        float moveDuration = 0.2f; // 돌진 및 복귀 시간 (왕복 0.4초)
+        float availableAttackTime = maxTotalTime - (moveDuration * 2); // 순수하게 때릴 수 있는 시간 (약 3.5초)
+
+        float baseInterval = pendingActionInterval; // 인스펙터에 설정된 기본값 (0.3초)
+        float currentInterval = baseInterval;
+
+        // 공격 개수가 너무 많아서 기본 간격으로 4초를 넘어가면, 간격을 강제로 압축합니다.
+        if (totalActions * baseInterval > availableAttackTime)
+        {
+            currentInterval = availableAttackTime / totalActions;
+        }
+
+        // 애니메이션 배속 (간격이 짧아질수록 애니메이션은 그만큼 배속으로 빨라짐)
+        float animSpeedMultiplier = baseInterval / currentInterval;
+
+        // 3. 적 앞으로 돌진
+        if (playerVisuals != null)
+        {
+            yield return playerVisuals.MoveToEnemyCoroutine(moveDuration);
+        }
+
+        // 4. 공격 스택 하나씩 실행
+        for (int i = 0; i < totalActions; i++)
+        {
+            var actionEntry = actions[i];
+
+            // 1번째 공격이면 Punch1, 그 이후는 랜덤 펀치 애니메이션 재생
+            if (playerVisuals != null)
             {
-                pendingActionManager.Clear();
-                yield break;
+                playerVisuals.PlayAttackAnimation(i == 0, animSpeedMultiplier);
             }
 
-            yield return new WaitForSeconds(pendingActionInterval);
-        }
-    }
+            // 데미지 및 UI 텍스트 처리
+            combatManager.ExecutePlayerAction(actionEntry.Action, player, enemyManager.currentEnemy);
+            battleManager.OnPlayerActionResolved(BuildBubbleText(actionEntry.Action));
 
+            // 도중에 적이 죽거나 전투가 끝났다면 콤보 즉시 중단
+            if (battleManager.IsGameOver || enemyManager.currentEnemy == null)
+            {
+                break;
+            }
+
+            // 계산된 동적 간격만큼 대기 (배속이 걸리면 엄청 짧게 기다림)
+            yield return new WaitForSeconds(currentInterval);
+        }
+
+        // 5. 원래 위치로 복귀 및 배속 원상 복구
+        if (playerVisuals != null)
+        {
+            yield return playerVisuals.MoveToOriginCoroutine(moveDuration);
+            playerVisuals.ResetAnimationSpeed();
+        }
+
+        pendingActionManager.Clear();
+    }
     // 말풍선엔 스킬 이름이 아니라 실제 적용된 공격력/방어력 수치를 보여준다.
     // Damage/Defense는 액션의 ActionKind에 따라 둘 중 하나만 채워진다.
     private static string BuildBubbleText(ResolvedAction action)

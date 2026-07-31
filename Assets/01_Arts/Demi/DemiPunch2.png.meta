@@ -1,0 +1,431 @@
+fileFormatVersion: 2
+guid: 1f83090a0fff0b64ca6d83ffcc19008e
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -1414471369572481577
+    second: DemiPunch2_0
+  - first:
+      213: 2594045603900254075
+    second: DemiPunch2_1
+  - first:
+      213: -172987837782028663
+    second: DemiPunch2_2
+  - first:
+      213: -7601344648432502310
+    second: DemiPunch2_3
+  - first:
+      213: 5127939270394050697
+    second: DemiPunch2_4
+  - first:
+      213: -2949395185944353972
+    second: DemiPunch2_5
+  - first:
+      213: -7677328898362416275
+    second: DemiPunch2_6
+  - first:
+      213: 8964056929359214579
+    second: DemiPunch2_7
+  - first:
+      213: -4303374134933898647
+    second: DemiPunch2_8
+  - first:
+      213: 7150997192034701888
+    second: DemiPunch2_9
+  - first:
+      213: -3192436011214747704
+    second: DemiPunch2_10
+  - first:
+      213: -1870426698165156169
+    second: DemiPunch2_11
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: DemiPunch2_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 808
+        height: 973
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d50ca798c9ce5ce0800000000000000
+      internalID: -1414471369572481577
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiPunch2_1
+      rect:
+        serializedVersion: 2
+        x: 808
+        y: 0
+        width: 808
+        height: 973
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7763af9bb6eff320800000000000000
+      internalID: 2594045603900254075
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiPunch2_2
+      rect:
+        serializedVersion: 2
+        x: 1616
+        y: 0
+        width: 808
+        height: 973
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 98e0a826a7c699df0800000000000000
+      internalID: -172987837782028663
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiPunch2_3
+      rect:
+        serializedVersion: 2
+        x: 2424
+        y: 0
+        width: 808
+        height: 973
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad93dded059928690800000000000000
+      internalID: -7601344648432502310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiPunch2_4
+      rect:
+        serializedVersion: 2
+        x: 3232
+        y: 0
+        width: 808
+        height: 973
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 988fc91f8991a2740800000000000000
+      internalID: 5127939270394050697
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiPunch2_5
+      rect:
+        serializedVersion: 2
+        x: 4040
+        y: 0
+        width: 808
+        height: 973
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c432a8774b4a117d0800000000000000
+      internalID: -2949395185944353972
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiPunch2_6
+      rect:
+        serializedVersion: 2
+        x: 4848
+        y: 0
+        width: 808
+        height: 973
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d63644d0b06a47590800000000000000
+      internalID: -7677328898362416275
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiPunch2_7
+      rect:
+        serializedVersion: 2
+        x: 5656
+        y: 0
+        width: 808
+        height: 973
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3f7b5dc984ab66c70800000000000000
+      internalID: 8964056929359214579
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiPunch2_8
+      rect:
+        serializedVersion: 2
+        x: 6464
+        y: 0
+        width: 808
+        height: 973
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96a39a746085744c0800000000000000
+      internalID: -4303374134933898647
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiPunch2_9
+      rect:
+        serializedVersion: 2
+        x: 7272
+        y: 0
+        width: 808
+        height: 973
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0425b0dfe027d3360800000000000000
+      internalID: 7150997192034701888
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiPunch2_10
+      rect:
+        serializedVersion: 2
+        x: 8080
+        y: 0
+        width: 808
+        height: 973
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c7416fac5032b3d0800000000000000
+      internalID: -3192436011214747704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiPunch2_11
+      rect:
+        serializedVersion: 2
+        x: 8888
+        y: 0
+        width: 808
+        height: 973
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b68575f3d8ea06e0800000000000000
+      internalID: -1870426698165156169
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: b10788346674c2f4dbb320122f8d9291
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":12.0,"y":1.0},"gridSpriteSize":{"x":808.0,"y":973.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":7,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      DemiPunch2_0: -1414471369572481577
+      DemiPunch2_1: 2594045603900254075
+      DemiPunch2_10: -3192436011214747704
+      DemiPunch2_11: -1870426698165156169
+      DemiPunch2_2: -172987837782028663
+      DemiPunch2_3: -7601344648432502310
+      DemiPunch2_4: 5127939270394050697
+      DemiPunch2_5: -2949395185944353972
+      DemiPunch2_6: -7677328898362416275
+      DemiPunch2_7: 8964056929359214579
+      DemiPunch2_8: -4303374134933898647
+      DemiPunch2_9: 7150997192034701888
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

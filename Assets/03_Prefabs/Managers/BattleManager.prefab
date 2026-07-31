@@ -47,22 +47,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BattleManager
   enemyManager: {fileID: 8898755630797020058}
   stageManager: {fileID: 0}
+  eventManager: {fileID: 0}
   player: {fileID: 0}
-  playerHPText: {fileID: 0}
-  enemyHPText: {fileID: 0}
-  playerHPBar: {fileID: 0}
-  enemyHPBar: {fileID: 0}
-  playerHPFill: {fileID: 0}
-  enemyHPFill: {fileID: 0}
-  playerDefIcon: {fileID: 0}
-  enemyDefIcon: {fileID: 0}
-  playerDefText: {fileID: 0}
-  enemyDefText: {fileID: 0}
-  playerSpeechBubblePrefab: {fileID: 421561903031249327, guid: ed42faf9df11d1b449d4840e0ebf3902, type: 3}
-  enemySpeechBubblePrefab: {fileID: 2888076677979763702, guid: ececaf37a69079c4f90e6f39dc5990d0, type: 3}
-  canvasTransform: {fileID: 0}
+  playerHealthBar: {fileID: 0}
+  enemyHealthBar: {fileID: 0}
   resultText: {fileID: 0}
   actionBubbleDuration: 1
+  attackSound:
+    Guid:
+      Data1: 1076573377
+      Data2: 1213439216
+      Data3: 1364334219
+      Data4: -484313630
+    Path: event:/Kick
+  battleBGM:
+    Guid:
+      Data1: 1675660136
+      Data2: 1166344121
+      Data3: -1615066971
+      Data4: 71728400
+    Path: event:/BGM
 --- !u!114 &8898755630797020058
 MonoBehaviour:
   m_ObjectHideFlags: 0

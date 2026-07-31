@@ -162,6 +162,7 @@ GameObject:
   - component: {fileID: 108802001}
   - component: {fileID: 108802000}
   - component: {fileID: 108802003}
+  - component: {fileID: 108802004}
   m_Layer: 0
   m_Name: player
   m_TagString: Untagged
@@ -281,6 +282,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &108802004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 108801999}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a045488b152f2e4785e4a75d2112e24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerBattleVisuals
+  animator: {fileID: 108802003}
+  enemyManager: {fileID: 1457634979}
+  dashOffset: 1.5
 --- !u!1 &117798624
 GameObject:
   m_ObjectHideFlags: 0
@@ -3146,6 +3162,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1457634980}
     - target: {fileID: 4851272410524515771, guid: 50c53463f810eb545879183065b0c7d9, type: 3}
+      propertyPath: playerVisuals
+      value: 
+      objectReference: {fileID: 108802004}
+    - target: {fileID: 4851272410524515771, guid: 50c53463f810eb545879183065b0c7d9, type: 3}
       propertyPath: pendingActionManager
       value: 
       objectReference: {fileID: 1084949182}
@@ -3289,11 +3309,11 @@ PrefabInstance:
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'enemyPrefabs.Array.data[0]'
       value: 
-      objectReference: {fileID: 6201447247898099441, guid: 71523482895db8d4ca417e23e6d25046, type: 3}
+      objectReference: {fileID: 6201447247898099441, guid: 537d28c9ef879924ba190036c02015ae, type: 3}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'enemyPrefabs.Array.data[1]'
       value: 
-      objectReference: {fileID: 6201447247898099441, guid: 537d28c9ef879924ba190036c02015ae, type: 3}
+      objectReference: {fileID: 6201447247898099441, guid: 71523482895db8d4ca417e23e6d25046, type: 3}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'enemyPrefabs.Array.data[2]'
       value: 

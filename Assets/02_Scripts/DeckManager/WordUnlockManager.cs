@@ -24,7 +24,13 @@ public class WordUnlockManager : MonoBehaviour
     [Tooltip("스테이지 클리어 시 지급할 단어 개수")]
     [SerializeField] private int wordsPerReward = 3;
 
+    [Tooltip("럭키가 포함된 공격으로 적을 처치했을 때 추가로 주는 단어 개수")]
+    [SerializeField] private int luckyBonusWords = 1;
+
     [SerializeField] private bool logDebugEvents = true;
+
+    // 럭키로 확정된 추가 보상. 적을 처치한 순간 쌓이고, 다음 보상 지급 때 소비된다.
+    private int _pendingBonusWords;
 
     // 지급할 때마다 새 리스트를 만들지 않도록 재사용한다.
     private readonly List<CardBase> _granted = new List<CardBase>();
@@ -70,7 +76,12 @@ public class WordUnlockManager : MonoBehaviour
 
         CollectLockedWords();
 
-        var count = Mathf.Min(wordsPerReward, _candidates.Count);
+        // 럭키로 쌓인 보너스를 여기서 소비한다. 지급이 한 번 일어나면 초기화되므로
+        // 다음 스테이지로 넘어가지 않는다.
+        var bonus = _pendingBonusWords;
+        _pendingBonusWords = 0;
+
+        var count = Mathf.Min(wordsPerReward + bonus, _candidates.Count);
         for (var i = 0; i < count; i++)
         {
             // 뽑은 건 후보에서 빼서 같은 단어가 두 번 나오지 않게 한다.
@@ -84,12 +95,27 @@ public class WordUnlockManager : MonoBehaviour
         if (logDebugEvents)
         {
             if (_granted.Count > 0)
-                Debug.Log($"WordUnlock: 클리어 보상 {_granted.Count}개 지급 - {JoinNames(_granted)}", this);
+            {
+                var bonusNote = bonus > 0 ? $" (럭키 +{bonus})" : string.Empty;
+                Debug.Log($"WordUnlock: 클리어 보상 {_granted.Count}개 지급{bonusNote} - {JoinNames(_granted)}", this);
+            }
             else
+            {
                 Debug.Log("WordUnlock: 더 이상 해금할 단어가 없습니다.", this);
+            }
         }
 
         return _granted;
+    }
+
+    /// <summary>럭키가 포함된 공격으로 적을 처치했을 때 호출한다. 다음 클리어 보상에
+    /// luckyBonusWords만큼 더 얹는다. 한 턴에 여러 번 성공하면 그만큼 쌓인다.</summary>
+    public void AddLuckyBonus()
+    {
+        _pendingBonusWords += luckyBonusWords;
+
+        if (logDebugEvents)
+            Debug.Log($"WordUnlock: 럭키 처치 - 다음 보상에 +{luckyBonusWords} (누적 +{_pendingBonusWords})", this);
     }
 
     // 아직 사전에 없는 단어들을 후보로 모은다.

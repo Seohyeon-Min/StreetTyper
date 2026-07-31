@@ -22,6 +22,12 @@ public class DeckManager : MonoBehaviour
     [Tooltip("턴이 도는 동안 완성된 조합을 쌓아두는 곳. 실제 적용은 턴이 끝날 때 한다.")]
     [SerializeField] private PendingActionManager pendingActionManager;
 
+    [Tooltip("화상 지속 피해와 상태이상 턴 감소를 적 턴 직후에 처리한다.")]
+    [SerializeField] private StatusEffectManager statusEffectManager;
+
+    [Tooltip("럭키로 처치했을 때 클리어 보상을 늘리기 위해 참조한다.")]
+    [SerializeField] private WordUnlockManager wordUnlockManager;
+
     [Header("턴 전환 딜레이")]
     [Tooltip("타이머가 끝난 뒤 적이 공격하기까지 대기하는 시간(초)")]
     [SerializeField] private float turnChangeDelay = 2f;
@@ -138,6 +144,11 @@ public class DeckManager : MonoBehaviour
 
         // 아직 터지지 않은 공격은 버린다 - 안 그러면 다음 스테이지 첫 턴에 지난 판 공격이 튀어나온다.
         pendingActionManager.Clear();
+
+        // 상태이상도 판이 끝나면 정리한다. 특히 데빌은 플레이어에게 걸린 것이라
+        // 되돌리지 않으면 다음 판까지 피해 감소가 남는다.
+        if (statusEffectManager != null)
+            statusEffectManager.ClearAll();
     }
 
     private IEnumerator RunTurnTransition()
@@ -174,7 +185,12 @@ public class DeckManager : MonoBehaviour
 
         battleManager.ExecuteEnemyTurn();
 
-        // 적 턴에 플레이어가 죽었을 수 있다 - 그러면 다음 턴을 시작하지 않는다.
+        // 적 턴이 끝난 직후 화상 피해를 넣고 상태이상 지속을 1턴 줄인다.
+        // 화상 피해를 적 공격과 겹치지 않게 띄워 보여주므로 코루틴으로 기다린다.
+        if (statusEffectManager != null)
+            yield return statusEffectManager.OnEnemyTurnEnded();
+
+        // 적 턴에 플레이어가 죽었거나, 화상 피해로 적이 죽었을 수 있다.
         if (battleManager.IsGameOver)
             yield break;
 
@@ -182,7 +198,10 @@ public class DeckManager : MonoBehaviour
         yield return new WaitForSeconds(postAttackDelay);
 
         inputManager.EnableInput();
-        timerManager.RestartTurn();
+
+        // 적이 마비 상태면 이번 턴 제한 시간이 늘어난다(GDD: 10초 + 5초).
+        var timerBonus = statusEffectManager != null ? statusEffectManager.GetTimerBonus() : 0f;
+        timerManager.RestartTurn(timerBonus);
     }
 
     // 이번 턴에 쌓인 공격을 쌓인 순서대로(먼저 완성한 것부터) 하나씩 적용하고 사이에 간격을 둔다.
@@ -200,6 +219,11 @@ public class DeckManager : MonoBehaviour
 
             if (battleManager.IsGameOver || enemyManager.currentEnemy == null)
             {
+                // 적을 쓰러뜨린 게 바로 이 공격이다 - 럭키가 섞여 있었다면 클리어 보상을 하나 더 준다.
+                // 화상 같은 지속 피해로 죽은 경우는 여기 오지 않으므로 보너스도 붙지 않는다.
+                if (entry.Action.LootBonusOnKill && wordUnlockManager != null)
+                    wordUnlockManager.AddLuckyBonus();
+
                 pendingActionManager.Clear();
                 yield break;
             }

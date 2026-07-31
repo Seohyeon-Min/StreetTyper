@@ -14,8 +14,13 @@ public class TimerManager : MonoBehaviour
 
     public float RemainingTime { get; private set; }
 
-    /// <summary>이번 턴 카운트다운의 기준값. 슬라이더 max 등 UI가 비율을 계산할 때 쓴다.</summary>
+    /// <summary>이번 턴 카운트다운의 기준값. 슬라이더 max 등 UI가 비율을 계산할 때 쓴다.
+    /// 마비 같은 효과로 늘어난 턴에는 BaseDuration보다 커진다.</summary>
     public float Duration { get; private set; }
+
+    /// <summary>보너스가 붙지 않은 기본 제한 시간. UI가 "이번 턴이 평소보다 긴가"를
+    /// 판단해 바 길이를 늘릴 때 기준으로 쓴다.</summary>
+    public float BaseDuration => baseDuration;
 
     public event Action<float> OnTimeChanged;
     public event Action OnTimeExpired;
@@ -44,9 +49,11 @@ public class TimerManager : MonoBehaviour
         OnTimeChanged?.Invoke(RemainingTime);
     }
 
-    public void RestartTurn()
+    /// <summary>이번 턴을 다시 시작한다. bonusSeconds는 상태이상(적 마비)처럼 제한 시간을
+    /// 늘려주는 효과가 넘긴다 - Duration이 늘어난 값으로 잡히므로 슬라이더 최대치도 함께 커진다.</summary>
+    public void RestartTurn(float bonusSeconds = 0f)
     {
-        StartTimer(baseDuration);
+        StartTimer(baseDuration + Mathf.Max(0f, bonusSeconds));
     }
 
     /// <summary>게이지를 최대치로 되돌리되 카운트다운은 시작하지 않는다. 턴 전환·스테이지 시작

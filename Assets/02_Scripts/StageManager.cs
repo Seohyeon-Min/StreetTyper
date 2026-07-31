@@ -26,15 +26,39 @@ public class StageManager : MonoBehaviour
     [Tooltip("적 HP 바의 위치 추종 컴포넌트. 적은 스테이지마다 새로 스폰되므로 여기서 대상을 넘겨준다.")]
     public WorldAnchoredUI enemyHealthBarAnchor;
 
+    public StatusEffectManager statusEffectManager;
+
+    [Tooltip("런이 시작될 때 어썸 누적 횟수를 되돌리기 위해 참조한다.")]
+    public SkillResolver skillResolver;
+
+    [Tooltip("클리어 보상으로 얻은 단어 카드를 화면에 펼쳐 보여준다.")]
+    public RewardCardView rewardCardView;
+
     private int currentStageIndex = 0;
     private GameObject currentEnemyObject;
     private Coroutine startRoutine;
+
+    private void OnEnable()
+    {
+        if (battleManager != null)
+            battleManager.OnBattleEnded += HandleBattleEnded;
+    }
+
+    private void OnDisable()
+    {
+        if (battleManager != null)
+            battleManager.OnBattleEnded -= HandleBattleEnded;
+    }
 
     void Start()
     {
         // 사전은 비어 있는 상태로 시작하므로, 첫 스테이지를 열기 전에 시작 단어부터 채워준다.
         if (wordUnlockManager != null)
             wordUnlockManager.GrantStartingWords();
+
+        // 여기가 런의 시작점이다 - 어썸 누적 횟수도 같이 되돌린다.
+        if (skillResolver != null)
+            skillResolver.ResetRun();
 
         LoadStage(currentStageIndex);
     }
@@ -95,6 +119,16 @@ public class StageManager : MonoBehaviour
         if (pendingActionManager != null)
             pendingActionManager.Clear();
 
+        // 상태이상도 넘겨받지 않는다. 이전 적은 이미 사라졌으므로 얼음 복원은 의미가 없고,
+        // 플레이어에게 걸린 데빌만 되돌아간다.
+        if (statusEffectManager != null)
+            statusEffectManager.ClearAll();
+
+        // 새 스테이지가 열리는 순간에는 보상 카드가 남아 있으면 안 된다.
+        // RunNextStage가 이미 치우지만, 패배 후 재시작처럼 그 경로를 타지 않는 진입도 있다.
+        if (rewardCardView != null)
+            rewardCardView.Clear();
+
         if (startRoutine != null)
             StopCoroutine(startRoutine);
 
@@ -123,12 +157,29 @@ public class StageManager : MonoBehaviour
 
     // 스테이지 클리어 지점. BattleManager가 승리 후 1번 키 입력에서만 부르므로
     // 클리어 1회당 보상이 정확히 한 번 지급된다(RestartStage는 이 경로를 타지 않는다).
+    // 보상은 승리가 확정된 순간(HandleBattleEnded)에 이미 지급되고 화면에도 떠 있다.
+    // 여기서는 그 카드를 치우고 다음 스테이지를 여는 일만 한다.
     public void NextStage()
     {
-        if (wordUnlockManager != null)
-            wordUnlockManager.GrantStageClearReward();
-
         LoadStage(currentStageIndex + 1);
+    }
+
+    // 적 HP가 0이 되어 승패가 갈리는 순간 호출된다(BattleManager.OnBattleEnded).
+    // 결과 화면과 함께 이번 판에서 얻은 단어를 바로 펼쳐 보여준다 - 플레이어가 1을 누르기 전에
+    // 무엇을 얻었는지 확인할 수 있어야 하기 때문이다.
+    private void HandleBattleEnded()
+    {
+        // 패배에는 보상이 없다. 죽은 쪽이 플레이어면 여기서 끝.
+        if (player == null || player.currentHP <= 0)
+            return;
+
+        if (wordUnlockManager == null)
+            return;
+
+        var reward = wordUnlockManager.GrantStageClearReward();
+
+        if (rewardCardView != null && reward != null && reward.Count > 0)
+            rewardCardView.Show(reward);
     }
 
     public void RestartStage()

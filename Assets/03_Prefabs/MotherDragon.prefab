@@ -108,5 +108,6 @@ MonoBehaviour:
   currentHP: 9999
   power: 10
   defense: 9999
+  damageTakenMultiplier: 1
   enemyData: {fileID: 11400000, guid: f6b198d5953ad4142b7711a89ab1783e, type: 2}
   isMotherDragon: 1

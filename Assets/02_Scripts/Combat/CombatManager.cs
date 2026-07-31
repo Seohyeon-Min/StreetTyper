@@ -4,6 +4,9 @@ using UnityEngine;
 // 수치 계산은 하지 않는다 - 대상의 방어도/생사처럼 "상대가 있어야 알 수 있는 것"만 처리한다.
 public class CombatManager : MonoBehaviour
 {
+    [Tooltip("상태이상(화상/마비/얼음)과 데빌을 실제로 거는 곳.")]
+    [SerializeField] private StatusEffectManager statusEffectManager;
+
     public void ExecutePlayerAction(ResolvedAction action, CharacterStats player, CharacterStats target)
     {
         if (action == null || player == null)
@@ -27,21 +30,30 @@ public class CombatManager : MonoBehaviour
         if (action.Heal > 0)
             player.Heal(action.Heal);
 
-        LogPendingEffects(action);
+        ApplyStatusEffects(action, player, target);
     }
 
-    // 아직 소비할 시스템이 없는 값들. SkillResolver는 이미 계산해서 넘겨주고 있으므로,
-    // 각 시스템(StatusEffectManager/BattleRewardManager)이 생기면 여기에 연결하면 된다.
-    // TimerChange는 여기 없다 - DeckManager가 TimerManager.AddTime으로 직접 소비한다.
-    private static void LogPendingEffects(ResolvedAction action)
+    // 상태이상은 대상의 스탯을 직접 건드리므로 피해/방어를 적용한 뒤에 건다.
+    // 지속 감소와 화상 피해는 DeckManager가 적 턴 직후에 처리한다.
+    private void ApplyStatusEffects(ResolvedAction action, CharacterStats player, CharacterStats target)
     {
-        if (action.StatusEffect != StatusEffectType.None)
-            Debug.Log($"[미구현] 상태이상 {action.StatusEffect} 부여");
+        if (statusEffectManager == null)
+        {
+            if (action.StatusEffect != StatusEffectType.None || action.DamageReduction > 0f)
+                Debug.LogWarning("CombatManager: statusEffectManager가 연결되지 않아 상태이상이 적용되지 않습니다.", this);
+            return;
+        }
 
+        if (action.StatusEffect != StatusEffectType.None && target != null)
+            statusEffectManager.ApplyToEnemy(action.StatusEffect, target);
+
+        // 데빌은 적이 아니라 시전자(플레이어)가 받는 피해를 줄인다.
         if (action.DamageReduction > 0f)
-            Debug.Log($"[미구현] 받는 피해 {action.DamageReduction}% 감소");
-
-        if (action.LootBonusOnKill)
-            Debug.Log("[미구현] 처치 시 추가 보상");
+            statusEffectManager.ApplyDevil(player);
     }
+
+    // 여기서 소비하지 않는 값이 둘 있다.
+    // - TimerChange: DeckManager가 체인 완성 시점에 TimerManager.AddTime으로 직접 쓴다.
+    // - LootBonusOnKill: "처치했는지"를 알아야 하는데 그 판정은 DeckManager.PlayPendingActions가
+    //   하므로 거기서 WordUnlockManager.AddLuckyBonus를 부른다.
 }

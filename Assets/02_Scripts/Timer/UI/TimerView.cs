@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,6 +16,10 @@ public class TimerView : MonoBehaviour
     [SerializeField] private Color increaseColor = new Color(0.3f, 1f, 0.3f);
     [SerializeField] private Color decreaseColor = new Color(1f, 0.3f, 0.3f);
     [SerializeField] private float flashDuration = 0.3f;
+
+    [Header("남은 시간 표시")]
+    [Tooltip("남은 초를 숫자로 보여줄 라벨(선택). 바만으로는 몇 초인지 알기 어렵다.")]
+    [SerializeField] private TMP_Text remainingText;
 
     private Coroutine _flashCoroutine;
 
@@ -37,9 +42,15 @@ public class TimerView : MonoBehaviour
     {
         if (slider != null)
         {
+            // 바의 길이는 그대로 두고 maxValue만 바꾼다 - 마비로 15초가 된 턴에는
+            // 같은 길이를 15초에 걸쳐 줄이므로 게이지가 "느리게 흐르는" 것으로 보인다.
+            // 마비가 걸렸다는 사실 자체는 적 HP 바의 StatusEffectView가 알려준다.
             slider.maxValue = timerManager.Duration;
             slider.value = remaining;
         }
+
+        if (remainingText != null)
+            remainingText.text = remaining.ToString("0.0");
     }
 
     // AddTime/ReduceTime으로 실제 효과가 적용됐을 때만 발생 - 이때만 반짝인다.

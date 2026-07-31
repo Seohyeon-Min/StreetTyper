@@ -155,9 +155,8 @@ public class StageManager : MonoBehaviour
         startRoutine = null;
     }
 
-    // 스테이지 클리어 지점. BattleManager가 승리 후 1번 키 입력에서만 부르므로
-    // 클리어 1회당 보상이 정확히 한 번 지급된다(RestartStage는 이 경로를 타지 않는다).
-    // 보상은 승리가 확정된 순간(HandleBattleEnded)에 이미 지급되고 화면에도 떠 있다.
+    // 스테이지 클리어 지점. 결과 화면에서 "다음"을 타이핑했을 때 ResultInputHandler가 부른다.
+    // 보상은 승리가 확정된 순간(HandleBattleEnded)에 이미 지급되고 화면에도 떠 있으므로,
     // 여기서는 그 카드를 치우고 다음 스테이지를 여는 일만 한다.
     public void NextStage()
     {
@@ -165,7 +164,7 @@ public class StageManager : MonoBehaviour
     }
 
     // 적 HP가 0이 되어 승패가 갈리는 순간 호출된다(BattleManager.OnBattleEnded).
-    // 결과 화면과 함께 이번 판에서 얻은 단어를 바로 펼쳐 보여준다 - 플레이어가 1을 누르기 전에
+    // 결과 화면과 함께 이번 판에서 얻은 단어를 바로 펼쳐 보여준다 - 플레이어가 "다음"을 치기 전에
     // 무엇을 얻었는지 확인할 수 있어야 하기 때문이다.
     private void HandleBattleEnded()
     {

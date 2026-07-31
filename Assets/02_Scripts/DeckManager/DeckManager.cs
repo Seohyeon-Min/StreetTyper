@@ -141,7 +141,10 @@ public class DeckManager : MonoBehaviour
     private void HandleBattleEnded()
     {
         timerManager.StopTimer();
-        inputManager.DisableInput();
+
+        // 결과 화면에서는 "다음"/"다시"를 타이핑해 넘어가므로 입력을 끄지 않고 오히려 켠다
+        // (일시정지에서 "계속"을 치는 것과 같은 구조). 대신 치다 만 글자는 비운다.
+        inputManager.EnableInput();
         inputManager.ClearInput();
 
         // 아직 터지지 않은 공격은 버린다 - 안 그러면 다음 스테이지 첫 턴에 지난 판 공격이 튀어나온다.
@@ -198,6 +201,15 @@ public class DeckManager : MonoBehaviour
 
         // 공격당한 여운을 두고 나서 플레이어 턴을 다시 연다.
         yield return new WaitForSeconds(postAttackDelay);
+
+        // 이번 턴에 쌓은 방어도는 적 공격을 막는 데까지만 쓰인다. 여기서 비우지 않으면
+        // 가드를 반복하는 것만으로 영구히 무적이 된다.
+        // 적 방어도는 건드리지 않는다 - 적은 자기 턴에 스스로 쌓는다.
+        if (player != null)
+        {
+            player.defense = 0;
+            battleManager.UpdateUI();
+        }
 
         inputManager.EnableInput();
 
@@ -262,16 +274,25 @@ public class DeckManager : MonoBehaviour
 
             // 데미지 및 UI 텍스트 처리
             combatManager.ExecutePlayerAction(actionEntry.Action, player, enemyManager.currentEnemy);
+
+            // 처치 판정을 UI 갱신보다 "먼저" 한다. OnPlayerActionResolved는 UpdateUI -> CheckGameState
+            // -> ShowResult -> OnBattleEnded까지 한 호출 안에서 이어지고, 그 안에서 StageManager가
+            // 클리어 보상을 지급해 버린다. 럭키 보너스가 그 뒤에 얹히면 이번 판이 아니라
+            // 다음 스테이지 보상에 반영되어, 로그만 찍히고 카드는 3장 그대로인 상태가 된다.
+            if (actionEntry.Action.LootBonusOnKill && wordUnlockManager != null)
+            {
+                var killed = enemyManager.currentEnemy;
+
+                // Die()가 Destroy를 부르면 Unity의 == null이 즉시 true가 되므로 둘 다 본다.
+                if (killed == null || killed.currentHP <= 0)
+                    wordUnlockManager.AddLuckyBonus();
+            }
+
             battleManager.OnPlayerActionResolved(BuildBubbleText(actionEntry.Action));
 
-            // 도중에 적이 죽거나 전투가 끝났다면 콤보 즉시 중단
+            // 도중에 적이 죽거나 전투가 끝났다면 콤보 즉시 중단 (럭키는 위에서 이미 처리했다)
             if (battleManager.IsGameOver || enemyManager.currentEnemy == null)
             {
-                // 적을 쓰러뜨린 게 바로 이 공격이다 - 럭키가 섞여 있었다면 클리어 보상을 하나 더 준다.
-                // 화상 같은 지속 피해로 죽은 경우는 여기 오지 않으므로 보너스도 붙지 않는다.
-                if (actionEntry.Action.LootBonusOnKill && wordUnlockManager != null)
-                    wordUnlockManager.AddLuckyBonus();
-
                 break;
             }
 

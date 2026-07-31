@@ -8,6 +8,9 @@ public class CardInputHandler : MonoBehaviour
     [SerializeField] private MainBufferManager mainBufferManager;
     [SerializeField] private WordChainManager wordChainManager;
 
+    [Tooltip("결과 화면에서는 타이핑이 전투가 아니라 ResultInputHandler로 가야 하므로 승패 여부를 본다.")]
+    [SerializeField] private BattleManager battleManager;
+
     public event Action<CardBase> OnCardMatched;
     public event Action OnTypo;
 
@@ -50,6 +53,11 @@ public class CardInputHandler : MonoBehaviour
         // ClearInput이 불려 명령 단어를 끝까지 칠 수 없게 된다.
         // PauseManager를 참조하지 않고 timeScale을 보는 이유는 BattleManager.Update와 같다.
         if (Mathf.Approximately(Time.timeScale, 0f))
+            return;
+
+        // 결과 화면에서도 같은 이유로 비켜준다. 여기서 걸러내지 않으면 "다음"의 첫 글자가
+        // 손패에 없는 단어라 오타로 처리되고 ClearInput이 불려 명령 단어를 끝까지 칠 수 없다.
+        if (battleManager != null && battleManager.IsGameOver)
             return;
 
         var committed = inputManager.CurrentInput;

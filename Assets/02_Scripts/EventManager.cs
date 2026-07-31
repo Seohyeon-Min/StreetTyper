@@ -115,7 +115,8 @@ public class EventManager : MonoBehaviour
         if (battleManager != null)
         {
             battleManager.UpdateUI();
-            battleManager.ShowResult("VICTORY!\n\nPress '1' for Next Stage");
+            // 안내 문구("다음을 입력하세요")는 ShowResult가 ResultInputHandler에서 받아 붙인다.
+            battleManager.ShowResult("VICTORY!");
         }
     }
 }

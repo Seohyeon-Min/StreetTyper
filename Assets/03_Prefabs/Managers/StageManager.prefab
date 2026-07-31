@@ -46,9 +46,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StageManager
   enemyPrefabs:
   - {fileID: 6201447247898099441, guid: 537d28c9ef879924ba190036c02015ae, type: 3}
+  - {fileID: 6201447247898099441, guid: 71523482895db8d4ca417e23e6d25046, type: 3}
   - {fileID: 6201447247898099441, guid: f468762efc46dc34ebeef2cf41689bf7, type: 3}
   enemySpawnPoint: {fileID: 0}
-  stageStartDelay: 2
+  stageStartDelay: 3
   battleManager: {fileID: 0}
   enemyManager: {fileID: 0}
   player: {fileID: 0}
@@ -57,3 +58,8 @@ MonoBehaviour:
   wordUnlockManager: {fileID: 0}
   cardSlotManager: {fileID: 0}
   wordChainManager: {fileID: 0}
+  pendingActionManager: {fileID: 0}
+  enemyHealthBarAnchor: {fileID: 0}
+  statusEffectManager: {fileID: 0}
+  skillResolver: {fileID: 0}
+  rewardCardView: {fileID: 0}

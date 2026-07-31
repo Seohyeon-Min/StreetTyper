@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using TMPro;
-using UnityEngine.InputSystem;
 using FMODUnity;
 
 public class BattleManager : MonoBehaviour
@@ -20,6 +19,9 @@ public class BattleManager : MonoBehaviour
 
     [Header("Game Result UI")]
     public TextMeshProUGUI resultText;
+
+    [Tooltip("결과 화면 안내 문구('다음'/'다시')를 만들 때 참조한다.")]
+    public ResultInputHandler resultInputHandler;
 
     [Header("Duration")]
     public float actionBubbleDuration = 1.0f;
@@ -64,61 +66,6 @@ public class BattleManager : MonoBehaviour
             SoundManager.Instance.PlayBGM(battleBGM);
 
         UpdateUI();
-    }
-
-    void Update()
-    {
-        if (Keyboard.current == null) return;
-
-        // 일시정지 중에는 디버그 키가 먹히면 안 된다 - 메뉴 뒤에서 스테이지가 넘어가 버린다.
-        // PauseManager를 참조하지 않고 timeScale을 보는 이유: BattleManager는 프리팹이고
-        // PauseManager는 씬 오브젝트라, 참조로 엮으면 씬 인스턴스 오버라이드가 하나 더 생긴다.
-        if (Mathf.Approximately(Time.timeScale, 0f)) return;
-
-        if (isGameOver)
-        {
-            if (Keyboard.current.digit1Key.wasPressedThisFrame)
-            {
-                if (player == null || player.currentHP <= 0) stageManager.RestartStage();
-                else stageManager.NextStage();
-            }
-            return;
-        }
-
-        // 이벤트 중이거나 엄마용 대기시간 중일 때는 키보드 입력 차단
-        if (eventManager != null && eventManager.IsEventActive) return;
-        if (isWaitingForDragonEnd) return; //   추가됨
-
-        if (Keyboard.current.digit1Key.wasPressedThisFrame)
-        {
-            if (enemyManager != null && enemyManager.currentEnemy != null)
-            {
-                enemyManager.currentEnemy.currentHP -= 10;
-                if (enemyManager.currentEnemy.currentHP < 0)
-                    enemyManager.currentEnemy.currentHP = 0;
-
-                // SoundManager는 씬에 없을 수 있다(아직 작업 중인 시스템이라 배치되지 않은 상태).
-                // 싱글턴이라 Instance가 null인 채로 호출하면 여기서 NullReferenceException이 난다.
-                if (SoundManager.Instance != null)
-                    SoundManager.Instance.PlaySFX(attackSound);
-
-                OnPlayerActionResolved("Attack 10!");
-            }
-        }
-
-        if (Keyboard.current.digit2Key.wasPressedThisFrame)
-        {
-            if (player != null)
-            {
-                player.defense += 10;
-                OnPlayerActionResolved("Defense 10!");
-            }
-        }
-
-        if (Keyboard.current.digit3Key.wasPressedThisFrame)
-        {
-            ExecuteEnemyTurn();
-        }
     }
 
     public void OnPlayerActionResolved(string bubbleText)
@@ -263,7 +210,7 @@ public class BattleManager : MonoBehaviour
     {
         if (player == null || player.currentHP <= 0)
         {
-            if (!isGameOver) ShowResult("DEFEAT...\n\nPress '1' to Restart");
+            if (!isGameOver) ShowResult("DEFEAT...");
         }
         else if (enemyManager != null && enemyManager.currentEnemy != null && enemyManager.currentEnemy.currentHP <= 0)
         {
@@ -288,12 +235,15 @@ public class BattleManager : MonoBehaviour
                 }
                 else
                 {
-                    ShowResult("VICTORY!\n\nPress '1' for Next Stage");
+                    ShowResult("VICTORY!");
                 }
             }
         }
     }
 
+    // message는 결과만 담고("VICTORY!"), 무엇을 입력해야 하는지는 여기서 붙인다.
+    // ResultInputHandler가 명령 단어를 소유하므로 안내도 그쪽에서 만들어야 인스펙터에서
+    // 단어를 바꿨을 때 안내가 같이 따라간다.
     public void ShowResult(string message)
     {
         bool wasOver = isGameOver;
@@ -302,7 +252,14 @@ public class BattleManager : MonoBehaviour
 
         if (resultText != null)
         {
-            resultText.text = message;
+            string hint = string.Empty;
+            if (resultInputHandler != null)
+            {
+                bool isVictory = player != null && player.currentHP > 0;
+                hint = resultInputHandler.GetHintText(isVictory);
+            }
+
+            resultText.text = message + hint;
             resultText.gameObject.SetActive(true);
         }
     }

@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1326174639955142419}
   - component: {fileID: 4261486253533367432}
   - component: {fileID: 8898755630797020058}
+  - component: {fileID: 8673143296737308907}
   m_Layer: 0
   m_Name: BattleManager
   m_TagString: Untagged
@@ -81,3 +82,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyManager
   currentEnemy: {fileID: 0}
   nextAction: 0
+--- !u!114 &8673143296737308907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3877965045486762055}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ad738f6bf6db554595fb684090b8065, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CombatManager
+  statusEffectManager: {fileID: 0}

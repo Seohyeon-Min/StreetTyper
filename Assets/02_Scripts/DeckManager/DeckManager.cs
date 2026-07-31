@@ -19,12 +19,18 @@ public class DeckManager : MonoBehaviour
     [SerializeField] private EnemyManager enemyManager;
     [SerializeField] private CharacterStats player;
 
+    [Tooltip("턴이 도는 동안 완성된 조합을 쌓아두는 곳. 실제 적용은 턴이 끝날 때 한다.")]
+    [SerializeField] private PendingActionManager pendingActionManager;
+
     [Header("턴 전환 딜레이")]
     [Tooltip("타이머가 끝난 뒤 적이 공격하기까지 대기하는 시간(초)")]
     [SerializeField] private float turnChangeDelay = 2f;
 
     [Tooltip("적 공격이 끝난 뒤 플레이어 턴이 다시 시작되기까지 대기하는 시간(초)")]
     [SerializeField] private float postAttackDelay = 4f;
+
+    [Tooltip("턴 종료 후 쌓인 공격을 하나씩 터뜨리는 간격(초)")]
+    [SerializeField] private float pendingActionInterval = 0.3f;
 
     [SerializeField] private bool logDebugEvents;
 
@@ -83,9 +89,10 @@ public class DeckManager : MonoBehaviour
         Debug.Log("Buffer cleared");
     }
 
-    // 액션 단어로 체인이 완성될 때마다 호출된다. 더 이상 턴을 끝내지 않는다 - 타이머가 도는
-    // 동안 여러 번 일어날 수 있다. 계산(SkillResolver) -> 적용(CombatManager) -> 타이머 반영
-    // -> UI/말풍선(BattleManager) -> 체인 비우기(바로 다음 조합을 이어서 쌓을 수 있게).
+    // 액션 단어로 체인이 완성될 때마다 호출된다. 턴을 끝내지 않는다 - 타이머가 도는 동안
+    // 여러 번 일어날 수 있다. 계산(SkillResolver) -> 쌓아두기(PendingActionManager) ->
+    // 체인 비우기(바로 다음 조합을 이어서 쌓을 수 있게) -> 타이머 반영.
+    // 실제 피해/방어 적용은 여기서 하지 않는다 - 턴이 끝날 때 PlayPendingActions가 순서대로 재생한다.
     private void HandleChainCompleted(IReadOnlyList<WordInstance> chain)
     {
         var skillName = BuildSkillName(chain);
@@ -99,12 +106,17 @@ public class DeckManager : MonoBehaviour
                       $"TimerChange={action.TimerChange} LootBonusOnKill={action.LootBonusOnKill}");
         }
 
-        combatManager.ExecutePlayerAction(action, player, enemyManager.currentEnemy);
-        battleManager.OnPlayerActionResolved(BuildBubbleText(action));
+        // 지금 적용하지 않고 쌓아둔다. 턴이 끝나면 PlayPendingActions가 쌓인 순서대로 터뜨린다.
+        pendingActionManager.Enqueue(skillName, action);
+
         wordChainManager.ClearChain();
 
+        // 타이머 증감(잽/훅/퀵/어퍼컷)만은 즉시 반영한다 - 남은 시간이 늘거나 깎이는 건
+        // 이번 턴 안에서 곧바로 체감돼야 하는 리스크/보상이라 지연시키면 의미가 없다.
+        //
         // 반드시 마지막에 반영한다 - 훅/어퍼컷처럼 시간을 깎는 조합이 남은 시간을 0으로 만들면
-        // 이 호출 안에서 곧바로 OnTimeExpired -> 턴 전환이 시작되기 때문이다.
+        // 이 호출 안에서 곧바로 OnTimeExpired -> 턴 전환이 시작되기 때문이다. 위의 Enqueue가
+        // 이보다 앞에 있어야 그 조합이 재생 목록에 들어간 상태로 턴이 넘어간다.
         timerManager.AddTime(action.TimerChange);
     }
 
@@ -123,6 +135,9 @@ public class DeckManager : MonoBehaviour
         timerManager.StopTimer();
         inputManager.DisableInput();
         inputManager.ClearInput();
+
+        // 아직 터지지 않은 공격은 버린다 - 안 그러면 다음 스테이지 첫 턴에 지난 판 공격이 튀어나온다.
+        pendingActionManager.Clear();
     }
 
     private IEnumerator RunTurnTransition()
@@ -139,6 +154,21 @@ public class DeckManager : MonoBehaviour
 
         wordChainManager.ClearChain();
 
+        // 대기 동안 게이지가 0에 붙어 있지 않고 가득 찬 채로 멈춰 있게 한다.
+        // 실제 카운트다운은 아래에서 RestartTurn()이 열어준다.
+        timerManager.ResetToFull();
+
+        // 이번 턴에 쌓아둔 공격을 순서대로 터뜨린다. 여기가 이 게임의 실제 공격 연출 구간이다.
+        yield return PlayPendingActions();
+
+        // 재생 도중 적을 처치했거나 그 사이 전투가 끝났으면 여기서 끝낸다.
+        if (battleManager.IsGameOver)
+            yield break;
+
+        // 다음 플레이어 턴에 쓸 손패를 미리 뽑는다 - 비어 있는 대기 시간이 교체 연출을
+        // 받아주고, 입력이 열릴 때쯤엔 이미 정리된 손패를 읽을 수 있다.
+        cardSlotManager.RefillAll();
+
         // "턴이 바뀌었다"는 걸 플레이어가 인지할 시간을 준 뒤 적이 공격한다.
         yield return new WaitForSeconds(turnChangeDelay);
 
@@ -153,6 +183,29 @@ public class DeckManager : MonoBehaviour
 
         inputManager.EnableInput();
         timerManager.RestartTurn();
+    }
+
+    // 이번 턴에 쌓인 공격을 쌓인 순서대로(먼저 완성한 것부터) 하나씩 적용하고 사이에 간격을 둔다.
+    // 적을 처치하면 남은 것은 버리고 즉시 끝낸다 - CharacterStats.Die()가 Destroy를 부르므로
+    // 그 뒤의 공격은 대상이 없어 어차피 헛돌고, 결과 화면이 뜬 뒤에도 타격이 이어지면 어색하다.
+    private IEnumerator PlayPendingActions()
+    {
+        while (pendingActionManager.TryDequeue(out var entry))
+        {
+            combatManager.ExecutePlayerAction(entry.Action, player, enemyManager.currentEnemy);
+
+            // OnPlayerActionResolved가 UpdateUI -> CheckGameState를 거치므로,
+            // 바로 아래의 IsGameOver는 이번 타격 결과가 반영된 값이다.
+            battleManager.OnPlayerActionResolved(BuildBubbleText(entry.Action));
+
+            if (battleManager.IsGameOver || enemyManager.currentEnemy == null)
+            {
+                pendingActionManager.Clear();
+                yield break;
+            }
+
+            yield return new WaitForSeconds(pendingActionInterval);
+        }
     }
 
     // 말풍선엔 스킬 이름이 아니라 실제 적용된 공격력/방어력 수치를 보여준다.

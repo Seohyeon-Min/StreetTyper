@@ -27,9 +27,12 @@ public class TimerManager : MonoBehaviour
 
     private void Start()
     {
-        // 스탠드얼론으로도 굴러가게 자체 시작하지만, 실제 매 턴 재시작은 DeckManager가
-        // RestartTurn()을 명시적으로 호출한다.
-        RestartTurn();
+        // 여기서 카운트다운을 시작하지는 않는다 - 게이지만 가득 채워두고, 실제 시작은
+        // 스테이지 시작 대기가 끝날 때 StageManager.BeginStageAfterDelay가 연다.
+        // RestartTurn()을 부르면 StageManager.Start()와 실행 순서가 정해져 있지 않아
+        // (프로젝트에 스크립트 실행 순서 설정이 없다) 이쪽이 나중에 돌 경우
+        // 첫 스테이지의 대기 시간 동안 타이머가 줄어버린다.
+        ResetToFull();
     }
 
     public void StartTimer(float duration)
@@ -44,6 +47,20 @@ public class TimerManager : MonoBehaviour
     public void RestartTurn()
     {
         StartTimer(baseDuration);
+    }
+
+    /// <summary>게이지를 최대치로 되돌리되 카운트다운은 시작하지 않는다. 턴 전환·스테이지 시작
+    /// 대기 동안 타이머가 0에 붙어 있는 대신 가득 찬 채로 멈춰 있게 하기 위한 것으로,
+    /// 실제 카운트다운 시작은 대기가 끝난 뒤 RestartTurn()이 맡는다.
+    /// OnTimeAdjusted는 일부러 쏘지 않는다 - 그건 "단어 효과로 시간이 변했다"는 신호 전용이라
+    /// 여기서 쏘면 대기에 들어갈 때마다 TimerView가 초록색으로 반짝인다.</summary>
+    public void ResetToFull()
+    {
+        Duration = baseDuration;
+        RemainingTime = baseDuration;
+        _running = false;
+        _expiredFired = false;
+        OnTimeChanged?.Invoke(RemainingTime);
     }
 
     public void AddTime(float amount)

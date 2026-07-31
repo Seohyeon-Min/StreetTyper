@@ -59,13 +59,21 @@ public class BattleManager : MonoBehaviour
         {
             enemyManager.GenerateNextAction();
         }
-        SoundManager.Instance.PlayBGM(battleBGM);
+        // 여기서 예외가 나면 아래 UpdateUI()까지 막혀 첫 프레임에 HP가 표시되지 않는다.
+        if (SoundManager.Instance != null)
+            SoundManager.Instance.PlayBGM(battleBGM);
+
         UpdateUI();
     }
 
     void Update()
     {
         if (Keyboard.current == null) return;
+
+        // 일시정지 중에는 디버그 키가 먹히면 안 된다 - 메뉴 뒤에서 스테이지가 넘어가 버린다.
+        // PauseManager를 참조하지 않고 timeScale을 보는 이유: BattleManager는 프리팹이고
+        // PauseManager는 씬 오브젝트라, 참조로 엮으면 씬 인스턴스 오버라이드가 하나 더 생긴다.
+        if (Mathf.Approximately(Time.timeScale, 0f)) return;
 
         if (isGameOver)
         {
@@ -89,7 +97,11 @@ public class BattleManager : MonoBehaviour
                 if (enemyManager.currentEnemy.currentHP < 0)
                     enemyManager.currentEnemy.currentHP = 0;
 
-                SoundManager.Instance.PlaySFX(attackSound);
+                // SoundManager는 씬에 없을 수 있다(아직 작업 중인 시스템이라 배치되지 않은 상태).
+                // 싱글턴이라 Instance가 null인 채로 호출하면 여기서 NullReferenceException이 난다.
+                if (SoundManager.Instance != null)
+                    SoundManager.Instance.PlaySFX(attackSound);
+
                 OnPlayerActionResolved("Attack 10!");
             }
         }

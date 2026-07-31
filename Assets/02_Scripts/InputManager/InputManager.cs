@@ -25,6 +25,11 @@ public class InputManager : MonoBehaviour
     private float _backspaceRepeatTimer;
     private float _lastImeForceTime = float.NegativeInfinity;
 
+    /// <summary>지금 타이핑을 받고 있는지. 일시정지가 멈추기 전 상태를 기억했다가 재개할 때
+    /// 그대로 되돌리기 위해 필요하다 - 턴 전환 대기처럼 원래 잠겨 있던 중에 멈췄다면
+    /// 재개하면서 켜면 안 된다.</summary>
+    public bool IsInputEnabled => _inputEnabled;
+
     private void Start()
     {
         EnableInput();

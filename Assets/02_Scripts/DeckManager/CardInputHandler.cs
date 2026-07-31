@@ -45,6 +45,13 @@ public class CardInputHandler : MonoBehaviour
 
     private void Evaluate(string composing)
     {
+        // 일시정지 중에는 타이핑이 일시정지 메뉴(PauseManager)의 명령 단어로 가야 한다.
+        // 여기서 걸러내지 않으면 "계속"이 손패에 없는 단어라 오타로 처리되고, 그 자리에서
+        // ClearInput이 불려 명령 단어를 끝까지 칠 수 없게 된다.
+        // PauseManager를 참조하지 않고 timeScale을 보는 이유는 BattleManager.Update와 같다.
+        if (Mathf.Approximately(Time.timeScale, 0f))
+            return;
+
         var committed = inputManager.CurrentInput;
 
         if (committed.Length == 0 && composing.Length == 0)

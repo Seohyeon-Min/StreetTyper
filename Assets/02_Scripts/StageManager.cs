@@ -21,6 +21,10 @@ public class StageManager : MonoBehaviour
     public WordUnlockManager wordUnlockManager;
     public CardSlotManager cardSlotManager;
     public WordChainManager wordChainManager;
+    public PendingActionManager pendingActionManager;
+
+    [Tooltip("적 HP 바의 위치 추종 컴포넌트. 적은 스테이지마다 새로 스폰되므로 여기서 대상을 넘겨준다.")]
+    public WorldAnchoredUI enemyHealthBarAnchor;
 
     private int currentStageIndex = 0;
     private GameObject currentEnemyObject;
@@ -56,6 +60,13 @@ public class StageManager : MonoBehaviour
         enemyManager.currentEnemy = newEnemyBase;
         enemyManager.GenerateNextAction();
 
+        // 적 HP 바가 방금 스폰된 적을 따라가게 한다. 뷰가 스스로 적을 찾아다니지 않도록
+        // 스포너가 넘겨주는 기존 방식(HandFanLayout -> CardSlotView.Bind)과 같다.
+        if (enemyHealthBarAnchor != null)
+            enemyHealthBarAnchor.Bind(currentEnemyObject.transform);
+        else
+            Debug.LogWarning("StageManager: enemyHealthBarAnchor가 연결되지 않아 적 HP 바가 따라오지 않습니다.", this);
+
         if (player != null)
         {
             player.defense = 0;
@@ -65,8 +76,10 @@ public class StageManager : MonoBehaviour
 
         // 대기 시간 동안엔 타이머가 돌지도, 입력이 들어오지도 않아야 한다.
         // 둘 다 BeginStageAfterDelay가 끝에서 다시 연다.
+        // ResetToFull은 정지까지 겸하므로(StopTimer 대체) 게이지가 0이 아니라
+        // 가득 찬 상태로 멈춰 있게 된다.
         if (timerManager != null)
-            timerManager.StopTimer();
+            timerManager.ResetToFull();
 
         if (inputManager != null)
         {
@@ -77,6 +90,10 @@ public class StageManager : MonoBehaviour
         // 이전 스테이지에서 쌓다 만 조합은 넘겨받지 않는다 - 입력창을 비우는 것과 같은 이유다.
         if (wordChainManager != null)
             wordChainManager.ClearChain();
+
+        // 아직 터지지 않은 공격도 같이 버린다 - 새 적에게 지난 스테이지의 공격이 들어가면 안 된다.
+        if (pendingActionManager != null)
+            pendingActionManager.Clear();
 
         if (startRoutine != null)
             StopCoroutine(startRoutine);

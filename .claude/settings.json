@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk '/m_EditorClassIdentifier: Assembly-CSharp::\\(BattleManager|StageManager|SpeechBubbleManager|WorldAnchoredUI\\)/{print \"\\\\n--- \" $2 \" ---\"; s=1; next} s&&/^  [a-z]/{print} /^--- !u!/{s=0}' Assets/00_Scenes/SampleScene.unity)"
+    ]
+  }
+}

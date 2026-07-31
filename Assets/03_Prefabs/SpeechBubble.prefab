@@ -367,5 +367,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpeechBubble
   bubbleText: {fileID: 2668929670146781178}
   tailTransform: {fileID: 7621623833116908542}
+  normalTailSprite: {fileID: -3671632523371792902, guid: 38046b2abc922fd4f89771128205ec93, type: 3}
+  thinkTailSprite: {fileID: 5904721828469306445, guid: 2a71f8f23fe720d49a42a6e42bd1d199, type: 3}
   playerTailPos: {x: 10, y: -3}
   enemyTailPos: {x: -10, y: -3}

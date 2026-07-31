@@ -240,7 +240,8 @@ public class BattleManager : MonoBehaviour
                 enemyIntentBubbleObj.SetActive(true);
 
                 string currentIntent = enemy.isMotherDragon ? mdIntentString : enemyManager.GetIntentString();
-                enemyIntentBubble.Setup(currentIntent, false);
+
+                enemyIntentBubble.Setup(currentIntent, false, false);
 
                 if (SpeechBubbleManager.Instance != null)
                 {

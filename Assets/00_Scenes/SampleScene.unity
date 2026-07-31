@@ -1665,6 +1665,11 @@ Transform:
   - {fileID: 1439353701}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &948146682 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2790320772274548289, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+  m_PrefabInstance: {fileID: 3074167411984738586}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &960669121
 GameObject:
   m_ObjectHideFlags: 0
@@ -1778,11 +1783,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
---- !u!4 &948146682 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2790320772274548289, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
-  m_PrefabInstance: {fileID: 3074167411984738586}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &996254191
 GameObject:
   m_ObjectHideFlags: 0
@@ -2054,7 +2054,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RewardCardView
   cardPrefab: {fileID: 6673234793080192669, guid: 01a72023d39fa9c47aa3a6b8ae82e92d, type: 3}
   container: {fileID: 1059607444}
-  spacing: 100
+  spacing: 200
   verticalOffset: 0
   logDebugEvents: 0
 --- !u!224 &1059607444
@@ -2073,7 +2073,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 40}
+  m_AnchoredPosition: {x: 0, y: 100}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1083296124
@@ -3518,17 +3518,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1457634980}
     - target: {fileID: 4851272410524515771, guid: 50c53463f810eb545879183065b0c7d9, type: 3}
+      propertyPath: playerVisuals
+      value: 
+      objectReference: {fileID: 108802004}
+    - target: {fileID: 4851272410524515771, guid: 50c53463f810eb545879183065b0c7d9, type: 3}
       propertyPath: wordUnlockManager
-      value:
+      value: 
       objectReference: {fileID: 569780932}
     - target: {fileID: 4851272410524515771, guid: 50c53463f810eb545879183065b0c7d9, type: 3}
       propertyPath: statusEffectManager
-      value:
+      value: 
       objectReference: {fileID: 970951418202211458}
-    - target: {fileID: 4851272410524515771, guid: 50c53463f810eb545879183065b0c7d9, type: 3}
-      propertyPath: playerVisuals
-      value:
-      objectReference: {fileID: 108802004}
     - target: {fileID: 4851272410524515771, guid: 50c53463f810eb545879183065b0c7d9, type: 3}
       propertyPath: pendingActionManager
       value: 

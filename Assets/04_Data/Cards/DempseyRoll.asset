@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActionCardData
   cardName: "\uB380\uD504\uC2DC\uB864"
   icon: {fileID: 0}
-  description: 
+  description: "2~5\uD68C \uC5F0\uD0C0"
+  statsLabel: "\uC5F0\uD0C0"
   actionKind: 0
   strengthBonus: 0
   timerDelta: 0

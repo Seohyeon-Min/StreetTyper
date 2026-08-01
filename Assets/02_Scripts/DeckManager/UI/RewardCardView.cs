@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 // 스테이지 클리어로 얻은 단어 카드를 화면 가운데에 늘어놓는 순수 뷰.
 // 카드 개수가 3장(럭키면 4장)으로 바뀌므로 가운데를 기준으로 좌우 대칭이 되게 배치한다 -
@@ -103,30 +101,26 @@ public class RewardCardView : MonoBehaviour
             var x = (index - (total - 1) * 0.5f) * step;
             rect.anchoredPosition = new Vector2(x, verticalOffset);
 
-            // Card.prefab에는 손패 부채꼴용 기울기(약 10도)가 박혀 있다. 손패에서는
-            // HandFanLayout이 매 프레임 덮어쓰지만 여기는 그 레이아웃 밖이라 그대로 드러난다.
+            // 손패에서는 HandFanLayout이 부채꼴로 카드를 기울인다. 여기는 그 레이아웃 밖이라
+            // 기울기 없이 반듯하게 세운다. Card.prefab 루트 자체의 회전은 지금 항등이라
+            // 이 줄은 사실상 방어용이다(기울기는 NameText 자식에 7도가 따로 박혀 있고, 그건 아트 의도다).
             rect.localRotation = Quaternion.identity;
         }
 
         // 손패용 Card.prefab을 재사용하는 경우 슬롯 로직이 같이 딸려온다.
         // 보상 표시는 슬롯과 무관하므로 꺼서 손패 이벤트에 반응하지 않게 한다.
+        // (그리기는 CardView가 따로 하므로 꺼도 카드 내용은 정상적으로 나온다.)
         var slotView = instance.GetComponent<CardSlotView>();
         if (slotView != null)
             slotView.enabled = false;
 
-        var label = instance.GetComponentInChildren<TMP_Text>();
-        if (label != null)
-            label.text = card != null ? card.CardName : string.Empty;
+        // 손패와 똑같은 뷰를 그대로 쓴다 - 이름·설명·프레임·배지 규칙이 한 곳에만 있어야
+        // 보상 카드와 손패가 서로 다르게 보이는 일이 없다.
+        var cardView = instance.GetComponent<CardView>();
+        if (cardView != null)
+            cardView.SetCard(card);
         else
-            Debug.LogWarning("RewardCardView: cardPrefab에 TMP_Text가 없어 단어 이름을 표시할 수 없습니다.", this);
-
-        // 카드 데이터에 아이콘이 있을 때만 덮어쓴다 - 없으면 프리팹의 기본 카드 프레임을 그대로 둔다.
-        if (card != null && card.Icon != null)
-        {
-            var icon = instance.GetComponentInChildren<Image>();
-            if (icon != null)
-                icon.sprite = card.Icon;
-        }
+            Debug.LogWarning("RewardCardView: cardPrefab에 CardView가 없어 보상 카드를 그릴 수 없습니다.", this);
 
         _spawned.Add(instance);
     }

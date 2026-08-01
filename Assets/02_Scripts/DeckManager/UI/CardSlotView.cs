@@ -1,15 +1,17 @@
 using System.Collections;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
+// 한 슬롯의 동작(슬롯 구독 + 타이핑 들림/교체 애니메이션)만 담당한다.
+// 카드를 실제로 그리는 일은 같은 오브젝트의 CardView가 맡는다 - 그쪽은 매니저를 모르므로
+// 보상 화면처럼 슬롯이 없는 곳에서도 그대로 쓸 수 있다.
 public class CardSlotView : MonoBehaviour
 {
     [SerializeField] private CardSlotManager cardSlotManager;
     [SerializeField] private InputManager inputManager;
     [SerializeField] private int slotIndex;
-    [SerializeField] private TMP_Text nameText;
-    [SerializeField] private Image iconImage;
+
+    [Tooltip("이 카드의 겉모습을 그리는 뷰. 보통 같은 오브젝트에 붙어 있습니다.")]
+    [SerializeField] private CardView cardView;
 
     [Header("타이핑 애니메이션")]
     [Tooltip("입력 중인 문자열이 이 카드 이름의 접두사일 때 떠오르는 높이")]
@@ -65,6 +67,9 @@ public class CardSlotView : MonoBehaviour
 
     private void Start()
     {
+        if (cardView == null)
+            Debug.LogWarning("CardSlotView: cardView가 연결되지 않아 이 슬롯의 카드가 갱신되지 않습니다.", this);
+
         Refresh();
     }
 
@@ -153,11 +158,8 @@ public class CardSlotView : MonoBehaviour
 
     private void SetAlpha(float alpha)
     {
-        nameText.alpha = alpha;
-
-        var color = iconImage.color;
-        color.a = alpha;
-        iconImage.color = color;
+        if (cardView != null)
+            cardView.SetAlpha(alpha);
     }
 
     private void Refresh()
@@ -172,17 +174,13 @@ public class CardSlotView : MonoBehaviour
         SetCard(cards[slotIndex]);
     }
 
+    // _currentCard는 타이핑 들림 판정(Update)에 계속 필요하므로 여기서 들고 있는다.
+    // 그리는 일 자체는 CardView가 한다.
     private void SetCard(CardBase card)
     {
         _currentCard = card;
-        nameText.text = card != null ? card.CardName : string.Empty;
 
-        // card.Icon이 없으면 프리팹에 미리 박아둔 카드 프레임 스프라이트를 그대로 둔다 -
-        // null로 덮어쓰거나 꺼버리지 않는다. 카드 데이터에 아이콘이 아직 없는 게 정상 상태다.
-        if (card != null && card.Icon != null)
-        {
-            iconImage.sprite = card.Icon;
-            iconImage.enabled = true;
-        }
+        if (cardView != null)
+            cardView.SetCard(card);
     }
 }

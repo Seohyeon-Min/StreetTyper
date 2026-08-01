@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ModifierCardData
   cardName: "\uC288\uD37C"
   icon: {fileID: 0}
-  description: 
+  description: "\uC704\uB825 +1"
+  statsLabel: "+1"
   effectType: 0
   value: 1

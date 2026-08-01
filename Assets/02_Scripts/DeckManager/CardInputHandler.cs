@@ -73,7 +73,9 @@ public class CardInputHandler : MonoBehaviour
             return;
         }
 
-        if (_pendingEcho != null)
+        // 메아리는 커밋되어 CurrentInput에 들어왔을 때만 판정한다. 조합 단계에서 표시를 써버리면
+        // 정작 커밋된 메아리를 걸러내지 못한다.
+        if (_pendingEcho != null && committed.Length > 0)
         {
             var echo = _pendingEcho;
             _pendingEcho = null;
@@ -106,8 +108,13 @@ public class CardInputHandler : MonoBehaviour
             // 조합 중이던 글자로 매칭됐다면 OS IME는 아직 그 글자를 붙잡고 있다 - 뒤늦게 커밋되어
             // 돌아올 걸 대비해 한 번만 걸러낼 표시를 남긴다. ClearInput이 OnCompositionChanged를
             // 발생시켜 이 메서드가 재진입하므로, 표시는 반드시 그 뒤에 남겨야 지워지지 않는다.
+            //
+            // ⚠️ 돌아오는 건 카드 이름 전체가 아니라 **조합 중이던 그 글자**다.
+            // "펀치"를 조합 중에 맞히면 커밋된 건 "펀", 조합 중인 건 "치"이고 메아리로 오는 것도 "치"다.
+            // 예전엔 여기에 CardName을 넣어 한 번도 걸러지지 않았는데, 뒤따르던 오타 자동 삭제가
+            // 대신 치워주고 있어서 드러나지 않았을 뿐이다. 그 삭제를 걷어내자 마지막 글자가 남았다.
             if (wasComposing)
-                _pendingEcho = matched.CardName;
+                _pendingEcho = composing;
 
             OnCardMatched?.Invoke(matched);
             return;

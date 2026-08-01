@@ -106,10 +106,16 @@ public class InputManager : MonoBehaviour
         // 조합되지 않는다. 턴 전환마다 EnableInput이 불리므로 여기가 자동 복구 지점이 된다.
         Input.imeCompositionMode = IMECompositionMode.On;
 
+        // 입력이 잠긴 동안 플레이어가 계속 쳤을 수 있다. 우리는 구독을 끊어 못 받았지만
+        // OS IME는 그동안에도 조합을 쌓아둘 수 있어서, 그냥 열면 그 글자가 새 턴의 첫 글자에
+        // 섞여 들어온다("딜레이 중 타이핑이 막히는 건 보이기에만 그렇다"는 증상이 이것이다).
+        // 우리 버퍼를 먼저 비우고, IME 쪽 조합은 컨텍스트가 붙는 다음 프레임에 버리게 한다.
+        ClearInput();
+
         // 방금 켠 IME는 이 프레임엔 아직 창에 붙지 않아 ImmGetContext가 빈 컨텍스트를 준다.
         // 한 프레임 뒤에 맞춘다.
         if (isActiveAndEnabled)
-            StartCoroutine(ApplyImeModeNextFrame());
+            StartCoroutine(BeginInputNextFrame());
         else
             ApplyImeMode();
     }
@@ -119,6 +125,11 @@ public class InputManager : MonoBehaviour
         if (!_inputEnabled) return;
         _inputEnabled = false;
 
+        // IME를 끄기 전에 조합을 버리게 한다. 남겨두면 다음에 입력이 열릴 때
+        // 그 글자가 뒤늦게 커밋되어 새 턴의 첫 글자에 섞인다.
+        if (Composition.Length > 0)
+            HangulImeMode.CancelComposition();
+
         if (Keyboard.current != null)
         {
             Keyboard.current.onTextInput -= HandleTextInput;
@@ -127,15 +138,20 @@ public class InputManager : MonoBehaviour
         }
 
         Composition = string.Empty;
+        _lastBackspaceComposition = null;
     }
 
     public void ClearInput()
     {
         CurrentInput = string.Empty;
 
-        // 조합 중인 글자로 단어가 완성된 경우(퀵/잽/훅 등 한 음절 단어), Composition까지
-        // 비워주지 않으면 이미 소비된 글자가 화면에 계속 남는다. OS IME 내부 상태는
-        // 건드리지 않으므로 뒤늦은 커밋은 CardInputHandler의 에코 방어가 처리한다.
+        // 조합 중인 글자로 단어가 완성된 경우(퀵/잽/훅 등 한 음절 단어, 또는 "펀치"의 마지막 "치")
+        // 우리 버퍼를 비우는 것만으로는 부족하다. **OS IME는 그 글자를 여전히 붙잡고 있어서**
+        // 다음 입력 때 뒤늦게 커밋되어 돌아오고, 입력창에 이전 단어의 마지막 글자가 남는다.
+        // IME에게도 조합을 버리라고 알려야 근본적으로 끊긴다.
+        if (Composition.Length > 0)
+            HangulImeMode.CancelComposition();
+
         Composition = string.Empty;
         _lastBackspaceComposition = null;
 
@@ -221,9 +237,18 @@ public class InputManager : MonoBehaviour
         OnCharacterEntered?.Invoke(character);
     }
 
-    private IEnumerator ApplyImeModeNextFrame()
+    // IME 컨텍스트가 창에 붙은 뒤에 조합을 버리고 변환 모드를 맞춘다. 이 두 가지 모두
+    // ImmGetContext가 유효해야 하므로 한 프레임 뒤여야 한다.
+    private IEnumerator BeginInputNextFrame()
     {
         yield return null;
+
+        // 잠긴 동안 IME가 쌓아둔 조합을 버린다. 우리 버퍼는 EnableInput에서 이미 비웠다.
+        HangulImeMode.CancelComposition();
+
+        // 취소로 조합 종료 이벤트가 들어올 수 있으니 미러도 함께 정리한다.
+        ClearComposition();
+
         ApplyImeMode();
     }
 

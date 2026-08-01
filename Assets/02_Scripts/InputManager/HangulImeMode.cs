@@ -48,6 +48,13 @@ public static class HangulImeMode
 
     [DllImport("imm32.dll")]
     private static extern bool ImmSetConversionStatus(IntPtr hIMC, uint conversion, uint sentence);
+
+    [DllImport("imm32.dll")]
+    private static extern bool ImmNotifyIME(IntPtr hIMC, uint action, uint index, uint value);
+
+    // 조합 중인 문자열을 버리라고 IME에 알린다.
+    private const uint NiCompositionStr = 0x0015;
+    private const uint CpsCancel = 0x0004;
 #endif
 
     /// <summary>
@@ -65,6 +72,38 @@ public static class HangulImeMode
     public static bool SetAlphanumeric()
     {
         return SetHangul(false);
+    }
+
+    /// <summary>
+    /// IME가 조합 중이던 글자를 버리게 한다.
+    ///
+    /// 조합 중인 글자로 단어가 완성되면(퀵/훅 같은 한 음절 단어, 또는 "펀치"의 마지막 "치")
+    /// 게임은 그 글자를 이미 소비했는데 **OS IME는 여전히 붙잡고 있다.** 그대로 두면 다음
+    /// 입력 때 뒤늦게 커밋되어 돌아와 입력창에 이전 단어의 마지막 글자가 남는다.
+    /// 우리 쪽 버퍼만 비우는 걸로는 부족하고 IME에게도 버리라고 알려야 한다.
+    /// </summary>
+    public static bool CancelComposition()
+    {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+        var window = GetActiveWindow();
+        if (window == IntPtr.Zero)
+            return false;
+
+        var context = ImmGetContext(window);
+        if (context == IntPtr.Zero)
+            return false;
+
+        try
+        {
+            return ImmNotifyIME(context, NiCompositionStr, CpsCancel, 0);
+        }
+        finally
+        {
+            ImmReleaseContext(window, context);
+        }
+#else
+        return false;
+#endif
     }
 
     /// <summary>

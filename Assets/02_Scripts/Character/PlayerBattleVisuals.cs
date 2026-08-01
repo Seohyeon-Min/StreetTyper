@@ -10,6 +10,13 @@ public class PlayerBattleVisuals : MonoBehaviour
     [Header("Settings")]
     public float dashOffset = 1.5f; // 적 앞에서 얼마나 떨어져서 멈출지
 
+    [Header("이동 애니메이션 커브")]
+    [Tooltip("적 앞으로 돌진할 때(공격 시작) 시간에 따른 이동 비율. x=0~1(경과 비율), y=0~1(이동 비율).")]
+    public AnimationCurve moveToEnemyCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
+    [Tooltip("원래 자리로 복귀할 때(공격 종료) 시간에 따른 이동 비율.")]
+    public AnimationCurve moveToOriginCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
     private Vector3 originalPosition;
 
     void Start()
@@ -32,7 +39,8 @@ public class PlayerBattleVisuals : MonoBehaviour
                 );
         while (time < duration)
         {
-            transform.position = Vector3.Lerp(startPos, targetPos, time / duration);
+            var t = moveToEnemyCurve.Evaluate(time / duration);
+            transform.position = Vector3.LerpUnclamped(startPos, targetPos, t);
             time += Time.deltaTime;
             yield return null;
         }
@@ -47,7 +55,8 @@ public class PlayerBattleVisuals : MonoBehaviour
 
         while (time < duration)
         {
-            transform.position = Vector3.Lerp(startPos, originalPosition, time / duration);
+            var t = moveToOriginCurve.Evaluate(time / duration);
+            transform.position = Vector3.LerpUnclamped(startPos, originalPosition, t);
             time += Time.deltaTime;
             yield return null;
         }

@@ -67,12 +67,21 @@ public class DeckManager : MonoBehaviour
     [Tooltip("턴 종료 후 쌓인 공격을 하나씩 터뜨리는 간격(초)")]
     [SerializeField] private float pendingActionInterval = 0.3f;
 
+    [Tooltip("공격 스택 재생(돌진+펀치+복귀) 전체가 아무리 많이 쌓여도 이 시간 안에 끝나도록 압축한다(초).")]
+    [SerializeField] private float maxTotalPlayTime = 3.9f;
+
+    [Tooltip("적 앞으로 돌진/원래 자리로 복귀하는 데 걸리는 시간(초, 각각).")]
+    [SerializeField] private float moveDuration = 0.2f;
+
     [Header("타격감 연출")]
     [Tooltip("펀치 한 번당 카메라가 흔들리는 시간(초). CameraShake.Shake(duration, magnitude)의 첫 번째 인자.")]
     [SerializeField] private float hitShakeDuration = 0.1f;
 
     [Tooltip("펀치 한 번당 카메라 흔들림 크기. CameraShake의 shakeMultiplier와 곱해져서 최종 크기가 된다.")]
     [SerializeField] private float hitShakeMagnitude = 0.2f;
+
+    [Tooltip("적 앞으로 돌진하기 시작하기 전에 잠깐 두는 대기 시간(초).")]
+    [SerializeField] private float dashStartDelay = 0.3f;
 
     [SerializeField] private bool logDebugEvents;
 
@@ -270,9 +279,7 @@ public class DeckManager : MonoBehaviour
         if (totalActions == 0) yield break;
 
         // 2. 다이나믹 배속 계산 (최대 4초 룰)
-        float maxTotalTime = 3.9f;
-        float moveDuration = 0.2f; // 돌진 및 복귀 시간 (왕복 0.4초)
-        float availableAttackTime = maxTotalTime - (moveDuration * 2); // 순수하게 때릴 수 있는 시간 (약 3.5초)
+        float availableAttackTime = maxTotalPlayTime - (moveDuration * 2); // 순수하게 때릴 수 있는 시간
 
         float baseInterval = pendingActionInterval; // 인스펙터에 설정된 기본값 (0.3초)
         float currentInterval = baseInterval;
@@ -286,49 +293,85 @@ public class DeckManager : MonoBehaviour
         // 애니메이션 배속 (간격이 짧아질수록 애니메이션은 그만큼 배속으로 빨라짐)
         float animSpeedMultiplier = baseInterval / currentInterval;
 
-        // 3. 적 앞으로 돌진
+        // 펀치 애니메이션/카메라 쉐이크/히트 이펙트는 전부 "데미지가 있는 액션"에서만 재생한다
+        // (가드처럼 데미지 0인 조합은 펀치가 안 나감). Punch1 여부와 쉐이크 1회 제한을 루프
+        // 인덱스 i가 아니라 "실제로 몇 번째로 재생된 펀치인가"로 따로 세야 한다 - 안 그러면
+        // 가드가 맨 앞에 쌓였을 때 진짜 첫 펀치가 Punch1로 안 나가거나 쉐이크가 아예 안 걸린다.
+        bool hasPlayedPunchAnim = false;
+        bool hasShaken = false;
+
+        // 이번 턴에 데미지가 있는 액션이 하나도 없으면(전부 가드 등) 돌진할 때도 펀치 자세를
+        // 취하면 안 된다 - 아래에서 돌진과 Punch1을 같이 트리거할지 판단하는 데 쓴다.
+        bool anyDamageThisTurn = false;
+        for (int j = 0; j < totalActions; j++)
+        {
+            if (actions[j].Action.Damage > 0)
+            {
+                anyDamageThisTurn = true;
+                break;
+            }
+        }
+
+        // 3. 적 앞으로 돌진 - Punch1은 즉시 재생하고, 이동은 dashStartDelay만큼 늦게 시작한다
+        // (때리는 자세를 먼저 잡고 나서 날아가는 느낌). 가만히 날아갔다가 도착한 뒤에야
+        // 펀치하는 게 아니라, 날아가기 직전부터 이미 펀치 자세를 취하고 있게 한다.
         if (playerVisuals != null)
         {
+            if (anyDamageThisTurn)
+            {
+                playerVisuals.PlayAttackAnimation(true, animSpeedMultiplier);
+                hasPlayedPunchAnim = true;
+            }
+
+            if (dashStartDelay > 0f)
+                yield return new WaitForSeconds(dashStartDelay);
+
             yield return playerVisuals.MoveToEnemyCoroutine(moveDuration);
         }
 
         // 4. 공격 스택 하나씩 실행
+
         for (int i = 0; i < totalActions; i++)
         {
             var actionEntry = actions[i];
+            var hasDamage = actionEntry.Action.Damage > 0;
 
-            // 1번째 공격이면 Punch1, 그 이후는 랜덤 펀치 애니메이션 재생
-            if (playerVisuals != null)
+            // 아래 루프 끝에서 "이번 인터벌 중 이미 기다린 시간"을 빼는 데 쓴다 - 데미지 없는
+            // 액션은 펀치 딜레이를 안 기다리므로 0으로 둔다(= 인터벌을 그대로 다 기다림).
+            float hitDelay = 0f;
+
+            if (hasDamage)
             {
-                playerVisuals.PlayAttackAnimation(i == 0, animSpeedMultiplier);
+                // 실제로 재생되는 첫 펀치면 Punch1, 그 이후는 랜덤 펀치 애니메이션 재생
+                if (playerVisuals != null)
+                {
+                    playerVisuals.PlayAttackAnimation(!hasPlayedPunchAnim, animSpeedMultiplier);
+                }
+                hasPlayedPunchAnim = true;
+
+                // 주먹이 뻗어 나가는 타격 시점까지 대기. 애니메이션 재생 속도(animSpeedMultiplier)에
+                // 맞춰 대기 시간도 조절된다.
+                hitDelay = 0.15f / animSpeedMultiplier; // 0.15f는 예시입니다. 애니메이션에 맞게 조절하세요.
+                yield return new WaitForSeconds(hitDelay);
+
+                if (SoundManager.Instance != null)
+                {
+                    SoundManager.Instance.PlayRandomPunch();
+                }
             }
 
-            // ==========================================
-            // [추가된 부분] 주먹이 뻗어 나가는 타격 시점까지 대기
-            // 애니메이션 재생 속도(animSpeedMultiplier)에 맞춰 대기 시간도 조절됩니다.
-            float hitDelay = 0.15f / animSpeedMultiplier; // 0.15f는 예시입니다. 애니메이션에 맞게 조절하세요.
-            yield return new WaitForSeconds(hitDelay);
-            // ==========================================
-
-            // SoundManager를 통해 랜덤 펀치 재생
-            if (SoundManager.Instance != null)
-            {
-                SoundManager.Instance.PlayRandomPunch();
-            }
-            // ========== 타격감 연출 추가 ==========
-            // 카메라 쉐이크/히트 이펙트는 "펀치 애니메이션이 재생됐는가" 기준이라 데미지가 0인
-            // 조합(방어 등)에도 나온다 - 위의 PlayAttackAnimation과 항상 짝을 맞춰야 한다.
-            if (enemyManager.currentEnemy != null)
+            // ========== 타격감 연출 ==========
+            if (hasDamage && enemyManager.currentEnemy != null)
             {
                 // 1. 카메라 쉐이크 - 펀치마다 흔들면 Shake()가 매번 StopAllCoroutines로 이전
                 // 흔들림을 끊고 다시 시작해서 펀치가 여러 번일 때 쉴 새 없이 흔들리는 것처럼 보인다.
-                // 시퀀스당 첫 펀치 한 번만 흔든다.
+                // 시퀀스당 실제 첫 펀치 한 번만 흔든다.
                 // (세기는 인스펙터의 hitShakeDuration/hitShakeMagnitude로 조절한다 - 흔들림이
                 //  약하거나 세다고 느껴지면 코드가 아니라 그쪽 값을 만질 것.)
-                bool shouldShake = i == 0;
-                if (shouldShake && CameraShake.Instance != null)
+                if (!hasShaken && CameraShake.Instance != null)
                 {
                     CameraShake.Instance.Shake(hitShakeDuration, hitShakeMagnitude);
+                    hasShaken = true;
                 }
 
                 // 2. 피격 이펙트
@@ -337,8 +380,8 @@ public class DeckManager : MonoBehaviour
                     HitEffectManager.Instance.PlayHitEffect(enemyManager.currentEnemy.GetComponent<SpriteRenderer>());
                 }
 
-                // 3. 플로팅 데미지 띄우기 - 이건 숫자를 보여주는 거라 0 데미지면 의미가 없어 그대로 조건을 둔다.
-                if (actionEntry.Action.Damage > 0 && FloatingDamageManager.Instance != null)
+                // 3. 플로팅 데미지 띄우기
+                if (FloatingDamageManager.Instance != null)
                 {
                     FloatingDamageManager.Instance.ShowDamage(actionEntry.Action.Damage, enemyManager.currentEnemy.transform.position);
                 }

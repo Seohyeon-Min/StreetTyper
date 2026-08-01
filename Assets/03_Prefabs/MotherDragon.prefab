@@ -111,3 +111,5 @@ MonoBehaviour:
   damageTakenMultiplier: 1
   enemyData: {fileID: 11400000, guid: f6b198d5953ad4142b7711a89ab1783e, type: 2}
   isMotherDragon: 1
+  animator: {fileID: 0}
+  bubbleAnchor: {fileID: 0}

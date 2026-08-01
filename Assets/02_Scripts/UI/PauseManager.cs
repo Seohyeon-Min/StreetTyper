@@ -187,6 +187,11 @@ public class PauseManager : MonoBehaviour
 
         // 씬을 넘어가도 timeScale은 유지된다 - 여기서 되돌리지 않으면 타이틀이 멈춘 채로 뜬다.
         Time.timeScale = 1f;
+
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.StopBGM();
+        }
         SceneManager.LoadScene(GameScenes.Title);
     }
 }

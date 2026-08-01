@@ -38,6 +38,48 @@ public class SoundManager : MonoBehaviour
     public float BGMVolume => _bgmVolume;
     public float SFXVolume => _sfxVolume;
 
+    [Header("BGM EventReferences")]
+    public EventReference titleBGM;
+    public EventReference battleBGM;
+
+    [Header("SFX EventReferences")]
+    public EventReference[] punchSounds;
+    public EventReference[] cardUseSounds;
+    public EventReference wordCompleteSound;
+
+    public void PlayTitleBGM()
+    {
+        PlayBGM(titleBGM);
+    }
+
+    public void PlayBattleBGM()
+    {
+        PlayBGM(battleBGM);
+    }
+
+    public void PlayRandomPunch()
+    {
+        if (punchSounds != null && punchSounds.Length > 0)
+        {
+            int index = UnityEngine.Random.Range(0, punchSounds.Length);
+            PlaySFX(punchSounds[index]);
+        }
+    }
+
+    public void PlayRandomCardUse()
+    {
+        if (cardUseSounds != null && cardUseSounds.Length > 0)
+        {
+            int index = UnityEngine.Random.Range(0, cardUseSounds.Length);
+            PlaySFX(cardUseSounds[index]);
+        }
+    }
+
+    public void PlayWordComplete()
+    {
+        PlaySFX(wordCompleteSound);
+    }
+
     private void Awake()
     {
         if (Instance == null)

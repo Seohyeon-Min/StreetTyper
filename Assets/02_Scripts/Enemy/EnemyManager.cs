@@ -61,6 +61,8 @@ public class EnemyManager : MonoBehaviour
             case ActionType.Attack:
                 Debug.Log(data.enemyName + " Action: ATTACK!");
                 player.TakeDamage(currentEnemy.power);
+                BattleManager battleManager = FindObjectOfType<BattleManager>();
+                if (SoundManager.Instance != null) SoundManager.Instance.PlayRandomPunch();
                 break;
             case ActionType.Defend:
                 Debug.Log(data.enemyName + " Action: DEFEND!");

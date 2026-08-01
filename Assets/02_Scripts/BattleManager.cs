@@ -26,10 +26,6 @@ public class BattleManager : MonoBehaviour
     [Header("Duration")]
     public float actionBubbleDuration = 1.0f;
 
-    [Header("FMOD Sounds")]
-    public EventReference attackSound;
-    public EventReference battleBGM;
-
     private bool isGameOver = false;
     private bool isEventTriggered = false;
 
@@ -63,7 +59,7 @@ public class BattleManager : MonoBehaviour
         }
         // 여기서 예외가 나면 아래 UpdateUI()까지 막혀 첫 프레임에 HP가 표시되지 않는다.
         if (SoundManager.Instance != null)
-            SoundManager.Instance.PlayBGM(battleBGM);
+            SoundManager.Instance.PlayBattleBGM();
 
         UpdateUI();
     }

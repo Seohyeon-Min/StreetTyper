@@ -4,9 +4,11 @@ using TMPro;
 
 public class HealthBarUI : MonoBehaviour
 {
-    public Slider hpSlider;
     public TextMeshProUGUI hpText;
     public Image hpFill;
+
+    [Tooltip("게이지 채우기는 UIStyle이 담당한다(fillAmount).")]
+    public UIStyle.UIStyle uiStyleFill;
 
     public GameObject defIcon;
     public TextMeshProUGUI defText;
@@ -18,15 +20,15 @@ public class HealthBarUI : MonoBehaviour
     {
         gameObject.SetActive(true);
 
-        if (hpSlider != null)
-        {
-            hpSlider.maxValue = maxHP;
-            hpSlider.value = currentHP;
-        }
-
         if (hpText != null)
         {
             hpText.text = currentHP + " / " + maxHP;
+        }
+
+        if (uiStyleFill != null)
+        {
+            float ratio = maxHP > 0 ? (float)currentHP / maxHP : 0f;
+            uiStyleFill.SetFillAmount(ratio);
         }
 
         if (defense > 0)

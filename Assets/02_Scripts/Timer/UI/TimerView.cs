@@ -8,8 +8,10 @@ using UnityEngine.UI;
 public class TimerView : MonoBehaviour
 {
     [SerializeField] private TimerManager timerManager;
-    [SerializeField] private Slider slider;
     [SerializeField] private Image fillImage;
+
+    [Tooltip("게이지 채우기는 UIStyle이 담당한다(fillAmount).")]
+    [SerializeField] private UIStyle.UIStyle uiStyleFill;
 
     [Header("색 피드백")]
     [SerializeField] private Color neutralColor = Color.white;
@@ -35,18 +37,17 @@ public class TimerView : MonoBehaviour
         timerManager.OnTimeAdjusted -= HandleTimeAdjusted;
     }
 
-    // 매 프레임(자연 감소 포함) 발생 - 슬라이더 위치만 갱신한다. 색 반짝임은 여기서 판단하지
+    // 매 프레임(자연 감소 포함) 발생 - 게이지 채우기만 갱신한다. 색 반짝임은 여기서 판단하지
     // 않는다 - 정상적인 카운트다운도 매 프레임 "감소"라서 반짝임이 끝날 틈도 없이 계속
     // 재시작되어 사실상 항상 빨간색으로 고정돼 버린다.
     private void HandleTimeChanged(float remaining)
     {
-        if (slider != null)
+        if (uiStyleFill != null)
         {
-            // 바의 길이는 그대로 두고 maxValue만 바꾼다 - 마비로 15초가 된 턴에는
-            // 같은 길이를 15초에 걸쳐 줄이므로 게이지가 "느리게 흐르는" 것으로 보인다.
-            // 마비가 걸렸다는 사실 자체는 적 HP 바의 StatusEffectView가 알려준다.
-            slider.maxValue = timerManager.Duration;
-            slider.value = remaining;
+            // maxValue 대신 Duration으로 나눈다 - 마비로 총 시간이 늘어나도 게이지 길이는
+            // 그대로 두고 "느리게 흐르는" 것으로 보이게 한다.
+            float ratio = timerManager.Duration > 0f ? remaining / timerManager.Duration : 0f;
+            uiStyleFill.SetFillAmount(ratio);
         }
 
         if (remainingText != null)

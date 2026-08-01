@@ -65,6 +65,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - `Assets/03_Prefabs/Managers/` — 매니저 프리팹 **열세 개**(`InputManager`/`Deck Manager`/`StageManager`/`BattleManager`/`WordDictionary`/`WordUnlockManager`/`StatusEffectManager`/`SpeechBubbleManager`/`EventManager`/`SoundManager`/`TimerManager`/`ResultInputHandler`/`TitleManager`). **`TitleManager`만 `TitleScene`용이고 나머지가 `SampleScene`의 `02_SYSTEM`에 들어간다.** 매니저는 전부 프리팹으로 뽑혀 있고 씬에는 인스턴스만 있다. **씬은 이걸 인스턴스로 들고 있고, 매니저끼리와 씬 오브젝트를 향한 인스펙터 연결은 전부 프리팹 인스턴스 오버라이드로 저장된다**(`SampleScene.unity`의 `m_Modifications` 안 `objectReference`). 자세한 주의점은 컨벤션 절 참조.
 - `Assets/04_Data/Cards/` — **24개 `CardBase` 에셋**(GDD 4장 단어 사전 전체, 페인풀만 제외). `Assets > Create > Deck Manager > Cards > ...` 메뉴로 만들 것. `.asset` YAML을 손으로 작성하면 스크립트 GUID가 조용히 어긋날 수 있다.
 - `Assets/04_Data/EnemyTutorial.asset` — 유일한 `EnemyData`.
+- `Assets/05_Sounds/FMOD/StreetTyperFMOD/` — **FMOD Studio 프로젝트 원본이 저장소 안에 있다.** `StreetTyperFMOD.fspro`(에디터로 여는 파일) · `Metadata/`(이벤트·버스·뱅크 정의 XML) · `Build/Desktop/`(빌드된 `.bank` 4개) · `Assets/`(원본 오디오). 사운드 구조를 바꾸려면 Unity가 아니라 여기를 FMOD Studio로 열어야 한다 — 자세한 건 아래 `SoundManager` 절과 "알려진 이슈" 참조.
 - `Assets/InputSystem_Actions.inputactions` — Input System 기본 템플릿. **미사용.** 게임플레이 입력은 의도적으로 이걸 거치지 않는다(아래).
 
 ## 아키텍처
@@ -215,10 +216,21 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - ⚠️ 숨길 때 `SetActive(false)`가 아니라 **`CanvasGroup.alpha`** 를 쓴다 — 오브젝트를 끄면 `LateUpdate`가 멈춰 대상이 다시 나타나도 스스로 되살아나지 못한다. 그래서 `[RequireComponent(typeof(CanvasGroup))]`이 걸려 있다.
   - 적은 `Destroy`(`CharacterStats.Die`)와 `SetActive(false)`(`BattleManager.CheckGameState`) 두 경로로 사라지므로 **둘 다 검사**한다.
 - **`SoundManager`** — FMOD 재생 창구이자 **볼륨 설정의 소유자**. `PlayBGM`/`StopBGM`/`PlaySFX`(2D·3D 두 오버로드)/`SetBGMParameter`. **싱글턴 + `DontDestroyOnLoad`** 라 타이틀에서 바꾼 볼륨이 전투 씬까지 따라간다. `EventReference.IsNull` 가드가 있어 이벤트 미지정 자체는 안전하다.
-  - **볼륨 3종은 거는 지점이 서로 다르다.** 이 FMOD 프로젝트에 VCA도 버스도 없어 이벤트가 전부 마스터 버스로 직결되기 때문이다 — 마스터는 `bus:/`의 볼륨, BGM은 들고 있는 `bgmInstance`에 직접, SFX는 원샷이라 값만 들고 있다가 **재생 시점에** 건다(이미 나간 소리는 되돌릴 수 없어 다음 재생부터 적용된다). FMOD Studio에 VCA를 만들면 셋을 `GetVCA(...).setVolume` 하나로 합칠 수 있다.
-  - `PlaySFX`는 `RuntimeManager.PlayOneShot`을 쓰지 않는다 — 핸들을 주지 않아 볼륨을 걸 수 없어서, 직접 `CreateInstance` → `setVolume` → `start` → `release`한다(재생이 끝나면 FMOD가 정리하므로 누수는 없다).
+  - **볼륨 3종은 전부 버스에 건다** — `getBus(경로).setVolume()` 하나로 통일되어 있다. FMOD Studio 프로젝트의 믹서 구조가 이렇다:
+
+    ```
+    bus:/            (Master Bus)
+      ├─ bus:/BGM    ← BGM 이벤트
+      └─ bus:/SFX    ← Kick, Punch 이벤트
+    ```
+
+    마스터가 하류라 BGM/SFX에 **곱해서** 걸린다(마스터 0이면 전부 무음).
+  - ⚠️ **인스턴스(`EventInstance.setVolume`)에 거는 방식으로 되돌리지 말 것.** 실제로 그렇게 만들었다가 갈아엎었다. 인스턴스에 걸면 **생성 시점에 볼륨이 박혀서 재생 중에는 바꿀 수 없고**(슬라이더를 움직여도 이미 흐르는 BGM은 그대로), `SoundManager`가 만들지 않은 소리에는 아예 걸리지 않는다. 버스는 믹서 하류라 누가 언제 재생했든 실시간으로 적용된다. 당시 증상은 "마스터만 먹고 BGM/SFX 슬라이더는 안 먹는다"였는데, 마스터만 유일하게 버스였기 때문이다.
+  - **버스를 새로 추가하려면 Unity만으로는 안 된다.** FMOD Studio의 `Mixer > Routing`에서 `New Group`으로 그룹을 만들고 **Routing 브라우저 안에서** 이벤트를 그 그룹으로 드래그한 뒤 `File > Build`로 뱅크를 다시 빌드해야 한다. 빌드를 빠뜨리면 `Master.strings.bank`에 경로가 없어 `getBus`가 못 찾는다.
+    - VCA로도 같은 걸 할 수 있지만 **이벤트를 VCA에 직접 끌어다 놓는 건 동작하지 않는다**(VCA는 버스를 조절하는 물건이다). 실제로 시도했다 실패해서 그룹 버스로 갔다.
+  - `PlaySFX`는 `RuntimeManager.PlayOneShot`을 그대로 쓴다. 볼륨은 버스가 잡으므로 핸들을 들고 있을 이유가 없다.
   - ⚠️ **슬라이더 값과 실제 게인이 일부러 다르다.** `setVolume`은 선형 진폭인데 청감은 로그에 가까워, `ToGain`이 값을 **제곱**(`VolumeCurve = 2f`)해서 넘긴다. UI는 원래 값을 %로 보여준다.
-  - ⚠️ **마스터 버스를 잡을 때 `RuntimeManager.IsInitialized`로 먼저 막으면 안 된다.** 그건 FMOD 초기화를 유발하지 않아서, 아직 아무 소리도 재생하지 않은 타이틀 씬에서는 항상 false가 되고 마스터 볼륨이 조용히 안 먹는다. `RuntimeManager.StudioSystem`에 접근하는 것 자체가 초기화를 유발하므로 그쪽을 `try`로 감싸고 `RESULT`를 직접 본다. 실패 경고는 **첫 번째만** 남긴다.
+  - ⚠️ **버스를 잡을 때 `RuntimeManager.IsInitialized`로 먼저 막으면 안 된다.** 그건 FMOD 초기화를 유발하지 않아서(내부의 `instance` 필드만 본다), 아직 아무 소리도 재생하지 않은 타이틀 씬에서는 항상 false가 되고 볼륨이 조용히 안 먹는다. `RuntimeManager.StudioSystem`에 접근하는 것 자체가 초기화를 유발하므로 그쪽을 `try`로 감싸고 `RESULT`를 직접 본다. 실패 경고는 **경로별로 첫 번째만** 남긴다(슬라이더를 움직일 때마다 불린다).
   - 볼륨은 `PlayerPrefs`(`option.volume.*`)에 저장된다. `Awake`에서 읽어두고 FMOD 호출은 `Start`로 미루며(뱅크 로드 후라야 안전), 디스크 쓰기는 드래그 중이 아니라 **옵션 창을 닫을 때** `SaveVolumes()` 한 번이다.
 - **타격감 연출 — `CameraShake` / `FloatingDamageManager`** (`02_Scripts/`) — 둘 다 `public static Instance` 싱글턴이고, `DeckManager.PlayPendingActions`가 공격 하나를 적용할 때마다 `Damage > 0`이면 호출한다(`Shake(0.1f, 0.8f)` + 피해 숫자). **호출부에 null 가드가 있어 씬에 없어도 조용히 넘어간다.**
   - `CameraShake`는 `Main Camera`에 붙어 `OnEnable`에서 원위치를 기억하고 `localPosition`을 흔든다 — **런타임에 카메라를 옮기면 복귀 지점이 어긋난다**(`PlayerBattleVisuals`와 같은 함정). 세기는 인스펙터 `shakeMultiplier`가 전체 배율이다.
@@ -318,9 +330,13 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - **`BattleManager.prefab`의 `playerHealthBar`가 `{fileID: 0}`이다.** 씬 오브젝트 참조라 프리팹에 저장될 수 없어서 정상이며, 실제 연결은 **씬 인스턴스 오버라이드**에 있다. 프리팹에서 `Apply`를 누르면 이 null이 확정되어 배선이 날아간다.
 - **`MotherDragon.prefab`의 체력이 의도대로 나오지 않는다.** 프리팹에 `maxHP: 9999`가 박혀 있지만 `enemyData`가 `EnemyTutorial.asset`(maxHP 150)으로 연결돼 있어 `EnemyBase.Start()`가 덮어쓴다. 마더 드래곤은 3턴을 버텨야 스파링 연출이 성립하므로 **`enemyData` 연결을 비우는 것이 맞다** — 그러면 `base.Start()` 폴백으로 9999가 유지되고, `EnemyManager`의 세 메서드가 `enemyData == null`에서 조용히 리턴해 공격·방어·버프도 하지 않는다(스파링 상대로 적절하다). 전용 `EnemyData`를 새로 만들 필요는 없다.
 - **FMOD 뱅크는 이제 있다.** `Assets/05_Sounds/FMOD/StreetTyperFMOD/`에 FMOD Studio 프로젝트(`.fspro`)와 빌드된 뱅크 4개(`Master`/`Master.strings`/`BGM`/`SFX`)가 들어와 있고, `FMODStudioSettings.asset`의 `sourceBankPath`가 `Assets/05_Sounds/FMOD/StreetTyperFMOD/Build`를 가리킨다. `BattleManager.prefab`의 `attackSound`/`battleBGM`도 실제 이벤트 GUID로 채워져 있다.
+  - 이벤트는 **3개뿐**이다 — `event:/BGM`(→ `bus:/BGM`), `event:/Kick`(공격음, → `bus:/SFX`), `event:/Punch`(→ `bus:/SFX`, **현재 코드에서 미사용**). 그룹 버스 2개 외에 VCA는 없다.
+  - ⚠️ **뱅크(`.bank`)는 빌드 산출물인데 저장소에 커밋된다.** FMOD Studio에서 믹서를 바꿨으면 `File > Build`까지 하고 갱신된 `.bank` 4개를 함께 커밋해야 한다. 라우팅만 바꾸고 빌드를 빠뜨리면 Unity 쪽에서는 아무것도 달라지지 않는다 — 실제로 겪었다. 뱅크 파일의 수정 시각이 `Metadata/` 변경보다 오래됐으면 빌드를 안 한 것이다.
   - `Assets/StreamingAssets`는 **비어 있는 게 정상이다** — `ImportType: 0`(StreamingAssets)이라 FMOD가 임포트/빌드 시점에 뱅크를 복사해 넣는다. 손으로 채우지 말 것.
   - ⚠️ **두 씬 모두 FMOD `StudioListener`가 없다**(0건). 3D 사운드(`PlaySFX(event, position)`)를 쓰려면 `Main Camera`에 붙여야 한다. 지금 실제로 쓰이는 건 2D 오버로드뿐이라 드러나지 않는다.
   - `Assets/Plugins/FMOD/platforms/mac/**/Info.plist`가 체크아웃만 해도 수정된 것으로 잡히는 일이 있다(플랫폼 간 차이).
+- ⚠️ **타이틀로 돌아와도 전투 BGM이 계속 재생된다.** `PauseManager.ReturnToTitle`이 씬만 바꾸고 `StopBGM()`을 부르지 않는데 `SoundManager`는 `DontDestroyOnLoad`라 살아남기 때문이다. 타이틀 전용 BGM을 넣을 계획에 따라 처리가 갈려서 그대로 두었다.
+- **옵션 창의 SFX 슬라이더는 타이틀에서 미리듣기가 안 된다.** 타이틀 씬에서 SFX를 재생하는 코드가 없어서 움직여도 들리는 변화가 없다(값은 정상 반영된다). 미리듣기를 붙이려면 슬라이더를 놓을 때 `event:/Kick`을 한 번 재생하면 된다.
 - **방어도에 상한이 없다.** 턴 초기화는 생겼다 — `DeckManager.RunTurnTransition`이 적 턴이 끝난 뒤 `player.defense = 0`으로 비우고(`StageManager`도 스테이지 시작/재시작에서 비운다), 적 방어도는 건드리지 않는다(적은 자기 턴에 스스로 쌓는다). 다만 **한 턴 안에서 `AddDefense`를 누적하는 데는 여전히 상한이 없다.** GDD에 규칙이 없어 그대로 두었지만 밸런스상 확인이 필요하다.
 - **공격 말풍선이 꺼져 있다.** `DeckManager.PlayPendingActions`의 `battleManager.OnPlayerActionResolved(BuildBubbleText(...))` 호출이 **주석 처리되어 있다**(`DeckManager.cs:305`). 타격 수치는 이제 말풍선이 아니라 `FloatingDamageManager`가 띄운다. `BattleManager.OnPlayerActionResolved`와 `DeckManager.BuildBubbleText`는 살아 있지만 현재 아무도 부르지 않으며, `actionBubbleDuration`도 그만큼 놀고 있다.
 

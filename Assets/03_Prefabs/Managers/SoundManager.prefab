@@ -44,3 +44,62 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95a557cd68839ba4aa176c8e0999565a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SoundManager
+  titleBGM:
+    Guid:
+      Data1: -229021512
+      Data2: 1286739703
+      Data3: -2052187224
+      Data4: -341221041
+    Path: event:/Main
+  battleBGM:
+    Guid:
+      Data1: 1675660136
+      Data2: 1166344121
+      Data3: -1615066971
+      Data4: 71728400
+    Path: event:/BGM
+  punchSounds:
+  - Guid:
+      Data1: 1865360393
+      Data2: 1232342701
+      Data3: 112787584
+      Data4: 2140521844
+    Path: event:/Punch1
+  - Guid:
+      Data1: 1076573377
+      Data2: 1213439216
+      Data3: 1364334219
+      Data4: -484313630
+    Path: event:/Punch2
+  - Guid:
+      Data1: -1860037431
+      Data2: 1163533208
+      Data3: 1296257701
+      Data4: -1028729994
+    Path: event:/Punch3
+  cardUseSounds:
+  - Guid:
+      Data1: -1608408768
+      Data2: 1241366678
+      Data3: 938697886
+      Data4: 104976683
+    Path: event:/Card1
+  - Guid:
+      Data1: -1820431956
+      Data2: 1143031175
+      Data3: -1694647399
+      Data4: 946991251
+    Path: event:/Card2
+  - Guid:
+      Data1: -447475249
+      Data2: 1311031854
+      Data3: -1951239534
+      Data4: 1061040752
+    Path: event:/Card3
+  wordCompleteSound:
+    Guid:
+      Data1: 528323665
+      Data2: 1336916585
+      Data3: -1084144506
+      Data4: 460505559
+    Path: event:/Input

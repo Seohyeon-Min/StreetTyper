@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 #endif
 
 /// <summary>
-/// Windows IME를 한글 변환 모드로 강제한다.
+/// Windows IME의 한글/영문 변환 모드를 직접 지정한다.
 ///
 /// Unity가 제어할 수 있는 건 "IME 조합을 켜는지"까지다(<see cref="Input.imeCompositionMode"/> /
 /// <c>Keyboard.SetIMEEnabled</c>). 한글이냐 영문이냐 하는 **변환 모드**는 IME 자신의 상태라
@@ -13,8 +13,12 @@ using System.Runtime.InteropServices;
 /// 남아 있을 때 ASCII가 들어와 <c>InputManager.IsHangul</c> 필터에 걸리고, 결국 사람이 직접
 /// 한/영을 눌러야 게임이 시작된다.
 ///
+/// **양방향이어야 한다.** 한글로 켜는 것만 있고 되돌리는 짝이 없으면, 영어 모드로 바꿔도 OS IME는
+/// 한글 변환 상태로 남아 친 글자가 한글로 조합되고 라틴 필터에 걸려 통째로 사라진다.
+///
 /// 한/영 핫키를 흉내내는 <c>ImmSimulateHotKey</c> 방식은 과거에 시도했다 효과가 없어 되돌렸다.
-/// 여기서는 핫키를 흉내내지 않고 변환 상태를 직접 쓰는 <c>ImmSetConversionStatus</c>를 쓴다.
+/// 여기서는 핫키를 흉내내지 않고 변환 상태를 직접 쓰는 <c>ImmSetConversionStatus</c>와
+/// 열림 상태를 쓰는 <c>ImmSetOpenStatus</c>를 쓴다(한국어 IME에서 열림/닫힘이 곧 한글/영문이다).
 /// </summary>
 public static class HangulImeMode
 {
@@ -24,6 +28,10 @@ public static class HangulImeMode
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
     // IME_CMODE_NATIVE = 한글 입력 모드. IME_CMODE_FULLSHAPE(0x0008)는 전각 문자가 되므로 넣지 않는다.
     private const uint ImeCmodeNative = 0x0001;
+
+    // IME_CMODE_ALPHANUMERIC = 0. 영문 그대로 통과시키는 모드다.
+    private const uint ImeCmodeAlphanumeric = 0x0000;
+
     private const uint ImeSmodeNone = 0x0000;
 
     [DllImport("user32.dll")]
@@ -40,6 +48,13 @@ public static class HangulImeMode
 
     [DllImport("imm32.dll")]
     private static extern bool ImmSetConversionStatus(IntPtr hIMC, uint conversion, uint sentence);
+
+    [DllImport("imm32.dll")]
+    private static extern bool ImmNotifyIME(IntPtr hIMC, uint action, uint index, uint value);
+
+    // 조합 중인 문자열을 버리라고 IME에 알린다.
+    private const uint NiCompositionStr = 0x0015;
+    private const uint CpsCancel = 0x0004;
 #endif
 
     /// <summary>
@@ -49,6 +64,54 @@ public static class HangulImeMode
     /// </summary>
     /// <returns>한글 모드로 맞추는 데 성공했는지. Windows가 아니면 항상 false.</returns>
     public static bool Force()
+    {
+        return SetHangul(true);
+    }
+
+    /// <summary>IME를 영문 모드로 되돌린다. 영어판에서 한글이 조합되는 걸 막는 짝이다.</summary>
+    public static bool SetAlphanumeric()
+    {
+        return SetHangul(false);
+    }
+
+    /// <summary>
+    /// IME가 조합 중이던 글자를 버리게 한다.
+    ///
+    /// 조합 중인 글자로 단어가 완성되면(퀵/훅 같은 한 음절 단어, 또는 "펀치"의 마지막 "치")
+    /// 게임은 그 글자를 이미 소비했는데 **OS IME는 여전히 붙잡고 있다.** 그대로 두면 다음
+    /// 입력 때 뒤늦게 커밋되어 돌아와 입력창에 이전 단어의 마지막 글자가 남는다.
+    /// 우리 쪽 버퍼만 비우는 걸로는 부족하고 IME에게도 버리라고 알려야 한다.
+    /// </summary>
+    public static bool CancelComposition()
+    {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+        var window = GetActiveWindow();
+        if (window == IntPtr.Zero)
+            return false;
+
+        var context = ImmGetContext(window);
+        if (context == IntPtr.Zero)
+            return false;
+
+        try
+        {
+            return ImmNotifyIME(context, NiCompositionStr, CpsCancel, 0);
+        }
+        finally
+        {
+            ImmReleaseContext(window, context);
+        }
+#else
+        return false;
+#endif
+    }
+
+    /// <summary>
+    /// 활성 창의 IME 변환 모드를 지정한다. **IME가 활성화된 뒤에** 부를 것 - Unity가 IME를
+    /// 꺼둔 상태(<c>SetIMEEnabled(false)</c>)에서는 창에 IME 컨텍스트가 붙어 있지 않아
+    /// <c>ImmGetContext</c>가 아무것도 주지 않는다.
+    /// </summary>
+    public static bool SetHangul(bool hangul)
     {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
         var window = GetActiveWindow();
@@ -69,12 +132,25 @@ public static class HangulImeMode
 
         try
         {
-            ImmSetOpenStatus(context, true);
+            // 한국어 IME에서는 열림/닫힘이 곧 한글/영문이라 변환 모드와 함께 맞춰준다.
+            // 켤 때는 열고 나서 모드를 쓰고, 끌 때는 모드를 먼저 쓰고 닫는다 -
+            // 닫힌 컨텍스트에 변환 모드를 쓰면 무시하는 IME가 있다.
+            if (hangul)
+            {
+                ImmSetOpenStatus(context, true);
 
-            if (ImmSetConversionStatus(context, ImeCmodeNative, ImeSmodeNone))
-                return true;
+                if (ImmSetConversionStatus(context, ImeCmodeNative, ImeSmodeNone))
+                    return true;
+            }
+            else
+            {
+                ImmSetConversionStatus(context, ImeCmodeAlphanumeric, ImeSmodeNone);
 
-            LogFailureOnce("ImmSetConversionStatus가 실패했다. 사용 중인 IME가 변환 모드 설정을 거부했을 수 있다.");
+                if (ImmSetOpenStatus(context, false))
+                    return true;
+            }
+
+            LogFailureOnce("IMM32 호출이 실패했다. 사용 중인 IME가 변환 모드 설정을 거부했을 수 있다.");
             return false;
         }
         finally
@@ -82,7 +158,7 @@ public static class HangulImeMode
             ImmReleaseContext(window, context);
         }
 #else
-        LogFailureOnce("Windows가 아니라 한글 모드를 강제할 수 없다. 플레이어가 직접 IME를 한글로 바꿔야 한다.");
+        LogFailureOnce("Windows가 아니라 IME 변환 모드를 강제할 수 없다. 플레이어가 직접 한/영을 눌러야 한다.");
         return false;
 #endif
     }

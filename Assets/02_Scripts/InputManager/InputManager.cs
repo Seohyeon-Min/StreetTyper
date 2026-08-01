@@ -21,9 +21,18 @@ public class InputManager : MonoBehaviour
     [Tooltip("한글 모드 강제를 다시 걸기까지의 최소 간격(초). 영문이 연타로 들어와도 IMM32 호출이 폭주하지 않게 한다.")]
     [SerializeField] private float imeForceCooldown = 0.2f;
 
+    [Tooltip("입력창에 쌓아둘 수 있는 최대 글자 수. 오타가 나도 입력을 지우지 않고 플레이어가 " +
+             "직접 지우는 방식이라, 무한정 길어지지 않게 상한을 둔다. 가장 긴 단어(uppercut, 8자)보다 " +
+             "넉넉해야 한다.")]
+    [SerializeField] private int maxInputLength = 12;
+
     private bool _inputEnabled;
     private float _backspaceRepeatTimer;
     private float _lastImeForceTime = float.NegativeInfinity;
+
+    // 직전 백스페이스를 눌렀을 때의 조합 문자열. 눌러도 값이 그대로면 IME가 받지 않은 것이라
+    // 미러가 낡았다고 판단한다(IsCompositionStale 참조).
+    private string _lastBackspaceComposition;
 
     /// <summary>지금 타이핑을 받고 있는지. 일시정지가 멈추기 전 상태를 기억했다가 재개할 때
     /// 그대로 되돌리기 위해 필요하다 - 턴 전환 대기처럼 원래 잠겨 있던 중에 멈췄다면
@@ -40,14 +49,40 @@ public class InputManager : MonoBehaviour
         DisableInput();
     }
 
-    // 창을 다시 활성화하면 IME 상태가 그동안 다른 앱에서 영문으로 바뀌어 있을 수 있다.
+    // 창을 다시 활성화하면 IME 상태가 그동안 다른 앱에서 바뀌어 있을 수 있다.
     private void OnApplicationFocus(bool hasFocus)
     {
         if (!hasFocus || !_inputEnabled)
             return;
 
         Input.imeCompositionMode = IMECompositionMode.On;
-        ForceHangulMode();
+        ApplyImeMode();
+    }
+
+    // 타이틀에서 언어를 바꾸고 돌아오는 경로 말고, 입력이 이미 열린 상태에서 언어가 바뀌는
+    // 경우에도 IME가 따라오게 한다. EnableInput은 이미 켜져 있으면 곧바로 리턴하므로
+    // 그것만으로는 반영되지 않는다.
+    private void OnEnable()
+    {
+        LanguageSettings.OnChanged += HandleLanguageChanged;
+    }
+
+    private void OnDisable()
+    {
+        LanguageSettings.OnChanged -= HandleLanguageChanged;
+    }
+
+    private void HandleLanguageChanged()
+    {
+        // 언어가 바뀌면 이전 언어로 치던 글자는 의미가 없다.
+        ClearInput();
+
+        if (!_inputEnabled)
+            return;
+
+        // 쿨다운을 무시하고 즉시 반영한다 - 사용자가 방금 버튼을 누른 결과라 기다릴 이유가 없다.
+        _lastImeForceTime = float.NegativeInfinity;
+        ApplyImeMode();
     }
 
     public void EnableInput()
@@ -59,6 +94,10 @@ public class InputManager : MonoBehaviour
         {
             Keyboard.current.onTextInput += HandleTextInput;
             Keyboard.current.onIMECompositionChange += HandleCompositionChange;
+
+            // 영어에서도 IME를 켜둔다. 꺼버리면 창에 IME 컨텍스트가 붙지 않아
+            // ImmGetContext가 0을 주고, 영문 모드로 되돌리는 IMM32 호출이 아예 먹지 않는다.
+            // 영문 변환 모드에서는 IME가 ASCII를 그대로 통과시키므로 조합도 끼어들지 않는다.
             Keyboard.current.SetIMEEnabled(true);
         }
 
@@ -67,18 +106,29 @@ public class InputManager : MonoBehaviour
         // 조합되지 않는다. 턴 전환마다 EnableInput이 불리므로 여기가 자동 복구 지점이 된다.
         Input.imeCompositionMode = IMECompositionMode.On;
 
+        // 입력이 잠긴 동안 플레이어가 계속 쳤을 수 있다. 우리는 구독을 끊어 못 받았지만
+        // OS IME는 그동안에도 조합을 쌓아둘 수 있어서, 그냥 열면 그 글자가 새 턴의 첫 글자에
+        // 섞여 들어온다("딜레이 중 타이핑이 막히는 건 보이기에만 그렇다"는 증상이 이것이다).
+        // 우리 버퍼를 먼저 비우고, IME 쪽 조합은 컨텍스트가 붙는 다음 프레임에 버리게 한다.
+        ClearInput();
+
         // 방금 켠 IME는 이 프레임엔 아직 창에 붙지 않아 ImmGetContext가 빈 컨텍스트를 준다.
-        // 한 프레임 뒤에 강제한다.
+        // 한 프레임 뒤에 맞춘다.
         if (isActiveAndEnabled)
-            StartCoroutine(ForceHangulModeNextFrame());
+            StartCoroutine(BeginInputNextFrame());
         else
-            ForceHangulMode();
+            ApplyImeMode();
     }
 
     public void DisableInput()
     {
         if (!_inputEnabled) return;
         _inputEnabled = false;
+
+        // IME를 끄기 전에 조합을 버리게 한다. 남겨두면 다음에 입력이 열릴 때
+        // 그 글자가 뒤늦게 커밋되어 새 턴의 첫 글자에 섞인다.
+        if (Composition.Length > 0)
+            HangulImeMode.CancelComposition();
 
         if (Keyboard.current != null)
         {
@@ -88,16 +138,22 @@ public class InputManager : MonoBehaviour
         }
 
         Composition = string.Empty;
+        _lastBackspaceComposition = null;
     }
 
     public void ClearInput()
     {
         CurrentInput = string.Empty;
 
-        // 조합 중인 글자로 단어가 완성된 경우(퀵/잽/훅 등 한 음절 단어), Composition까지
-        // 비워주지 않으면 이미 소비된 글자가 화면에 계속 남는다. OS IME 내부 상태는
-        // 건드리지 않으므로 뒤늦은 커밋은 CardInputHandler의 에코 방어가 처리한다.
+        // 조합 중인 글자로 단어가 완성된 경우(퀵/잽/훅 등 한 음절 단어, 또는 "펀치"의 마지막 "치")
+        // 우리 버퍼를 비우는 것만으로는 부족하다. **OS IME는 그 글자를 여전히 붙잡고 있어서**
+        // 다음 입력 때 뒤늦게 커밋되어 돌아오고, 입력창에 이전 단어의 마지막 글자가 남는다.
+        // IME에게도 조합을 버리라고 알려야 근본적으로 끊긴다.
+        if (Composition.Length > 0)
+            HangulImeMode.CancelComposition();
+
         Composition = string.Empty;
+        _lastBackspaceComposition = null;
 
         OnInputCleared?.Invoke();
         OnCompositionChanged?.Invoke(Composition);
@@ -108,14 +164,17 @@ public class InputManager : MonoBehaviour
         if (!_inputEnabled || Keyboard.current == null)
             return;
 
-        // While the IME is composing a character, backspace edits the composition
-        // itself (reported via onIMECompositionChange) - deleting from CurrentInput
-        // here too would double-delete already committed characters.
-        var isComposing = !string.IsNullOrEmpty(Composition);
+        // 한글 조합 중에는 백스페이스를 IME가 먼저 가져가 자모를 지우고, 그 결과가
+        // onIMECompositionChange로 들어온다. 여기서 CurrentInput까지 지우면 한 번에 두 글자가 날아간다.
+        //
+        // 영어 모드에서는 이 가드를 걸지 않는다. 조합 단계가 없어서 걸 이유가 없고, IME가 한글로
+        // 빠져 조합 문자열이 남아 있을 때 백스페이스까지 막아버리면 플레이어가 입력을 지울
+        // 방법이 사라진다(위 HandleCompositionChange 참조 - 그쪽이 근본 원인을 막고 여기는 이중 방어다).
+        var isComposing = !LanguageSettings.IsEnglish && !string.IsNullOrEmpty(Composition);
 
         if (Keyboard.current.backspaceKey.wasPressedThisFrame)
         {
-            if (!isComposing)
+            if (!isComposing || IsCompositionStale())
                 HandleBackspace();
             _backspaceRepeatTimer = backspaceRepeatDelay;
         }
@@ -124,7 +183,7 @@ public class InputManager : MonoBehaviour
             _backspaceRepeatTimer -= Time.deltaTime;
             if (_backspaceRepeatTimer <= 0f)
             {
-                if (!isComposing)
+                if (!isComposing || IsCompositionStale())
                     HandleBackspace();
                 _backspaceRepeatTimer = backspaceRepeatInterval;
             }
@@ -139,42 +198,135 @@ public class InputManager : MonoBehaviour
 
     private void HandleTextInput(char character)
     {
-        if (!IsHangul(character))
+        // 어느 언어든 글자만 받는다. 공백과 숫자를 버리는 건 양쪽 공통이다 -
+        // 띄어쓰기 없이 이어 치는 게 게임 규칙이라 공백이 버퍼에 들어가면 매칭이 어긋난다.
+        //
+        // 반대 언어의 글자가 들어왔다는 건 IME가 반대 모드로 빠졌다는 뜻이다(플레이어가 한/영을
+        // 눌렀거나 다른 앱에서 그 상태로 돌아왔거나). 그 글자는 버리고 곧바로 모드를 되돌려,
+        // 한 글자만 잃고 계속 타이핑할 수 있게 한다. 한/영 키 자체는 Windows IME가 앱보다 먼저
+        // 처리하므로 막을 수 없고, 이 자가 복구가 그 대체책이다.
+        // 숫자/공백까지 신호로 보면 조합 중인 글자가 끊길 수 있어 "글자"만 본다.
+        if (LanguageSettings.IsEnglish)
         {
-            // 라틴 글자가 들어왔다는 건 IME가 영문 모드로 빠졌다는 뜻이다(플레이어가 한/영을
-            // 눌렀거나 다른 앱에서 그 상태로 돌아왔거나). 이 글자는 버리고 곧바로 한글 모드를
-            // 되돌려, 한 글자만 잃고 계속 타이핑할 수 있게 한다. 한/영 키 자체는 Windows IME가
-            // 앱보다 먼저 처리하므로 막을 수 없고, 이 자가 복구가 그 대체책이다.
-            // 숫자/공백까지 여기서 IME를 건드리면 조합 중인 글자가 끊길 수 있어 라틴 글자만 본다.
+            if (!IsLatinLetter(character))
+            {
+                if (IsHangul(character))
+                    ApplyImeMode();
+
+                return;
+            }
+
+            // 카드 이름은 전부 소문자로 저장되어 있다. 여기서 한 번 내려두면 CapsLock을 켰든
+            // Shift를 눌렀든 똑같이 매칭되고, 비교하는 쪽들은 Ordinal 그대로 둘 수 있다.
+            character = char.ToLowerInvariant(character);
+        }
+        else if (!IsHangul(character))
+        {
             if (IsLatinLetter(character))
-                ForceHangulMode();
+                ApplyImeMode();
 
             return;
         }
+
+        // 상한을 넘으면 조용히 버린다. 오타를 자동으로 지우지 않는 대신 길이를 제한하는 것이라,
+        // 여기서 입력을 비워버리면 그 취지가 무너진다 - 플레이어가 백스페이스로 지워야 한다.
+        if (CurrentInput.Length >= Mathf.Max(1, maxInputLength))
+            return;
 
         CurrentInput += character;
         OnCharacterEntered?.Invoke(character);
     }
 
-    private IEnumerator ForceHangulModeNextFrame()
+    // IME 컨텍스트가 창에 붙은 뒤에 조합을 버리고 변환 모드를 맞춘다. 이 두 가지 모두
+    // ImmGetContext가 유효해야 하므로 한 프레임 뒤여야 한다.
+    private IEnumerator BeginInputNextFrame()
     {
         yield return null;
-        ForceHangulMode();
+
+        // 잠긴 동안 IME가 쌓아둔 조합을 버린다. 우리 버퍼는 EnableInput에서 이미 비웠다.
+        HangulImeMode.CancelComposition();
+
+        // 취소로 조합 종료 이벤트가 들어올 수 있으니 미러도 함께 정리한다.
+        ClearComposition();
+
+        ApplyImeMode();
     }
 
-    private void ForceHangulMode()
+    // IME 변환 모드를 지금 언어에 맞춘다. 한국어면 한글, 영어면 영문이다.
+    // 한쪽만 강제하면 반대 언어로 바꿨을 때 IME가 이전 상태로 남아 입력이 통째로 사라진다.
+    private void ApplyImeMode()
     {
+        // ⚠️ 모드를 바꾸면 진행 중이던 조합은 더 이상 우리에게 돌아오지 않는다.
+        // Composition 미러를 그대로 두면 낡은 값이 남고, Update의 isComposing 가드가
+        // 백스페이스를 영영 막아 입력을 지울 수 없는 상태가 된다.
+        //
+        // 두 언어 모두에서 일어난다. 영어는 한/영으로 한글 조합이 시작될 때, 한국어는 조합 도중
+        // 한/영을 눌러 IME가 영문으로 빠지면서 조합 종료 이벤트를 보내지 않을 때다.
+        // (한국어 쪽은 턴이 바뀔 때 DisableInput이 비워줘서 잘 드러나지 않을 뿐이다.)
+        ClearComposition();
+
         // 조합 중에 변환 상태를 다시 쓰면 진행 중인 글자가 끊길 수 있으니 쿨다운으로 묶는다.
         if (Time.unscaledTime - _lastImeForceTime < imeForceCooldown)
             return;
 
         _lastImeForceTime = Time.unscaledTime;
-        HangulImeMode.Force();
+        HangulImeMode.SetHangul(!LanguageSettings.IsEnglish);
+    }
+
+    // 조합 미러만 비운다. CurrentInput(커밋된 글자)은 건드리지 않는다 - 플레이어가 지금까지
+    // 친 것은 그대로 남아 있어야 하고, 지우는 건 백스페이스의 몫이다.
+    private void ClearComposition()
+    {
+        if (Composition.Length == 0)
+            return;
+
+        Composition = string.Empty;
+        _lastBackspaceComposition = null;
+        OnCompositionChanged?.Invoke(Composition);
+    }
+
+    /// <summary>
+    /// 조합이 살아 있다면 백스페이스는 IME가 받아 조합 글자를 바꾼다. 눌렀는데도 조합 문자열이
+    /// 직전과 똑같다면 아무도 받지 않았다는 뜻 - 미러가 낡은 것이다.
+    ///
+    /// 조합 도중에 한/영을 누르고 곧바로 백스페이스를 치는 경우가 여기 걸린다. 그 경로에는
+    /// 모드를 되돌릴 입력이 없어서 ApplyImeMode가 불리지 않고, 그대로 두면 그 턴 내내
+    /// 지울 수도 칠 수도 없다.
+    /// </summary>
+    private bool IsCompositionStale()
+    {
+        if (_lastBackspaceComposition != Composition)
+        {
+            // 첫 백스페이스는 IME에게 양보한다. 조합이 살아 있다면 이 입력으로 바뀔 것이다.
+            _lastBackspaceComposition = Composition;
+            return false;
+        }
+
+        ClearComposition();
+        return true;
     }
 
     private void HandleCompositionChange(IMECompositionString composition)
     {
-        Composition = composition.ToString();
+        var text = composition.ToString();
+
+        // 영어 모드에서는 조합이 일어날 일이 없다. 조합이 들어왔다는 건 플레이어가 한/영을 눌러
+        // IME가 한글로 빠졌다는 뜻이다.
+        //
+        // ⚠️ 이걸 커밋 시점(HandleTextInput)에서만 되돌리면 늦는다. 한글은 다음 글자를 칠 때까지
+        // 커밋되지 않아서 그동안 Composition에 글자가 남고, 아래 Update의 isComposing 가드가
+        // 백스페이스를 막아 입력을 지울 수도 칠 수도 없는 상태가 된다. 실제로 났던 버그다.
+        // 그래서 조합이 시작되는 순간 곧바로 영문 모드로 되돌리고 조합 문자열을 받아들이지 않는다.
+        if (LanguageSettings.IsEnglish && !string.IsNullOrEmpty(text))
+        {
+            // ApplyImeMode가 조합 미러까지 털어준다.
+            ApplyImeMode();
+            return;
+        }
+
+        // IME가 살아서 조합을 갱신했다. 낡음 판정 기준을 새로 잡는다.
+        Composition = text;
+        _lastBackspaceComposition = null;
         OnCompositionChanged?.Invoke(Composition);
     }
 

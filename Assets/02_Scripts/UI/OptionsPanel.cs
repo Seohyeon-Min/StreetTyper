@@ -23,6 +23,19 @@ public class OptionsPanel : MonoBehaviour
     [Header("버튼")]
     [SerializeField] private Button closeButton;
 
+    [Header("언어")]
+    [Tooltip("누를 때마다 한국어 ↔ 영어를 오간다. 전투 중에는 바꿀 수 없고 타이틀에만 둔다 - " +
+             "CardName이 곧 타이핑 매칭 키라서 런 도중에 바꾸면 사전과 손패가 어긋난다.")]
+    [SerializeField] private Button languageButton;
+
+    [Tooltip("언어 버튼에 표시할 글자. 지금 언어가 아니라 '누르면 바뀔 언어'를 보여준다. " +
+             "비워두면 버튼 안의 TMP 라벨을 자동으로 찾는다.")]
+    [SerializeField] private TMP_Text languageButtonText;
+
+    [Header("닫기 버튼 글자")]
+    [SerializeField] private string closeKorean = "닫기";
+    [SerializeField] private string closeEnglish = "CLOSE";
+
     private void OnEnable()
     {
         var sound = SoundManager.Instance;
@@ -47,6 +60,13 @@ public class OptionsPanel : MonoBehaviour
             closeButton.onClick.AddListener(Close);
         else
             Debug.LogWarning("OptionsPanel: closeButton이 연결되지 않아 창을 닫을 수 없습니다.", this);
+
+        if (languageButton != null)
+            languageButton.onClick.AddListener(HandleLanguageClicked);
+        else
+            Debug.LogWarning("OptionsPanel: languageButton이 연결되지 않아 언어를 바꿀 수 없습니다.", this);
+
+        RefreshLanguageButton();
     }
 
     private void OnDisable()
@@ -58,9 +78,39 @@ public class OptionsPanel : MonoBehaviour
         if (closeButton != null)
             closeButton.onClick.RemoveListener(Close);
 
+        if (languageButton != null)
+            languageButton.onClick.RemoveListener(HandleLanguageClicked);
+
         // 드래그 중에는 적용만 하고, 창을 닫을 때 한 번만 디스크에 쓴다.
         if (SoundManager.Instance != null)
             SoundManager.Instance.SaveVolumes();
+    }
+
+    // 값의 소유자는 LanguageSettings다. 여기선 누르고 비추기만 한다(볼륨이 SoundManager를 대하는 방식과 같다).
+    private void HandleLanguageClicked()
+    {
+        LanguageSettings.Toggle();
+        RefreshLanguageButton();
+    }
+
+    // 지금 언어가 아니라 "누르면 바뀔 언어"를 보여준다 - 버튼은 눌렀을 때 무슨 일이 일어나는지를
+    // 알려주는 게 맞고, 지금 언어는 나머지 UI가 이미 그 언어로 떠 있어서 알 수 있다.
+    private void RefreshLanguageButton()
+    {
+        var label = languageButtonText;
+        if (label == null && languageButton != null)
+            label = languageButton.GetComponentInChildren<TMP_Text>(true);
+
+        if (label != null)
+            label.text = LanguageSettings.IsEnglish ? "한국어" : "English";
+
+        // 닫기 버튼도 같이 갱신한다. 라벨을 따로 배선하지 않아도 되게 버튼에서 자식을 찾는다.
+        if (closeButton != null)
+        {
+            var closeLabel = closeButton.GetComponentInChildren<TMP_Text>(true);
+            if (closeLabel != null)
+                closeLabel.text = LanguageSettings.Pick(closeKorean, closeEnglish, closeButton, "closeEnglish");
+        }
     }
 
     private void Subscribe(Slider slider, UnityEngine.Events.UnityAction<float> handler, string fieldName)

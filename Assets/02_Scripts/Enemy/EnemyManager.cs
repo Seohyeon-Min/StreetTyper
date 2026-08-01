@@ -67,6 +67,9 @@ public class EnemyManager : MonoBehaviour
                 {
                     HitEffectManager.Instance.PlayHitEffect(player.GetComponent<SpriteRenderer>());
                 }
+
+                if (SoundManager.Instance != null)
+                    SoundManager.Instance.PlayRandomPunch();
                 break;
             case ActionType.Defend:
                 Debug.Log(data.enemyName + " Action: DEFEND!");

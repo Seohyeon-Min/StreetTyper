@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
   cardName: "\uD30C\uC774\uC5B4"
   icon: {fileID: 0}
-  description: 
+  description: "20% \uD655\uB960 \uD654\uC0C1"
+  statsLabel: "\uD654\uC0C1"
+  cardNameEn: "fire"
+  descriptionEn: "20% chance to burn"
+  statsLabelEn: "BURN"
   effectType: 0
   statusEffect: 1
   chancePercent: 20

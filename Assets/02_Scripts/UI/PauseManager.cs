@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -17,20 +18,39 @@ public class PauseManager : MonoBehaviour
     [Tooltip("일시정지 창 루트. 평소엔 비활성이어야 한다.")]
     [SerializeField] private GameObject pausePanel;
 
+    [Tooltip("안내 문구 라벨. 비워두면 씬에 적어둔 글자가 그대로 남는다 - 그 경우 " +
+             "명령 단어나 언어를 바꿔도 안내가 따라오지 않는다.")]
+    [SerializeField] private TMP_Text hintText;
+
     [Header("References")]
     [SerializeField] private InputManager inputManager;
 
-    [Header("명령 단어")]
+    [Header("명령 단어 - 한국어")]
     [Tooltip("치면 일시정지가 풀리는 단어")]
     [SerializeField] private string resumeWord = "계속";
 
     [Tooltip("치면 타이틀 씬으로 돌아가는 단어")]
     [SerializeField] private string titleWord = "타이틀";
 
+    [Header("명령 단어 - 영어")]
+    [Tooltip("소문자로 적을 것. 입력이 소문자로 정규화되어 들어옵니다.")]
+    [SerializeField] private string resumeWordEn = "resume";
+
+    [SerializeField] private string titleWordEn = "title";
+
+    [Header("안내 문구")]
+    [Tooltip("{0}=계속 단어, {1}=타이틀 단어")]
+    [SerializeField, TextArea] private string hintFormat = "계속 진행을 원한다면 \"{0}\"!\n타이틀로 돌아가길 원한다면 \"{1}\"!\n을 입력해주세요!";
+
+    [SerializeField, TextArea] private string hintFormatEn = "Type \"{0}\" to keep playing!\nType \"{1}\" to return to the title!";
+
     private bool _isPaused;
     private bool _inputWasEnabled;
 
     public bool IsPaused => _isPaused;
+
+    private string ResumeWord => LanguageSettings.Pick(resumeWord, resumeWordEn, this, "resumeWordEn");
+    private string TitleWord => LanguageSettings.Pick(titleWord, titleWordEn, this, "titleWordEn");
 
     private void Awake()
     {
@@ -108,14 +128,17 @@ public class PauseManager : MonoBehaviour
         if (typed.Length == 0)
             return;
 
-        if (typed == resumeWord)
+        var resume = ResumeWord;
+        var title = TitleWord;
+
+        if (typed == resume)
         {
             inputManager.ClearInput();
             Resume();
             return;
         }
 
-        if (typed == titleWord)
+        if (typed == title)
         {
             inputManager.ClearInput();
             ReturnToTitle();
@@ -124,11 +147,25 @@ public class PauseManager : MonoBehaviour
 
         // 두 단어 중 어느 쪽으로도 진행 중이 아니면 오타다. 입력창을 비워 처음부터 다시 치게 한다.
         // 매칭 판정은 전투 쪽과 같은 기준(InputManager.IsValidProgress)을 쓴다.
-        if (InputManager.IsValidProgress(committed, composing, resumeWord) ||
-            InputManager.IsValidProgress(committed, composing, titleWord))
+        if (InputManager.IsValidProgress(committed, composing, resume) ||
+            InputManager.IsValidProgress(committed, composing, title))
             return;
 
         inputManager.ClearInput();
+    }
+
+    // 안내 문구를 명령 단어에서 만들어 넣는다. 씬에 글자를 박아두면 단어를 바꾸거나 언어를
+    // 바꿔도 안내만 옛 상태로 남는다(결과 화면의 ResultInputHandler.GetHintText와 같은 이유).
+    private void RefreshHint()
+    {
+        if (hintText == null)
+            return;
+
+        var format = LanguageSettings.IsEnglish ? hintFormatEn : hintFormat;
+        if (string.IsNullOrEmpty(format))
+            return;
+
+        hintText.text = string.Format(format, ResumeWord, TitleWord);
     }
 
     public void Pause()
@@ -151,6 +188,8 @@ public class PauseManager : MonoBehaviour
             // 치다 만 글자가 명령 단어와 섞이지 않게 비운다.
             inputManager.ClearInput();
         }
+
+        RefreshHint();
 
         if (pausePanel != null)
             pausePanel.SetActive(true);
@@ -187,6 +226,11 @@ public class PauseManager : MonoBehaviour
 
         // 씬을 넘어가도 timeScale은 유지된다 - 여기서 되돌리지 않으면 타이틀이 멈춘 채로 뜬다.
         Time.timeScale = 1f;
+
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.StopBGM();
+        }
         SceneManager.LoadScene(GameScenes.Title);
     }
 }

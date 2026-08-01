@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
   cardName: "\uB354\uBE14"
   icon: {fileID: 0}
-  description: 
+  description: "\uD0C0\uACA9 2\uD68C"
+  statsLabel: "2\uD68C"
+  cardNameEn: "double"
+  descriptionEn: "Doubles the hit count"
+  statsLabelEn: "x2"
   effectType: 6
   statusEffect: 0
   chancePercent: 0

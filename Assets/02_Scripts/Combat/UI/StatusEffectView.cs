@@ -89,7 +89,7 @@ public class StatusEffectView : MonoBehaviour
             if (_builder.Length > 0)
                 _builder.Append("  ");
 
-            _builder.Append(ToKorean(pair.Key)).Append(' ').Append(pair.Value);
+            _builder.Append(StatusEffectManager.GetDisplayName(pair.Key)).Append(' ').Append(pair.Value);
         }
     }
 
@@ -97,17 +97,6 @@ public class StatusEffectView : MonoBehaviour
     {
         var turns = statusEffectManager.DevilTurnsLeft;
         if (turns > 0)
-            _builder.Append("데빌 ").Append(turns);
-    }
-
-    private static string ToKorean(StatusEffectType effect)
-    {
-        return effect switch
-        {
-            StatusEffectType.Burn => "화상",
-            StatusEffectType.Paralysis => "마비",
-            StatusEffectType.Freeze => "얼음",
-            _ => effect.ToString()
-        };
+            _builder.Append(StatusEffectManager.DevilDisplayName).Append(' ').Append(turns);
     }
 }

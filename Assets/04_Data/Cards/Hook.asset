@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActionCardData
   cardName: "\uD6C5"
   icon: {fileID: 0}
-  description: 
+  description: "\uC704\uB825 +5, \uC2DC\uAC04 -1\uCD08"
+  statsLabel: "+5"
+  cardNameEn: "hook"
+  descriptionEn: "+5 power, lose 1 second"
+  statsLabelEn: "+5"
   actionKind: 0
   strengthBonus: 5
   timerDelta: -1

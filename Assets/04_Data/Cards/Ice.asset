@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
   cardName: "\uC544\uC774\uC2A4"
   icon: {fileID: 0}
-  description: 
+  description: "20% \uD655\uB960 \uC5BC\uC74C"
+  statsLabel: "\uC5BC\uC74C"
+  cardNameEn: "ice"
+  descriptionEn: "20% chance to freeze and weaken"
+  statsLabelEn: "FREEZE"
   effectType: 0
   statusEffect: 3
   chancePercent: 20

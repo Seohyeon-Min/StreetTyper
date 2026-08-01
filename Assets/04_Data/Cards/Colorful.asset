@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
   cardName: "\uCEEC\uB7EC\uD480"
   icon: {fileID: 0}
-  description: 
+  description: "10% \uD655\uB960 \uC0C1\uD0DC\uC774\uC0C1"
+  statsLabel: "\uB79C\uB364"
+  cardNameEn: "colorful"
+  descriptionEn: "10% chance of a status effect"
+  statsLabelEn: "RANDOM"
   effectType: 1
   statusEffect: 0
   chancePercent: 10

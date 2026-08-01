@@ -9,6 +9,16 @@ public class EnemyManager : MonoBehaviour
     public enum ActionType { Attack, Defend, Buff }
     public ActionType nextAction;
 
+    [Header("Intent 아이콘 (ActionType별로 하나씩)")]
+    [SerializeField] private Sprite attackIcon;
+    [SerializeField] private Sprite defendIcon;
+    [SerializeField] private Sprite buffIcon;
+
+    [Header("Intent 텍스트 색 (ActionType별로 하나씩)")]
+    [SerializeField] private Color attackColor = Color.red;
+    [SerializeField] private Color defendColor = Color.blue;
+    [SerializeField] private Color buffColor = Color.yellow;
+
     // Determine the next action beforehand
     public void GenerateNextAction()
     {
@@ -31,7 +41,7 @@ public class EnemyManager : MonoBehaviour
         }
     }
 
-    // Get the intent text for UI
+    // 인텐트 수치만 반환한다("Intent: Attack (10)" 같은 라벨 문구는 아이콘이 대신하므로 뺐다).
     public string GetIntentString()
     {
         if (currentEnemy == null || currentEnemy.enemyData == null) return "";
@@ -39,13 +49,45 @@ public class EnemyManager : MonoBehaviour
         switch (nextAction)
         {
             case ActionType.Attack:
-                return "Intent: Attack (" + currentEnemy.power + ")";
+                return currentEnemy.power.ToString();
             case ActionType.Defend:
-                return "Intent: Defend (" + currentEnemy.enemyData.defensePower + ")";
+                return currentEnemy.enemyData.defensePower.ToString();
             case ActionType.Buff:
-                return "Intent: Buff (" + currentEnemy.enemyData.buffPower + ")";
+                return currentEnemy.enemyData.buffPower.ToString();
             default:
                 return "";
+        }
+    }
+
+    // 텍스트 대신 아이콘으로 인텐트를 보여줄 때 쓴다(SpeechBubble.SetupIcon과 짝).
+    public Sprite GetIntentIcon()
+    {
+        switch (nextAction)
+        {
+            case ActionType.Attack:
+                return attackIcon;
+            case ActionType.Defend:
+                return defendIcon;
+            case ActionType.Buff:
+                return buffIcon;
+            default:
+                return null;
+        }
+    }
+
+    // 인텐트 텍스트에 입힐 색(SpeechBubble.SetupIntent와 짝).
+    public Color GetIntentColor()
+    {
+        switch (nextAction)
+        {
+            case ActionType.Attack:
+                return attackColor;
+            case ActionType.Defend:
+                return defendColor;
+            case ActionType.Buff:
+                return buffColor;
+            default:
+                return Color.white;
         }
     }
 

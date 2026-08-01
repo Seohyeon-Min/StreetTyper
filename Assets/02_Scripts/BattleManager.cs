@@ -206,9 +206,12 @@ public class BattleManager : MonoBehaviour
             {
                 enemyIntentBubbleObj.SetActive(true);
 
-                string currentIntent = enemy.isMotherDragon ? mdIntentString : enemyManager.GetIntentString();
-
-                enemyIntentBubble.Setup(currentIntent);
+                // 마더 드래곤은 대사(텍스트)를 그대로 쓰고, 일반 적은 아이콘 + ActionType별 색이
+                // 입혀진 텍스트를 같이 보여준다.
+                if (enemy.isMotherDragon)
+                    enemyIntentBubble.Setup(mdIntentString);
+                else
+                    enemyIntentBubble.SetupIntent(enemyManager.GetIntentIcon(), enemyManager.GetIntentString(), enemyManager.GetIntentColor());
 
                 if (SpeechBubbleManager.Instance != null)
                 {

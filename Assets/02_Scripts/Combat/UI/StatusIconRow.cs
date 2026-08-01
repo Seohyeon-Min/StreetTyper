@@ -1,19 +1,20 @@
 using TMPro;
 using UnityEngine;
 
-// 방어/화상/마비/냉동/데빌 상태를 아이콘 + 숫자로 보여준다. 방어는 방어도 "값", 나머지 넷은
-// 남은 "턴 수"를 표시한다. 숫자 텍스트는 인스펙터에서 따로 연결하지 않는다 - 각 아이콘 밑에
-// TMP_Text 자식을 미리 만들어두면(색은 아이콘마다 다르게 원하는 대로) Awake에서
-// GetComponentInChildren으로 알아서 찾는다. 아이콘을 SetActive로 켜고 끄면 자식인 텍스트도
-// 자동으로 같이 켜지고 꺼진다.
+// 화상/마비/냉동/데빌 상태를 아이콘 + 남은 턴 숫자로 보여준다. 방어(쉴드)는 상태이상이 아니라
+// CharacterStats.defense 값이라 여기서 다루지 않는다 - HealthBarUI의 defIcon/defText가 담당한다.
+//
+// 숫자 텍스트는 인스펙터에서 따로 연결하지 않는다 - 각 아이콘 밑에 TMP_Text 자식을 미리
+// 만들어두면(색은 아이콘마다 다르게 원하는 대로) Awake에서 GetComponentInChildren으로 알아서
+// 찾는다. 아이콘을 SetActive로 켜고 끄면 자식인 텍스트도 자동으로 같이 켜지고 꺼진다.
 //
 // HP 바 프리팹 안, WorldAnchoredUI가 붙은 오브젝트에 같이 두는 것을 전제로 한다. 기존 텍스트
 // 한 줄짜리 StatusEffectView를 완전히 대체한다.
 //
-// 배치(왼쪽부터 순서대로, 방어가 항상 맨 앞)는 여기서 좌표 계산을 하지 않는다 - 부모 오브젝트에
-// Horizontal Layout Group을 붙이고, 아래 아이콘들을 반드시 "방어 → 화상 → 마비 → 냉동 → 데빌"
-// 순서로 자식에 배치해두면, 꺼진 아이콘은 레이아웃에서 자동으로 빠지고 켜진 것들만 그 순서
-// 그대로 왼쪽부터 붙는다.
+// 배치(왼쪽부터 순서대로)는 여기서 좌표 계산을 하지 않는다 - 부모 오브젝트에 Horizontal Layout
+// Group을 붙이고, 아래 아이콘들을 반드시 "화상 → 마비 → 냉동 → 데빌" 순서로 자식에
+// 배치해두면, 꺼진 아이콘은 레이아웃에서 자동으로 빠지고 켜진 것들만 그 순서 그대로 왼쪽부터
+// 붙는다.
 //
 // 화상/마비/냉동은 StatusEffectManager 설계상 적한테만, 데빌은 플레이어한테만 걸리므로 이 바가
 // 지금 전투 중인 적을 따라다니는지(IsCurrentEnemy)로 어느 쪽을 켤지 가른다 - 한 바에 둘 다
@@ -23,10 +24,7 @@ public class StatusIconRow : MonoBehaviour
 {
     [SerializeField] private StatusEffectManager statusEffectManager;
 
-    [Header("아이콘 (반드시 이 순서: 방어 → 화상 → 마비 → 냉동 → 데빌). 각 아이콘 밑에 숫자를 보여줄 TMP_Text 자식을 미리 만들어둘 것 - 자동으로 찾아서 쓴다.")]
-    [Tooltip("방어 - CharacterStats.defense, 상태이상이 아니라 매 프레임 확인. 숫자는 방어도 값.")]
-    [SerializeField] private GameObject defenseIcon;
-
+    [Header("아이콘 (반드시 이 순서: 화상 → 마비 → 냉동 → 데빌). 각 아이콘 밑에 숫자를 보여줄 TMP_Text 자식을 미리 만들어둘 것 - 자동으로 찾아서 쓴다.")]
     [Tooltip("화상 - 적 전용. 숫자는 남은 턴.")]
     [SerializeField] private GameObject burnIcon;
 
@@ -40,9 +38,7 @@ public class StatusIconRow : MonoBehaviour
     [SerializeField] private GameObject devilIcon;
 
     private WorldAnchoredUI _anchor;
-    private CharacterStats _target;
 
-    private TMP_Text _defenseText;
     private TMP_Text _burnText;
     private TMP_Text _paralysisText;
     private TMP_Text _freezeText;
@@ -52,7 +48,6 @@ public class StatusIconRow : MonoBehaviour
     {
         _anchor = GetComponent<WorldAnchoredUI>();
 
-        _defenseText = FindCountText(defenseIcon);
         _burnText = FindCountText(burnIcon);
         _paralysisText = FindCountText(paralysisIcon);
         _freezeText = FindCountText(freezeIcon);
@@ -78,26 +73,6 @@ public class StatusIconRow : MonoBehaviour
     {
         if (statusEffectManager != null)
             statusEffectManager.OnEffectsChanged -= RefreshStatusEffects;
-    }
-
-    private void Update()
-    {
-        RefreshDefense();
-    }
-
-    private void RefreshDefense()
-    {
-        if (defenseIcon == null)
-            return;
-
-        if (_target == null && _anchor != null && _anchor.Target != null)
-            _target = _anchor.Target.GetComponent<CharacterStats>();
-
-        var hasDefense = _target != null && _target.defense > 0;
-        defenseIcon.SetActive(hasDefense);
-
-        if (_defenseText != null)
-            _defenseText.text = hasDefense ? _target.defense.ToString() : string.Empty;
     }
 
     private void RefreshStatusEffects()

@@ -16,6 +16,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 
 - **에디터**: 프로젝트 루트를 Unity Hub / Editor `6000.3.19f1`로 연다 (`ProjectSettings/ProjectVersion.txt`와 일치해야 함).
 - **컴파일**: Unity가 포커스/저장 시 자동 컴파일. `dotnet build` 없음 — `Assembly-CSharp.csproj`/`StreetTyper.sln`은 Unity 생성물이고 gitignore되어 있으니 절대 직접 수정하지 말 것. 단일 `Assembly-CSharp` 어셈블리, `.asmdef` 분리 없음.
+  - ⚠️ **어셈블리가 하나라 스크립트 한 개의 문법 오류가 프로젝트 전체를 멈춘다.** 게다가 CI도 터미널 컴파일 경로도 없어서 **에디터를 열기 전까지 아무도 모른다** — 실제로 지금 `CameraShake.cs`가 그 상태로 커밋되어 있다(아래 "알려진 이슈" 첫 항목). 스크립트를 고친 뒤에는 에디터 콘솔에서 컴파일이 통과했는지 반드시 확인할 것.
 - **테스트**: `com.unity.test-framework`는 설치되어 있으나 **테스트 어셈블리가 하나도 없다.** 여기서 "테스트"란 Play Mode 수동 확인이며, 보통 `Debug.Log` 출력을 읽는 것이다(`DeckManager.logDebugEvents`, `WordChainManager.logDebugEvents`, `WordUnlockManager.logDebugEvents`, `PendingActionManager.logDebugEvents`).
   - **Play는 `TitleScene`부터 시작해야 실제 흐름과 같다.** `SampleScene`을 직접 Play해도 전투는 돌지만, 일시정지에서 "타이틀"을 치면 `TitleScene`으로 넘어가므로 씬 전환 경로를 확인할 수 없다.
 - **실행**: 에디터에서 Play. 헤드리스/CLI 실행 경로 없음.
@@ -39,10 +40,11 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 **씬은 두 개이고 빌드 설정에 그 순서대로 등록되어 있다** — `TitleScene`(인덱스 0) → `SampleScene`(인덱스 1). 인덱스 0이 빌드 시작 씬이므로 이 순서가 곧 "타이틀부터 시작"이다. 씬 이름 문자열은 `Assets/02_Scripts/GameScenes.cs`의 상수(`GameScenes.Title`/`GameScenes.Battle`)로만 쓰고 직접 타이핑하지 말 것.
 
 - `Assets/00_Scenes/TitleScene.unity` — 타이틀 메뉴. `Canvas`(버튼 `GameStart`/`Option`/`Exit`) · `Main Camera` · `EventSystem`.
-  - ⚠️ **`TitleMenu` 컴포넌트가 지금 씬에 없다.** `TitleMenu.prefab`이 삭제되면서 그 인스턴스가 깨졌고, 씬에는 소스 프리팹을 가리키는 참조만 남아 있다 — 아래 "알려진 이슈" 참조.
+  - 루트는 `Canvas`(버튼 `GameStart`/`Option`/`Exit`, 그리고 `UI > Option Panel`) · `Main Camera` · `System` · `EventSystem`이다. `TitleMenu` 컴포넌트는 **`03_Prefabs/Managers/TitleManager.prefab`**(구 `TitleMenu.prefab`을 이름만 바꾼 것) 인스턴스로 들어와 있다 — 씬 파일을 스크립트 GUID로 검색하면 0건이 나오는데, 컴포넌트가 프리팹 쪽에 있어서지 없어서가 아니다. **버튼 3개는 정상 동작한다.**
+  - `SoundManager` 프리팹 인스턴스도 이 씬에 있다. `OptionsPanel`이 `SoundManager.Instance`로 볼륨을 읽고 쓰므로 **빼면 옵션 창의 슬라이더가 아무것도 하지 않는다**(경고만 뜬다).
   - `Main Camera`를 지우지 말 것. Overlay 캔버스는 카메라 없이도 그려지지만 카메라가 하나도 없으면 "No cameras rendering" 경고가 뜬다.
 - `Assets/00_Scenes/SampleScene.unity` — 전투 씬. 루트: `00_BOOT`, `01_CAMERA`, `02_SYSTEM`, `03_WORLD`, `04_UI`, `05_DEBUG`, `EventSystem`.
-  - `02_SYSTEM`: 매니저 **열 개가 전부 프리팹 인스턴스**다(아래 `03_Prefabs/Managers/` 참조).
+  - `02_SYSTEM`: 매니저가 **전부 프리팹 인스턴스**다(아래 `03_Prefabs/Managers/` 참조). **단 `FloatingDamageManager`는 예외로 씬에 직접 놓인 오브젝트**이고, `CameraShake`는 `01_CAMERA`의 `Main Camera`에 붙어 있다.
   - `03_WORLD`: `player`, `enemySpawnPoint`
     - `player`는 자식 없이 `SpriteRenderer` + `Animator` + `CharacterStats` + `PlayerBattleVisuals`를 직접 들고 있다. 예전의 `PlayerVisual`/`PlayerBlink` 두 오브젝트를 겹쳐 깜빡이던 구조는 **없어졌고**, 이제 애니메이터 하나가 대기·펀치를 모두 재생한다.
   - `04_UI`: 캔버스 **다섯 개** — `Card Canvas`(`Hand`=손패 · `PendingActionList`=쌓인 공격 · `RewardCardList`), `Input Canvas`(`InputFieldDisplay`=입력창 · `WordChainText (TMP)` · `Timer Bar`), `Field Canvas`(`Result Text` 등), `Pause Canvas`(`Sort Order 10`), `RewardCanvas`.
@@ -58,8 +60,9 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - `Assets/01_Arts/Demi/` — 플레이어 스프라이트(`DemiOpenEyes`, `DemiPunch1~4`)와 애님 클립(`PlayerIdle`, `Punch1~4`), 컨트롤러. `PlayerBattleVisuals`가 `Punch1`(첫 타) / `Punch2~4`(랜덤) 트리거를 쏜다. 컨트롤러 파일명 `DemiOpneEyes_0`의 오타는 그대로 두었다.
 - `Assets/01_Arts/UI/` — 말풍선 이미지. `SpeechBubbleTailx2`(일반 꼬리)와 `ThinkBubbleTailx2`(생각풍선 꼬리)는 `SpeechBubble.Setup`의 `isNormalTail`로 갈린다.
 - `Assets/03_Prefabs/` — `Card.prefab`(런타임 생성되는 손패 카드), `Actions.prefab`(쌓인 공격 문장 한 줄, `PendingActionView`가 찍어낸다), `HPBar.prefab`(HP·방어 UI 한 벌, **플레이어/적이 같은 프리팹을 인스턴스로 공유**), `SpeechBubble.prefab`(말풍선, `ContentSizeFitter`로 문장 길이에 맞춰 늘어난다), `MotherDragon.prefab`, `enemy`/`strongEnemy`(스테이지별 적).
-  - 구 `PlayerSpeechBubble.prefab`은 **삭제됐다.** `EnemySpeechBubble.prefab`은 GUID가 유지된 채 `SpeechBubble.prefab`으로 이름만 바뀌었다(`ececaf37…`). ⚠️ `BattleManager.prefab`은 아직 삭제된 쪽을 `playerSpeechBubblePrefab`으로 참조하고 있다(깨진 참조).
-- `Assets/03_Prefabs/Managers/` — `02_SYSTEM`의 매니저 프리팹 **열두 개**(`InputManager`/`Deck Manager`/`StageManager`/`BattleManager`/`WordDictionary`/`WordUnlockManager`/`StatusEffectManager`/`SpeechBubbleManager`/`EventManager`/`SoundManager`/`TimerManager`/`ResultInputHandler`). 매니저는 전부 프리팹으로 뽑혀 있고 씬에는 인스턴스만 있다. **씬은 이걸 인스턴스로 들고 있고, 매니저끼리와 씬 오브젝트를 향한 인스펙터 연결은 전부 프리팹 인스턴스 오버라이드로 저장된다**(`SampleScene.unity`의 `m_Modifications` 안 `objectReference`). 자세한 주의점은 컨벤션 절 참조.
+  - 그 외: `FloatingDamageText.prefab`(피해 숫자 한 개), `Volume Slider.prefab`·`VolumeText.prefab`(옵션 창 슬라이더 한 줄).
+  - 구 `PlayerSpeechBubble.prefab`은 **삭제됐다.** `EnemySpeechBubble.prefab`은 GUID가 유지된 채 `SpeechBubble.prefab`으로 이름만 바뀌었다(`ececaf37…`). 예전에 남아 있던 `BattleManager.prefab`의 `playerSpeechBubblePrefab` 깨진 참조는 **정리됐다** — 지금 말풍선 프리팹 필드는 `SpeechBubbleManager.speechBubblePrefab` 하나뿐이다.
+- `Assets/03_Prefabs/Managers/` — 매니저 프리팹 **열세 개**(`InputManager`/`Deck Manager`/`StageManager`/`BattleManager`/`WordDictionary`/`WordUnlockManager`/`StatusEffectManager`/`SpeechBubbleManager`/`EventManager`/`SoundManager`/`TimerManager`/`ResultInputHandler`/`TitleManager`). **`TitleManager`만 `TitleScene`용이고 나머지가 `SampleScene`의 `02_SYSTEM`에 들어간다.** 매니저는 전부 프리팹으로 뽑혀 있고 씬에는 인스턴스만 있다. **씬은 이걸 인스턴스로 들고 있고, 매니저끼리와 씬 오브젝트를 향한 인스펙터 연결은 전부 프리팹 인스턴스 오버라이드로 저장된다**(`SampleScene.unity`의 `m_Modifications` 안 `objectReference`). 자세한 주의점은 컨벤션 절 참조.
 - `Assets/04_Data/Cards/` — **24개 `CardBase` 에셋**(GDD 4장 단어 사전 전체, 페인풀만 제외). `Assets > Create > Deck Manager > Cards > ...` 메뉴로 만들 것. `.asset` YAML을 손으로 작성하면 스크립트 GUID가 조용히 어긋날 수 있다.
 - `Assets/04_Data/EnemyTutorial.asset` — 유일한 `EnemyData`.
 - `Assets/InputSystem_Actions.inputactions` — Input System 기본 템플릿. **미사용.** 게임플레이 입력은 의도적으로 이걸 거치지 않는다(아래).
@@ -75,7 +78,8 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
       → TimerManager.AddTime(시간 증감만 즉시)
    → [타이머 0] → DeckManager.HandleTimeExpired
       → PlayPendingActions
-         → PlayerBattleVisuals 돌진 → 쌓인 수만큼 펀치 → CombatManager(적용) → 복귀
+         → PlayerBattleVisuals 돌진 → 쌓인 수만큼 펀치(+ CameraShake / FloatingDamage)
+            → CombatManager(적용) → 복귀
       → 손패 리롤 → 적 턴 → StatusEffectManager.OnEnemyTurnEnded(화상 피해·지속 감소)
       → 다음 플레이어 턴(적이 마비면 +5초)
 ```
@@ -102,7 +106,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 
 대기 중에는 **입력이 잠기고 타이머도 멈춘다**(`DisableInput` + `StopTimer`). 대기가 끝나는 쪽에서 다시 열어주므로, 새 대기 구간을 추가할 땐 반드시 짝을 맞출 것.
 
-스크립트 폴더는 시스템 단위로 나뉘고, 뷰는 각 시스템 아래 `UI/` 하위 폴더에 둔다(`DeckManager/UI/`, `Timer/UI/`, `WordChainManager/UI/`, `Combat/UI/`). 예외는 특정 시스템에 속하지 않는 화면 단위 UI인 `02_Scripts/UI/`(`TitleMenu`/`PauseManager`/`ResultInputHandler`/`WorldAnchoredUI`)와 최상위 `GameScenes.cs`다.
+스크립트 폴더는 시스템 단위로 나뉘고, 뷰는 각 시스템 아래 `UI/` 하위 폴더에 둔다(`DeckManager/UI/`, `Timer/UI/`, `WordChainManager/UI/`, `Combat/UI/`). 예외는 특정 시스템에 속하지 않는 화면 단위 UI인 `02_Scripts/UI/`(`TitleMenu`/`OptionsPanel`/`PauseManager`/`ResultInputHandler`/`WorldAnchoredUI`)와 최상위에 흩어져 있는 것들(`GameScenes.cs`·`BattleManager`·`StageManager`·`EventManager`·`SoundManager`·`SpeechBubble(Manager)`·`HPBarUI`·`CameraShake`·`FloatingDamage*`)이다.
 
 ### 입력 파이프라인 (`02_Scripts/InputManager/`)
 
@@ -188,6 +192,9 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - ⚠️ **`HandleChainCompleted`에서 `Enqueue`는 반드시 `timerManager.AddTime`보다 먼저 와야 한다.** `AddTime`이 남은 시간을 0으로 만들면 그 호출 안에서 곧바로 턴 전환 코루틴이 시작되기 때문이다. 순서가 뒤바뀌면 **훅으로 타이머를 깎아 턴을 끝낸 그 조합만 재생 목록에서 빠진다.**
   - 재생 중 적이 죽으면 남은 것을 버리고 즉시 중단한다(`Die()`가 `Destroy`를 부르므로 이후 공격은 대상이 없다). `HandleBattleEnded`와 `StageManager.LoadStage`에서도 비워, 지난 판 공격이 다음 스테이지로 넘어가지 않게 한다.
   - **`UI/PendingActionView`** — 쌓인 문장을 플레이어 옆에 세로로 보여주는 순수 뷰. 프리팹을 `Instantiate`해 목록을 만들고, 꺼내진 항목은 맨 앞부터 지운다(FIFO라 순서만 맞으면 정확하다). 한글 문장이 들어가므로 **라벨 폰트는 Paperlogy여야 한다.**
+    - **위치를 자기가 소유한다.** `followTarget`(보통 `player`)을 넣으면 `LateUpdate`에서 `WorldToScreenPoint` + `screenOffset`(참조 해상도 픽셀 × `scaleFactor`)으로 캐릭터를 따라간다. 비우면 캔버스 앵커에 그대로 머문다(예전 동작).
+    - ⚠️ **`WorldAnchoredUI`를 붙여 해결하려 하지 말 것.** 그쪽은 `CanvasGroup.alpha`를 자기가 소유해 `LateUpdate`마다 1로 되돌리는데, 이 뷰는 목록이 비었을 때와 **턴 종료 시(`HandleTimeExpired`)** alpha로 스스로를 숨긴다 — 같이 붙이면 그 숨김이 매 프레임 덮어써지고, 같은 오브젝트의 `LateUpdate` 순서는 보장되지 않아 증상이 들쭉날쭉해진다. 위치와 가시성을 한 컴포넌트가 함께 소유하는 게 의도다.
+    - **목록이 아래로만 자라게 하는 건 레이아웃 정렬이 아니라 피벗이다.** 피벗이 가운데(0.5)면 `ContentSizeFitter`가 높이를 늘릴 때 위아래로 똑같이 벌어진다. `pinToTop`이 `Awake`/`OnValidate`에서 피벗을 **TopMiddle(0.5, 1)** 로 고정해 윗변을 제자리에 붙들어 둔다.
 - **`CharacterStats`** — `TakeDamage(damage, ignoreDefense = false)`, `Heal`, `AddDefense`, `IncreasePower`, private `Die()` → `Destroy(gameObject)`(그래서 호출자들이 매 프레임 null 체크한다).
   - `damageTakenMultiplier`(기본 1)를 `TakeDamage` 맨 앞에서 곱한다. 데빌이 이걸 0.75로 낮춘다 — **공격하는 쪽이 아니라 받는 쪽에서** 처리하는 이유는 적 공격이 `EnemyManager`(다른 작업자 파일)에서 나가기 때문이다.
 - **`PlayerBattleVisuals`** (`Character/`) — 플레이어 공격 연출. `MoveToEnemyCoroutine`(적 앞 `dashOffset`까지 돌진) → `PlayAttackAnimation(isFirstAttack, speedMultiplier)` → `MoveToOriginCoroutine`(복귀). 첫 타는 `Punch1`, 이후는 `Punch2~4` 중 랜덤 트리거다.
@@ -207,7 +214,16 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - 위치 조정은 **`screenOffset`(참조 해상도 픽셀)** 으로 한다. `worldOffset`도 있지만 위와 같은 이유로 1이 100픽셀을 넘는다.
   - ⚠️ 숨길 때 `SetActive(false)`가 아니라 **`CanvasGroup.alpha`** 를 쓴다 — 오브젝트를 끄면 `LateUpdate`가 멈춰 대상이 다시 나타나도 스스로 되살아나지 못한다. 그래서 `[RequireComponent(typeof(CanvasGroup))]`이 걸려 있다.
   - 적은 `Destroy`(`CharacterStats.Die`)와 `SetActive(false)`(`BattleManager.CheckGameState`) 두 경로로 사라지므로 **둘 다 검사**한다.
-- **`SoundManager`** — FMOD 재생(`PlayBGM`/`PlaySFX`/`StopBGM`). **싱글턴 + `DontDestroyOnLoad`** 라 씬을 넘어 유지된다. `EventReference.IsNull` 가드가 있어 이벤트 미지정 자체는 안전하다.
+- **`SoundManager`** — FMOD 재생 창구이자 **볼륨 설정의 소유자**. `PlayBGM`/`StopBGM`/`PlaySFX`(2D·3D 두 오버로드)/`SetBGMParameter`. **싱글턴 + `DontDestroyOnLoad`** 라 타이틀에서 바꾼 볼륨이 전투 씬까지 따라간다. `EventReference.IsNull` 가드가 있어 이벤트 미지정 자체는 안전하다.
+  - **볼륨 3종은 거는 지점이 서로 다르다.** 이 FMOD 프로젝트에 VCA도 버스도 없어 이벤트가 전부 마스터 버스로 직결되기 때문이다 — 마스터는 `bus:/`의 볼륨, BGM은 들고 있는 `bgmInstance`에 직접, SFX는 원샷이라 값만 들고 있다가 **재생 시점에** 건다(이미 나간 소리는 되돌릴 수 없어 다음 재생부터 적용된다). FMOD Studio에 VCA를 만들면 셋을 `GetVCA(...).setVolume` 하나로 합칠 수 있다.
+  - `PlaySFX`는 `RuntimeManager.PlayOneShot`을 쓰지 않는다 — 핸들을 주지 않아 볼륨을 걸 수 없어서, 직접 `CreateInstance` → `setVolume` → `start` → `release`한다(재생이 끝나면 FMOD가 정리하므로 누수는 없다).
+  - ⚠️ **슬라이더 값과 실제 게인이 일부러 다르다.** `setVolume`은 선형 진폭인데 청감은 로그에 가까워, `ToGain`이 값을 **제곱**(`VolumeCurve = 2f`)해서 넘긴다. UI는 원래 값을 %로 보여준다.
+  - ⚠️ **마스터 버스를 잡을 때 `RuntimeManager.IsInitialized`로 먼저 막으면 안 된다.** 그건 FMOD 초기화를 유발하지 않아서, 아직 아무 소리도 재생하지 않은 타이틀 씬에서는 항상 false가 되고 마스터 볼륨이 조용히 안 먹는다. `RuntimeManager.StudioSystem`에 접근하는 것 자체가 초기화를 유발하므로 그쪽을 `try`로 감싸고 `RESULT`를 직접 본다. 실패 경고는 **첫 번째만** 남긴다.
+  - 볼륨은 `PlayerPrefs`(`option.volume.*`)에 저장된다. `Awake`에서 읽어두고 FMOD 호출은 `Start`로 미루며(뱅크 로드 후라야 안전), 디스크 쓰기는 드래그 중이 아니라 **옵션 창을 닫을 때** `SaveVolumes()` 한 번이다.
+- **타격감 연출 — `CameraShake` / `FloatingDamageManager`** (`02_Scripts/`) — 둘 다 `public static Instance` 싱글턴이고, `DeckManager.PlayPendingActions`가 공격 하나를 적용할 때마다 `Damage > 0`이면 호출한다(`Shake(0.1f, 0.8f)` + 피해 숫자). **호출부에 null 가드가 있어 씬에 없어도 조용히 넘어간다.**
+  - `CameraShake`는 `Main Camera`에 붙어 `OnEnable`에서 원위치를 기억하고 `localPosition`을 흔든다 — **런타임에 카메라를 옮기면 복귀 지점이 어긋난다**(`PlayerBattleVisuals`와 같은 함정). 세기는 인스펙터 `shakeMultiplier`가 전체 배율이다.
+  - `FloatingDamageManager`는 씬 오브젝트이고 `FloatingDamageText.prefab`을 `damageCanvas` 아래에 찍는다. 위치는 적의 월드 좌표를 `WorldToScreenPoint`로 바꿔 잡고 숫자가 겹치지 않게 살짝 랜덤으로 흩뿌린다. ⚠️ **`Camera.main`을 캐시 없이 매번 부르고 null 검사도 하지 않는다.**
+  - ⚠️ 둘 다 나머지 프로젝트의 인스펙터 배선 컨벤션과 어긋나는 `public` 필드 + 싱글턴 스타일이다(컨벤션 절 참조). **새 코드를 이 패턴으로 확장하지 말 것.**
 - **`EventManager`** — 스테이지 클리어 시 끼어드는 대화 이벤트(마더 드래곤). `StartEvent(isMotherDragon, healAmount)` → 대사를 순서대로 보여주고, **스페이스키**로 넘긴다. 대사는 인스펙터 배열(`normalEventLines`/`dragonEventLines`)이고 `string.Format`으로 `healAmount`가 들어간다.
   - 종료 시 회복을 적용한 뒤 `battleManager.ShowResult(...)`를 직접 호출해 승리 화면을 띄운다. 회복은 `CharacterStats.Heal`이 아니라 `currentHP`를 직접 더하고 `maxHP`로 클램프한다.
   - 마더 드래곤 여부는 `EnemyBase.isMotherDragon`(public 필드)로 판별한다.
@@ -215,7 +231,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - `OnBattleEnded` 이벤트는 `isGameOver`가 **false→true로 바뀌는 순간에만** 발생한다. `CheckGameState`가 `UpdateUI`마다 불려 `ShowResult`도 반복 호출되므로, 가드 없이 쏘면 매 프레임 발생한다.
   - 방어도 UI는 **아이콘 오브젝트가 텍스트를 자식으로 품는 구조**다(`PlayerDefIcon > PlayerDef`). 방어도가 0이면 아이콘째 꺼서 둘 다 사라진다. 아이콘 Image엔 아직 스프라이트가 없어 흰 사각형으로 보이는 게 현재 정상이다. 이 켜고 끄는 판단은 이제 `HealthBarUI.UpdateUI`가 한다.
 - **`StageManager`** — `enemyPrefabs` 리스트를 인덱스로 참조. `Start()`에서 시작 단어 지급 + `skillResolver.ResetRun()`(어썸 카운터 초기화) 후 `LoadStage(0)`. `RestartStage()`(사망 재시작)는 사전을 건드리지 않아 얻은 단어가 유지된다.
-  - **보상은 `NextStage()`가 아니라 `battleManager.OnBattleEnded`를 구독해 지급한다.** 적 HP가 0이 되는 순간(= 결과 화면이 뜨는 순간) 카드를 받아 `RewardCardView`로 펼쳐 보여주고, 플레이어가 `1`을 눌러 `NextStage()`가 불릴 때 `LoadStage`가 그 카드를 치운다. 패배(`player.currentHP <= 0`)에는 보상이 없다.
+  - **보상은 `NextStage()`가 아니라 `battleManager.OnBattleEnded`를 구독해 지급한다.** 적 HP가 0이 되는 순간(= 결과 화면이 뜨는 순간) 카드를 받아 `RewardCardView`로 펼쳐 보여주고, 플레이어가 `다음`을 쳐서 `NextStage()`가 불릴 때 `LoadStage`가 그 카드를 치운다. 패배(`player.currentHP <= 0`)에는 보상이 없다.
   - 적을 스폰한 직후 `enemyHealthBarAnchor.Bind(...)`로 적 HP 바의 추종 대상을 넘긴다(뷰가 스스로 적을 찾지 않는다).
   - `LoadStage`는 적을 스폰한 **직후 곧바로 플레이어 턴을 열지 않는다.** 타이머를 멈추고 입력을 잠근 뒤(+ 이전 스테이지에서 쌓다 만 체인을 비운 뒤) `stageStartDelay`만큼 기다렸다가, `BeginStageAfterDelay`에서 **손패를 전부 새로 뽑고**(`CardSlotManager.RefillAll()`) 입력·타이머를 연다.
   - 체인과 입력창은 대기 후가 아니라 **`LoadStage` 시점에 즉시** 비운다 — 새 적이 등장하는데 이전 조합 텍스트가 2초 더 남아 있으면 어색하기 때문.
@@ -236,7 +252,10 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 ### 씬 전환과 일시정지 (`02_Scripts/UI/`, `GameScenes.cs`)
 
 - **`GameScenes`** — 씬 이름 상수만 담은 정적 클래스. 씬 전환은 전부 여기를 거친다.
-- **`TitleMenu`** — 타이틀 버튼 3개 배선. `Awake`에서 **`Time.timeScale = 1f`로 되돌리는 게 핵심**이다(일시정지 상태로 타이틀에 돌아오면 멈춘 채로 뜬다). `옵션`은 코드에서도 `interactable = false`로 잠가둔다 — 구현할 때 그 줄을 지울 것. 종료는 `#if UNITY_EDITOR` 분기가 있어야 에디터에서도 반응한다.
+- **`TitleMenu`** — 타이틀 버튼 3개 배선. `Awake`에서 **`Time.timeScale = 1f`로 되돌리는 게 핵심**이다(일시정지 상태로 타이틀에 돌아오면 멈춘 채로 뜬다). 종료는 `#if UNITY_EDITOR` 분기가 있어야 에디터에서도 반응한다. `옵션`은 이제 잠겨 있지 않고 `optionsPanel`을 켠다(`Awake`에서 먼저 꺼둔다). **닫기는 `OptionsPanel`이 자기 닫기 버튼으로 직접 처리한다** — 여는 쪽과 닫는 쪽이 다른 스크립트다.
+- **`OptionsPanel`** (`02_Scripts/UI/`) — 타이틀 옵션 창. **순수 뷰**이고 값의 소유자는 `SoundManager`다. 마스터/BGM/SFX 슬라이더 3개(전부 0~1, `Whole Numbers` 끄기)와 선택적 `%` 라벨, 닫기 버튼.
+  - ⚠️ **`OnEnable`에서 저장값을 슬라이더에 되비출 때 `SetValueWithoutNotify`를 쓴다.** 평범한 `value =` 대입은 `onValueChanged`를 되쏘아 **방금 읽어온 값을 그대로 덮어쓴다.**
+  - 구독/해제가 `OnEnable`/`OnDisable`이라 창을 여닫을 때마다 도는데, `OnDisable`에서 `SaveVolumes()`를 부른다 — **드래그 중엔 적용만, 닫을 때 한 번만 디스크에 쓴다.**
 - **`ResultInputHandler`** — 결과 화면에서 `다음`(승리) / `다시`(패배)를 받아 `StageManager.NextStage()` / `RestartStage()`를 부른다. `PauseManager`와 같은 구조이고, `battleManager.IsGameOver`가 아니면 즉시 리턴해 전투 입력과 겹치지 않는다.
   - 승패 판별은 `player.currentHP > 0`으로 한다 — 이긴 판에서는 `다시`가, 진 판에서는 `다음`이 먹지 않는다.
 - **`PauseManager`** — ESC 토글. **버튼이 아니라 명령 단어 타이핑으로 조작한다** — 멈춘 동안 입력창에 `계속`/`타이틀`을 친다(단어는 인스펙터의 `resumeWord`/`titleWord`).
@@ -264,20 +283,21 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 
 **단어 사전에서 빠진 것**: **페인풀**(출혈) 카드 에셋이 없다. ⚠️ `AttributeEffectType.Bleed` enum 값은 **삭제 금지** — 인덱스가 밀려 `Intelli.asset`(`effectType: 5`)이 조용히 다른 효과가 된다. **컬러풀**은 `StatusEffectType`이 단일 값이라 "화상 하나만"으로 단순화되어 있다(다중 부여를 하려면 `ResolvedAction.StatusEffect`를 리스트로 바꿔야 하고, 그러면 `SkillResolver`/`CombatManager`만 고치면 된다).
 
-**옵션 화면이 없다.** 타이틀의 `옵션` 버튼은 자리만 잡아둔 채 `TitleMenu.Awake`에서 `interactable = false`로 잠겨 있다.
+**옵션은 볼륨 3종뿐이다.** 해상도·키 설정·언어 같은 건 없고, 옵션 창은 **타이틀 씬에만** 있다(일시정지 중에는 열 수 없다).
 
-**저장이 없어서 타이틀로 돌아가면 런이 초기화된다.** 해금한 단어와 스테이지 진행이 전부 사라지고 시작 단어 3장부터 다시 시작한다. 의도된 현재 상태다(`StageManager.RestartStage`만 사전을 유지한다).
+**저장되는 건 볼륨뿐이다.** `PlayerPrefs`의 `option.volume.*` 3개가 전부이고, **저장이 없어서 타이틀로 돌아가면 런이 초기화된다.** 해금한 단어와 스테이지 진행이 전부 사라지고 시작 단어 3장부터 다시 시작한다. 의도된 현재 상태다(`StageManager.RestartStage`만 사전을 유지한다).
 
-**연출은 플레이어 공격만 있다.** `PlayerBattleVisuals`가 돌진 → 펀치(`Punch1~4`) → 복귀를 재생하고, 그 사이 쌓인 공격이 하나씩 적용되며 HP가 계단식으로 줄어든다. **적 공격 모션과 피격 반응, 스테이지 전환 연출은 여전히 없고**, `turnChangeDelay`/`postAttackDelay`가 그 자리를 비워두고 있다.
+**연출은 플레이어 공격만 있다.** `PlayerBattleVisuals`가 돌진 → 펀치(`Punch1~4`) → 복귀를 재생하고, 그 사이 쌓인 공격이 하나씩 적용되며 HP가 계단식으로 줄어든다. 여기에 **카메라 흔들림(`CameraShake`)과 피해 숫자(`FloatingDamageManager`)** 가 타격마다 붙는다. **적 공격 모션과 피격 반응, 스테이지 전환 연출은 여전히 없고**, `turnChangeDelay`/`postAttackDelay`가 그 자리를 비워두고 있다.
 
 ## 컨벤션
 
 - C# 네임스페이스 없음 — 전부 전역 네임스페이스.
 - 컴포넌트 간 의존은 인스펙터에서 손으로 연결하는 `[SerializeField]` 참조가 원칙이다. 런타임에만 알 수 있는 의존은 `Bind(...)` 메서드를 명시적으로 둔다(`CardSlotView` 참조) — 조회하지 말 것.
-  - **예외가 둘 있다: `SpeechBubbleManager`와 `SoundManager`가 싱글턴**(`public static Instance`)이고 `BattleManager`가 둘을 직접 참조한다. `seungju` 브랜치에서 머지되어 들어온 코드이며 나머지 프로젝트의 배선 방식과 어긋난다. 새 코드를 이 패턴으로 확장하지 말 것.
-    - `SoundManager`는 `DontDestroyOnLoad`까지 붙어 씬을 넘어 유지된다. ⚠️ `BattleManager`가 **null 체크 없이** `SoundManager.Instance.PlayBGM/PlaySFX`를 부르므로, 씬에 없으면 `Start()`에서 바로 예외가 난다(`SpeechBubbleManager` 쪽은 `!= null` 가드가 있다).
+  - **예외가 넷 있다: `SpeechBubbleManager` · `SoundManager` · `CameraShake` · `FloatingDamageManager`가 싱글턴**(`public static Instance`)이다. 전부 `seungju` 브랜치에서 머지되어 들어온 코드이며 나머지 프로젝트의 배선 방식과 어긋난다. **새 코드를 이 패턴으로 확장하지 말 것** — 예외가 늘고 있으니 특히 주의.
+    - 지금은 **호출부 네 곳이 전부 `!= null` 가드를 갖고 있다**(예전에 `BattleManager`가 `SoundManager.Instance`를 가드 없이 불러 씬에 없으면 `Start()`에서 예외가 나던 문제는 고쳐졌다). 씬에 매니저가 빠져 있으면 예외 대신 **조용히 아무 일도 안 일어난다** — 소리·흔들림·피해 숫자가 안 나오면 씬에 오브젝트가 있는지부터 볼 것.
+    - `SoundManager`는 `DontDestroyOnLoad`까지 붙어 씬을 넘어 유지된다. 그래서 **두 씬 모두에 인스턴스가 있어야 한다** — 타이틀에서 시작하면 타이틀 쪽 인스턴스가 살아남고 전투 씬 쪽은 `Awake`에서 스스로 `Destroy`된다.
 - 씬 오브젝트 참조는 프리팹 에셋에 저장되지 않는다. 프리팹이 씬 컴포넌트를 필요로 하면 스포너가 `Bind()`로 넘겨준다(`HandFanLayout` → `CardSlotView`의 `InputManager`).
-- ⚠️ **매니저 프리팹의 인스펙터 연결은 프리팹이 아니라 씬 인스턴스에 있다.** `03_Prefabs/Managers/`의 넷은 서로와 씬 오브젝트(`player`/`enemySpawnPoint`/각종 UI)를 참조하는데, 그 참조는 프리팹 에셋에 담길 수 없으므로 전부 인스턴스 오버라이드로만 존재한다. 따라서:
+- ⚠️ **매니저 프리팹의 인스펙터 연결은 프리팹이 아니라 씬 인스턴스에 있다.** `03_Prefabs/Managers/`의 매니저들은 서로와 씬 오브젝트(`player`/`enemySpawnPoint`/각종 UI)를 참조하는데, 그 참조는 프리팹 에셋에 담길 수 없으므로 전부 인스턴스 오버라이드로만 존재한다. 따라서:
   - 인스턴스에서 **Apply / Apply All을 누르지 말 것** — 씬 참조가 프리팹 쪽에서 null이 되고, 그 프리팹을 다시 인스턴스화하면 "아무 일도 안 일어남" 상태가 된다. 프리팹은 Override 상태로 두는 게 정상이다.
   - 프리팹을 다시 씬에 끌어다 놓으면 참조가 하나도 안 붙어 온다. 연결을 손으로 전부 다시 채워야 한다.
   - 매니저에 `[SerializeField]`를 추가했다면 프리팹이 아니라 **씬 인스턴스에서** 채우고 `SampleScene.unity`를 커밋할 것.
@@ -291,21 +311,18 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 
 ## 알려진 이슈
 
-- ⚠️ **타이틀 씬의 버튼 3개가 아무 동작도 하지 않는다.** `TitleMenu.prefab`이 삭제되면서 `TitleScene`의 인스턴스가 깨졌고, **`TitleMenu` 컴포넌트가 씬에서 사라졌다**(스크립트 GUID로 검색해 0건, 삭제된 프리팹 GUID 참조만 15곳 남아 있다). 결과:
-  - `게임시작`이 `SampleScene`을 열지 않는다 — **게임을 시작할 수 없다.**
-  - `옵션`이 `interactable = false`로 잠기지 않아 눌린다.
-  - `게임종료`가 반응하지 않는다.
-  - `Awake`의 `Time.timeScale = 1f` 복원이 사라져, **일시정지 상태에서 `타이틀`로 나오면 타이틀이 멈춘 채로 뜬다.**
-  - 복구: 씬에서 깨진 인스턴스를 지우고 빈 GameObject에 `TitleMenu`를 새로 붙인 뒤 버튼 3개를 연결하면 된다. 스크립트(`02_Scripts/UI/TitleMenu.cs`)는 멀쩡하다.
+- **컴파일이 한 파일에 걸려 통째로 멈춘 적이 있다 — 해결됨.** `CameraShake.cs`에 `= 1.5 f;`(숫자와 `f` 접미사 사이 공백)가 커밋된 적이 있고(`cfc7957`), 단일 어셈블리라 **그 파일 하나 때문에 모든 스크립트가 컴파일되지 않았다.** CI도 터미널 컴파일 경로도 없어 에디터를 열기 전까지 드러나지 않는 종류의 사고다 — 스크립트를 고친 뒤에는 에디터 콘솔에서 컴파일 통과를 눈으로 확인할 것.
 
 - ⚠️ **적이 죽는 경로가 두 개로 갈려 있다.** `CharacterStats.Die()`는 `Destroy(gameObject)`지만 `BattleManager.CheckGameState`는 `SetActive(false)`로 비활성화만 한다. `DeckManager.PlayPendingActions`의 중단 판정이 `IsGameOver || currentEnemy == null`인데, **비활성화된 적은 null이 아니다.** `eventManager`가 배선된 지금은 처치 시 `ShowResult` 대신 `StartEvent`로 빠져 `IsGameOver`가 false로 남을 수 있어, 그 사이 남은 공격이 죽은 적에게 계속 들어갈 여지가 있다. 중단 조건에 `!activeInHierarchy` 또는 `currentHP <= 0`을 더하는 게 안전하다.
 - ⚠️ **`HPBarUI.cs`의 클래스명이 `HealthBarUI`다.** Unity는 MonoBehaviour의 파일명과 클래스명이 같아야 하므로 **`Add Component`로는 새로 붙일 수 없다.** 다만 `HPBar.prefab`에 이미 직렬화되어 있어 프리팹을 인스턴스화하면 정상 동작한다 — 새로 붙일 일이 생기면 파일명을 `HealthBarUI.cs`로 바꾸는 쪽이 호출부를 안 건드려 간단하다.
 - **`BattleManager.prefab`의 `playerHealthBar`가 `{fileID: 0}`이다.** 씬 오브젝트 참조라 프리팹에 저장될 수 없어서 정상이며, 실제 연결은 **씬 인스턴스 오버라이드**에 있다. 프리팹에서 `Apply`를 누르면 이 null이 확정되어 배선이 날아간다.
 - **`MotherDragon.prefab`의 체력이 의도대로 나오지 않는다.** 프리팹에 `maxHP: 9999`가 박혀 있지만 `enemyData`가 `EnemyTutorial.asset`(maxHP 150)으로 연결돼 있어 `EnemyBase.Start()`가 덮어쓴다. 마더 드래곤은 3턴을 버텨야 스파링 연출이 성립하므로 **`enemyData` 연결을 비우는 것이 맞다** — 그러면 `base.Start()` 폴백으로 9999가 유지되고, `EnemyManager`의 세 메서드가 `enemyData == null`에서 조용히 리턴해 공격·방어·버프도 하지 않는다(스파링 상대로 적절하다). 전용 `EnemyData`를 새로 만들 필요는 없다.
-- **FMOD는 뱅크가 없다.** 코드(`SoundManager`)와 `EventReference` 두 개(`attackSound`/`battleBGM`)는 연결됐지만 `Assets/StreamingAssets`가 없어 지정할 이벤트가 없다. `EventReference.IsNull` 가드가 있어 미지정 자체는 안전하다.
-  - ⚠️ **`SampleScene`에 FMOD `StudioListener`가 없다**(0건). 3D 사운드(`PlaySFX(event, position)`)를 쓰려면 `Main Camera`에 붙여야 한다.
+- **FMOD 뱅크는 이제 있다.** `Assets/05_Sounds/FMOD/StreetTyperFMOD/`에 FMOD Studio 프로젝트(`.fspro`)와 빌드된 뱅크 4개(`Master`/`Master.strings`/`BGM`/`SFX`)가 들어와 있고, `FMODStudioSettings.asset`의 `sourceBankPath`가 `Assets/05_Sounds/FMOD/StreetTyperFMOD/Build`를 가리킨다. `BattleManager.prefab`의 `attackSound`/`battleBGM`도 실제 이벤트 GUID로 채워져 있다.
+  - `Assets/StreamingAssets`는 **비어 있는 게 정상이다** — `ImportType: 0`(StreamingAssets)이라 FMOD가 임포트/빌드 시점에 뱅크를 복사해 넣는다. 손으로 채우지 말 것.
+  - ⚠️ **두 씬 모두 FMOD `StudioListener`가 없다**(0건). 3D 사운드(`PlaySFX(event, position)`)를 쓰려면 `Main Camera`에 붙여야 한다. 지금 실제로 쓰이는 건 2D 오버로드뿐이라 드러나지 않는다.
   - `Assets/Plugins/FMOD/platforms/mac/**/Info.plist`가 체크아웃만 해도 수정된 것으로 잡히는 일이 있다(플랫폼 간 차이).
-- **방어도에 상한도 턴 초기화도 없다.** `AddDefense`가 계속 누적되어 가드를 반복하면 적 공격(힘 5)을 영구히 막는 상태가 된다. GDD에 규칙이 없어 그대로 두었지만 밸런스상 확인이 필요하다.
+- **방어도에 상한이 없다.** 턴 초기화는 생겼다 — `DeckManager.RunTurnTransition`이 적 턴이 끝난 뒤 `player.defense = 0`으로 비우고(`StageManager`도 스테이지 시작/재시작에서 비운다), 적 방어도는 건드리지 않는다(적은 자기 턴에 스스로 쌓는다). 다만 **한 턴 안에서 `AddDefense`를 누적하는 데는 여전히 상한이 없다.** GDD에 규칙이 없어 그대로 두었지만 밸런스상 확인이 필요하다.
+- **공격 말풍선이 꺼져 있다.** `DeckManager.PlayPendingActions`의 `battleManager.OnPlayerActionResolved(BuildBubbleText(...))` 호출이 **주석 처리되어 있다**(`DeckManager.cs:305`). 타격 수치는 이제 말풍선이 아니라 `FloatingDamageManager`가 띄운다. `BattleManager.OnPlayerActionResolved`와 `DeckManager.BuildBubbleText`는 살아 있지만 현재 아무도 부르지 않으며, `actionBubbleDuration`도 그만큼 놀고 있다.
 
 - **한/영 IME — 해결됨.** 증상은 두 갈래였는데 원인이 하나였다.
   - "Play 직후엔 입력창을 클릭하거나 Alt를 눌러야 조합이 시작된다" → `imeCompositionMode`가 기본값 `Auto`였던 탓이다. **`EnableInput()`에서 `On`으로 고정**하고, 그 값을 되돌리는 주범이던 `TMP_InputField`를 라벨로 교체해 해결했다.

@@ -6,7 +6,7 @@ public class CameraShake : MonoBehaviour
     public static CameraShake Instance;
 
     [Tooltip("화면 흔들림 전체 배율 (이 값을 키우면 흔들립니다)")]
-    public float shakeMultiplier = 1.5 f;
+    public float shakeMultiplier = 1.5f;
 
     private Vector3 _originalPos;
 

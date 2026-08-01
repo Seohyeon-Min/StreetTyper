@@ -62,6 +62,11 @@ public class EnemyManager : MonoBehaviour
                 Debug.Log(data.enemyName + " Action: ATTACK!");
                 currentEnemy.PlayAttackAnimation();
                 player.TakeDamage(currentEnemy.power);
+
+                if (HitEffectManager.Instance != null)
+                {
+                    HitEffectManager.Instance.PlayHitEffect(player.GetComponent<SpriteRenderer>());
+                }
                 break;
             case ActionType.Defend:
                 Debug.Log(data.enemyName + " Action: DEFEND!");

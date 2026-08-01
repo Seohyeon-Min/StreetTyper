@@ -6,6 +6,7 @@ Shader "Custom/HitImpact"
         _Progress ("Progress (0~1, 외부 스크립트에서 제어)", Range(0, 1)) = 0
         _Duration ("Duration (몇 초 안에 재생을 끝낼지 - EffectBase가 참고만 하는 값)", Range(0.05, 2)) = 0.2
         _FadeStart ("Fade Start (여기부터 서서히 사라짐)", Range(0.1, 0.95)) = 0.6
+        _GrowthPower ("Growth Power (1=일정 속도, 1보다 작으면 처음에 빨리 커지다 느려짐, 1보다 크면 처음엔 느리다가 나중에 확 커짐)", Range(0.1, 5)) = 1.0
 
         [Header(Color)]
         [HDR] _Color ("Outline Color (윤곽선 색)", Color) = (1, 1, 1, 1)
@@ -71,6 +72,7 @@ Shader "Custom/HitImpact"
 
             float _Progress;
             float _FadeStart;
+            float _GrowthPower;
 
             float4 _Color;
 
@@ -143,7 +145,10 @@ Shader "Custom/HitImpact"
                 float fadeOut = 1.0 - smoothstep(_FadeStart, 1.0, progress);
                 float envelope = saturate(appear * fadeOut);
 
-                float baseRadius = _MaxRadius * saturate(progress / max(0.001, _FadeStart));
+                // _GrowthPower로 반경이 커지는 속도(이징)를 조절한다 - 1이면 그대로 선형,
+                // 1보다 작으면 초반에 빠르게 커졌다 점점 느려지고, 1보다 크면 초반엔 느리다가 막판에 확 커진다.
+                float growthT = saturate(progress / max(0.001, _FadeStart));
+                float baseRadius = _MaxRadius * pow(growthT, _GrowthPower);
 
                 // 저주파 노이즈로 원의 경계를 뭉게구름처럼 둥글둥글하게 부풀린다 - 광선이나 균열이 아니라
                 // 원 하나의 윤곽선 자체가 완만하게 울렁이는 형태.

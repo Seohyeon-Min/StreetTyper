@@ -24,9 +24,6 @@ public class CharacterStats : MonoBehaviour
         if (!Mathf.Approximately(damageTakenMultiplier, 1f))
             damage = Mathf.Max(0, Mathf.RoundToInt(damage * damageTakenMultiplier));
 
-        if (damage > 0 && HitEffectManager.Instance != null)
-            HitEffectManager.Instance.PlayHitEffect(GetComponent<SpriteRenderer>());
-
         int actualDamage;
 
         if (ignoreDefense)

@@ -31,18 +31,19 @@ Material:
     - _BreakSoftness: 0.29
     - _BumpScale: 3.5
     - _BumpStrength: 0.722
-    - _Duration: 0.26
+    - _Duration: 0.539
     - _EdgeSoftness: 0.139
-    - _FadeStart: 0.6
+    - _FadeStart: 0.785
+    - _GrowthPower: 0.32
     - _Intensity: 3
     - _MaxRadius: 0.735
-    - _Progress: 0.588
+    - _Progress: 0.926
     - _RingWidth: 0.005
     - _Seed: 27.5
     - _WidthBumpInfluence: 0.979
     - _WidthSegmentCount: 15.7
     - _WidthSegmentVariation: 1
     m_Colors:
-    - _Color: {r: 1, g: 0.40715817, b: 0.25943398, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

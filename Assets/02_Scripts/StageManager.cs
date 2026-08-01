@@ -7,10 +7,14 @@ public class StageManager : MonoBehaviour
 {
     [Header("Stage Settings")]
     public List<GameObject> enemyPrefabs;
+    public GameObject motherDragonPrefab;
     public Transform enemySpawnPoint;
 
     [Tooltip("스테이지가 열리고 플레이어가 타이핑을 시작할 수 있을 때까지의 대기 시간(초)")]
     public float stageStartDelay = 2f;
+
+    [Tooltip("총 스테이지 수")]
+    public int totalStages = 8;
 
     [Header("References")]
     public BattleManager battleManager;
@@ -67,29 +71,61 @@ public class StageManager : MonoBehaviour
     {
         currentStageIndex = stageIndex;
 
+        // [추가] 최고 도달 스테이지 기록 갱신
+        if (StatisticsManager.Instance != null)
+            StatisticsManager.Instance.UpdateHighestStage(currentStageIndex + 1);
+
         if (currentEnemyObject != null)
         {
             Destroy(currentEnemyObject);
         }
 
-        if (currentStageIndex >= enemyPrefabs.Count)
+        // [수정] 8스테이지(인덱스 7) 클리어 시(즉, 9번째 스테이지 진입 시) 게임 종료
+        // 주의: enemyPrefabs.Count가 아닌 totalStages(8)로 검사해야 합니다.
+        if (currentStageIndex >= totalStages)
         {
             battleManager.ShowGameClear();
             return;
         }
 
-        currentEnemyObject = Instantiate(enemyPrefabs[currentStageIndex], enemySpawnPoint.position, Quaternion.identity);
+        // [수정] 프리팹 결정 로직
+        GameObject prefabToSpawn;
+
+        // 4스테이지(인덱스 3) 또는 8스테이지(인덱스 7)이면 보스 스폰
+        if ((currentStageIndex == 3 || currentStageIndex == 7) && motherDragonPrefab != null)
+        {
+            prefabToSpawn = motherDragonPrefab;
+        }
+        else
+        {
+            // 일반 스테이지는 무조건 첫 번째 프리팹(enemyPrefabs[0])을 재사용
+            if (enemyPrefabs != null && enemyPrefabs.Count > 0)
+            {
+                prefabToSpawn = enemyPrefabs[0];
+            }
+            else
+            {
+                Debug.LogError("StageManager: Enemy Prefabs 리스트가 비어있습니다! 인스펙터를 확인하세요.");
+                return;
+            }
+        }
+
+        // [핵심] 기존 enemyPrefabs[currentStageIndex] 대신 prefabToSpawn 변수로 생성!
+        currentEnemyObject = Instantiate(prefabToSpawn, enemySpawnPoint.position, Quaternion.identity);
+
         EnemyBase newEnemyBase = currentEnemyObject.GetComponent<EnemyBase>();
+
+        // [추가] 생성 직후 스탯 스케일링 적용
+        newEnemyBase.ApplyScaling(currentStageIndex);
 
         enemyManager.currentEnemy = newEnemyBase;
         enemyManager.GenerateNextAction();
 
-        // 적 HP 바가 방금 스폰된 적을 따라가게 한다. 뷰가 스스로 적을 찾아다니지 않도록
-        // 스포너가 넘겨주는 기존 방식(HandFanLayout -> CardSlotView.Bind)과 같다.
+        // HP 바 연결
         if (enemyHealthBarAnchor != null)
             enemyHealthBarAnchor.Bind(currentEnemyObject.transform);
         else
-            Debug.LogWarning("StageManager: enemyHealthBarAnchor가 연결되지 않아 적 HP 바가 따라오지 않습니다.", this);
+            Debug.LogWarning("StageManager: enemyHealthBarAnchor가 할당되지 않았습니다.", this);
 
         if (player != null)
         {
@@ -98,10 +134,6 @@ public class StageManager : MonoBehaviour
 
         battleManager.ResetBattle();
 
-        // 대기 시간 동안엔 타이머가 돌지도, 입력이 들어오지도 않아야 한다.
-        // 둘 다 BeginStageAfterDelay가 끝에서 다시 연다.
-        // ResetToFull은 정지까지 겸하므로(StopTimer 대체) 게이지가 0이 아니라
-        // 가득 찬 상태로 멈춰 있게 된다.
         if (timerManager != null)
             timerManager.ResetToFull();
 
@@ -111,21 +143,15 @@ public class StageManager : MonoBehaviour
             inputManager.ClearInput();
         }
 
-        // 이전 스테이지에서 쌓다 만 조합은 넘겨받지 않는다 - 입력창을 비우는 것과 같은 이유다.
         if (wordChainManager != null)
             wordChainManager.ClearChain();
 
-        // 아직 터지지 않은 공격도 같이 버린다 - 새 적에게 지난 스테이지의 공격이 들어가면 안 된다.
         if (pendingActionManager != null)
             pendingActionManager.Clear();
 
-        // 상태이상도 넘겨받지 않는다. 이전 적은 이미 사라졌으므로 얼음 복원은 의미가 없고,
-        // 플레이어에게 걸린 데빌만 되돌아간다.
         if (statusEffectManager != null)
             statusEffectManager.ClearAll();
 
-        // 새 스테이지가 열리는 순간에는 보상 카드가 남아 있으면 안 된다.
-        // RunNextStage가 이미 치우지만, 패배 후 재시작처럼 그 경로를 타지 않는 진입도 있다.
         if (rewardCardView != null)
             rewardCardView.Clear();
 
@@ -139,6 +165,9 @@ public class StageManager : MonoBehaviour
     private IEnumerator BeginStageAfterDelay()
     {
         yield return new WaitForSeconds(stageStartDelay);
+
+        if (StatisticsManager.Instance != null)
+            StatisticsManager.Instance.StartTracking();
 
         // 손패는 스테이지마다 새로 뽑는다. 안 그러면 이전 스테이지에서 들고 있던 카드가 그대로 남는다.
         if (cardSlotManager != null)

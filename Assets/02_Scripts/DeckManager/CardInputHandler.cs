@@ -104,6 +104,9 @@ public class CardInputHandler : MonoBehaviour
             if (SoundManager.Instance != null)
                 SoundManager.Instance.PlayWordComplete();
 
+            if (StatisticsManager.Instance != null)
+                StatisticsManager.Instance.AddValidWord(matched.CardName);
+
             mainBufferManager.AddCard(matched);
             wordChainManager?.SubmitWord(matched.CardName);
             cardSlotManager.ConsumeSlot(i);

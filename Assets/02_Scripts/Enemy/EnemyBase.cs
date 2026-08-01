@@ -5,6 +5,7 @@ public class EnemyBase : CharacterStats
     [Header("Enemy Data Reference")]
     public EnemyData enemyData;
     public bool isMotherDragon = false;
+    private bool isScaled = false;
 
     [Header("Visuals")]
     [SerializeField] private Animator animator;
@@ -12,6 +13,18 @@ public class EnemyBase : CharacterStats
     [SerializeField] private Transform bubbleAnchor;
 
     public Vector3 BubblePosition => bubbleAnchor != null ? bubbleAnchor.position : transform.position;
+
+    public void ApplyScaling(int stageIndex)
+    {
+        if (enemyData != null)
+        {
+            float multiplier = 1f + (stageIndex * 0.2f); // 스테이지당 20% 증가
+            maxHP = Mathf.RoundToInt(enemyData.maxHP * multiplier);
+            currentHP = maxHP;
+            power = Mathf.RoundToInt(enemyData.power * multiplier);
+            isScaled = true;
+        }
+    }
 
     // 공격 애니메이션 트리거 (Idle -> Attack 전이는 Animator Controller의 Exit Time으로 자동 복귀)
     public void PlayAttackAnimation()
@@ -27,16 +40,14 @@ public class EnemyBase : CharacterStats
 
     protected override void Start()
     {
-        if (enemyData != null)
+        // 스케일링이 아직 적용되지 않은 경우에만 기본 데이터 적용
+        if (!isScaled && enemyData != null)
         {
             maxHP = enemyData.maxHP;
             currentHP = maxHP;
             power = enemyData.power;
-            gameObject.name = enemyData.enemyName;
         }
-        else
-        {
-            base.Start();
-        }
+
+        if (enemyData != null) gameObject.name = enemyData.enemyName;
     }
 }

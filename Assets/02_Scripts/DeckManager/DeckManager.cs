@@ -418,14 +418,18 @@ public class DeckManager : MonoBehaviour
                 break;
             }
 
-            // ==========================================
-            // [수정된 부분] 전체 인터벌에서 이미 기다린 타격 딜레이(hitDelay)를 빼고 남은 시간만 대기
-            float remainingDelay = currentInterval - hitDelay;
-            if (remainingDelay > 0)
+            // 전체 인터벌에서 이미 기다린 타격 딜레이(hitDelay)를 빼고 남은 시간만 대기한다.
+            // 데미지 없는 액션(가드 등)은 애니메이션이 아예 없으므로 이 대기 자체를 건너뛴다 -
+            // 안 그러면 펀치 사이에 가드가 끼어 있을 때마다 아무것도 안 보이면서
+            // currentInterval만큼 조용히 멈춰서, 펀치 3번이 바로 이어지지 않고 뜨문뜨문 보인다.
+            if (hasDamage)
             {
-                yield return new WaitForSeconds(remainingDelay);
+                float remainingDelay = currentInterval - hitDelay;
+                if (remainingDelay > 0)
+                {
+                    yield return new WaitForSeconds(remainingDelay);
+                }
             }
-            // ==========================================
         }
 
         // 5. 원래 위치로 복귀 및 배속 원상 복구

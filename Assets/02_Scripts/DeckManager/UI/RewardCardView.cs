@@ -12,6 +12,9 @@ public class RewardCardView : MonoBehaviour
     [Tooltip("생성된 카드가 들어갈 부모. 앵커를 화면 중앙으로 둬야 가운데 정렬이 맞는다.")]
     [SerializeField] private RectTransform container;
 
+    [Tooltip("평소엔 꺼두고 보상을 보여줄 때만 켤 패널(배경/타이틀 등). 비워두면 이 부분은 건너뛴다 - 패널을 따로 안 쓰는 구성도 지원하기 위해서다.")]
+    [SerializeField] private GameObject panel;
+
     [Tooltip("카드와 카드 사이의 빈 공간(px). 카드 폭은 프리팹에서 읽어 자동으로 더하므로, " +
              "여기 100을 넣으면 카드 사이가 실제로 100만큼 벌어진다.")]
     [SerializeField] private float spacing = 100f;
@@ -66,6 +69,9 @@ public class RewardCardView : MonoBehaviour
             return;
         }
 
+        if (panel != null)
+            panel.SetActive(true);
+
         for (var i = 0; i < cards.Count; i++)
             Spawn(cards[i], i, cards.Count);
 
@@ -83,6 +89,9 @@ public class RewardCardView : MonoBehaviour
         }
 
         _spawned.Clear();
+
+        if (panel != null)
+            panel.SetActive(false);
     }
 
     private void Spawn(CardBase card, int index, int total)

@@ -177,9 +177,11 @@ public class StatusEffectManager : MonoBehaviour
             Debug.Log($"[상태이상] 화상 피해 {damage} (적 HP {enemy.currentHP}/{enemy.maxHP})", this);
 
         // 수치를 적 위에 띄워 "지금 줄어든 건 화상 때문"이라는 걸 알 수 있게 한다.
+        // 위치는 BubblePosition을 쓴다 - 적 의도 말풍선(BattleManager)과 같은 기준점이라야
+        // 화상 수치만 엉뚱한 곳에 뜨지 않는다.
         if (showBurnBubble && SpeechBubbleManager.Instance != null)
             SpeechBubbleManager.Instance.ShowBubble($"{GetDisplayName(StatusEffectType.Burn)} {damage}",
-                enemy.transform.position, false, burnBubbleDuration);
+                enemy.BubblePosition, false, burnBubbleDuration);
 
         if (battleManager != null)
             battleManager.UpdateUI();

@@ -8,10 +8,13 @@ public class TitleMenu : MonoBehaviour
     [Header("버튼")]
     [SerializeField] private Button startButton;
 
-    [Tooltip("옵션 화면은 아직 없다. 지금은 비활성으로만 자리를 잡아둔다.")]
     [SerializeField] private Button optionsButton;
 
     [SerializeField] private Button quitButton;
+
+    [Header("옵션")]
+    [Tooltip("옵션 창 루트. 평소엔 비활성이어야 한다.")]
+    [SerializeField] private GameObject optionsPanel;
 
     private void Awake()
     {
@@ -19,10 +22,10 @@ public class TitleMenu : MonoBehaviour
         // 씬을 넘어가도 리셋되지 않는 전역 값이라 진입할 때마다 되돌린다.
         Time.timeScale = 1f;
 
-        // 인스펙터 설정에만 기대지 않고 코드로도 잠가둔다.
-        // 옵션 화면을 실제로 붙일 때 이 줄을 지울 것.
-        if (optionsButton != null)
-            optionsButton.interactable = false;
+        if (optionsPanel != null)
+            optionsPanel.SetActive(false);
+        else
+            Debug.LogWarning("TitleMenu: optionsPanel이 연결되지 않아 옵션 창을 열 수 없습니다.", this);
     }
 
     private void OnEnable()
@@ -31,6 +34,11 @@ public class TitleMenu : MonoBehaviour
             startButton.onClick.AddListener(HandleStart);
         else
             Debug.LogWarning("TitleMenu: startButton이 연결되지 않아 게임을 시작할 수 없습니다.", this);
+
+        if (optionsButton != null)
+            optionsButton.onClick.AddListener(HandleOptions);
+        else
+            Debug.LogWarning("TitleMenu: optionsButton이 연결되지 않았습니다.", this);
 
         if (quitButton != null)
             quitButton.onClick.AddListener(HandleQuit);
@@ -43,6 +51,9 @@ public class TitleMenu : MonoBehaviour
         if (startButton != null)
             startButton.onClick.RemoveListener(HandleStart);
 
+        if (optionsButton != null)
+            optionsButton.onClick.RemoveListener(HandleOptions);
+
         if (quitButton != null)
             quitButton.onClick.RemoveListener(HandleQuit);
     }
@@ -50,6 +61,13 @@ public class TitleMenu : MonoBehaviour
     private void HandleStart()
     {
         SceneManager.LoadScene(GameScenes.Battle);
+    }
+
+    // 닫기는 OptionsPanel이 자기 닫기 버튼으로 직접 처리한다.
+    private void HandleOptions()
+    {
+        if (optionsPanel != null)
+            optionsPanel.SetActive(true);
     }
 
     private void HandleQuit()

@@ -144,22 +144,37 @@ public class DeckManager : MonoBehaviour
     // 입력도 받지 않아야 한다 - 안 그러면 적이 죽은 뒤에도 타이머가 0까지 흐르는 동안 타이핑이 먹힌다.
     private void HandleBattleEnded()
     {
+        // 1. 타이머 정지는 승리/패배 상관없이 작동 (결과창 대기 중이므로)
         timerManager.StopTimer();
 
-        // 결과 화면에서는 "다음"/"다시"를 타이핑해 넘어가므로 입력을 끄지 않고 오히려 켠다
-        // (일시정지에서 "계속"을 치는 것과 같은 구조). 대신 치다 만 글자는 비운다.
+        // [수정] 플레이어가 사망한 경우(게임 오버)에만 BGM을 끄고 패를 비웁니다.
+        if (player != null && player.currentHP <= 0)
+        {
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.StopBGM();
+            }
+
+            if (cardSlotManager != null)
+            {
+                cardSlotManager.EmptyAllSlots();
+            }
+
+            if (timerManager != null)
+            {
+                timerManager.ResetToFull();
+            }
+        }
+
+        // 3. 재시작 또는 다음 스테이지 입력을 받기 위해 인풋 활성화
         inputManager.EnableInput();
         inputManager.ClearInput();
 
-        // 아직 터지지 않은 공격은 버린다 - 안 그러면 다음 스테이지 첫 턴에 지난 판 공격이 튀어나온다.
         pendingActionManager.Clear();
 
-        // 상태이상도 판이 끝나면 정리한다. 특히 데빌은 플레이어에게 걸린 것이라
-        // 되돌리지 않으면 다음 판까지 피해 감소가 남는다.
         if (statusEffectManager != null)
             statusEffectManager.ClearAll();
     }
-
     private IEnumerator RunTurnTransition()
     {
         // 게임오버 여부와 무관하게 입력부터 잠근다 - 타이머가 다 됐는데 계속 타이핑되면 안 된다.

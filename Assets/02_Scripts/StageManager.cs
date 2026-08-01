@@ -38,7 +38,8 @@ public class StageManager : MonoBehaviour
     [Tooltip("클리어 보상으로 얻은 단어 카드를 화면에 펼쳐 보여준다.")]
     public RewardCardView rewardCardView;
 
-    private int currentStageIndex = 0;
+    private int currentBattleIndex = 0;
+    private int totalBattles = 10;
     private GameObject currentEnemyObject;
     private Coroutine startRoutine;
 
@@ -64,16 +65,30 @@ public class StageManager : MonoBehaviour
         if (skillResolver != null)
             skillResolver.ResetRun();
 
-        LoadStage(currentStageIndex);
+        LoadStage(currentBattleIndex);
     }
 
     public void LoadStage(int stageIndex)
     {
-        currentStageIndex = stageIndex;
+        currentBattleIndex = stageIndex;
+        // 총 10번의 전투(인덱스 0~9)를 모두 마치고 인덱스 10에 도달하면 게임 클리어
+        if (currentBattleIndex >= totalBattles)
+        {
+            battleManager.ShowGameClear();
+            return;
+        }
+
+        // 인덱스 4(5번째 전투 = 4스테이지 클리어 후)와 인덱스 9(10번째 전투 = 8스테이지 클리어 후)를 보스전으로 설정
+        bool isBossBattle = (currentBattleIndex == 4 || currentBattleIndex == 9);
+
+        // 실제 UI 및 통계에 표시될 스테이지 번호 계산 (보스는 카운트 제외)
+        int displayStage = currentBattleIndex + 1;
+        if (currentBattleIndex >= 4) displayStage -= 1; // 첫 번째 보스전 및 그 이후 인덱스 보정
+        if (currentBattleIndex >= 9) displayStage -= 1; // 두 번째 보스전 및 그 이후 인덱스 보정
 
         // [추가] 최고 도달 스테이지 기록 갱신
         if (StatisticsManager.Instance != null)
-            StatisticsManager.Instance.UpdateHighestStage(currentStageIndex + 1);
+            StatisticsManager.Instance.UpdateHighestStage(currentBattleIndex + 1);
 
         if (currentEnemyObject != null)
         {
@@ -82,7 +97,7 @@ public class StageManager : MonoBehaviour
 
         // [수정] 8스테이지(인덱스 7) 클리어 시(즉, 9번째 스테이지 진입 시) 게임 종료
         // 주의: enemyPrefabs.Count가 아닌 totalStages(8)로 검사해야 합니다.
-        if (currentStageIndex >= totalStages)
+        if (currentBattleIndex >= totalStages)
         {
             battleManager.ShowGameClear();
             return;
@@ -90,18 +105,15 @@ public class StageManager : MonoBehaviour
 
         // [수정] 프리팹 결정 로직
         GameObject prefabToSpawn;
-
-        // 4스테이지(인덱스 3) 또는 8스테이지(인덱스 7)이면 보스 스폰
-        if ((currentStageIndex == 3 || currentStageIndex == 7) && motherDragonPrefab != null)
+        if (isBossBattle && motherDragonPrefab != null)
         {
             prefabToSpawn = motherDragonPrefab;
         }
         else
         {
-            // 일반 스테이지는 무조건 첫 번째 프리팹(enemyPrefabs[0])을 재사용
             if (enemyPrefabs != null && enemyPrefabs.Count > 0)
             {
-                prefabToSpawn = enemyPrefabs[0];
+                prefabToSpawn = enemyPrefabs[0]; // 일반 스테이지는 무조건 첫 번째 프리팹 사용
             }
             else
             {
@@ -110,13 +122,13 @@ public class StageManager : MonoBehaviour
             }
         }
 
-        // [핵심] 기존 enemyPrefabs[currentStageIndex] 대신 prefabToSpawn 변수로 생성!
+        // [핵심] 기존 enemyPrefabs[currentBattleIndex] 대신 prefabToSpawn 변수로 생성!
         currentEnemyObject = Instantiate(prefabToSpawn, enemySpawnPoint.position, Quaternion.identity);
 
         EnemyBase newEnemyBase = currentEnemyObject.GetComponent<EnemyBase>();
 
         // [추가] 생성 직후 스탯 스케일링 적용
-        newEnemyBase.ApplyScaling(currentStageIndex);
+        newEnemyBase.ApplyScaling(displayStage - 1);
 
         enemyManager.currentEnemy = newEnemyBase;
         enemyManager.GenerateNextAction();
@@ -161,10 +173,32 @@ public class StageManager : MonoBehaviour
         startRoutine = StartCoroutine(BeginStageAfterDelay());
     }
 
+    public void RestartStage()
+    {
+        if (player != null)
+        {
+            player.currentHP = player.maxHP;
+            player.defense = 0;
+            player.gameObject.SetActive(true);
+            LoadStage(currentBattleIndex);
+        }
+        else
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+    }
+
     // 적이 등장한 뒤 잠깐 두었다가 플레이어 턴을 연다 - 적 턴 이후의 대기와 같은 목적이다.
     private IEnumerator BeginStageAfterDelay()
     {
         yield return new WaitForSeconds(stageStartDelay);
+
+        // [추가된 부분] 대기하는 동안 게임 오버가 되었다면 (예: 킬스위치 즉사) 더 이상 진행하지 않음
+        if (battleManager != null && battleManager.IsGameOver)
+        {
+            startRoutine = null;
+            yield break; // 여기서 코루틴을 강제 종료하여 타이머가 다시 켜지는 것을 막습니다.
+        }
 
         if (StatisticsManager.Instance != null)
             StatisticsManager.Instance.StartTracking();
@@ -189,7 +223,7 @@ public class StageManager : MonoBehaviour
     // 여기서는 그 카드를 치우고 다음 스테이지를 여는 일만 한다.
     public void NextStage()
     {
-        LoadStage(currentStageIndex + 1);
+        LoadStage(currentBattleIndex + 1);
     }
 
     // 적 HP가 0이 되어 승패가 갈리는 순간 호출된다(BattleManager.OnBattleEnded).
@@ -208,24 +242,5 @@ public class StageManager : MonoBehaviour
 
         if (rewardCardView != null && reward != null && reward.Count > 0)
             rewardCardView.Show(reward);
-    }
-
-    public void RestartStage()
-    {
-        if (player != null)
-        {
-            player.currentHP = player.maxHP;
-            player.defense = 0;
-
-            // Reactivate the player GameObject if it was disabled
-            player.gameObject.SetActive(true);
-
-            LoadStage(currentStageIndex);
-        }
-        else
-        {
-            // Fallback: Reload the entire scene if the player was completely destroyed
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        }
     }
 }

@@ -302,7 +302,15 @@ public class DeckManager : MonoBehaviour
                     wordUnlockManager.AddLuckyBonus();
             }
 
-            //battleManager.OnPlayerActionResolved(BuildBubbleText(actionEntry.Action));
+            // 타격 하나가 적용될 때마다 HP/방어도 표시를 갱신한다. 이게 없으면 수치는
+            // 한 대씩 제대로 깎이는데 화면만 그대로 있다가 턴이 끝날 때 한 번에 뚝 떨어져서,
+            // 공격이 한꺼번에 들어간 것처럼 보인다.
+            // 반드시 위의 럭키 처리보다 "뒤"에 있어야 한다 - UpdateUI는 CheckGameState ->
+            // ShowResult -> OnBattleEnded까지 한 호출 안에서 이어지고, 그 안에서 StageManager가
+            // 클리어 보상을 지급해 버리기 때문이다.
+            // (예전엔 이 자리에서 OnPlayerActionResolved가 말풍선과 함께 UpdateUI를 불렀다.
+            //  말풍선은 FloatingDamageManager로 대체되어 빠졌지만, 갱신은 여전히 필요하다.)
+            battleManager.UpdateUI();
 
             // 도중에 적이 죽거나 전투가 끝났다면 콤보 즉시 중단 (럭키는 위에서 이미 처리했다)
             if (battleManager.IsGameOver || enemyManager.currentEnemy == null)

@@ -60,6 +60,7 @@ public class EnemyManager : MonoBehaviour
         {
             case ActionType.Attack:
                 Debug.Log(data.enemyName + " Action: ATTACK!");
+                currentEnemy.PlayAttackAnimation();
                 player.TakeDamage(currentEnemy.power);
                 break;
             case ActionType.Defend:

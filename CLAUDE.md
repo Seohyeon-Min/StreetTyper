@@ -185,6 +185,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - **`DeckManager`** — 파사드 + **전투 배선**. `HandleChainCompleted`, `HandleTimeExpired`(코루틴으로 딜레이를 두고 턴 전환), `HandleBattleEnded`를 소유한다. `turnChangeDelay`/`postAttackDelay`가 인스펙터에 노출된다.
   - `HandleChainCompleted`의 순서가 중요하다: 적용(`CombatManager`) → UI/말풍선 → 체인 비우기 → **마지막에** `timerManager.AddTime`. 마지막인 이유는 이 호출이 타이머를 0으로 만들면 그 자리에서 `OnTimeExpired` → 턴 전환 코루틴이 시작되기 때문이다. 앞으로 옮기면 턴 전환 도중에 나머지 처리가 끼어든다.
   - `battleManager.OnBattleEnded`를 구독해 승패가 갈리는 즉시 `StopTimer` + `DisableInput`한다. 이게 없으면 적이 죽은 뒤에도 타이머가 0까지 흐르는 동안 타이핑이 먹힌다.
+  - **`DeckManager.TurnPhase`** — `RunTurnTransition`이 어느 구간을 지나는 중인지 다른 시스템이 알 수 있게 노출한 enum이다: `PlayerInput`(입력 열려있고 타이머 도는 중) → `ResolvingPlayerActions`(`PlayPendingActions` — 내가 쌓은 펀치 재생 중) → `TurnChangeRest`(`turnChangeDelay` 대기) → `EnemyTurn`(`ExecuteEnemyTurn` + `OnEnemyTurnEnded` 화상 틱) → `PostAttackRest`(`postAttackDelay` 대기) → 다시 `PlayerInput`. `CurrentPhase` 프로퍼티로 즉시 읽거나 `OnTurnPhaseChanged` 이벤트로 구독할 수 있다. **적 인텐트 말풍선을 내 공격 애니메이션 재생 중(`ResolvingPlayerActions`)엔 숨기고 싶다는 요청으로 추가됐다** — 이런 "지금 연출 중이라 이 UI는 꺼야 한다"류 판단이 필요하면 여기부터 확인할 것.
 
 ### 조합 (`02_Scripts/WordChainManager/`)
 

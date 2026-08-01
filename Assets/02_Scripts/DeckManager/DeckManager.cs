@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -6,6 +7,32 @@ using FMODUnity;
 
 public class DeckManager : MonoBehaviour
 {
+    // 내 턴(입력) -> 내 공격 재생 -> 턴전환휴식1 -> 적 턴 -> 턴전환휴식2 -> 다시 내 턴, 순환.
+    // 다른 시스템(예: 적 인텐트 말풍선을 내 공격 애니메이션 중에는 숨기는 것)이 지금이 정확히
+    // 어느 구간인지 알아야 할 때 이걸 본다.
+    public enum TurnPhase
+    {
+        PlayerInput,
+        ResolvingPlayerActions,
+        TurnChangeRest,
+        EnemyTurn,
+        PostAttackRest
+    }
+
+    public TurnPhase CurrentPhase { get; private set; } = TurnPhase.PlayerInput;
+
+    /// <summary>턴 구간이 바뀔 때마다 발생한다.</summary>
+    public event Action<TurnPhase> OnTurnPhaseChanged;
+
+    private void SetPhase(TurnPhase phase)
+    {
+        if (CurrentPhase == phase)
+            return;
+
+        CurrentPhase = phase;
+        OnTurnPhaseChanged?.Invoke(phase);
+    }
+
     [SerializeField] private CardSlotManager cardSlotManager;
     [SerializeField] private CardInputHandler cardInputHandler;
     [SerializeField] private MainBufferManager mainBufferManager;
@@ -179,6 +206,7 @@ public class DeckManager : MonoBehaviour
         timerManager.ResetToFull();
 
         // 이번 턴에 쌓아둔 공격을 순서대로 터뜨린다. 여기가 이 게임의 실제 공격 연출 구간이다.
+        SetPhase(TurnPhase.ResolvingPlayerActions);
         yield return PlayPendingActions();
 
         // 재생 도중 적을 처치했거나 그 사이 전투가 끝났으면 여기서 끝낸다.
@@ -190,8 +218,10 @@ public class DeckManager : MonoBehaviour
         cardSlotManager.RefillAll();
 
         // "턴이 바뀌었다"는 걸 플레이어가 인지할 시간을 준 뒤 적이 공격한다.
+        SetPhase(TurnPhase.TurnChangeRest);
         yield return new WaitForSeconds(turnChangeDelay);
 
+        SetPhase(TurnPhase.EnemyTurn);
         battleManager.ExecuteEnemyTurn();
 
         // 적 턴이 끝난 직후 화상 피해를 넣고 상태이상 지속을 1턴 줄인다.
@@ -204,6 +234,7 @@ public class DeckManager : MonoBehaviour
             yield break;
 
         // 공격당한 여운을 두고 나서 플레이어 턴을 다시 연다.
+        SetPhase(TurnPhase.PostAttackRest);
         yield return new WaitForSeconds(postAttackDelay);
 
         // 이번 턴에 쌓은 방어도는 적 공격을 막는 데까지만 쓰인다. 여기서 비우지 않으면
@@ -216,6 +247,7 @@ public class DeckManager : MonoBehaviour
         }
 
         inputManager.EnableInput();
+        SetPhase(TurnPhase.PlayerInput);
 
         // 적이 마비 상태면 이번 턴 제한 시간이 늘어난다(GDD: 10초 + 5초).
         var timerBonus = statusEffectManager != null ? statusEffectManager.GetTimerBonus() : 0f;

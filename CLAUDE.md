@@ -61,12 +61,15 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - 현황을 다시 셀 때는 GUID로 세면 된다 — Paperlogy `53b522988c0e6f94d8a0a2d8ed5d613c`, `LiberationSans SDF` `8f586378b4e144a9851e7b34d9b748ee`. **프리팹까지 같이 세야 한다** — HP·말풍선·카드 텍스트는 씬이 아니라 프리팹 안에 있다.
 - `Assets/01_Arts/Demi/` — 플레이어 스프라이트(`DemiOpenEyes`, `DemiPunch1~4`)와 애님 클립(`PlayerIdle`, `Punch1~4`), 컨트롤러. `PlayerBattleVisuals`가 `Punch1`(첫 타) / `Punch2~4`(랜덤) 트리거를 쏜다. 컨트롤러 파일명 `DemiOpneEyes_0`의 오타는 그대로 두었다.
 - `Assets/01_Arts/UI/` — 말풍선 이미지. `SpeechBubbleTailx2`(일반 꼬리)와 `ThinkBubbleTailx2`(생각풍선 꼬리)는 `SpeechBubble.Setup`의 `isNormalTail`로 갈린다.
-- `Assets/01_Arts/Card/` — 카드 아트 5장. **아직 어디에서도 참조되지 않는다.** 카드 프레임 2종(`Active` 분홍 / `Modifier` 남색 — 카테고리별 색 구분으로 보인다)과 아이콘 3종(`IconActive`/`IconMultiply`/`IconUp`)이고, 전부 Sprite(Multiple)로 임포트되어 있다. 어떤 `.asset`·프리팹·씬에서도 GUID가 잡히지 않으므로, **붙이려면 `Card.prefab`의 프레임 이미지를 갈아끼우거나 카드 `.asset`의 `icon` 필드를 채워야 한다**(현재 24장 전부 비어 있고, 그게 정상 상태인 이유는 아래 `CardSlotView` 참조).
-- `Assets/03_Prefabs/` — `Card.prefab`(런타임 생성되는 손패 카드), `Actions.prefab`(쌓인 공격 문장 한 줄, `PendingActionView`가 찍어낸다), `HPBar.prefab`(HP·방어 UI 한 벌, **플레이어/적이 같은 프리팹을 인스턴스로 공유**), `SpeechBubble.prefab`(말풍선, `ContentSizeFitter`로 문장 길이에 맞춰 늘어난다), `MotherDragon.prefab`, `enemy`/`strongEnemy`(스테이지별 적).
+- `Assets/01_Arts/Card/` — 카드 아트 5장. 카드 프레임 2종(`Active` 분홍 = 액션 / `Modifier` 남색 = 그 외)과 효과 배지 3종(`IconActive`/`IconMultiply`/`IconUp`). **전부 `Card.prefab`의 `CardView`가 인스펙터로 들고 있고, 코드가 카드 카테고리를 보고 골라 끼운다**(아래 `CardView` 참조).
+  - ⚠️ **다섯 장 모두 Sprite(Single)로 임포트되어 있다.** 예전엔 Multiple이었고 `IconActive`는 6장짜리 시트였다. Multiple로 되돌리면 프리팹의 `fileID: 21300000`(텍스처 단일 스프라이트 ID)이 서브스프라이트를 못 찾아 **경고 없이 조용히 비어버린다.**
+- `Assets/03_Prefabs/` — `Card.prefab`(런타임 생성되는 손패 카드 — 자식 `Frame`·`NameText`·`Badge`·`Stats`·`Description`, 루트에 `CanvasGroup`+`CardView`+`CardSlotView`. **손패와 보상 화면이 같이 쓴다**), `Actions.prefab`(쌓인 공격 문장 한 줄, `PendingActionView`가 찍어낸다), `HPBar.prefab`(HP·방어 UI 한 벌, **플레이어/적이 같은 프리팹을 인스턴스로 공유**), `SpeechBubble.prefab`(말풍선, `ContentSizeFitter`로 문장 길이에 맞춰 늘어난다), `MotherDragon.prefab`, `enemy`/`strongEnemy`(스테이지별 적).
   - 그 외: `FloatingDamageText.prefab`(피해 숫자 한 개), `Volume Slider.prefab`·`VolumeText.prefab`(옵션 창 슬라이더 한 줄).
   - 구 `PlayerSpeechBubble.prefab`은 **삭제됐다.** `EnemySpeechBubble.prefab`은 GUID가 유지된 채 `SpeechBubble.prefab`으로 이름만 바뀌었다(`ececaf37…`). 예전에 남아 있던 `BattleManager.prefab`의 `playerSpeechBubblePrefab` 깨진 참조는 **정리됐다** — 지금 말풍선 프리팹 필드는 `SpeechBubbleManager.speechBubblePrefab` 하나뿐이다.
 - `Assets/03_Prefabs/Managers/` — 매니저 프리팹 **열세 개**(`InputManager`/`Deck Manager`/`StageManager`/`BattleManager`/`WordDictionary`/`WordUnlockManager`/`StatusEffectManager`/`SpeechBubbleManager`/`EventManager`/`SoundManager`/`TimerManager`/`ResultInputHandler`/`TitleManager`). **`TitleManager`만 `TitleScene`용이고 나머지가 `SampleScene`의 `02_SYSTEM`에 들어간다.** 매니저는 전부 프리팹으로 뽑혀 있고 씬에는 인스턴스만 있다. **씬은 이걸 인스턴스로 들고 있고, 매니저끼리와 씬 오브젝트를 향한 인스펙터 연결은 전부 프리팹 인스턴스 오버라이드로 저장된다**(`SampleScene.unity`의 `m_Modifications` 안 `objectReference`). 자세한 주의점은 컨벤션 절 참조.
-- `Assets/04_Data/Cards/` — **24개 `CardBase` 에셋**(GDD 4장 단어 사전 전체, 페인풀만 제외). `Assets > Create > Deck Manager > Cards > ...` 메뉴로 만들 것. `.asset` YAML을 손으로 작성하면 스크립트 GUID가 조용히 어긋날 수 있다.
+- `Assets/04_Data/Cards/` — **24개 `CardBase` 에셋**(GDD 4장 단어 사전 전체, 페인풀만 제외). `Assets > Create > Deck Manager > Cards > ...` 메뉴로 만들 것. `.asset` YAML을 손으로 **새로 작성**하면 스크립트 GUID가 조용히 어긋날 수 있다.
+  - `description`(카드 하단 설명)과 `statsLabel`(카드 위 큰 글씨 요약)은 **24장 전부 채워져 있다.** `icon`은 24장 전부 비어 있고 **현재 읽는 코드가 없다**(프레임·배지는 카테고리로 정해진다).
+  - 이미 있는 에셋의 **필드 값만 고치는 건** YAML 직접 편집도 안전하다(GUID가 관여하지 않는다). 단 한글은 Unity가 `"파워"`처럼 `\uXXXX`로 이스케이프해 저장하므로 같은 형식으로 써야 하고, **에디터를 닫은 상태에서** 할 것.
 - `Assets/04_Data/EnemyTutorial.asset` — 유일한 `EnemyData`.
 - `Assets/05_Sounds/FMOD/StreetTyperFMOD/` — **FMOD Studio 프로젝트 원본이 저장소 안에 있다.** `StreetTyperFMOD.fspro`(에디터로 여는 파일) · `Metadata/`(이벤트·버스·뱅크 정의 XML) · `Build/Desktop/`(빌드된 `.bank` 4개) · `Assets/`(원본 오디오). 사운드 구조를 바꾸려면 Unity가 아니라 여기를 FMOD Studio로 열어야 한다 — 자세한 건 아래 `SoundManager` 절과 "알려진 이슈" 참조.
 - `Assets/InputSystem_Actions.inputactions` — Input System 기본 템플릿. **미사용.** 게임플레이 입력은 의도적으로 이걸 거치지 않는다(아래).
@@ -137,7 +140,10 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 
 > 폴더명은 `DeckManager`(공백 없음)다. 예전엔 `Deck Manager`(공백 포함)였으나 이름이 바뀌었다 — 씬의 GameObject 이름은 여전히 `Deck Manager`(공백 포함)이니 혼동하지 말 것.
 
-- **`Cards/CardBase.cs`** — 추상 `ScriptableObject`: `CardName`(타이핑할 단어 = 표시 텍스트 = 매칭 키), `Icon`, `Description`, 추상 `Category`. `enum CardCategory { Modifier, Time, Type, Action }`.
+- **`Cards/CardBase.cs`** — 추상 `ScriptableObject`: `CardName`(타이핑할 단어 = 표시 텍스트 = 매칭 키), `Icon`, `Description`, `StatsLabel`, 추상 `Category`. `enum CardCategory { Modifier, Time, Type, Action }`.
+  - `Description`은 카드 하단 설명(`위력 +5, 시간 -1초`), `StatsLabel`은 카드 위쪽 큰 글씨 요약(`+5`/`화상`/`2회`)이다. 둘 다 `CardView`가 읽는다.
+  - ⚠️ **표시 칸이 좁다.** `Description`은 200×50 / 20pt라 한 줄 약 10자·2줄, `StatsLabel`은 100×50 / **42pt**라 한글 실질 2자가 한계다(`+1초`는 `+`·`1`이 좁아 들어간다). 둘 다 `overflowMode: Overflow`라 넘치면 잘리는 게 아니라 **칸 밖으로 삐져나온다.**
+  - `Icon`은 남아 있지만 **읽는 코드가 없다.** 프레임과 배지는 카테고리로 정해지므로 카드별 스프라이트를 쓰려면 `CardView`에 오버라이드를 새로 넣어야 한다.
   - **`Category`는 직렬화되지 않는 계산 프로퍼티다.** 그래서 enum 값을 바꿔도 `.asset` 마이그레이션이 필요 없다.
   - `AttributeCardData.Category`는 `effectType`에서 계산된다: `RepeatAction`→`Time`, `StatusChance*`/`Bleed`→`Type`, 나머지(`LifeDrain`/`DamageReduction`/`CritMultiplier`)→`Modifier`. 즉 GDD의 "속성 및 특수효과" 한 덩어리가 세 분류로 쪼개진다.
   - ⚠️ **`AttributeEffectType`에서 `Bleed`를 삭제하지 말 것.** 페인풀이 단어 목록에서 빠져 미사용이지만, 지우면 enum 인덱스가 밀려 `Intelli.asset`(`effectType: 5` = `CritMultiplier`)이 조용히 `RepeatAction`으로 바뀐다. 직렬화되는 건 `effectType`/`actionKind`이니 **이 enum들의 순서는 절대 건드리지 말 것.**
@@ -148,7 +154,9 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - **`WordUnlockManager`** — 게임 전체 단어 목록(인스펙터에 24장)과 지급 로직. `WordEntry { card, grantedAtStart }`. `GrantStartingWords()`(런 시작 — 사전을 비우고 `grantedAtStart` 전부 지급), `GrantStageClearReward()`(미보유 중 랜덤 `wordsPerReward`개, 기본 3). 시작 단어를 별도 리스트로 두지 않고 플래그로 표현하는 게 핵심 — 별도 리스트를 두면 중복 문제가 재발한다.
   - **럭키**는 `AddLuckyBonus()`로 다음 보상에 `luckyBonusWords`(기본 1)를 얹어둔다. 부르는 쪽은 `DeckManager.PlayPendingActions`로, **적을 쓰러뜨린 그 공격에 `LootBonusOnKill`이 있었을 때만**이다 — 화상 같은 지속 피해로 죽으면 그 경로를 타지 않아 보너스가 붙지 않는다(GDD가 "공격으로 처치 시"라 명시).
   - **`UI/RewardCardView`** (`DeckManager/UI/`) — 얻은 카드를 화면 가운데에 펼친다. 카드 중심 간격은 **프리팹 폭 + `spacing`**이라, `Card.prefab`(100px)에 `spacing 100`이면 사이가 실제로 100 벌어진다. `Awake`에서 프리팹 폭을 읽어두므로 카드 크기를 바꿔도 여백은 유지된다.
-    - ⚠️ `Card.prefab`에는 부채꼴용 기울기(약 10도)가 박혀 있다. 손패에서는 `HandFanLayout`이 매 프레임 덮어쓰지만 여기는 그 밖이라 **생성 후 `localRotation`을 직접 초기화**해야 반듯하게 선다. `CardSlotView`도 꺼서 손패 이벤트에 반응하지 않게 한다.
+    - **카드 내용은 `CardView.SetCard` 하나로 그린다.** 예전엔 `GetComponentInChildren<TMP_Text>()`/`<Image>()`로 계층 **첫 번째** 컴포넌트를 집어 이름과 아이콘을 직접 넣었는데, 자식 순서에 의존하는 구조라 `Badge`를 추가하는 순간 깨질 참이었다. 그 방식으로 되돌리지 말 것.
+    - `CardSlotView`는 꺼서 손패 이벤트에 반응하지 않게 한다. 그리기는 `CardView`가 따로 하므로 꺼도 카드 내용은 정상적으로 나온다.
+    - `localRotation`을 초기화하는 줄이 있는데 **지금은 사실상 방어용이다.** `Card.prefab` 루트 회전은 항등이고, 기울기는 `NameText` 자식에 7도가 따로 박혀 있다(아트 의도라 그대로 둔다). 손패에서 카드가 기우는 건 `HandFanLayout`이 매 프레임 루트를 돌리기 때문이다.
   - **시작 단어는 현재 3장이다: 가드 · 펀치 · 슈퍼**(액션 2 + 모디파이어 1의 최소 조합). 예전엔 9장이었고, 프리팹 기본값은 아직 9장 그대로다 — **지금의 3장은 `SampleScene.unity`의 인스턴스 오버라이드로만 존재한다.** 시작 단어를 바꾸려면 프리팹이 아니라 **씬 인스턴스**에서 체크박스를 만지고 씬을 커밋할 것(위 매니저 프리팹 주의사항과 같은 이유).
   - 액션 단어(`Category == Action`)가 시작 목록에 최소 하나는 있어야 한다. 액션 단어로만 체인이 완성되므로, 전부 빼면 **어떤 조합도 완성할 수 없어 공격이 영원히 불가능해진다.**
 - **`CardSlotManager`** — 5슬롯(`CurrentCards`/`SlotCount`/`OnSlotChanged`/`ConsumeSlot`/`RefillAll`). 사전에서 균등 랜덤으로 뽑으며 **슬롯 간 중복은 의도된 동작**(중복 방지 버전을 만들었다가 요청으로 되돌린 이력이 있으니 확인 없이 "고치지" 말 것).
@@ -164,8 +172,16 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - **`HandFanLayout`** (`04_UI/Card Canvas/Hand`) — `Card.prefab`을 `SlotCount`만큼 생성하고 `CardSlotView.Bind(manager, i, inputManager)` 호출 후, `LateUpdate`에서 부채꼴 배치. `[ExecuteAlways]`라 생성은 `Application.isPlaying`으로 가드된다.
   - **위치를 쓰는 건 여기 하나뿐이다.** `CardSlotView`는 `VerticalOffset`(떠 있어야 할 높이)만 계산해 들고 있고, `HandFanLayout`이 부채꼴 목표에 더한다. `CardSlotView`가 자기 `anchoredPosition`을 직접 만지면 같은 프레임에 두 스크립트가 경쟁한다.
   - `CollectChildren()`이 `_children`과 `_cards`를 같은 루프에서 나란히 재수집한다 — `centerOnTop`이 형제 순서를 바꾸므로 스폰 순서로 고정해두면 어긋난다.
-- **`UI/CardSlotView`** — 한 슬롯의 표시 + 타이핑 들림/교체 애니메이션. 런타임 생성이라 `OnEnable`이 `Bind`보다 먼저 돌므로 구독이 null 관용적이고 멱등하다(`Subscribe`/`Unsubscribe`/`_subscribed`).
-  - `SetCard`는 `card.Icon`이 없으면 **프리팹에 박아둔 스프라이트를 그대로 둔다.** 카드 데이터에 아이콘이 없는 게 현재 정상 상태이고, 예전엔 이걸 null로 덮어써서 Play 시작과 동시에 카드 프레임이 사라졌었다.
+- **`UI/CardView`** — **카드 한 장의 겉모습만** 담당하는 순수 뷰(이름·설명·`StatsLabel`·카테고리 프레임·효과 배지). 공개 API는 `SetCard(CardBase)`와 `SetAlpha(float)` 둘뿐이고 **매니저 참조가 하나도 없다.**
+  - 이 분리가 핵심이다. 손패(`CardSlotView`)와 보상 화면(`RewardCardView`)이 같은 프리팹을 쓰는데 보상 카드에는 슬롯도 타이핑도 없어서, 예전엔 `CardSlotView`를 통째로 끄고 이름·아이콘을 **따로 다시 그려야 했다.** 그리기 규칙이 두 곳에 중복되지 않게 유지할 것.
+  - **프레임**: `Category == Action`이면 `actionFrame`(분홍), 나머지 전부 `defaultFrame`(남색).
+  - **배지**: `AttributeEffectType.RepeatAction`(더블/트리플)→`multiplyBadge`, `Category == Action`→`actionBadge`, 그 외 전부→`upBadge`. **배지가 없는 카드는 없다.** `Category == Time`을 보지 않고 `RepeatAction`을 직접 보는 건, 배지가 "무슨 효과인가"의 표현이지 조합 규칙상의 분류가 아니기 때문이다(지금은 둘이 1:1이다).
+  - ⚠️ **스프라이트가 없으면 `Image`를 끈다. `sprite = null`로 지우지 말 것** — 스프라이트 없는 `Image`는 사라지는 게 아니라 **흰 사각형**으로 그려진다. 빈 슬롯(`card == null`)에서 배지가 꺼지는 것도 같은 처리다.
+  - ⚠️ 프레임 대입에는 null 가드가 있다. 인스펙터에 프레임 스프라이트를 안 넣었을 때 null로 덮어쓰면 **Play 시작과 동시에 카드 프레임이 사라진다**(예전에 실제로 났던 버그). 프레임은 빈 슬롯에서도 남겨둔다 — 통째로 사라지면 부채꼴 배치가 흔들린다.
+  - 배선 검증 경고는 **`Awake` 1회**에서만 낸다. `SetCard`에서 내면 매 턴 5슬롯 × 스왑마다 불려 콘솔이 폭주한다.
+- **`UI/CardSlotView`** — 한 슬롯의 **동작**(슬롯 구독 + 타이핑 들림/교체 애니메이션). 그리기는 같은 오브젝트의 `CardView`에 위임한다. 런타임 생성이라 `OnEnable`이 `Bind`보다 먼저 돌므로 구독이 null 관용적이고 멱등하다(`Subscribe`/`Unsubscribe`/`_subscribed`).
+  - **`cardSlotManager`/`inputManager`는 여기 남아야 한다.** 전자는 `OnSlotChanged` 구독과 `Refresh()`의 초기 읽기에, 후자는 `Update`의 타이핑 들림 판정 폴링에 쓰인다 — **둘 다 손패 전용**이라 `CardView`에는 없다.
+  - ⚠️ **페이드는 루트 `CanvasGroup` 하나로 한다**(`CardView.SetAlpha`). 예전엔 이름과 아이콘의 알파만 따로 만져서, 나중에 붙은 `Description`이 교체 애니메이션 중 혼자 안 사라졌다. 표시 요소가 늘어도 코드를 고칠 필요가 없는 쪽이 의도다 — **이 프리팹에 알파를 만지는 컴포넌트를 더 붙이지 말 것**(`PendingActionView`의 알파 소유권 충돌 사례 참조).
 - **`DeckManager`** — 파사드 + **전투 배선**. `HandleChainCompleted`, `HandleTimeExpired`(코루틴으로 딜레이를 두고 턴 전환), `HandleBattleEnded`를 소유한다. `turnChangeDelay`/`postAttackDelay`가 인스펙터에 노출된다.
   - `HandleChainCompleted`의 순서가 중요하다: 적용(`CombatManager`) → UI/말풍선 → 체인 비우기 → **마지막에** `timerManager.AddTime`. 마지막인 이유는 이 호출이 타이머를 0으로 만들면 그 자리에서 `OnTimeExpired` → 턴 전환 코루틴이 시작되기 때문이다. 앞으로 옮기면 턴 전환 도중에 나머지 처리가 끼어든다.
   - `battleManager.OnBattleEnded`를 구독해 승패가 갈리는 즉시 `StopTimer` + `DisableInput`한다. 이게 없으면 적이 죽은 뒤에도 타이머가 0까지 흐르는 동안 타이핑이 먹힌다.
@@ -341,7 +357,9 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - ⚠️ **타이틀로 돌아와도 전투 BGM이 계속 재생된다.** `PauseManager.ReturnToTitle`이 씬만 바꾸고 `StopBGM()`을 부르지 않는데 `SoundManager`는 `DontDestroyOnLoad`라 살아남기 때문이다. 타이틀 전용 BGM을 넣을 계획에 따라 처리가 갈려서 그대로 두었다.
 - **옵션 창의 SFX 슬라이더는 타이틀에서 미리듣기가 안 된다.** 타이틀 씬에서 SFX를 재생하는 코드가 없어서 움직여도 들리는 변화가 없다(값은 정상 반영된다). 미리듣기를 붙이려면 슬라이더를 놓을 때 `event:/Kick`을 한 번 재생하면 된다.
 - **방어도에 상한이 없다.** 턴 초기화는 생겼다 — `DeckManager.RunTurnTransition`이 적 턴이 끝난 뒤 `player.defense = 0`으로 비우고(`StageManager`도 스테이지 시작/재시작에서 비운다), 적 방어도는 건드리지 않는다(적은 자기 턴에 스스로 쌓는다). 다만 **한 턴 안에서 `AddDefense`를 누적하는 데는 여전히 상한이 없다.** GDD에 규칙이 없어 그대로 두었지만 밸런스상 확인이 필요하다.
-- **공격 말풍선이 꺼져 있다.** `DeckManager.PlayPendingActions`의 `battleManager.OnPlayerActionResolved(BuildBubbleText(...))` 호출이 **주석 처리되어 있다**(`DeckManager.cs:305`). 타격 수치는 이제 말풍선이 아니라 `FloatingDamageManager`가 띄운다. `BattleManager.OnPlayerActionResolved`와 `DeckManager.BuildBubbleText`는 살아 있지만 현재 아무도 부르지 않으며, `actionBubbleDuration`도 그만큼 놀고 있다.
+- **공격 말풍선이 꺼져 있다.** `DeckManager.PlayPendingActions`의 `battleManager.OnPlayerActionResolved(BuildBubbleText(...))` 호출이 **주석 처리되어 있다.** 타격 수치는 이제 말풍선이 아니라 `FloatingDamageManager`가 띄운다. `BattleManager.OnPlayerActionResolved`와 `DeckManager.BuildBubbleText`는 살아 있지만 현재 아무도 부르지 않으며, `actionBubbleDuration`도 그만큼 놀고 있다.
+  - ⚠️ **그 자리에는 대신 `battleManager.UpdateUI()`가 있다. 같이 지우지 말 것.** `OnPlayerActionResolved`는 말풍선과 **UI 갱신 두 가지**를 했는데, 말풍선을 없애려고 호출을 통째로 주석 처리했다가 갱신까지 사라진 적이 있다. 그때 증상은 "**쌓인 공격이 한 번에 적용된다**"였다 — 수치는 한 대씩 정상적으로 깎이는데 HP 바만 그대로 있다가 턴 끝에 한 번에 뚝 떨어진 것이다.
+  - ⚠️ **이 `UpdateUI()`는 반드시 럭키(`LootBonusOnKill`) 처리보다 뒤에 있어야 한다.** `UpdateUI` → `CheckGameState` → `ShowResult` → `OnBattleEnded`가 한 호출 안에서 이어지고 그 안에서 `StageManager`가 클리어 보상을 지급하므로, 앞으로 옮기면 럭키 보너스가 다음 스테이지 보상에 얹혀 **로그만 찍히고 카드는 3장 그대로**가 된다.
 
 - **한/영 IME — 해결됨.** 증상은 두 갈래였는데 원인이 하나였다.
   - "Play 직후엔 입력창을 클릭하거나 Alt를 눌러야 조합이 시작된다" → `imeCompositionMode`가 기본값 `Auto`였던 탓이다. **`EnableInput()`에서 `On`으로 고정**하고, 그 값을 되돌리는 주범이던 `TMP_InputField`를 라벨로 교체해 해결했다.

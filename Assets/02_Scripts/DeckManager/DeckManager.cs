@@ -285,6 +285,10 @@ public class DeckManager : MonoBehaviour
                 {
                     FloatingDamageManager.Instance.ShowDamage(actionEntry.Action.Damage, enemyManager.currentEnemy.transform.position);
                 }
+
+                // 3. 피격 이펙트는 여기서 부르지 않는다 - CharacterStats.TakeDamage 안에서
+                // HitEffectManager.Instance로 직접 재생한다(플레이어/모든 적 프리팹에
+                // 인스펙터 연결을 반복하지 않기 위해 CameraShake와 같은 싱글턴 방식을 씀).
             }
             // 데미지 및 UI 텍스트 처리
             combatManager.ExecutePlayerAction(actionEntry.Action, player, enemyManager.currentEnemy);
@@ -323,6 +327,7 @@ public class DeckManager : MonoBehaviour
 
         pendingActionManager.Clear();
     }
+
     // 말풍선엔 스킬 이름이 아니라 실제 적용된 공격력/방어력 수치를 보여준다.
     // Damage/Defense는 액션의 ActionKind에 따라 둘 중 하나만 채워진다.
     private static string BuildBubbleText(ResolvedAction action)

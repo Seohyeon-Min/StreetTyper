@@ -152,7 +152,7 @@ public class StatusEffectManager : MonoBehaviour
     // BattleManager.CheckGameState의 승리 판정은 currentEnemy가 null이 아닐 것을 요구한다.
     // 화상으로 적을 파괴해 버리면 승리 처리가 통째로 건너뛰어진다. currentHP를 직접 깎고
     // UpdateUI를 부르면 CheckGameState가 정상적인 SetActive(false) 경로를 탄다.
-    private void ApplyBurnDamage(CharacterStats enemy)
+    private void ApplyBurnDamage(EnemyBase enemy)
     {
         var damage = Mathf.Max(1, Mathf.RoundToInt(enemy.maxHP * burnDamageRatio));
         enemy.currentHP = Mathf.Max(0, enemy.currentHP - damage);
@@ -162,7 +162,7 @@ public class StatusEffectManager : MonoBehaviour
 
         // 수치를 적 위에 띄워 "지금 줄어든 건 화상 때문"이라는 걸 알 수 있게 한다.
         if (showBurnBubble && SpeechBubbleManager.Instance != null)
-            SpeechBubbleManager.Instance.ShowBubble($"화상 {damage}", enemy.transform.position, false, burnBubbleDuration);
+            SpeechBubbleManager.Instance.ShowBubble($"화상 {damage}", enemy.BubblePosition, false, burnBubbleDuration);
 
         if (battleManager != null)
             battleManager.UpdateUI();

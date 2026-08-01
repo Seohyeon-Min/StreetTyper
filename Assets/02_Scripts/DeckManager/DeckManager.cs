@@ -94,10 +94,7 @@ public class DeckManager : MonoBehaviour
         Debug.Log("Typo");
     }
 
-    private void HandleCardAdded(CardBase card)
-    {
-        Debug.Log($"Buffer += {card.CardName} (count: {mainBufferManager.Buffer.Count})");
-    }
+
 
     private void HandleBufferCleared()
     {
@@ -274,9 +271,17 @@ public class DeckManager : MonoBehaviour
                 playerVisuals.PlayAttackAnimation(i == 0, animSpeedMultiplier);
             }
 
-            if (SoundManager.Instance != null && battleManager != null)
+            // ==========================================
+            // [추가된 부분] 주먹이 뻗어 나가는 타격 시점까지 대기
+            // 애니메이션 재생 속도(animSpeedMultiplier)에 맞춰 대기 시간도 조절됩니다.
+            float hitDelay = 0.15f / animSpeedMultiplier; // 0.15f는 예시입니다. 애니메이션에 맞게 조절하세요.
+            yield return new WaitForSeconds(hitDelay);
+            // ==========================================
+
+            // SoundManager를 통해 랜덤 펀치 재생
+            if (SoundManager.Instance != null)
             {
-                SoundManager.Instance.PlaySFX(battleManager.attackSound);
+                SoundManager.Instance.PlayRandomPunch();
             }
             // ========== 타격감 연출 추가 ==========
             // 카메라 쉐이크/히트 이펙트는 "펀치 애니메이션이 재생됐는가" 기준이라 데미지가 0인
@@ -286,6 +291,8 @@ public class DeckManager : MonoBehaviour
                 // 1. 카메라 쉐이크 - 펀치마다 흔들면 Shake()가 매번 StopAllCoroutines로 이전
                 // 흔들림을 끊고 다시 시작해서 펀치가 여러 번일 때 쉴 새 없이 흔들리는 것처럼 보인다.
                 // 시퀀스당 첫 펀치 한 번만 흔든다.
+                // (세기는 인스펙터의 hitShakeDuration/hitShakeMagnitude로 조절한다 - 흔들림이
+                //  약하거나 세다고 느껴지면 코드가 아니라 그쪽 값을 만질 것.)
                 bool shouldShake = i == 0;
                 if (shouldShake && CameraShake.Instance != null)
                 {
@@ -336,8 +343,14 @@ public class DeckManager : MonoBehaviour
                 break;
             }
 
-            // 계산된 동적 간격만큼 대기 (배속이 걸리면 엄청 짧게 기다림)
-            yield return new WaitForSeconds(currentInterval);
+            // ==========================================
+            // [수정된 부분] 전체 인터벌에서 이미 기다린 타격 딜레이(hitDelay)를 빼고 남은 시간만 대기
+            float remainingDelay = currentInterval - hitDelay;
+            if (remainingDelay > 0)
+            {
+                yield return new WaitForSeconds(remainingDelay);
+            }
+            // ==========================================
         }
 
         // 5. 원래 위치로 복귀 및 배속 원상 복구
@@ -371,4 +384,16 @@ public class DeckManager : MonoBehaviour
 
         return sb.ToString();
     }
+
+    private void HandleCardAdded(CardBase card)
+    {
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayRandomCardUse();
+        }
+
+        Debug.Log($"Buffer += {card.CardName} (count: {mainBufferManager.Buffer.Count})");
+    }
+
 }
+

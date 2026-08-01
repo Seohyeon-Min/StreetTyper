@@ -3646,6 +3646,26 @@ PrefabInstance:
       propertyPath: wordChainManager
       value: 
       objectReference: {fileID: 4504949275694822399}
+    - target: {fileID: 1335612949842731433, guid: 50c53463f810eb545879183065b0c7d9, type: 3}
+      propertyPath: wordCompleteSound.Path
+      value: event:/Input
+      objectReference: {fileID: 0}
+    - target: {fileID: 1335612949842731433, guid: 50c53463f810eb545879183065b0c7d9, type: 3}
+      propertyPath: wordCompleteSound.Guid.Data1
+      value: 528323665
+      objectReference: {fileID: 0}
+    - target: {fileID: 1335612949842731433, guid: 50c53463f810eb545879183065b0c7d9, type: 3}
+      propertyPath: wordCompleteSound.Guid.Data2
+      value: 1336916585
+      objectReference: {fileID: 0}
+    - target: {fileID: 1335612949842731433, guid: 50c53463f810eb545879183065b0c7d9, type: 3}
+      propertyPath: wordCompleteSound.Guid.Data3
+      value: -1084144506
+      objectReference: {fileID: 0}
+    - target: {fileID: 1335612949842731433, guid: 50c53463f810eb545879183065b0c7d9, type: 3}
+      propertyPath: wordCompleteSound.Guid.Data4
+      value: 460505559
+      objectReference: {fileID: 0}
     - target: {fileID: 2392438242120979713, guid: 50c53463f810eb545879183065b0c7d9, type: 3}
       propertyPath: m_Name
       value: DeckManager
@@ -4536,6 +4556,70 @@ PrefabInstance:
       propertyPath: resultInputHandler
       value: 
       objectReference: {fileID: 1856966510}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[0].Path
+      value: event:/Punch1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[1].Path
+      value: event:/Punch2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[2].Path
+      value: event:/Punch3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[0].Guid.Data1
+      value: 1865360393
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[0].Guid.Data2
+      value: 1232342701
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[0].Guid.Data3
+      value: 112787584
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[0].Guid.Data4
+      value: 2140521844
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[1].Guid.Data1
+      value: 1076573377
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[1].Guid.Data2
+      value: 1213439216
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[1].Guid.Data3
+      value: 1364334219
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[1].Guid.Data4
+      value: -484313630
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[2].Guid.Data1
+      value: -1860037431
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[2].Guid.Data2
+      value: 1163533208
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[2].Guid.Data3
+      value: 1296257701
+      objectReference: {fileID: 0}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: attackSounds.Array.data[2].Guid.Data4
+      value: -1028729994
+      objectReference: {fileID: 0}
     - target: {fileID: 8673143296737308907, guid: 66f4d484af32f294896f919679cb257b, type: 3}
       propertyPath: statusEffectManager
       value: 

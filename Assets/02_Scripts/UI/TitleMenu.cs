@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using FMODUnity;
 
 // 타이틀 씬의 버튼 배선. 게임 상태를 들고 있지 않은 순수 진입점이다.
 public class TitleMenu : MonoBehaviour
@@ -38,6 +39,12 @@ public class TitleMenu : MonoBehaviour
             optionsPanel.SetActive(false);
         else
             Debug.LogWarning("TitleMenu: optionsPanel이 연결되지 않아 옵션 창을 열 수 없습니다.", this);
+    }
+
+    private void Start()
+    {
+        if (SoundManager.Instance != null)
+            SoundManager.Instance.PlayTitleBGM();
     }
 
     private void OnEnable()
@@ -99,6 +106,11 @@ public class TitleMenu : MonoBehaviour
 
     private void HandleStart()
     {
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.StopBGM();
+        }
+
         SceneManager.LoadScene(GameScenes.Battle);
     }
 

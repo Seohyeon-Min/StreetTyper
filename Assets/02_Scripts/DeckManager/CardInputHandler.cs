@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using FMODUnity;
 
 public class CardInputHandler : MonoBehaviour
 {
@@ -92,7 +93,6 @@ public class CardInputHandler : MonoBehaviour
 
         for (var i = 0; i < cards.Count; i++)
         {
-            // 사전이 아직 비어 있으면 슬롯이 null일 수 있다.
             if (cards[i] == null || cards[i].CardName != typed)
                 continue;
 
@@ -100,6 +100,10 @@ public class CardInputHandler : MonoBehaviour
             var wasComposing = composing.Length > 0;
 
             _notProgressing = false;
+
+            if (SoundManager.Instance != null)
+                SoundManager.Instance.PlayWordComplete();
+
             mainBufferManager.AddCard(matched);
             wordChainManager?.SubmitWord(matched.CardName);
             cardSlotManager.ConsumeSlot(i);

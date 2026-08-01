@@ -10,12 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3a9684e27ffb23a49b13d2ffd843db05, type: 3}
-  m_Name: Feint
+  m_Name: Kick
   m_EditorClassIdentifier: Assembly-CSharp::ActionCardData
   cardName: "\uD0A5"
   icon: {fileID: 0}
   description: "\uBC29\uC5B4 \uBB34\uC2DC \uACF5\uACA9"
   statsLabel: "\uAD00\uD1B5"
+  cardNameEn: "kick"
+  descriptionEn: "Ignores enemy defense"
+  statsLabelEn: "PIERCE"
   actionKind: 0
   strengthBonus: 0
   timerDelta: 0

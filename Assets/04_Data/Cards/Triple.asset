@@ -16,6 +16,9 @@ MonoBehaviour:
   icon: {fileID: 0}
   description: "\uD0C0\uACA9 3\uD68C"
   statsLabel: "3\uD68C"
+  cardNameEn: "triple"
+  descriptionEn: "Triples the hit count"
+  statsLabelEn: "x3"
   effectType: 6
   statusEffect: 0
   chancePercent: 0

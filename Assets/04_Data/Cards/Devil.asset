@@ -16,6 +16,9 @@ MonoBehaviour:
   icon: {fileID: 0}
   description: "\uBC1B\uB294 \uD53C\uD574 25% \uAC10\uC18C"
   statsLabel: "\uACBD\uAC10"
+  cardNameEn: "devil"
+  descriptionEn: "Take 25% less damage"
+  statsLabelEn: "-25%"
   effectType: 4
   statusEffect: 0
   chancePercent: 0

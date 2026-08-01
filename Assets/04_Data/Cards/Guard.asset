@@ -16,6 +16,9 @@ MonoBehaviour:
   icon: {fileID: 0}
   description: "\uACF5\uACA9 \uB300\uC2E0 \uBC29\uC5B4"
   statsLabel: "\uBC29\uC5B4"
+  cardNameEn: "guard"
+  descriptionEn: "Gain defense instead of attacking"
+  statsLabelEn: "BLOCK"
   actionKind: 1
   strengthBonus: 0
   timerDelta: 0

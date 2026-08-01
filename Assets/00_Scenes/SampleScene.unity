@@ -1578,7 +1578,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 0
+  m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -2744,7 +2744,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -3188,9 +3188,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PauseManager
   pausePanel: {fileID: 1173419597}
+  hintText: {fileID: 117798626}
   inputManager: {fileID: 2533025945593742310}
   resumeWord: "\uACC4\uC18D"
   titleWord: "\uD0C0\uC774\uD2C0"
+  resumeWordEn: resume
+  titleWordEn: title
+  hintFormat: "\uACC4\uC18D \uC9C4\uD589\uC744 \uC6D0\uD55C\uB2E4\uBA74 \"{0}\"!\n\uD0C0\uC774\uD2C0\uB85C
+    \uB3CC\uC544\uAC00\uAE38 \uC6D0\uD55C\uB2E4\uBA74 \"{1}\"!\n\uC744 \uC785\uB825\uD574\uC8FC\uC138\uC694!"
+  hintFormatEn: 'Type "{0}" to keep playing!
+
+    Type "{1}" to return to the title!'
 --- !u!114 &1861501379
 MonoBehaviour:
   m_ObjectHideFlags: 0

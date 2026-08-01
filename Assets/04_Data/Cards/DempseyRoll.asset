@@ -16,6 +16,9 @@ MonoBehaviour:
   icon: {fileID: 0}
   description: "2~5\uD68C \uC5F0\uD0C0"
   statsLabel: "\uC5F0\uD0C0"
+  cardNameEn: "dempsey"
+  descriptionEn: "Chains 2-5 hits at 50%"
+  statsLabelEn: "COMBO"
   actionKind: 0
   strengthBonus: 0
   timerDelta: 0

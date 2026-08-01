@@ -16,5 +16,8 @@ MonoBehaviour:
   icon: {fileID: 0}
   description: "\uC704\uB825 +2"
   statsLabel: "+2"
+  cardNameEn: "ultra"
+  descriptionEn: "Raises the value by 2"
+  statsLabelEn: "+2"
   effectType: 0
   value: 2

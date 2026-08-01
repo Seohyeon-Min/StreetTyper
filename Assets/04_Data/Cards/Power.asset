@@ -16,5 +16,8 @@ MonoBehaviour:
   icon: {fileID: 0}
   description: "\uC0C1\uC2B9 \uD6A8\uACFC +1"
   statsLabel: "\uAC15\uD654"
+  cardNameEn: "power"
+  descriptionEn: "Adds 1 to each value-up word"
+  statsLabelEn: "BOOST"
   effectType: 1
   value: 1

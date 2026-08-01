@@ -16,6 +16,9 @@ MonoBehaviour:
   icon: {fileID: 0}
   description: "\uBC29\uC5B4\uB3C4 \uD30C\uAD34, \uC704\uB825 +5"
   statsLabel: "\uD30C\uAD34"
+  cardNameEn: "uppercut"
+  descriptionEn: "Breaks enemy defense, +5 power"
+  statsLabelEn: "BREAK"
   actionKind: 0
   strengthBonus: 5
   timerDelta: -1

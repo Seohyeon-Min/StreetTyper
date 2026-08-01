@@ -64,6 +64,22 @@ public class StatusEffectManager : MonoBehaviour
     /// <summary>데빌의 남은 턴. 0이면 걸려 있지 않다.</summary>
     public int DevilTurnsLeft => _devilTurnsLeft;
 
+    /// <summary>화면에 띄울 상태이상 이름. HP 바 라벨과 화상 말풍선이 같은 이름을 쓰도록
+    /// 한 곳에서만 만든다.</summary>
+    public static string GetDisplayName(StatusEffectType effect)
+    {
+        return effect switch
+        {
+            StatusEffectType.Burn => LanguageSettings.IsEnglish ? "BURN" : "화상",
+            StatusEffectType.Paralysis => LanguageSettings.IsEnglish ? "STUN" : "마비",
+            StatusEffectType.Freeze => LanguageSettings.IsEnglish ? "FREEZE" : "얼음",
+            _ => effect.ToString()
+        };
+    }
+
+    /// <summary>데빌은 플레이어에게 걸리는 것이라 StatusEffectType에 없다.</summary>
+    public static string DevilDisplayName => LanguageSettings.IsEnglish ? "DEVIL" : "데빌";
+
     /// <summary>이 Transform이 지금 전투 중인 적인지. 표시용 뷰가 "내가 적 쪽인가 플레이어 쪽인가"를
     /// 스스로 판별하는 데 쓴다 - 인스펙터 토글에 기대면 오버라이드가 날아갔을 때 조용히 틀린다.</summary>
     public bool IsCurrentEnemy(Transform target)
@@ -162,7 +178,8 @@ public class StatusEffectManager : MonoBehaviour
 
         // 수치를 적 위에 띄워 "지금 줄어든 건 화상 때문"이라는 걸 알 수 있게 한다.
         if (showBurnBubble && SpeechBubbleManager.Instance != null)
-            SpeechBubbleManager.Instance.ShowBubble($"화상 {damage}", enemy.transform.position, false, burnBubbleDuration);
+            SpeechBubbleManager.Instance.ShowBubble($"{GetDisplayName(StatusEffectType.Burn)} {damage}",
+                enemy.transform.position, false, burnBubbleDuration);
 
         if (battleManager != null)
             battleManager.UpdateUI();

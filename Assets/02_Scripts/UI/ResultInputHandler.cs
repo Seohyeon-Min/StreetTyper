@@ -13,12 +13,18 @@ public class ResultInputHandler : MonoBehaviour
     [Tooltip("승리인지 패배인지 판별하는 데 쓴다.")]
     [SerializeField] private CharacterStats player;
 
-    [Header("명령 단어")]
+    [Header("명령 단어 - 한국어")]
     [Tooltip("승리 화면에서 치면 다음 스테이지로 넘어가는 단어")]
     [SerializeField] private string nextWord = "다음";
 
     [Tooltip("패배 화면에서 치면 같은 스테이지를 다시 시작하는 단어")]
     [SerializeField] private string retryWord = "다시";
+
+    [Header("명령 단어 - 영어")]
+    [Tooltip("소문자로 적을 것. 입력이 소문자로 정규화되어 들어옵니다.")]
+    [SerializeField] private string nextWordEn = "next";
+
+    [SerializeField] private string retryWordEn = "retry";
 
     [Header("안내 문구")]
     [Tooltip("승리 화면에 덧붙일 안내. {0} 자리에 위 명령 단어가 들어간다. " +
@@ -28,14 +34,28 @@ public class ResultInputHandler : MonoBehaviour
     [Tooltip("패배 화면에 덧붙일 안내.")]
     [SerializeField] private string retryHintFormat = "\n\n\"{0}\"를 입력하세요";
 
+    [Tooltip("영어 안내. 조사가 없어 승리/패배가 같은 형식이라 하나로 충분하다.")]
+    [SerializeField] private string hintFormatEn = "\n\nType \"{0}\"";
+
     [SerializeField] private bool logDebugEvents;
+
+    /// <summary>지금 언어의 명령 단어. 매칭과 안내 문구가 같은 값을 보게 한 곳에서 고른다.</summary>
+    private string GetWord(bool isVictory)
+    {
+        return isVictory
+            ? LanguageSettings.Pick(nextWord, nextWordEn, this, "nextWordEn")
+            : LanguageSettings.Pick(retryWord, retryWordEn, this, "retryWordEn");
+    }
 
     /// <summary>결과 화면에 붙일 안내 문구. 명령 단어를 인스펙터에서 바꾸면 안내도 함께 따라가도록
     /// 문구를 여기서 만든다 - 호출부에 하드코딩하면 단어를 바꿨을 때 조용히 어긋난다.</summary>
     public string GetHintText(bool isVictory)
     {
-        var word = isVictory ? nextWord : retryWord;
-        var format = isVictory ? nextHintFormat : retryHintFormat;
+        var word = GetWord(isVictory);
+
+        var format = LanguageSettings.IsEnglish
+            ? hintFormatEn
+            : (isVictory ? nextHintFormat : retryHintFormat);
 
         return string.IsNullOrEmpty(format) ? string.Empty : string.Format(format, word);
     }
@@ -100,7 +120,7 @@ public class ResultInputHandler : MonoBehaviour
 
         // 이긴 판에서는 "다음", 진 판에서는 "다시"만 받는다.
         var isVictory = player != null && player.currentHP > 0;
-        var target = isVictory ? nextWord : retryWord;
+        var target = GetWord(isVictory);
 
         if (typed == target)
         {

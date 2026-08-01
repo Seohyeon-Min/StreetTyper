@@ -16,6 +16,9 @@ MonoBehaviour:
   icon: {fileID: 0}
   description: "\uD53C\uD574\uC758 10% \uD68C\uBCF5"
   statsLabel: "\uD761\uD608"
+  cardNameEn: "drain"
+  descriptionEn: "Heals 10% of damage dealt"
+  statsLabelEn: "LIFE"
   effectType: 3
   statusEffect: 0
   chancePercent: 0

@@ -16,5 +16,8 @@ MonoBehaviour:
   icon: {fileID: 0}
   description: "\uC704\uB825 +1"
   statsLabel: "+1"
+  cardNameEn: "super"
+  descriptionEn: "Raises the value by 1"
+  statsLabelEn: "+1"
   effectType: 0
   value: 1

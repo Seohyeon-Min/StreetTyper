@@ -16,5 +16,8 @@ MonoBehaviour:
   icon: {fileID: 0}
   description: "\uCC98\uCE58 \uC2DC \uBCF4\uC0C1 +1"
   statsLabel: "\uBCF4\uC0C1"
+  cardNameEn: "lucky"
+  descriptionEn: "One extra reward card on kill"
+  statsLabelEn: "LOOT"
   effectType: 4
   value: 0

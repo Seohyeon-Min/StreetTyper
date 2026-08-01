@@ -38,8 +38,32 @@ public class BattleManager : MonoBehaviour
 
     // 엄마용 전투 전용 변수
     private int mdTurnCount = 0;
-    private string mdIntentString = "어디 한번 실력을 보여보거라!";
+    private string mdIntentString = MotherDragonLine(0);
     private int savedMDDamage = 0;
+
+    // 마더 드래곤이 턴마다 하는 말. 스파링 연출이라 순서가 정해져 있다.
+    // 0=시작, 1=1턴 뒤, 2=2턴 뒤, 3=마무리
+    private static string MotherDragonLine(int index)
+    {
+        if (LanguageSettings.IsEnglish)
+        {
+            return index switch
+            {
+                1 => "Not bad!",
+                2 => "Draw out more of your power!",
+                3 => "Splendid. That will do.",
+                _ => "Come, show me what you can do!"
+            };
+        }
+
+        return index switch
+        {
+            1 => "제법이구나!",
+            2 => "조금 더 힘을 끌어내 보거라!",
+            3 => "훌륭하다. 여기까지 하마!",
+            _ => "어디 한번 실력을 보여보거라!"
+        };
+    }
 
     //   추가: 대기열 상태 확인용 변수
     private bool isWaitingForDragonEnd = false;
@@ -89,11 +113,11 @@ public class BattleManager : MonoBehaviour
             if (enemyManager.currentEnemy.isMotherDragon)
             {
                 mdTurnCount++;
-                if (mdTurnCount == 1) mdIntentString = "제법이구나!";
-                else if (mdTurnCount == 2) mdIntentString = "조금 더 힘을 끌어내 보거라!";
+                if (mdTurnCount == 1) mdIntentString = MotherDragonLine(1);
+                else if (mdTurnCount == 2) mdIntentString = MotherDragonLine(2);
                 else if (mdTurnCount >= 3)
                 {
-                    mdIntentString = "훌륭하다. 여기까지 하마!";
+                    mdIntentString = MotherDragonLine(3);
 
                     //   수정됨: 즉시 죽이지 않고 입력 차단 후 1.5초 대기 함수 실행
                     isWaitingForDragonEnd = true;
@@ -139,7 +163,7 @@ public class BattleManager : MonoBehaviour
         isGameOver = false;
         isEventTriggered = false;
         mdTurnCount = 0;
-        mdIntentString = "어디 한번 실력을 보여보거라!";
+        mdIntentString = MotherDragonLine(0);
         savedMDDamage = 0;
         isWaitingForDragonEnd = false; //   추가됨
 

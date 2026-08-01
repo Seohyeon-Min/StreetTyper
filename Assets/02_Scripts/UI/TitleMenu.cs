@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -15,6 +16,17 @@ public class TitleMenu : MonoBehaviour
     [Header("옵션")]
     [Tooltip("옵션 창 루트. 평소엔 비활성이어야 한다.")]
     [SerializeField] private GameObject optionsPanel;
+
+    [Header("버튼 글자")]
+    [Tooltip("버튼 안의 TMP 라벨을 자동으로 찾아 넣는다. 별도 배선이 필요 없다.")]
+    [SerializeField] private string startKorean = "게임시작";
+    [SerializeField] private string startEnglish = "START";
+
+    [SerializeField] private string optionsKorean = "옵션";
+    [SerializeField] private string optionsEnglish = "OPTIONS";
+
+    [SerializeField] private string quitKorean = "게임종료";
+    [SerializeField] private string quitEnglish = "QUIT";
 
     private void Awake()
     {
@@ -44,6 +56,10 @@ public class TitleMenu : MonoBehaviour
             quitButton.onClick.AddListener(HandleQuit);
         else
             Debug.LogWarning("TitleMenu: quitButton이 연결되지 않았습니다.", this);
+
+        // 옵션 창에서 언어를 누른 그 순간 버튼 글자도 같이 바뀌어야 한다.
+        LanguageSettings.OnChanged += RefreshLabels;
+        RefreshLabels();
     }
 
     private void OnDisable()
@@ -56,6 +72,29 @@ public class TitleMenu : MonoBehaviour
 
         if (quitButton != null)
             quitButton.onClick.RemoveListener(HandleQuit);
+
+        LanguageSettings.OnChanged -= RefreshLabels;
+    }
+
+    // 버튼 안의 TMP 라벨을 찾아 글자를 넣는다. 라벨을 인스펙터에 따로 연결하지 않아도 되도록
+    // 버튼 참조에서 자식을 뒤진다 - 버튼 하나에 라벨이 하나뿐인 구조라 모호하지 않다.
+    private void RefreshLabels()
+    {
+        SetButtonLabel(startButton, startKorean, startEnglish);
+        SetButtonLabel(optionsButton, optionsKorean, optionsEnglish);
+        SetButtonLabel(quitButton, quitKorean, quitEnglish);
+    }
+
+    private void SetButtonLabel(Button button, string korean, string english)
+    {
+        if (button == null)
+            return;
+
+        var label = button.GetComponentInChildren<TMP_Text>(true);
+        if (label == null)
+            return;
+
+        label.text = LanguageSettings.Pick(korean, english, button, "english");
     }
 
     private void HandleStart()

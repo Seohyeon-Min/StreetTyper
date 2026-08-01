@@ -40,6 +40,13 @@ public class DeckManager : MonoBehaviour
     [Tooltip("턴 종료 후 쌓인 공격을 하나씩 터뜨리는 간격(초)")]
     [SerializeField] private float pendingActionInterval = 0.3f;
 
+    [Header("타격감 연출")]
+    [Tooltip("펀치 한 번당 카메라가 흔들리는 시간(초). CameraShake.Shake(duration, magnitude)의 첫 번째 인자.")]
+    [SerializeField] private float hitShakeDuration = 0.1f;
+
+    [Tooltip("펀치 한 번당 카메라 흔들림 크기. CameraShake의 shakeMultiplier와 곱해져서 최종 크기가 된다.")]
+    [SerializeField] private float hitShakeMagnitude = 0.2f;
+
     [SerializeField] private bool logDebugEvents;
 
     public CardSlotManager Slots => cardSlotManager;
@@ -272,16 +279,27 @@ public class DeckManager : MonoBehaviour
                 SoundManager.Instance.PlaySFX(battleManager.attackSound);
             }
             // ========== 타격감 연출 추가 ==========
-            if (actionEntry.Action.Damage > 0 && enemyManager.currentEnemy != null)
+            // 카메라 쉐이크/히트 이펙트는 "펀치 애니메이션이 재생됐는가" 기준이라 데미지가 0인
+            // 조합(방어 등)에도 나온다 - 위의 PlayAttackAnimation과 항상 짝을 맞춰야 한다.
+            if (enemyManager.currentEnemy != null)
             {
-                // 1. 카메라 쉐이크 (0.1초 동안 0.8 강도로 흔들림)
-                if (CameraShake.Instance != null)
+                // 1. 카메라 쉐이크 - 펀치마다 흔들면 Shake()가 매번 StopAllCoroutines로 이전
+                // 흔들림을 끊고 다시 시작해서 펀치가 여러 번일 때 쉴 새 없이 흔들리는 것처럼 보인다.
+                // 시퀀스당 첫 펀치 한 번만 흔든다.
+                bool shouldShake = i == 0;
+                if (shouldShake && CameraShake.Instance != null)
                 {
-                    CameraShake.Instance.Shake(0.1f, 0.8f);
+                    CameraShake.Instance.Shake(hitShakeDuration, hitShakeMagnitude);
                 }
 
-                // 2. 플로팅 데미지 띄우기
-                if (FloatingDamageManager.Instance != null)
+                // 2. 피격 이펙트
+                if (HitEffectManager.Instance != null)
+                {
+                    HitEffectManager.Instance.PlayHitEffect(enemyManager.currentEnemy.GetComponent<SpriteRenderer>());
+                }
+
+                // 3. 플로팅 데미지 띄우기 - 이건 숫자를 보여주는 거라 0 데미지면 의미가 없어 그대로 조건을 둔다.
+                if (actionEntry.Action.Damage > 0 && FloatingDamageManager.Instance != null)
                 {
                     FloatingDamageManager.Instance.ShowDamage(actionEntry.Action.Damage, enemyManager.currentEnemy.transform.position);
                 }
@@ -331,6 +349,7 @@ public class DeckManager : MonoBehaviour
 
         pendingActionManager.Clear();
     }
+
     // 말풍선엔 스킬 이름이 아니라 실제 적용된 공격력/방어력 수치를 보여준다.
     // Damage/Defense는 액션의 ActionKind에 따라 둘 중 하나만 채워진다.
     private static string BuildBubbleText(ResolvedAction action)

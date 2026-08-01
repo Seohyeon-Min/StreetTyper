@@ -1,0 +1,104 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: UIStyle
+  m_Shader: {fileID: 4800000, guid: d1234749a7eb9eb4a98dcce717ea2f81, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap:
+    RenderType: Transparent
+  disabledShaderPasses: []
+  m_LockedProperties:
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _CornerRadius: 0.1
+    - _CornerRadiusBottomLeft: 0.1
+    - _CornerRadiusBottomRight: 0.1
+    - _CornerRadiusTopLeft: 0.1
+    - _CornerRadiusTopRight: 0.1
+    - _DiamondCurvature: 1
+    - _DropShadowBlur: 0.02
+    - _DropShadowSize: 0
+    - _EdgeBlurAmount: 0.05
+    - _EdgeFadeVertical: 0
+    - _EdgeFadeWidth: 0.2
+    - _EdgeHighlightSize: 0.02
+    - _EdgeHighlightStrength: 0.05
+    - _EdgeLineIntensity: 0.2
+    - _EdgeLineSharpness: 0.5
+    - _EdgeLineThickness: 0.02
+    - _FillAmount: 1
+    - _EnableBottomEdgeLine: 0
+    - _EnableColorGradient: 0
+    - _EnableDropShadow: 0
+    - _EnableEdgeBlur: 0
+    - _EnableEdgeFade: 0
+    - _EnableGradient: 0
+    - _EnableInnerShadow: 0
+    - _EnableNoise: 0
+    - _GradientBlend: 0.5
+    - _GradientDirection: 270
+    - _GradientRadial: 0
+    - _HueShiftCool: -2
+    - _HueShiftWarm: 2
+    - _InnerShadowBlur: 0.02
+    - _LightDirection: 270
+    - _LightGradientStrength: 0.05
+    - _MaterialType: 0
+    - _NoiseStrength: 0.01
+    - _PillShapeHorizontal: 0
+    - _PillShapeVertical: 0
+    - _Skew: 0
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _UseCapsuleShape: 0
+    - _UseDiamondShape: 0
+    - _UsePerCornerRadius: 0
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _DropShadowColor: {r: 0, g: 0, b: 0, a: 0.5}
+    - _DropShadowOffset: {r: 2, g: -2, b: 0, a: 0}
+    - _EdgeLineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _GradientBaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _GradientColorEnd: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - _GradientColorStart: {r: 1, g: 1, b: 1, a: 1}
+    - _InnerShadowColor: {r: 0, g: 0, b: 0, a: 0.3}
+    - _InnerShadowOffset: {r: 0, g: 0, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
+--- !u!114 &1717192774670296910
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Editor::UnityEditor.Rendering.Universal.AssetVersion
+  version: 10

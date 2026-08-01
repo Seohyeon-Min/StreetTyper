@@ -168,7 +168,7 @@ public class StatusEffectManager : MonoBehaviour
     // BattleManager.CheckGameState의 승리 판정은 currentEnemy가 null이 아닐 것을 요구한다.
     // 화상으로 적을 파괴해 버리면 승리 처리가 통째로 건너뛰어진다. currentHP를 직접 깎고
     // UpdateUI를 부르면 CheckGameState가 정상적인 SetActive(false) 경로를 탄다.
-    private void ApplyBurnDamage(CharacterStats enemy)
+    private void ApplyBurnDamage(EnemyBase enemy)
     {
         var damage = Mathf.Max(1, Mathf.RoundToInt(enemy.maxHP * burnDamageRatio));
         enemy.currentHP = Mathf.Max(0, enemy.currentHP - damage);

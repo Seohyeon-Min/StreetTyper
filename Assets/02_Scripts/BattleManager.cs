@@ -126,7 +126,7 @@ public class BattleManager : MonoBehaviour
 
                 if (SpeechBubbleManager.Instance != null)
                 {
-                    SpeechBubbleManager.Instance.ShowBubble(mdIntentString, enemyManager.currentEnemy.transform.position, false, actionBubbleDuration);
+                    SpeechBubbleManager.Instance.ShowBubble(mdIntentString, enemyManager.currentEnemy.BubblePosition, false, actionBubbleDuration);
                 }
             }
             else
@@ -135,7 +135,7 @@ public class BattleManager : MonoBehaviour
 
                 if (SpeechBubbleManager.Instance != null)
                 {
-                    SpeechBubbleManager.Instance.ShowBubble(enemyManager.GetIntentString(), enemyManager.currentEnemy.transform.position, false, actionBubbleDuration);
+                    SpeechBubbleManager.Instance.ShowBubble(enemyManager.GetIntentString(), enemyManager.currentEnemy.BubblePosition, false, actionBubbleDuration);
                 }
             }
 
@@ -212,12 +212,12 @@ public class BattleManager : MonoBehaviour
 
                 string currentIntent = enemy.isMotherDragon ? mdIntentString : enemyManager.GetIntentString();
 
-                enemyIntentBubble.Setup(currentIntent, false, false);
+                enemyIntentBubble.Setup(currentIntent);
 
                 if (SpeechBubbleManager.Instance != null)
                 {
                     enemyIntentBubbleObj.GetComponent<RectTransform>().position =
-                        SpeechBubbleManager.Instance.GetBubbleScreenPosition(enemy.transform.position, false);
+                        SpeechBubbleManager.Instance.GetBubbleScreenPosition(enemy.BubblePosition, false);
                 }
             }
         }

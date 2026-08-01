@@ -83,14 +83,12 @@ public class SpeechBubbleManager : MonoBehaviour
         return _canvas != null ? _canvas.scaleFactor : 1f;
     }
 
-    // ★ 수정됨: isNormalTail 매개변수 추가 (기본값 true)
-    public void ShowBubble(string message, Vector3 worldPosition, bool isPlayer, float duration = 1.0f, bool isNormalTail = true)
+    public void ShowBubble(string message, Vector3 worldPosition, bool isPlayer, float duration = 1.0f)
     {
-        StartCoroutine(ShowBubbleRoutine(message, worldPosition, isPlayer, duration, isNormalTail));
+        StartCoroutine(ShowBubbleRoutine(message, worldPosition, isPlayer, duration));
     }
 
-    // ★ 수정됨: 코루틴에도 isNormalTail 전달 및 Setup에 적용
-    private IEnumerator ShowBubbleRoutine(string message, Vector3 worldPosition, bool isPlayer, float duration, bool isNormalTail)
+    private IEnumerator ShowBubbleRoutine(string message, Vector3 worldPosition, bool isPlayer, float duration)
     {
         if (speechBubblePrefab == null || canvasTransform == null) yield break;
 
@@ -99,8 +97,7 @@ public class SpeechBubbleManager : MonoBehaviour
         SpeechBubble bubbleScript = bubbleObj.GetComponent<SpeechBubble>();
         if (bubbleScript != null)
         {
-            // ★ 전달받은 꼬리 타입을 Setup 함수로 넘겨줍니다.
-            bubbleScript.Setup(message, isPlayer, isNormalTail);
+            bubbleScript.Setup(message);
         }
 
         RectTransform rectTransform = bubbleObj.GetComponent<RectTransform>();

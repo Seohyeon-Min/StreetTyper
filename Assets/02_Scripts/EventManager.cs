@@ -108,7 +108,7 @@ public class EventManager : MonoBehaviour
         {
             if (dialogueBubbleScript != null)
             {
-                dialogueBubbleScript.Setup(activeDialogueLines[currentLineIndex], false);
+                dialogueBubbleScript.Setup(activeDialogueLines[currentLineIndex]);
             }
             currentLineIndex++;
         }

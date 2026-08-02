@@ -38,6 +38,9 @@ public class StageManager : MonoBehaviour
     [Tooltip("클리어 보상으로 얻은 단어 카드를 화면에 펼쳐 보여준다.")]
     public RewardCardView rewardCardView;
 
+    [Header("UI")]
+    public TMPro.TextMeshProUGUI stageStartText;
+
     private int currentBattleIndex = 0;
     private int totalBattles = 10;
     private GameObject currentEnemyObject;
@@ -175,6 +178,16 @@ public class StageManager : MonoBehaviour
         if (startRoutine != null)
             StopCoroutine(startRoutine);
 
+        if (stageStartText != null)
+        {
+            if (isBossBattle)
+                stageStartText.text = "MOMMY DRAGON";
+            else
+                stageStartText.text = $"STAGE {displayStage}\nSTART!";
+
+            stageStartText.gameObject.SetActive(true);
+        }
+
         startRoutine = StartCoroutine(BeginStageAfterDelay());
     }
 
@@ -197,6 +210,11 @@ public class StageManager : MonoBehaviour
     private IEnumerator BeginStageAfterDelay()
     {
         yield return new WaitForSeconds(stageStartDelay);
+
+        if (stageStartText != null)
+        {
+            stageStartText.gameObject.SetActive(false);
+        }
 
         // [추가된 부분] 대기하는 동안 게임 오버가 되었다면 (예: 킬스위치 즉사) 더 이상 진행하지 않음
         if (battleManager != null && battleManager.IsGameOver)

@@ -47,6 +47,10 @@ public class StageManager : MonoBehaviour
              "0으로 두어도 최소 한 프레임은 기다린다.")]
     public float rewardAdvanceDelay = 0.6f;
 
+    [Header("UI")]
+    public TMPro.TextMeshProUGUI stageStartText;
+    public TMPro.TextMeshProUGUI currentStageText;
+
     private int currentBattleIndex = 0;
     private int totalBattles = 10;
     private GameObject currentEnemyObject;
@@ -99,8 +103,21 @@ public class StageManager : MonoBehaviour
             return;
         }
 
+
         // 인덱스 4(5번째 전투 = 4스테이지 클리어 후)와 인덱스 9(10번째 전투 = 8스테이지 클리어 후)를 보스전으로 설정
         bool isBossBattle = (currentBattleIndex == 4 || currentBattleIndex == 9);
+
+        if (SoundManager.Instance != null)
+        {
+            if (isBossBattle)
+            {
+                SoundManager.Instance.PlayBossBGM(); // 보스전이면 보스 브금 재생
+            }
+            else
+            {
+                SoundManager.Instance.PlayBattleBGM(); // 일반 전투면 일반 브금 재생 (이미 재생 중이면 알아서 무시됨)
+            }
+        }
 
         // 실제 UI 및 통계에 표시될 스테이지 번호 계산 (보스는 카운트 제외)
         int displayStage = currentBattleIndex + 1;
@@ -110,6 +127,14 @@ public class StageManager : MonoBehaviour
         // [추가] 최고 도달 스테이지 기록 갱신
         if (StatisticsManager.Instance != null)
             StatisticsManager.Instance.UpdateHighestStage(currentBattleIndex + 1);
+
+        if (currentStageText != null)
+        {
+            if (isBossBattle)
+                currentStageText.text = "MOMMY";
+            else
+                currentStageText.text = $"STAGE {displayStage}";
+        }
 
         if (currentEnemyObject != null)
         {
@@ -196,6 +221,16 @@ public class StageManager : MonoBehaviour
             advanceRoutine = null;
         }
 
+        if (stageStartText != null)
+        {
+            if (isBossBattle)
+                stageStartText.text = "MOMMY DRAGON";
+            else
+                stageStartText.text = $"STAGE {displayStage}\nSTART!";
+
+            stageStartText.gameObject.SetActive(true);
+        }
+
         startRoutine = StartCoroutine(BeginStageAfterDelay());
     }
 
@@ -218,6 +253,11 @@ public class StageManager : MonoBehaviour
     private IEnumerator BeginStageAfterDelay()
     {
         yield return new WaitForSeconds(stageStartDelay);
+
+        if (stageStartText != null)
+        {
+            stageStartText.gameObject.SetActive(false);
+        }
 
         // [추가된 부분] 대기하는 동안 게임 오버가 되었다면 (예: 킬스위치 즉사) 더 이상 진행하지 않음
         if (battleManager != null && battleManager.IsGameOver)

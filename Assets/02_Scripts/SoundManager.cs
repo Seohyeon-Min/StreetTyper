@@ -56,6 +56,7 @@ public class SoundManager : MonoBehaviour
     [Header("BGM EventReferences")]
     public EventReference titleBGM;
     public EventReference battleBGM;
+    public EventReference bossBGM;
 
     [Header("SFX EventReferences")]
     public EventReference[] punchSounds;
@@ -70,6 +71,11 @@ public class SoundManager : MonoBehaviour
     public void PlayBattleBGM()
     {
         PlayBGM(battleBGM);
+    }
+
+    public void PlayBossBGM()
+    {
+        PlayBGM(bossBGM);
     }
 
     public void PlayRandomPunch()

@@ -21,6 +21,10 @@ public enum TypingPriority
 
     /// <summary>일시정지 명령 단어. 무엇보다 우선한다.</summary>
     Pause = 20,
+
+    /// <summary>일시정지 안에서 열리는 보유 카드 목록. 일시정지 메뉴 <b>위에</b> 겹쳐 뜨므로
+    /// 그보다 먼저 가져간다 - 목록이 열려 있는 동안 "계속"/"타이틀"이 먹으면 안 된다.</summary>
+    CardCollection = 30,
 }
 
 /// <summary>

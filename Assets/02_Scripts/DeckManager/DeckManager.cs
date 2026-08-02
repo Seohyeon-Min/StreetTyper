@@ -211,6 +211,16 @@ public class DeckManager : MonoBehaviour
         if (statusEffectManager != null)
             statusEffectManager.ClearAll();
     }
+    // 이벤트 스테이지(마더 드래곤 등)는 적이 죽어도 대사가 끝날 때까지 BattleManager.IsGameOver가
+    // 계속 false다(ShowResult가 EventManager.EndEvent에서 늦게 불린다). CheckGameState가 죽은 적을
+    // Destroy가 아니라 SetActive(false)로만 끄기 때문에 currentEnemy 참조도 그대로 남는다 -
+    // IsGameOver만 보면 이 구간의 턴 전환 코루틴이 죽은 적을 상대로 계속 진행돼버린다.
+    private bool IsEnemyDefeated()
+    {
+        var enemy = enemyManager.currentEnemy;
+        return enemy == null || !enemy.gameObject.activeInHierarchy || enemy.currentHP <= 0;
+    }
+
     private IEnumerator RunTurnTransition()
     {
         // 게임오버 여부와 무관하게 입력부터 잠근다 - 타이머가 다 됐는데 계속 타이핑되면 안 된다.
@@ -233,8 +243,11 @@ public class DeckManager : MonoBehaviour
         SetPhase(TurnPhase.ResolvingPlayerActions);
         yield return PlayPendingActions();
 
-        // 재생 도중 적을 처치했거나 그 사이 전투가 끝났으면 여기서 끝낸다.
-        if (battleManager.IsGameOver)
+        // 재생 도중 적을 처치했거나 그 사이 전투가 끝났으면 여기서 끝낸다. 이벤트 스테이지는
+        // 대사가 끝날 때까지 IsGameOver가 아직 false이므로 적 처치 여부도 함께 봐야 한다 -
+        // 안 그러면 죽은 적을 상대로 가짜 적 턴까지 재생하고 타이머를 다시 시작해버려서,
+        // 보상 화면이 뜬 뒤에 그 타이머가 만료되며 입력이 다시 잠기고 아무도 안 열어준다.
+        if (battleManager.IsGameOver || IsEnemyDefeated())
             yield break;
 
         // 다음 플레이어 턴에 쓸 손패를 미리 뽑는다 - 비어 있는 대기 시간이 교체 연출을
@@ -430,8 +443,11 @@ public class DeckManager : MonoBehaviour
             //  말풍선은 FloatingDamageManager로 대체되어 빠졌지만, 갱신은 여전히 필요하다.)
             battleManager.UpdateUI();
 
-            // 도중에 적이 죽거나 전투가 끝났다면 콤보 즉시 중단 (럭키는 위에서 이미 처리했다)
-            if (battleManager.IsGameOver || enemyManager.currentEnemy == null)
+            // 도중에 적이 죽거나 전투가 끝났다면 콤보 즉시 중단 (럭키는 위에서 이미 처리했다).
+            // 이벤트 스테이지는 CheckGameState가 죽은 적을 Destroy가 아니라 SetActive(false)로만
+            // 끄므로 currentEnemy가 null이 되지 않는다 - 그래서 HP/활성 상태도 함께 봐야
+            // 죽은 적에게 남은 콤보가 계속 들어가는 걸 막을 수 있다.
+            if (battleManager.IsGameOver || IsEnemyDefeated())
             {
                 break;
             }

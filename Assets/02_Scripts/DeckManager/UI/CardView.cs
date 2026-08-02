@@ -91,6 +91,27 @@ public class CardView : MonoBehaviour
             frameImage.sprite = frame;
     }
 
+    /// <summary>CardBase 데이터 없이 이름 칸만 채운다 - 일시정지 중 "계속"/"타이틀" 같은 명령
+    /// 단어를 카드 모양으로 보여줄 때처럼, 실제 카드가 아닌 텍스트를 그릴 때 쓴다.
+    /// 설명/수치 칸은 비우고 배지는 끈다. 프레임은 기본 프레임을 그대로 쓴다.</summary>
+    public void SetText(string label)
+    {
+        if (nameText != null)
+            nameText.text = label ?? string.Empty;
+
+        if (descriptionText != null)
+            descriptionText.text = string.Empty;
+
+        if (statsText != null)
+            statsText.text = string.Empty;
+
+        if (badgeImage != null)
+            badgeImage.enabled = false;
+
+        if (frameImage != null && defaultFrame != null)
+            frameImage.sprite = defaultFrame;
+    }
+
     /// <summary>카드 전체의 투명도. CardSlotView의 교체 애니메이션이 부릅니다.</summary>
     public void SetAlpha(float alpha)
     {

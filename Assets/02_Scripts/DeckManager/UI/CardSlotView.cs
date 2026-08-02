@@ -31,6 +31,11 @@ public class CardSlotView : MonoBehaviour
 
     private bool _subscribed;
     private CardBase _currentCard;
+
+    // 타이핑 들림 판정에 실제로 비교하는 목표 단어. 보통은 _currentCard.CardName과 같지만,
+    // BindStatic으로 전환됐을 때는 카드 데이터 없이 이 값만 따로 갖는다(예: 일시정지 명령 단어).
+    private string _liftTargetWord;
+
     private float _liftAmount;
     private float _swapOffset;
     private bool _isSwapping;
@@ -53,6 +58,21 @@ public class CardSlotView : MonoBehaviour
         inputManager = input;
         Subscribe();
         Refresh();
+    }
+
+    /// <summary>CardSlotManager 슬롯 없이, 고정된 단어 하나를 카드처럼 보여준다(예: 일시정지 중
+    /// "계속"/"타이틀"). 기존 슬롯 구독은 끊어서 CurrentCards가 바뀌어도 이 카드는 영향받지
+    /// 않는다 - 애초에 슬롯을 대표하는 게 아니라 빌려 쓰는 것뿐이다. slotIndex는 건드리지 않고
+    /// 그대로 남겨둔다 - 나중에 원래 슬롯으로 복원할 때 필요하다.</summary>
+    public void BindStatic(string label, InputManager input)
+    {
+        Unsubscribe();
+        inputManager = input;
+        _currentCard = null;
+        _liftTargetWord = label;
+
+        if (cardView != null)
+            cardView.SetText(label);
     }
 
     private void OnEnable()
@@ -78,7 +98,7 @@ public class CardSlotView : MonoBehaviour
     // 그렇다면 CurrentInput을 그 안에서 바로 읽는 쪽이 별도 이벤트 배선보다 단순하다.
     private void Update()
     {
-        if (inputManager == null || _isSwapping || _currentCard == null)
+        if (inputManager == null || _isSwapping || string.IsNullOrEmpty(_liftTargetWord))
             return;
 
         var committed = inputManager.CurrentInput;
@@ -87,10 +107,15 @@ public class CardSlotView : MonoBehaviour
 
         // CardInputHandler의 매칭 판정과 같은 기준(InputManager.IsValidProgress)을 써야
         // 화면 연출과 실제 매칭이 서로 다른 카드를 가리키는 일이 없다.
-        var isCandidate = hasInput && InputManager.IsValidProgress(committed, composing, _currentCard.CardName);
+        var isCandidate = hasInput && InputManager.IsValidProgress(committed, composing, _liftTargetWord);
 
         var target = isCandidate ? typingLiftHeight : 0f;
-        var t = 1f - Mathf.Exp(-Time.deltaTime / Mathf.Max(liftSmoothTime, 0.0001f));
+
+        // unscaledDeltaTime을 쓴다 - 이 카드는 일시정지 중 "계속"/"타이틀" 명령 단어로도
+        // 재사용되는데(PauseCommandCardsView.BindStatic), 그때는 Time.timeScale == 0이라
+        // 보통의 deltaTime을 쓰면 들림 애니메이션이 아예 멈춰서 안 움직인다. 평소(타임스케일
+        // 1)에는 deltaTime과 값이 같으므로 손패 들림 동작은 그대로다.
+        var t = 1f - Mathf.Exp(-Time.unscaledDeltaTime / Mathf.Max(liftSmoothTime, 0.0001f));
         _liftAmount = Mathf.Lerp(_liftAmount, target, t);
     }
 
@@ -112,6 +137,50 @@ public class CardSlotView : MonoBehaviour
 
         cardSlotManager.OnSlotChanged -= HandleSlotChanged;
         _subscribed = false;
+    }
+
+    /// <summary>지금 내용을 밀어내며(offset 방향) 페이드아웃한 뒤 onComplete를 부른다. 슬롯 교체
+    /// 이벤트와 무관하게 밖에서 직접 호출할 수 있다 - 일시정지 메뉴처럼 카드 자리를 통째로
+    /// 다른 용도로 바꿀 때, 다른 메뉴에서도 같은 방식으로 재사용하기 위한 범용 API다.
+    /// offset을 양수로 주면 위로 올라가며 사라지고, 음수를 주면 아래로 가라앉듯 사라진다.</summary>
+    public void PlayExit(float offset, System.Action onComplete = null)
+    {
+        RestartSwapCoroutine(ExitRoutine(offset, onComplete));
+    }
+
+    /// <summary>offset 위치(투명)에서 시작해 제자리(0, 불투명)까지 움직이며 페이드인한다.
+    /// setContent가 있으면 애니메이션을 시작하기 전에 먼저 불러서 내용을 채운다(BindStatic이나
+    /// Bind 등 무엇이든). 꺼져 있던 오브젝트라도 자동으로 켠다.</summary>
+    public void PlayEnter(float fromOffset, System.Action setContent = null)
+    {
+        gameObject.SetActive(true);
+        setContent?.Invoke();
+        RestartSwapCoroutine(EnterRoutine(fromOffset));
+    }
+
+    private void RestartSwapCoroutine(IEnumerator routine)
+    {
+        if (_swapCoroutine != null)
+            StopCoroutine(_swapCoroutine);
+
+        _swapCoroutine = StartCoroutine(routine);
+    }
+
+    private IEnumerator ExitRoutine(float offset, System.Action onComplete)
+    {
+        _isSwapping = true;
+        yield return AnimateSwap(0f, offset, 1f, 0f, exitDuration);
+        onComplete?.Invoke();
+        _isSwapping = false;
+        _swapCoroutine = null;
+    }
+
+    private IEnumerator EnterRoutine(float fromOffset)
+    {
+        _isSwapping = true;
+        yield return AnimateSwap(fromOffset, 0f, 0f, 1f, enterDuration);
+        _isSwapping = false;
+        _swapCoroutine = null;
     }
 
     private void HandleSlotChanged(int index, CardBase card)
@@ -142,10 +211,14 @@ public class CardSlotView : MonoBehaviour
 
     private IEnumerator AnimateSwap(float fromOffset, float toOffset, float fromAlpha, float toAlpha, float duration)
     {
+        // unscaledDeltaTime을 쓴다 - PlayExit/PlayEnter는 일시정지 전환(Time.timeScale이 1에서
+        // 0으로 바뀌는 도중)에도 쓰이는데, 보통의 deltaTime을 쓰면 애니메이션이 재생되다가
+        // timeScale이 0이 되는 순간 멈춰버린다. 평소(타임스케일 1)에는 값이 같으므로 실제
+        // 게임플레이 카드 교체 애니메이션(PlaySwap)에는 영향이 없다.
         var elapsed = 0f;
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += Time.unscaledDeltaTime;
             var t = Mathf.Clamp01(elapsed / duration);
             _swapOffset = Mathf.Lerp(fromOffset, toOffset, t);
             SetAlpha(Mathf.Lerp(fromAlpha, toAlpha, t));
@@ -174,11 +247,12 @@ public class CardSlotView : MonoBehaviour
         SetCard(cards[slotIndex]);
     }
 
-    // _currentCard는 타이핑 들림 판정(Update)에 계속 필요하므로 여기서 들고 있는다.
+    // _currentCard/_liftTargetWord는 타이핑 들림 판정(Update)에 계속 필요하므로 여기서 들고 있는다.
     // 그리는 일 자체는 CardView가 한다.
     private void SetCard(CardBase card)
     {
         _currentCard = card;
+        _liftTargetWord = card != null ? card.CardName : null;
 
         if (cardView != null)
             cardView.SetCard(card);

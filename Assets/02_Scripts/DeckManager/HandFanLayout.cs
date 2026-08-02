@@ -89,8 +89,11 @@ public class HandFanLayout : MonoBehaviour
             return;
 
         // 편집 모드에서는 Time.deltaTime이 신뢰할 수 없으므로 즉시 스냅합니다.
+        // unscaledDeltaTime을 쓰는 이유는 CardSlotView.Update()와 같다 - 일시정지 중
+        // PauseCommandCardsView가 5장을 2장으로 줄이면 카드들이 새 부채꼴 위치로 옮겨가야
+        // 하는데, 보통의 deltaTime은 Time.timeScale == 0에서 0이라 전혀 움직이지 않는다.
         var immediate = !Application.isPlaying || smoothTime <= 0f;
-        var t = immediate ? 1f : 1f - Mathf.Exp(-Time.deltaTime / smoothTime);
+        var t = immediate ? 1f : 1f - Mathf.Exp(-Time.unscaledDeltaTime / smoothTime);
 
         for (var i = 0; i < count; i++)
         {

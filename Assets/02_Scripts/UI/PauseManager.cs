@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -25,6 +26,24 @@ public class PauseManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private InputManager inputManager;
 
+    [Tooltip("평소 손패를 그리는 HandFanLayout(Card Canvas 쪽). 일시정지 중엔 5장을 전부 숨긴다.")]
+    [SerializeField] private HandFanLayout handFanLayout;
+
+    [Tooltip("일시정지가 풀렸을 때 카드를 원래 슬롯 내용으로 되돌리는 데 필요하다.")]
+    [SerializeField] private CardSlotManager cardSlotManager;
+
+    [Tooltip("\"계속\"/\"타이틀\" 카드 2장을 배치할, Pause Canvas 아래의 별도 HandFanLayout. " +
+             "패널보다 위에 그려져야 하므로 손패(Card Canvas)가 아니라 Pause Canvas 쪽에 둔다. " +
+             "Card Slot Manager는 비워둘 것 - 자동 스폰 없이 이 스크립트가 직접 2장만 채운다.")]
+    [SerializeField] private HandFanLayout commandCardsLayout;
+
+    [Tooltip("명령 카드로 스폰할 프리팹. 보통 손패와 같은 Card.prefab.")]
+    [SerializeField] private CardSlotView commandCardPrefab;
+
+    [Tooltip("전환 애니메이션에서 카드가 움직이는 거리(px). 기존 5장은 이만큼 아래로 가라앉듯 " +
+             "사라지고, 새 명령 카드 2장은 그 자리에서 떠오르듯 나타난다(재개할 땐 반대).")]
+    [SerializeField] private float commandCardTransitionHeight = 80f;
+
     [Header("명령 단어 - 한국어")]
     [Tooltip("치면 일시정지가 풀리는 단어")]
     [SerializeField] private string resumeWord = "계속";
@@ -46,6 +65,14 @@ public class PauseManager : MonoBehaviour
 
     private bool _isPaused;
     private bool _inputWasEnabled;
+
+    // HandFanLayout.Cards는 매 프레임 "활성 자식만" 다시 모아서 채워지는 리스트라, 카드를
+    // 꺼버리고 나면 그 순간부터 목록에서 빠져 참조를 잃는다. 그래서 끄기 전에 5장 전부를
+    // 여기 스냅샷으로 저장해뒀다가, 복원할 때 이걸 쓴다.
+    private readonly List<CardSlotView> _pausedHandCards = new List<CardSlotView>();
+
+    // ShowCommandCards가 commandCardsLayout 밑에 스폰한 "계속"/"타이틀" 카드. Hide 때 파괴한다.
+    private readonly List<CardSlotView> _commandCardInstances = new List<CardSlotView>();
 
     public bool IsPaused => _isPaused;
 
@@ -194,6 +221,8 @@ public class PauseManager : MonoBehaviour
         if (pausePanel != null)
             pausePanel.SetActive(true);
 
+        ShowCommandCards();
+
         Time.timeScale = 0f;
     }
 
@@ -208,6 +237,8 @@ public class PauseManager : MonoBehaviour
         if (pausePanel != null)
             pausePanel.SetActive(false);
 
+        HideCommandCards();
+
         if (inputManager != null)
         {
             // 명령 단어가 입력창에 남아 전투 입력으로 흘러가지 않게 비운다.
@@ -217,6 +248,69 @@ public class PauseManager : MonoBehaviour
             if (!_inputWasEnabled)
                 inputManager.DisableInput();
         }
+    }
+
+    // 기존 손패 5장은 아래로 가라앉듯 사라지고(PlayExit, 음수 offset), commandCardsLayout에
+    // 새로 스폰한 "계속"/"타이틀" 2장은 그 자리에서 떠오르듯 나타난다(PlayEnter, 음수 offset에서
+    // 0으로). CardSlotView.PlayExit/PlayEnter는 일반적인 범용 API라 다른 메뉴에서 카드 자리를
+    // 다른 용도로 바꿀 때도 같은 방식으로 재사용할 수 있다.
+    private void ShowCommandCards()
+    {
+        if (handFanLayout == null)
+            return;
+
+        // 끄기 전에 지금 활성 상태인 카드 전부를 스냅샷으로 저장해둔다 - 비활성화하고 나면
+        // HandFanLayout.Cards에서 빠져서 다시는 참조를 못 얻는다.
+        _pausedHandCards.Clear();
+        _pausedHandCards.AddRange(handFanLayout.Cards);
+
+        foreach (var card in _pausedHandCards)
+        {
+            if (card != null)
+                card.PlayExit(-commandCardTransitionHeight, () => card.gameObject.SetActive(false));
+        }
+
+        if (commandCardsLayout == null || commandCardPrefab == null)
+            return;
+
+        SpawnCommandCard(ResumeWord);
+        SpawnCommandCard(TitleWord);
+    }
+
+    private void SpawnCommandCard(string label)
+    {
+        var instance = Instantiate(commandCardPrefab, commandCardsLayout.transform, false);
+        _commandCardInstances.Add(instance);
+        instance.PlayEnter(-commandCardTransitionHeight, () => instance.BindStatic(label, inputManager));
+    }
+
+    private void HideCommandCards()
+    {
+        // 명령 카드는 아래로 가라앉듯 사라진 뒤 파괴한다(스폰할 때 올라온 것과 반대 방향).
+        foreach (var instance in _commandCardInstances)
+        {
+            if (instance == null)
+                continue;
+
+            var toDestroy = instance;
+            toDestroy.PlayExit(-commandCardTransitionHeight, () => Destroy(toDestroy.gameObject));
+        }
+        _commandCardInstances.Clear();
+
+        // 기존 손패는 반대로 떠오르며 되돌아온다.
+        foreach (var card in _pausedHandCards)
+        {
+            if (card == null)
+                continue;
+
+            // 리스트 순서가 아니라 카드 자신이 기억하고 있는 원래 슬롯 인덱스로 되돌린다 -
+            // HandFanLayout이 가운데 카드를 맨 위로 그리려고(centerOnTop) 형제 순서를 바꾸면
+            // 스냅샷 순서와 슬롯 인덱스가 더 이상 일치하지 않을 수 있기 때문이다.
+            var slotIndex = card.SlotIndex;
+            card.PlayEnter(-commandCardTransitionHeight, () => card.Bind(cardSlotManager, slotIndex, inputManager));
+        }
+
+        _pausedHandCards.Clear();
     }
 
     public void ReturnToTitle()

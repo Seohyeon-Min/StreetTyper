@@ -724,9 +724,9 @@ GameObject:
   m_Component:
   - component: {fileID: 519420032}
   - component: {fileID: 519420031}
-  - component: {fileID: 519420029}
   - component: {fileID: 519420030}
   - component: {fileID: 519420033}
+  - component: {fileID: 519420034}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -734,14 +734,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &519420029
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 519420028}
-  m_Enabled: 1
 --- !u!114 &519420030
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -865,6 +857,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraShake
   shakeMultiplier: 0.8
+--- !u!114 &519420034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86c6556701af9e04380698b89f691b6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FMODUnity::FMODUnity.StudioListener
+  nonRigidbodyVelocity: 0
+  attenuationObject: {fileID: 0}
 --- !u!4 &524534440 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7855640368841322006, guid: 0995d3239a6b59242933df530292adc3, type: 3}
@@ -4330,7 +4336,7 @@ PrefabInstance:
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: motherDragonPrefab
       value: 
-      objectReference: {fileID: 6201447247898099441, guid: 71523482895db8d4ca417e23e6d25046, type: 3}
+      objectReference: {fileID: 8981707868698957726, guid: 71523482895db8d4ca417e23e6d25046, type: 3}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: statusEffectManager
       value: 
@@ -4693,6 +4699,22 @@ PrefabInstance:
     - target: {fileID: 4348157351067449690, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
       propertyPath: m_Name
       value: SoundManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+      propertyPath: battleBGM.Guid.Data1
+      value: -1072704160
+      objectReference: {fileID: 0}
+    - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+      propertyPath: battleBGM.Guid.Data2
+      value: 1243963518
+      objectReference: {fileID: 0}
+    - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+      propertyPath: battleBGM.Guid.Data3
+      value: -1939707999
+      objectReference: {fileID: 0}
+    - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+      propertyPath: battleBGM.Guid.Data4
+      value: 1254286650
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

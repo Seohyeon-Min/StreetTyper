@@ -95,14 +95,6 @@ public class StageManager : MonoBehaviour
             Destroy(currentEnemyObject);
         }
 
-        // [수정] 8스테이지(인덱스 7) 클리어 시(즉, 9번째 스테이지 진입 시) 게임 종료
-        // 주의: enemyPrefabs.Count가 아닌 totalStages(8)로 검사해야 합니다.
-        if (currentBattleIndex >= totalStages)
-        {
-            battleManager.ShowGameClear();
-            return;
-        }
-
         // [수정] 프리팹 결정 로직
         GameObject prefabToSpawn;
         if (isBossBattle && motherDragonPrefab != null)

@@ -176,8 +176,7 @@ public class BattleManager : MonoBehaviour
                 else if (mdTurnCount >= 3)
                 {
                     mdIntentString = MotherDragonLine(3);
-
-                    //   수정됨: 즉시 죽이지 않고 입력 차단 후 1.5초 대기 함수 실행
+                    // 1.5초 대기
                     isWaitingForDragonEnd = true;
                     Invoke("FinishMotherDragonBattle", 1.5f);
                 }
@@ -185,6 +184,9 @@ public class BattleManager : MonoBehaviour
                 if (SpeechBubbleManager.Instance != null)
                 {
                     SpeechBubbleManager.Instance.ShowBubble(mdIntentString, enemyManager.currentEnemy.BubblePosition, false, actionBubbleDuration);
+
+                    // [유지] 마미드래곤일 때만 말하기 애니메이션 재생
+                    enemyManager.currentEnemy.PlaySpeakAnimation();
                 }
             }
             else
@@ -194,6 +196,7 @@ public class BattleManager : MonoBehaviour
                 if (SpeechBubbleManager.Instance != null)
                 {
                     SpeechBubbleManager.Instance.ShowBubble(enemyManager.GetIntentString(), enemyManager.currentEnemy.BubblePosition, false, actionBubbleDuration);
+
                 }
             }
 

@@ -38,6 +38,12 @@ public class EnemyBase : CharacterStats
         animator.SetTrigger("Attack");
     }
 
+    public void PlaySpeakAnimation()
+    {
+        if (animator == null) return;
+        animator.SetTrigger("Speak");
+    }
+
     protected override void Start()
     {
         // 스케일링이 아직 적용되지 않은 경우에만 기본 데이터 적용

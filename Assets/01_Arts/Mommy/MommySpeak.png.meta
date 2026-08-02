@@ -1,0 +1,743 @@
+fileFormatVersion: 2
+guid: 7fcecb8dcbc819a4a81b8b031cec29f6
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 1039691788419096073
+    second: MamiSpeaklow_0
+  - first:
+      213: -5480529049154473598
+    second: MamiSpeaklow_1
+  - first:
+      213: 921583332866737372
+    second: MamiSpeaklow_2
+  - first:
+      213: 7204855608089411155
+    second: MamiSpeaklow_3
+  - first:
+      213: 189785351601748505
+    second: MamiSpeaklow_4
+  - first:
+      213: -7954032554477866287
+    second: MamiSpeaklow_5
+  - first:
+      213: -2396400581531228006
+    second: MamiSpeaklow_6
+  - first:
+      213: 1027337618742485115
+    second: MamiSpeaklow_7
+  - first:
+      213: 5383806975927366931
+    second: MamiSpeaklow_8
+  - first:
+      213: 7163888176531815237
+    second: MamiSpeaklow_9
+  - first:
+      213: 7552955232794042480
+    second: MamiSpeaklow_10
+  - first:
+      213: 7172613161204999326
+    second: MamiSpeaklow_11
+  - first:
+      213: 1237327834436638648
+    second: MamiSpeaklow_12
+  - first:
+      213: -2696059750683051721
+    second: MamiSpeaklow_13
+  - first:
+      213: 7917324448408439251
+    second: MamiSpeaklow_14
+  - first:
+      213: -4262805355359497140
+    second: MamiSpeaklow_15
+  - first:
+      213: -7119853487409023048
+    second: MamiSpeaklow_16
+  - first:
+      213: -539791956209556018
+    second: MamiSpeaklow_17
+  - first:
+      213: 4308534048703998140
+    second: MamiSpeaklow_18
+  - first:
+      213: -5618450523507320435
+    second: MamiSpeaklow_19
+  - first:
+      213: 8556177158755130082
+    second: MamiSpeaklow_20
+  - first:
+      213: -3020022054921197977
+    second: MamiSpeaklow_21
+  - first:
+      213: 6806336907124596531
+    second: MamiSpeaklow_22
+  - first:
+      213: 953759330267919133
+    second: MamiSpeaklow_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: MamiSpeaklow_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 2511
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 90e5c9c4c2abd6e00800000000000000
+      internalID: 1039691788419096073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_1
+      rect:
+        serializedVersion: 2
+        x: 1507
+        y: 2511
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28130fbeddf31f3b0800000000000000
+      internalID: -5480529049154473598
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_2
+      rect:
+        serializedVersion: 2
+        x: 3014
+        y: 2511
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd44172982f1acc00800000000000000
+      internalID: 921583332866737372
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_3
+      rect:
+        serializedVersion: 2
+        x: 4521
+        y: 2511
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35e762aa00accf360800000000000000
+      internalID: 7204855608089411155
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_4
+      rect:
+        serializedVersion: 2
+        x: 6028
+        y: 2511
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 91a7bc195c042a200800000000000000
+      internalID: 189785351601748505
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_5
+      rect:
+        serializedVersion: 2
+        x: 7535
+        y: 2511
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d23472b8899d9190800000000000000
+      internalID: -7954032554477866287
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1674
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a98aa462e564ebed0800000000000000
+      internalID: -2396400581531228006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_7
+      rect:
+        serializedVersion: 2
+        x: 1507
+        y: 1674
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b70aa850f16d14e00800000000000000
+      internalID: 1027337618742485115
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_8
+      rect:
+        serializedVersion: 2
+        x: 3014
+        y: 1674
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 315bb638bef17ba40800000000000000
+      internalID: 5383806975927366931
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_9
+      rect:
+        serializedVersion: 2
+        x: 4521
+        y: 1674
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54bbcc4375e3b6360800000000000000
+      internalID: 7163888176531815237
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_10
+      rect:
+        serializedVersion: 2
+        x: 6028
+        y: 1674
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 070ed1754cc71d860800000000000000
+      internalID: 7552955232794042480
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_11
+      rect:
+        serializedVersion: 2
+        x: 7535
+        y: 1674
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e946ae00bad3a8360800000000000000
+      internalID: 7172613161204999326
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_12
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 837
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b79c4a1c1fdb2110800000000000000
+      internalID: 1237327834436638648
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_13
+      rect:
+        serializedVersion: 2
+        x: 1507
+        y: 837
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 739fe4be0fba59ad0800000000000000
+      internalID: -2696059750683051721
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_14
+      rect:
+        serializedVersion: 2
+        x: 3014
+        y: 837
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d986e653acffdd60800000000000000
+      internalID: 7917324448408439251
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_15
+      rect:
+        serializedVersion: 2
+        x: 4521
+        y: 837
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c441a275d1977d4c0800000000000000
+      internalID: -4262805355359497140
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_16
+      rect:
+        serializedVersion: 2
+        x: 6028
+        y: 837
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b7b82ec9f2313d90800000000000000
+      internalID: -7119853487409023048
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_17
+      rect:
+        serializedVersion: 2
+        x: 7535
+        y: 837
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec5248563164288f0800000000000000
+      internalID: -539791956209556018
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_18
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb86da3c3ecfacb30800000000000000
+      internalID: 4308534048703998140
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_19
+      rect:
+        serializedVersion: 2
+        x: 1507
+        y: 0
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d891d3644014702b0800000000000000
+      internalID: -5618450523507320435
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_20
+      rect:
+        serializedVersion: 2
+        x: 3014
+        y: 0
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ea19e61bc5adb670800000000000000
+      internalID: 8556177158755130082
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_21
+      rect:
+        serializedVersion: 2
+        x: 4521
+        y: 0
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 766a39a11f9b616d0800000000000000
+      internalID: -3020022054921197977
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_22
+      rect:
+        serializedVersion: 2
+        x: 6028
+        y: 0
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 33fdac20b57f47e50800000000000000
+      internalID: 6806336907124596531
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeaklow_23
+      rect:
+        serializedVersion: 2
+        x: 7535
+        y: 0
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1375d1ce0f6c3d00800000000000000
+      internalID: 953759330267919133
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 2c5466f4bd2dc4543b5543b5173d65c2
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":6.0,"y":4.0},"gridSpriteSize":{"x":1507.0,"y":837.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":7,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      MamiSpeaklow_0: 1039691788419096073
+      MamiSpeaklow_1: -5480529049154473598
+      MamiSpeaklow_10: 7552955232794042480
+      MamiSpeaklow_11: 7172613161204999326
+      MamiSpeaklow_12: 1237327834436638648
+      MamiSpeaklow_13: -2696059750683051721
+      MamiSpeaklow_14: 7917324448408439251
+      MamiSpeaklow_15: -4262805355359497140
+      MamiSpeaklow_16: -7119853487409023048
+      MamiSpeaklow_17: -539791956209556018
+      MamiSpeaklow_18: 4308534048703998140
+      MamiSpeaklow_19: -5618450523507320435
+      MamiSpeaklow_2: 921583332866737372
+      MamiSpeaklow_20: 8556177158755130082
+      MamiSpeaklow_21: -3020022054921197977
+      MamiSpeaklow_22: 6806336907124596531
+      MamiSpeaklow_23: 953759330267919133
+      MamiSpeaklow_3: 7204855608089411155
+      MamiSpeaklow_4: 189785351601748505
+      MamiSpeaklow_5: -7954032554477866287
+      MamiSpeaklow_6: -2396400581531228006
+      MamiSpeaklow_7: 1027337618742485115
+      MamiSpeaklow_8: 5383806975927366931
+      MamiSpeaklow_9: 7163888176531815237
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

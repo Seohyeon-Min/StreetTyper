@@ -2100,6 +2100,16 @@ MonoBehaviour:
   panel: {fileID: 1248003085}
   spacing: 200
   verticalOffset: 0
+  presentation:
+    titleKorean: "\uCE74\uB4DC \uD68D\uB4DD"
+    titleEnglish: CHOOSE A CARD
+    image: {fileID: 0}
+    titleColor: {r: 1, g: 1, b: 1, a: 1}
+  titleLabel: {fileID: 0}
+  titleImage: {fileID: 0}
+  typingLiftHeight: 40
+  liftSmoothTime: 0.08
+  dimAlpha: 0.4
   logDebugEvents: 0
 --- !u!224 &1059607444
 RectTransform:
@@ -2201,6 +2211,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4094ea858a95b441acc1bc666b0eefd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CardSlotManager
+--- !u!4 &1105107304 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 487241434307784838, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+  m_PrefabInstance: {fileID: 2960076400279285099}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1105107305 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4573702726212017277, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+  m_PrefabInstance: {fileID: 2960076400279285099}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 415e10ddcaa920c4e9cb869f23864b04, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RewardInputHandler
 --- !u!1001 &1133852583
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2313,7 +2339,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8ed8a3bb8ec0ded43a806201686f6d96, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::TextGateRevealAnimation
 --- !u!1001 &1180301410
 PrefabInstance:
@@ -3546,24 +3572,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2324c9bfc80be948b02c4889d715b06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PauseManager
-  pausePanel: {fileID: 1173419597}
-  hintText: {fileID: 0}
-  titleReveal: {fileID: 1173419601}
   inputManager: {fileID: 2533025945593742310}
+  hintSeparator: '
+
+'
+  hintSuffix:
+  hintSuffixEn:
+  hintLabel: {fileID: 0}
+  pausePanel: {fileID: 1173419597}
+  titleReveal: {fileID: 1173419601}
   handFanLayout: {fileID: 1259881543}
   cardSlotManager: {fileID: 1084949171}
   commandCardsLayout: {fileID: 682189038}
   commandCardPrefab: {fileID: 7534683157795553136, guid: 01a72023d39fa9c47aa3a6b8ae82e92d, type: 3}
   commandCardTransitionHeight: 80
-  resumeWord: "\uACC4\uC18D"
-  titleWord: "\uD0C0\uC774\uD2C0"
-  resumeWordEn: resume
-  titleWordEn: title
-  hintFormat: "\uACC4\uC18D \uC9C4\uD589\uC744 \uC6D0\uD55C\uB2E4\uBA74 \"{0}\"!\n\uD0C0\uC774\uD2C0\uB85C
-    \uB3CC\uC544\uAC00\uAE38 \uC6D0\uD55C\uB2E4\uBA74 \"{1}\"!\n\uC744 \uC785\uB825\uD574\uC8FC\uC138\uC694!"
-  hintFormatEn: 'Type "{0}" to keep playing!
-
-    Type "{1}" to return to the title!'
+  resumeCommand:
+    korean: "\uACC4\uC18D"
+    english: resume
+    hintKorean: "\uACC4\uC18D \uC9C4\uD589\uC744 \uC6D0\uD55C\uB2E4\uBA74 \"{0}\"!"
+    hintEnglish: Type "{0}" to keep playing!
+  titleCommand:
+    korean: "\uD0C0\uC774\uD2C0"
+    english: title
+    hintKorean: "\uD0C0\uC774\uD2C0\uB85C \uB3CC\uC544\uAC00\uAE38 \uC6D0\uD55C\uB2E4\uBA74
+      \"{0}\"!"
+    hintEnglish: Type "{0}" to return to the title!
 --- !u!114 &1861501379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3843,6 +3876,7 @@ Transform:
   - {fileID: 1943176986}
   - {fileID: 606443245}
   - {fileID: 891639024}
+  - {fileID: 1105107304}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2110709450
@@ -4360,6 +4394,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 6201447247898099441, guid: 71523482895db8d4ca417e23e6d25046, type: 3}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: rewardInputHandler
+      value: 
+      objectReference: {fileID: 1105107305}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: statusEffectManager
       value: 
       objectReference: {fileID: 970951418202211458}
@@ -4674,6 +4712,75 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 871cc0f753521c74aaa635a15a965df1, type: 3}
+--- !u!1001 &2960076400279285099
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2092489548}
+    m_Modifications:
+    - target: {fileID: 487241434307784838, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 487241434307784838, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 487241434307784838, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 487241434307784838, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 487241434307784838, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 487241434307784838, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 487241434307784838, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 487241434307784838, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 487241434307784838, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 487241434307784838, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4537454949968267726, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+      propertyPath: m_Name
+      value: RewardInputHandler
+      objectReference: {fileID: 0}
+    - target: {fileID: 4573702726212017277, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+      propertyPath: inputManager
+      value: 
+      objectReference: {fileID: 2533025945593742310}
+    - target: {fileID: 4573702726212017277, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+      propertyPath: rewardCardView
+      value: 
+      objectReference: {fileID: 1059607443}
+    - target: {fileID: 4573702726212017277, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
+      propertyPath: wordUnlockManager
+      value: 
+      objectReference: {fileID: 569780932}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
 --- !u!1001 &3074167411984738586
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5117,6 +5224,10 @@ PrefabInstance:
       propertyPath: resultInputHandler
       value: 
       objectReference: {fileID: 1856966510}
+    - target: {fileID: 4261486253533367432, guid: 66f4d484af32f294896f919679cb257b, type: 3}
+      propertyPath: rewardInputHandler
+      value: 
+      objectReference: {fileID: 1105107305}
     - target: {fileID: 8673143296737308907, guid: 66f4d484af32f294896f919679cb257b, type: 3}
       propertyPath: statusEffectManager
       value: 
@@ -5186,6 +5297,10 @@ PrefabInstance:
       propertyPath: player
       value: 
       objectReference: {fileID: 108802000}
+    - target: {fileID: 3646585726638328726, guid: 901dbc30fed772744b05a85b656746eb, type: 3}
+      propertyPath: inputManager
+      value: 
+      objectReference: {fileID: 2533025945593742310}
     - target: {fileID: 3646585726638328726, guid: 901dbc30fed772744b05a85b656746eb, type: 3}
       propertyPath: battleManager
       value: 

@@ -43,6 +43,12 @@ public class StatusEffectManager : MonoBehaviour
 
     [SerializeField] private float burnBubbleDuration = 0.8f;
 
+    [Tooltip("화상 말풍선에 띄울 문구. {0} 자리에 이번 피해량이 들어간다.")]
+    [SerializeField, TextArea] private string burnBubbleFormat = "화상 {0}";
+
+    [Tooltip("영어 문구. 비워두면 한국어로 대체되고 경고가 남는다.")]
+    [SerializeField, TextArea] private string burnBubbleFormatEn = "BURN {0}";
+
     [SerializeField] private bool logDebugEvents;
 
     // 적에게 걸린 상태이상별 남은 턴. 재부여는 값 덮어쓰기라 "턴수 갱신"이 자연스럽게 성립한다.
@@ -64,21 +70,10 @@ public class StatusEffectManager : MonoBehaviour
     /// <summary>데빌의 남은 턴. 0이면 걸려 있지 않다.</summary>
     public int DevilTurnsLeft => _devilTurnsLeft;
 
-    /// <summary>화면에 띄울 상태이상 이름. HP 바 라벨과 화상 말풍선이 같은 이름을 쓰도록
-    /// 한 곳에서만 만든다.</summary>
-    public static string GetDisplayName(StatusEffectType effect)
-    {
-        return effect switch
-        {
-            StatusEffectType.Burn => LanguageSettings.IsEnglish ? "BURN" : "화상",
-            StatusEffectType.Paralysis => LanguageSettings.IsEnglish ? "STUN" : "마비",
-            StatusEffectType.Freeze => LanguageSettings.IsEnglish ? "FREEZE" : "얼음",
-            _ => effect.ToString()
-        };
-    }
-
-    /// <summary>데빌은 플레이어에게 걸리는 것이라 StatusEffectType에 없다.</summary>
-    public static string DevilDisplayName => LanguageSettings.IsEnglish ? "DEVIL" : "데빌";
+    // 예전에는 여기에 상태이상 이름을 돌려주는 GetDisplayName(화상/BURN 등)과 DevilDisplayName이
+    // 있었다. 둘 다 문구가 코드에 박혀 있어 인스펙터에서 바꿀 수 없었고, StatusIconRow가 이름 대신
+    // 아이콘 + 남은 턴 숫자로 바뀌면서 소비자가 사라졌다 - DevilDisplayName은 호출자가 0곳,
+    // GetDisplayName은 아래 화상 말풍선 한 곳뿐이었다. 그 한 곳을 burnBubbleFormat으로 접었다.
 
     /// <summary>이 Transform이 지금 전투 중인 적인지. 표시용 뷰가 "내가 적 쪽인가 플레이어 쪽인가"를
     /// 스스로 판별하는 데 쓴다 - 인스펙터 토글에 기대면 오버라이드가 날아갔을 때 조용히 틀린다.</summary>
@@ -180,13 +175,22 @@ public class StatusEffectManager : MonoBehaviour
         // 위치는 BubblePosition을 쓴다 - 적 의도 말풍선(BattleManager)과 같은 기준점이라야
         // 화상 수치만 엉뚱한 곳에 뜨지 않는다.
         if (showBurnBubble && SpeechBubbleManager.Instance != null)
-            SpeechBubbleManager.Instance.ShowBubble($"{GetDisplayName(StatusEffectType.Burn)} {damage}",
+            SpeechBubbleManager.Instance.ShowBubble(BuildBurnBubbleText(damage),
                 enemy.BubblePosition, false, burnBubbleDuration);
 
         if (battleManager != null)
             battleManager.UpdateUI();
         else
             Debug.LogWarning("StatusEffectManager: battleManager가 연결되지 않아 화상 피해가 UI와 승패 판정에 반영되지 않습니다.", this);
+    }
+
+    // 화상 말풍선 문구. 문구도 수치 배치도 인스펙터에서 바꿀 수 있어야 하므로 포맷으로 둔다.
+    private string BuildBurnBubbleText(int damage)
+    {
+        var format = LanguageSettings.Pick(burnBubbleFormat, burnBubbleFormatEn, this, nameof(burnBubbleFormatEn));
+
+        // 포맷을 통째로 비워두면 수치만 띄운다 - 문구 없이 숫자만 보고 싶을 수도 있다.
+        return string.IsNullOrEmpty(format) ? damage.ToString() : string.Format(format, damage);
     }
 
     private void TickDownEnemyEffects(CharacterStats enemy)

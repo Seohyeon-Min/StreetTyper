@@ -404,10 +404,13 @@ public class DeckManager : MonoBehaviour
             // 데미지 및 UI 텍스트 처리
             combatManager.ExecutePlayerAction(actionEntry.Action, player, enemyManager.currentEnemy);
 
-            // 처치 판정을 UI 갱신보다 "먼저" 한다. OnPlayerActionResolved는 UpdateUI -> CheckGameState
-            // -> ShowResult -> OnBattleEnded까지 한 호출 안에서 이어지고, 그 안에서 StageManager가
-            // 클리어 보상을 지급해 버린다. 럭키 보너스가 그 뒤에 얹히면 이번 판이 아니라
-            // 다음 스테이지 보상에 반영되어, 로그만 찍히고 카드는 3장 그대로인 상태가 된다.
+            // 처치 판정을 UI 갱신보다 "먼저" 한다. 아래 UpdateUI는 CheckGameState -> ShowResult
+            // -> OnBattleEnded까지 한 호출 안에서 이어지고, 그 안에서 StageManager가 보상 라운드를
+            // 열어버린다. 럭키가 그 뒤에 얹히면 이번 판이 아니라 다음 스테이지에서 창이 한 번 더
+            // 뜨게 된다(럭키는 카드를 늘리는 게 아니라 보상 창을 한 번 더 여는 것이다).
+            //
+            // 지금 구조에서는 라운드 소비가 첫 라운드가 "끝난" 뒤라 실제로는 여유가 좀 있지만,
+            // 순서를 지켜두면 그 여유에 기대지 않아도 된다.
             if (actionEntry.Action.LootBonusOnKill && wordUnlockManager != null)
             {
                 var killed = enemyManager.currentEnemy;
@@ -422,7 +425,7 @@ public class DeckManager : MonoBehaviour
             // 공격이 한꺼번에 들어간 것처럼 보인다.
             // 반드시 위의 럭키 처리보다 "뒤"에 있어야 한다 - UpdateUI는 CheckGameState ->
             // ShowResult -> OnBattleEnded까지 한 호출 안에서 이어지고, 그 안에서 StageManager가
-            // 클리어 보상을 지급해 버리기 때문이다.
+            // 보상 라운드를 열기 때문이다.
             // (예전엔 이 자리에서 OnPlayerActionResolved가 말풍선과 함께 UpdateUI를 불렀다.
             //  말풍선은 FloatingDamageManager로 대체되어 빠졌지만, 갱신은 여전히 필요하다.)
             battleManager.UpdateUI();

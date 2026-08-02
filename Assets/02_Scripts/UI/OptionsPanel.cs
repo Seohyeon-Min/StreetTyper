@@ -32,6 +32,13 @@ public class OptionsPanel : MonoBehaviour
              "비워두면 버튼 안의 TMP 라벨을 자동으로 찾는다.")]
     [SerializeField] private TMP_Text languageButtonText;
 
+    [Tooltip("지금 영어일 때 언어 버튼에 띄울 글자. 라벨은 '지금 언어'가 아니라 " +
+             "'누르면 바뀔 언어'를 보여주므로, 영어일 때 한국어를 적는 게 맞다.")]
+    [SerializeField] private string toKoreanLabel = "한국어";
+
+    [Tooltip("지금 한국어일 때 언어 버튼에 띄울 글자. 위와 같은 이유로 영어를 적는다.")]
+    [SerializeField] private string toEnglishLabel = "English";
+
     [Header("닫기 버튼 글자")]
     [SerializeField] private string closeKorean = "닫기";
     [SerializeField] private string closeEnglish = "CLOSE";
@@ -101,8 +108,10 @@ public class OptionsPanel : MonoBehaviour
         if (label == null && languageButton != null)
             label = languageButton.GetComponentInChildren<TMP_Text>(true);
 
+        // ⚠️ LanguageSettings.Pick을 쓰지 않는다. Pick은 "지금 언어에 맞는 값"을 고르는데
+        // 여기는 일부러 반대를 고르기 때문이다 - 지금 영어면 "한국어"를 띄워야 한다.
         if (label != null)
-            label.text = LanguageSettings.IsEnglish ? "한국어" : "English";
+            label.text = LanguageSettings.IsEnglish ? toKoreanLabel : toEnglishLabel;
 
         // 닫기 버튼도 같이 갱신한다. 라벨을 따로 배선하지 않아도 되게 버튼에서 자식을 찾는다.
         if (closeButton != null)

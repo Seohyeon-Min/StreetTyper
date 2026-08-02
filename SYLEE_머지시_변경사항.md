@@ -1,225 +1,169 @@
 # SYLEE 브랜치 머지 시 변경사항
 
-작성일: 2026-08-02 · 대상: **SeohyeonMin 브랜치와의 머지**
+작성일: 2026-08-02 · 기준 커밋: **`1bc534c` (Dictionary)** + 아직 커밋되지 않은 워킹 트리
+
+> 이전 판(입력 핸들러 통일 · 카드 보상 선택제)의 내용은 **이미 `main`에 들어가 있어** 전부 걷어냈다. 이 문서는 그 이후 SYLEE가 새로 들고 있는 것만 다룬다.
 
 ---
 
-## 0. 먼저 알아야 할 브랜치 상태
+## 0. 브랜치 상태
 
-| 브랜치 | 커밋 | 관계 |
+| 브랜치 | 커밋 | SYLEE와의 관계 |
 |---|---|---|
-| `main` | `ba55bae` | — |
-| `SYLEE` | `ba55bae` | **main과 동일 커밋** |
-| `SeohyeonMin` | `b26ea6f` | **이미 `1b63dd5`로 SYLEE에 머지 완료된 조상 커밋** |
+| `SYLEE` | `1bc534c` | 기준 |
+| `main` | `a74b9f5` | SYLEE가 **4 커밋 앞섬** (main에만 있는 건 없음 → fast-forward) |
+| `SeohyeonMin` | `65bfa16` | SYLEE가 **1 커밋 앞섬** (fast-forward) |
+| `seungju` | `cb25889` | **분기함** — SYLEE +14 / seungju +5. 유일하게 진짜 머지가 필요하다 |
 
-**`SeohyeonMin`은 지금 SYLEE보다 뒤처져 있고, SeohyeonMin의 기존 작업은 전부 SYLEE 안에 들어와 있다.** 즉 지금 시점에 `SeohyeonMin ← SYLEE` 머지는 **fast-forward**라 커밋 충돌이 없다.
+SYLEE가 `main` 위에 얹는 4 커밋:
 
-⚠️ **다만 이 문서의 내용은 아직 한 줄도 커밋되지 않았다.** 아래 변경은 전부 **워킹 트리 상태**다. SeohyeonMin 쪽에서 `b26ea6f` 위에 새 작업을 얹고 있다면, 그 작업이 아래 "충돌 위험" 파일을 건드리는 순간 충돌이 난다.
+| 커밋 | 내용 |
+|---|---|
+| `45c8a6d` | 턴 스케일링 카드 4종 추가 + 스테이지 클리어 자동 진행("다음" 없앰) |
+| `ad29c08` | 이벤트 스테이지에서 입력이 잠기던 버그 수정 |
+| `65bfa16` | (머지 커밋) |
+| `1bc534c` | 일시정지 중 보유 카드 목록 창 |
 
-**권장 순서**: ① SYLEE에서 아래 변경을 커밋 → ② SeohyeonMin이 SYLEE(또는 main)를 먼저 받아 최신화 → ③ 그 위에서 새 작업 진행.
+### ⚠️ 아직 커밋되지 않은 것
+
+| 상태 | 파일 |
+|---|---|
+| 새 파일(untracked) | `Assets/02_Scripts/UI/MenuKeyboardNavigator.cs` (+`.meta`) |
+| 수정 | `Assets/00_Scenes/TitleScene.unity` (+151줄) |
+| 삭제 | `Assets/00_Scenes/ShortStoryScene.unity` (+`.meta`) |
+
+앞의 둘이 **4번 항목(타이틀 키보드 조작)** 이다. `ShortStoryScene`은 `1bc534c`에 딸려 들어갔다가 워킹 트리에서 지워진 상태인데, **빌드 설정에도 없고 코드 참조도 0건**이라 지우는 게 맞아 보인다 — 다만 커밋 전에 의도한 삭제인지 확인할 것.
 
 ---
 
 ## 1. 이번 변경의 요지
 
-두 덩어리다.
+### ① 턴 스케일링 카드 4종 + 클리어 자동 진행 (`45c8a6d`)
 
-1. **타이핑 입력 핸들러 통일** — 입력 라우팅 소유권을 `InputManager`로 옮기고, 세 곳에 복붙돼 있던 매칭 파이프라인을 베이스 클래스로 모았다.
-2. **카드 보상 선택제** — 클리어 시 3장을 자동 지급하던 것을, 3장 중 하나를 타이핑으로 고르거나 `넘기기`로 건너뛰는 방식으로 바꿨다.
+한 턴 안의 행동 수에 따라 값이 변하는 카드가 들어왔다. 액션 3장 **니킥**(위력 +10, 액션당 −1) · **춉**(액션당 +2) · **박치기**(수식어당 +2), 수식어 1장 **퍼펙트**(줄어든 초당 +2 / 늘어난 초당 −2). 단어 사전이 24장 → **28장**이 됐다.
 
-여기에 **화면에 나가는 글자·이미지를 전부 인스펙터로 빼는 작업**이 함께 들어갔다.
+- `CardBase`에 `TurnScalingSource` enum(`None`/`SecondsSpentThisTurn`/`ActionsThisTurn`/`ModifiersThisTurn`)이 생기고 `StatsLabel`이 `virtual`이 됐다. 액션·수식어 양쪽이 같이 쓰므로 `CardBase.cs`에 있다.
+- `SkillResolver`에 **런타임 수치를 카드에 띄우는 static 후크**가 생겼다 — `AwesomeBonus`(런 단위) · `ActionsThisTurn` · `ModifiersThisTurn` · `SecondsSpentThisTurn` + `OnCardValuesChanged` 이벤트 + `ScalingBonus(source, perUnit)`. 계산과 표시가 이 함수 하나를 공유해서 카드에 뜬 숫자와 실제 피해가 어긋나지 않는다.
+- `CardView`가 그 이벤트를 구독해 **손패에 남아 있는 카드의 수치 칸만** 다시 쓴다.
+- **스테이지 클리어 후 `다음`을 치지 않는다.** 보상을 고르면 `StageManager.rewardAdvanceDelay`(0.6초) 뒤 코루틴이 다음 스테이지를 연다. `IsAdvancingAutomatically`가 노출되고 `BattleManager`는 그동안 `다음` 안내를 숨긴다. `다음` 자체는 전체 클리어 화면과 자동 진행이 안 걸린 경우의 탈출구로 남겨뒀다.
 
----
+### ② 이벤트 스테이지 입력 잠김 버그 수정 (`ad29c08`)
 
-## 2. SeohyeonMin과 충돌할 수 있는 파일
+`DeckManager`에 `IsEnemyDefeated()`가 생기고, 쌓인 공격 재생과 콤보 중단 판정이 `battleManager.IsGameOver` 대신 **`IsGameOver || IsEnemyDefeated()`** 를 본다.
 
-SeohyeonMin이 과거에 건드렸고 **이번에 우리도 건드린** 파일이다. SeohyeonMin에서 `b26ea6f` 이후 새 작업이 있다면 여기를 먼저 볼 것.
+원인: 이벤트 스테이지(마더 드래곤)는 대사가 끝날 때까지 `IsGameOver`가 false이고, `CheckGameState`가 죽은 적을 `Destroy`가 아니라 `SetActive(false)`로만 꺼서 `currentEnemy`도 null이 아니다. 그래서 죽은 적을 상대로 가짜 적 턴까지 재생하고 타이머를 다시 시작해버렸고, **보상 화면이 뜬 뒤 그 타이머가 만료되며 입력이 잠긴 채 아무도 열어주지 않았다.**
 
-| 파일 | 우리 변경 규모 | 주의 |
-|---|---|---|
-| `Assets/00_Scenes/SampleScene.unity` | +136 / −10 | **상시 충돌 대상.** 손으로 해소하면 컴파일은 통과해도 연결이 조용히 빠진다 |
-| `Assets/02_Scripts/BattleManager.cs` | +275 / −(대폭) | 결과 화면 API가 **바뀌었다**(아래 3-③) |
-| `Assets/02_Scripts/DeckManager/DeckManager.cs` | +13 | 주석만 갱신 — 충돌해도 내용 손실 위험 낮음 |
-| `Assets/02_Scripts/DeckManager/UI/RewardCardView.cs` | +125 | 거의 새로 씀 |
-| `Assets/03_Prefabs/Card.prefab` | — | **우리 변경 아님**(이번 작업 전부터 수정 상태였음) |
-| `Assets/03_Prefabs/MotherDragon.prefab` | — | **우리 변경 아님**(위와 동일) |
+### ③ 일시정지 중 보유 카드 목록 (`1bc534c`)
 
-> `Card.prefab` / `MotherDragon.prefab` / `01_Arts/Card/Back.png` / `01_Arts/Mommy/`는 이번 작업 이전부터 워킹 트리에 있던 변경이다. 이 문서의 범위 밖이니 머지 때 별도로 확인할 것.
+일시정지에서 **`카드`**(영어 `cards`)를 치면 지금 사전에 있는 카드를 격자로 펼치고, **`닫기`**(`close`) 또는 ESC/X로 닫는다.
 
----
+- 새 수신자 `CardCollectionPanel : CommandWordReceiver`, 우선순위 **`TypingPriority.CardCollection = 30`**(일시정지 20보다 위). 목록이 열려 있는 동안 `계속`/`타이틀`이 안 먹는 게 이 순서 하나로 성립한다.
+- 카드는 손패·보상 화면과 **같은 `CardView.SetCard`** 로 그린다(`CardSlotView`는 꺼서 슬롯 로직을 뗀다).
+- 열려 있는 동안 가리는 UI를 비켜나게 하는 **`Displaced UI`** 목록이 있다(대상 + 오프셋 px). 지금 `PauseHand`(0, −600) · `InputFieldDisplay`(0, −300)로 배선돼 있다. 원래 자리는 `Awake`에서 한 번만 읽으므로 **그 UI들의 배치는 Play 중에 옮기지 말 것.**
+- `PauseManager`는 명령 카드가 **3장**이 됐다(`계속` / `카드` / `타이틀`). ESC는 목록이 떠 있으면 "한 단계 뒤로"(목록만 닫기)로 갈라진다.
 
-## 3. 깨지는 API — 다른 브랜치 코드가 부르고 있다면 고쳐야 한다
+### ④ 타이틀 키보드 조작 + 포인터 (**미커밋**)
 
-### ① `BattleManager.ShowResult`의 시그니처가 바뀌었다
+`TitleScene`을 키보드만으로 조작한다. 새 컴포넌트 `MenuKeyboardNavigator` 하나를 타이틀(`Canvas`)과 옵션 창(`Option Panel`)에 하나씩 붙였다.
 
-```csharp
-// 이전
-public void ShowResult(string message)      // ShowResult("VICTORY!")
-
-// 지금
-public void ShowResult(ResultKind kind)     // ShowResult(ResultKind.Victory)
-```
-
-`ResultKind`는 `Victory` / `Defeat` / `GameClear` 셋이다. 제목 문자열은 이제 `BattleManager` 인스펙터의 `ScreenPresentation` 세 벌에서 나온다.
-
-호출부는 우리 쪽에서 전부 고쳤다(`BattleManager` 내부 3곳, `EventManager.EndEvent` 1곳). **다른 브랜치에 `ShowResult("...")` 호출이 있으면 컴파일 에러가 난다.**
-
-새로 생긴 것: `public void RefreshResult()` — 결과 화면을 지금 상태로 다시 그린다(보상 선택이 끝난 뒤 `StageManager`가 부른다).
-
-### ② `WordUnlockManager.GrantStageClearReward()`가 사라졌다
-
-```csharp
-// 이전 — 뽑기와 사전 등록을 한 번에 했다
-IReadOnlyList<CardBase> GrantStageClearReward();
-
-// 지금 — 둘로 갈렸다
-IReadOnlyList<CardBase> RollRewardCandidates();   // 후보만 뽑는다. 사전에 넣지 않는다
-bool ConfirmReward(CardBase card);                 // 고른 한 장만 사전에 넣는다
-bool TryConsumeBonusRound();                       // 럭키 라운드가 남았으면 하나 소비
-```
-
-⚠️ **인스펙터 필드 이름도 바뀌었다**: `luckyBonusWords` → **`luckyBonusRounds`**. 럭키의 의미가 "보상 카드 +1장"에서 **"보상 창을 한 번 더 띄움"**으로 바뀌었기 때문이다. 프리팹에 직렬화돼 있던 값 `1`은 유실되지만 새 코드 기본값도 `1`이라 결과는 같다.
-
-`wordsPerReward`(3)는 이름 그대로지만 의미가 "지급 장수" → **"보여줄 후보 장수"**로 바뀌었다.
-
-### ③ `StatusEffectManager`의 표시 이름 두 개를 삭제했다
-
-```csharp
-public static string GetDisplayName(StatusEffectType effect);   // 삭제
-public static string DevilDisplayName { get; }                  // 삭제
-```
-
-`DevilDisplayName`은 **호출자가 0곳인 죽은 코드**였고, `GetDisplayName`은 화상 말풍선 한 곳만 쓰는 간접층이었다. 그 한 곳을 인스펙터 필드 `burnBubbleFormat` / `burnBubbleFormatEn`(`화상 {0}` / `BURN {0}`)로 접었다. **다른 브랜치가 이 둘을 부르고 있으면 컴파일 에러가 난다.**
-
-### ④ `InputManager.OnSubmit`(엔터) 이벤트를 삭제했다
-
-구독자가 0명이었다. 대신 `OnCancel`(ESC) / `OnAdvance`(스페이스)가 생겼다.
-
-### ⑤ `EventManager.IsEventActive` 공개 프로퍼티를 삭제했다
-
-읽는 코드가 0곳이었다. private 필드는 내부 가드용으로 남아 있다.
-
-### ⑥ `ResultPresentation` → `ScreenPresentation` 이름 변경
-
-결과 화면과 보상 화면이 같은 구조를 쓰게 되어 이름을 일반화했다. `MonoBehaviour`가 아니고 필드 이름을 바꾸지 않아 **씬 배선은 그대로 살아 있다.**
+- 이동 **방향키 + WASD** / 확인 **Space·Enter·NumpadEnter·Z** / 닫기 **ESC·X**. 키 목록·반복 속도(0.4→0.08초)·슬라이더 증감(5%)·순환 여부가 전부 인스펙터 값이다.
+- 확인은 `Button.onClick.Invoke()`, 좌우는 `Slider.value` 증감(`onValueChanged`가 돌아야 `OptionsPanel`이 볼륨과 `%`를 갱신한다). 닫기 키는 `Cancel Target`에 꽂은 버튼을 누른 것으로 친다 — **키와 닫기 버튼이 완전히 같은 경로**를 탄다.
+- 포커스 표시는 `EventSystem.SetSelectedGameObject`에 맡기고, 여기에 **`Pointer`(Canvas 밑 Image)** 가 따라다닌다. 항목과 부모가 달라도 월드 좌표로 맞추므로 옵션 창 항목에도 정확히 붙는다.
+- **`TitleMenu.cs` / `OptionsPanel.cs`는 한 줄도 고치지 않았다** — 기존 버튼 `onClick`과 `Close()`를 그대로 재사용한다.
 
 ---
 
-## 4. 새로 생긴 파일
+## 2. 새로 생긴 파일
 
 | 파일 | 무엇 |
 |---|---|
-| `02_Scripts/InputManager/TypingReceiver.cs` | 타이핑 수신자 베이스 + `TypingPriority` enum |
-| `02_Scripts/InputManager/CommandWordReceiver.cs` | 명령 단어 수신자 베이스(안내 문구 조립 포함) |
-| `02_Scripts/InputManager/TypedCommand.cs` | 명령 단어 한/영 + 안내 문구를 묶은 `[Serializable]` |
-| `02_Scripts/UI/ScreenPresentation.cs` | 화면 제목(한/영)·이미지·색 묶음 + `ResultKind` enum |
-| `02_Scripts/DeckManager/RewardInputHandler.cs` | 보상 카드 선택 수신자 |
-| `03_Prefabs/Managers/RewardInputHandler.prefab` | 위 컴포넌트의 매니저 프리팹 |
+| `02_Scripts/UI/CardCollectionPanel.cs` | 보유 카드 목록 수신자 + 격자 배치 + 비켜날 UI |
+| `03_Prefabs/Card Collection Panel.prefab` | 목록 창 UI 프리팹 |
+| `02_Scripts/UI/MenuKeyboardNavigator.cs` | **(미커밋)** 메뉴 키보드 내비게이터 + `PointerSide` enum |
+| `04_Data/Cards/KneeKick·Chop·Headbutt·Perfect.asset` | 턴 스케일링 카드 4종 |
 
-삭제된 파일: `02_Scripts/UI/ResultPresentation.cs`(→ `ScreenPresentation.cs`로 대체).
+삭제된 파일 없음.
 
 ---
 
-## 5. 구조 변경 — 머지 후 코드를 읽을 때 알아야 할 것
+## 3. API — 깨지는 것은 없다, 다만 지뢰가 둘
 
-### 입력은 이제 `InputManager`가 **하나에게만** 넘긴다
+`main...SYLEE`에서 **제거된 공개 멤버는 없다.** `CardBase.StatsLabel`이 `virtual`이 된 것(추가적 변경)뿐이라 다른 브랜치 코드는 그대로 컴파일된다.
 
-예전에는 `CardInputHandler` / `PauseManager` / `ResultInputHandler` 셋이 전부 `OnCharacterEntered`·`OnCompositionChanged`를 구독해 놓고, 각자 `timeScale`·`IsGameOver`·`_isPaused`를 보며 스스로 비켜섰다.
+주의할 것 둘:
 
-지금은 각 수신자가 `WantsInput()`으로 "내 차례다"만 선언하고, `InputManager.DispatchToReceiver`가 우선순위로 **딱 하나**를 골라 넘긴다.
+1. ⚠️ **`TurnScalingSource`와 `ModifierEffectType`의 값 순서를 바꾸지 말 것.** 직렬화되는 건 인덱스라, 중간에 끼워 넣으면 기존 `.asset`이 조용히 다른 효과가 된다(`AttributeEffectType`에서 `Bleed`를 지우면 안 되는 것과 같은 이유). 새 값은 **맨 뒤에만**.
+2. ⚠️ **`statsLabel`이 포맷 문자열인 카드가 있다.** 어썸 `"+{0}"`, 퍼펙트·니킥·춉·박치기 `"{0}"`. 고정 문구로 덮으면 숫자가 사라지고 적힌 글자만 뜬다 — 값이 안 보이는 게 아니라 옛 방식으로 조용히 되돌아가는 것이라 눈치채기 어렵다.
 
-```
-Pause = 20  >  Reward = 15  >  Result = 10  >  Battle = 0
-```
-
-**새 타이핑 대상을 추가할 때는 `TypingReceiver`(또는 `CommandWordReceiver`)를 상속하고 우선순위만 정하면 된다.** 기존 핸들러의 가드를 손볼 필요가 없다 — 예전 구조에서는 그게 필요했다.
-
-`InputFieldDisplay`(입력창 미러링)와 `CardSlotView`(손패 들림 폴링)는 **바뀌지 않았다.** 뷰는 여전히 모든 이벤트를 받고, 배타적 라우팅은 게임 판단을 하는 수신자에게만 적용된다.
-
-### ESC·스페이스도 `InputManager`를 거친다
-
-`PauseManager`(ESC)와 `EventManager`(스페이스)가 `Keyboard.current`를 직접 폴링하던 것을 걷어냈다. `InputManager.Update`에서 **입력 잠금(`_inputEnabled`) 가드보다 위에** 읽어 이벤트로 쏜다 — 턴 전환 대기처럼 타이핑이 잠긴 구간에서도 일시정지가 걸려야 하기 때문이다. **이 순서를 뒤집지 말 것.**
-
-### 오타가 나도 입력창을 비우지 않는다 (동작 변경)
-
-예전에는 `PauseManager`/`ResultInputHandler`가 잘못 친 순간 입력창을 비웠고 손패만 남겨뒀다. 이제 **셋 다 남겨둔다**(베이스 기본 정책). 플레이어가 무엇을 틀렸는지 보고 백스페이스로 지운다.
-
-막다른 골목은 없다 — 결과 화면에서 버퍼가 막혀도 ESC로 일시정지하면 `Pause()`/`Resume()`이 `ClearInput()`을 부른다.
-
-### 보상 흐름
-
-```
-적 처치 → BattleManager.ShowResult(Victory)
-            └ OnBattleEnded → StageManager.HandleBattleEnded
-                 └ BeginRewardRound()
-                      ├ wordUnlockManager.RollRewardCandidates()   (사전에 안 넣음)
-                      ├ rewardCardView.Show(후보)
-                      └ rewardInputHandler.BeginSelection(후보)
-                           ↓ 플레이어가 카드 이름 또는 "넘기기"를 타이핑
-                      OnSelectionFinished
-                           └ TryConsumeBonusRound() ? 라운드 한 번 더 : FinishReward()
-                                                                        └ RefreshResult()
-```
-
-**보상을 정하기 전에는 `다음`이 안 먹는다.** 별도 잠금 코드가 아니라 우선순위(`Reward 15 > Result 10`) 하나로 성립한다.
-
-⚠️ `DeckManager.PlayPendingActions`에서 **`AddLuckyBonus()`는 반드시 `battleManager.UpdateUI()`보다 앞**이어야 한다. `UpdateUI → CheckGameState → ShowResult → OnBattleEnded`가 한 호출 안에서 이어지며 그 안에서 보상 라운드가 열린다.
+새로 생긴 공개 API(호출 가능): `SkillResolver.ScalingBonus/ResetTurn/ResetRun/OnCardValuesChanged`, `StageManager.IsAdvancingAutomatically`, `CardCollectionPanel.Open/Close/IsOpen`, `TypingPriority.CardCollection`.
 
 ---
 
-## 6. 씬·프리팹 (`SampleScene.unity`)
+## 4. 씬·프리팹 배선
 
-⚠️ **매니저 프리팹 인스턴스에서 Apply / Apply All을 절대 누르지 말 것.** 씬 오브젝트 참조가 프리팹 쪽에서 null이 되어 배선이 통째로 날아간다. Override 상태로 두는 게 정상이다.
+⚠️ **매니저 프리팹 인스턴스에서 Apply / Apply All을 절대 누르지 말 것.** 씬 오브젝트 참조가 프리팹 쪽에서 null이 되어 배선이 통째로 날아간다.
 
-### 이미 진행된 것
-- `RewardInputHandler.prefab` 인스턴스가 `SampleScene.unity`에 올라가 있다(GUID `55cb090f…` 확인).
+### `SampleScene.unity` (커밋됨)
+- `Pause Canvas`에 **`CardCollectionPanel` 컴포넌트**가 붙어 있다(패널 오브젝트가 아니라 **PauseManager와 같은 오브젝트**다 — 항상 켜져 있어야 해서다).
+- `Card Collection Panel` 프리팹 인스턴스가 `Pause Canvas`의 **두 번째 자식**(`Pause Panel` 다음 = 위에 그려짐)으로 들어가 있다.
+- `PauseManager.cardCollectionPanel` 연결됨. 목록 배치는 7열 / 셀 150×220 / 배율 0.6.
 
-### 머지 후 반드시 눈으로 확인할 것
-
-1. **`StageManager`** → `Reward Input Handler` 필드. 비면 후보를 전부 지급하는 옛 동작으로 떨어지고 경고가 뜬다.
-2. **`BattleManager`** → `Reward Input Handler` 필드. 비면 보상 중에도 `"다음"을 입력하세요`가 같이 떠 있다(동작 자체는 정상).
-3. **`BattleManager`** → `Victory / Defeat / Game Clear Presentation` 세 개의 제목이 비어 있지 않은지. **비어 있으면 배선이 깨진 것.**
-4. **`RewardInputHandler`** → `Input Manager` / `Word Unlock Manager` / `Reward Card View` / `Hint Label`.
-5. **`RewardCardView`** → `Title Label`, (쓴다면) `Title Image`. **이미지를 안 쓸 거면 비워둘 것** — 비면 코드가 건너뛴다.
-6. **`EventManager`** → `Input Manager`. ⚠️ **비면 스페이스로 대사를 못 넘겨 마더 드래곤 이벤트에서 진행이 막힌다**(`EndEvent`가 안 불려 결과 화면도 보상도 안 나온다). 콘솔에 경고가 남는다.
-7. **폰트** — 보상 화면에 새로 만든 라벨은 **Paperlogy 계열**이어야 한다. 한글이 흐르는 라벨에 `LiberationSans SDF`를 쓰면 `□`가 된다.
-
-### 아직 안 된 것
-- `EventManager`의 `Normal Event Lines En` / `Dragon Event Lines En`이 **빈 배열**이라 영어 모드에서도 이벤트 대사만 한국어로 나온다. 한국어와 **같은 개수로** 채워야 한다(개수가 어긋나면 스페이스를 눌러야 하는 횟수가 언어마다 달라진다).
+### `TitleScene.unity` (**미커밋**)
+- `Canvas`에 내비게이터: items = `GameStart`·`Option`·`Exit`, `Blocked While Active` = `Option Panel`, `Cancel Target` 비움(타이틀 ESC는 아무 일도 안 함).
+- `Option Panel`에 내비게이터: items = 볼륨 3종 → `Language` → `Exit`, `Cancel Target` = `Exit`(닫기).
+- 양쪽 모두 `Pointer` 연결, `Pointer Side = Center`, 오프셋 (0, 50).
+- **`EventSystem`의 `Send Navigation Events`가 꺼져 있다.** 내장 모듈이 같은 방향키·Enter를 함께 처리하면 포커스가 두 칸씩 뛴다. **머지 후 이 체크가 되살아나지 않았는지 반드시 확인할 것.**
 
 ---
 
-## 7. 검증
+## 5. `seungju`와의 충돌 (여기만 진짜 머지다)
 
-### 컴파일
-**터미널에서 검증 가능하다.** `CLAUDE.md`는 "컴파일 경로 없음"이라고 적고 있지만 실제로는 된다:
+머지 베이스 `5e01634` 기준으로 **양쪽이 같이 건드린 파일**:
 
-1. `Assembly-CSharp.csproj`에서 `<HintPath>`와 `<DefineConstants>`를 추출
-2. 소스는 `Assets/02_Scripts/**/*.cs` 글롭 + csproj의 `02_Scripts` 밖 항목 4개(`03_Prefabs/UI/UIStyle/Runtime/*.cs`)
-3. `-r:` 하나를 손으로 추가 — **FMOD는 csproj에 HintPath가 없다**(`Library/ScriptAssemblies/FMODUnity.dll`)
-4. `dotnet "<SDK>/Roslyn/bincore/csc.dll" @response.rsp` (`-target:library -langversion:9.0 -nostdlib+`)
-5. rsp 안의 경로는 **Windows 형식(`C:/...`)**이어야 한다
+| 파일 | 충돌 정도 |
+|---|---|
+| `Assets/00_Scenes/SampleScene.unity` | **상시 충돌.** YAML을 손으로 해소하면 컴파일은 통과해도 연결이 조용히 빠진다 |
+| `Assets/02_Scripts/StageManager.cs` | **겹친다.** 클래스 필드 선언부(~40행)와 `LoadStage` 내부 둘 다 — SYLEE는 보상 자동 진행/코루틴 취소, seungju는 스테이지 시작 메시지 |
+| `Assets/03_Prefabs/Pause Panel.prefab` | **내용이 완전히 동일**(확인함). 충돌하지 않는다 |
 
-이번 변경은 이 방법으로 **에러·경고 0건**을 확인했다(소스 65개).
+seungju 단독 변경(SYLEE는 안 건드림): `IntroScene` + `IntroManager.cs`, `GameScenes.cs`, `SoundManager.cs`, `TitleMenu.cs`, `EditorBuildSettings.asset`, FMOD 뱅크·메타데이터.
+
+⚠️ **파일이 갈려서 git은 조용하지만 실제로 부딪히는 곳**: seungju가 `TitleMenu.cs`와 빌드 설정(인트로 씬 추가)을 고쳤고, SYLEE는 `TitleScene.unity`에 키보드 조작을 얹었다. 머지 후 **타이틀 진입 흐름이 바뀌면 `EventSystem` 설정과 내비게이터 배선을 다시 확인**해야 한다. 인트로 씬에도 같은 조작이 필요하면 `MenuKeyboardNavigator`를 그대로 붙이면 된다.
+
+---
+
+## 6. 검증
+
+### 컴파일 — 터미널에서 된다
+
+`CLAUDE.md`는 "컴파일 경로 없음"이라 적고 있지만 Roslyn으로 검증된다. **이번에 소스 목록 만드는 법을 고쳤다**:
+
+1. `Assembly-CSharp.csproj`에서 `<HintPath>`(329개)와 `<DefineConstants>` 추출.
+2. 소스는 **csproj의 `<Compile Include>` 목록**을 쓰고, 거기에 없는 새 `.cs`만 더한다. ⚠️ `Assets/**/*.cs`를 통째로 글롭하면 **FMOD 에디터 소스까지 딸려와 `CS0579`/`CS0227`(unsafe)로 실패**한다.
+3. `-r:Library/ScriptAssemblies/FMODUnity.dll`을 손으로 추가(FMOD만 csproj에 HintPath가 없다).
+4. `dotnet "<SDK>/Roslyn/bincore/csc.dll" @response.rsp` — `-target:library -langversion:9.0 -nostdlib+ -noconfig`.
+5. rsp 안의 경로는 **Windows 형식(`C:/...`)**. Git Bash의 `/c/...`는 CS0006이 난다.
+
+이번 변경은 이 방법으로 **에러 0건**을 확인했다(소스 68개). 경고는 프로젝트 전반의 기존 `CS0649`(SerializeField)뿐이다.
 
 ### Play Mode (`TitleScene`부터)
-- **보상 기본 흐름**: 클리어 → 카드 3장 + 안내 → 이름을 치면 그 카드만 획득 → 카드가 사라지고 `"다음"을 입력하세요` → `다음`
-- **게이트**: 보상이 떠 있는 동안 `다음`을 쳐도 아무 일도 없어야 한다
-- **하이라이트**: 치는 카드가 떠오르고 나머지가 흐려진다. **아무것에도 안 맞으면 3장 전부 흐려진다**
-- **럭키**: 럭키 처치 시 보상 창이 **두 번** 뜬다
-- **후보 고갈**: 디버그 킬스위치 `9`로 빠르게 진행 → 후보가 0장이면 보상 창 없이 결과 화면으로 (여기서 멈추면 안 된다)
-- **오타 정책**: 일시정지·결과 화면에서 엉뚱한 글자를 쳐도 입력창에 **남아야** 한다
-- **ESC**: 턴 전환 대기 중(입력 잠김)에도 일시정지가 걸려야 한다
-- **디버그 키**: 일시정지·결과 화면에서 `0`/`9`가 먹지 않아야 한다
-- **마더 드래곤**: 보스 클리어는 `EventManager.EndEvent` 경로로 들어온다. 이쪽 보상도 별도 확인
+
+- **타이틀 키보드**: 방향키/WASD로 3버튼 순환 → `Space`/`Enter`/`Z`로 실행 → 포인터가 따라오는지.
+- **옵션 창**: 상하로 5행 이동, 좌우로 볼륨(`%` 라벨 + **실제 소리**가 같이 변하는지), `Language` 확인 키로 한/영 전환, `ESC`·`X`·닫기 버튼이 모두 같게 닫히는지, 닫으면 포커스가 `Option`으로 돌아오는지. 마우스 클릭 병행도 확인.
+- **카드 목록**: 전투 중 ESC → `카드` → 보유 카드가 다 뜨는지 → `PauseHand`와 입력창이 비켜나는지 → `닫기`/ESC/X로 닫고 원래 자리로 돌아오는지 → 목록이 떠 있는 동안 `계속`/`타이틀`이 안 먹는지.
+- **턴 스케일링 카드**: 한 턴에 액션을 여러 번 완성하며 니킥/춉/박치기의 **카드 위 숫자가 실시간으로 변하는지**, 그 숫자와 실제 피해가 같은지. 니킥이 음수까지 내려가도 회복으로 둔갑하지 않는지(클램프).
+- **클리어 자동 진행**: 보상을 고르면 `다음` 없이 넘어가는지, 안내가 뜨지 않는지. 반대로 배선이 빠져 자동 진행이 안 걸리면 안내가 **반드시** 떠야 한다.
+- **이벤트 스테이지(마더 드래곤)**: 처치 → 대사 → 보상까지 **입력이 잠기지 않고** 이어지는지(`ad29c08`이 고친 그 경로다).
 
 ### 빌드
-`InputManager.Update` 구조를 바꿨으므로 **IME는 스탠드얼론에서 재확인**해야 한다(에디터와 빌드가 다르게 동작한 이력이 있다). 로그: `%USERPROFILE%\AppData\LocalLow\DefaultCompany\StreetTyper\Player.log`
+
+이번 변경은 `InputManager`를 건드리지 않았으므로 IME 재검증 부담은 없다. 다만 `MenuKeyboardNavigator`가 `Keyboard.current`를 직접 읽으므로 **스탠드얼론에서 키 입력이 그대로 먹는지**는 한 번 봐야 한다. 로그: `%USERPROFILE%\AppData\LocalLow\DefaultCompany\StreetTyper\Player.log`
 
 ---
 
-## 8. 알려진 잔여 이슈 (이번 범위 밖)
+## 7. 알려진 잔여 이슈 (이번 범위 밖)
 
-- **이벤트 대사 중에도 손패 타이핑이 먹는다.** `IsEventActive`를 삭제하면서 라우팅에 Event 계층을 두지 않기로 했다. 대사가 끝나면 `ShowResult`로 넘어가고 `LoadStage`가 쌓인 공격을 비우므로 실질 피해는 없다.
-- **밸런스**: 선택제로 바뀌면서 런 전체 획득 카드가 **3장(시작) + 스테이지당 최대 1장** 수준으로 줄었다(이전엔 스테이지당 3장). 의도한 변경이지만 손패 다양성이 크게 달라지므로 플레이 후 `wordsPerReward`나 럭키 빈도 조정 여지가 있다.
-- **`StageManager`의 스테이지 상수 불일치**(`totalBattles = 10` / `totalStages = 8` / 보스 인덱스 `4, 9`) — 인덱스 9의 두 번째 보스전은 여전히 도달 불가. 이번에 통계창 분모가 `totalStages`를 읽게 되면서 이 값이 화면에 노출된다.
+- `EventManager`의 `normalEventLinesEn` / `dragonEventLinesEn`이 **빈 배열**이라 영어 모드에서도 이벤트 대사만 한국어다. 한국어와 **같은 개수로** 채워야 한다(개수가 어긋나면 스페이스를 눌러야 하는 횟수가 언어마다 달라진다).
+- `StageManager.prefab`의 `enemyPrefabs` 3번째 항목이 삭제된 `strongEnemy`의 **깨진 GUID**다(씬 인스턴스가 배열 크기를 1로 덮어써 가려져 있다).
+- 카드 목록은 **열 때마다 다시 그린다.** 28장을 7열 × 4줄로 배치하는데, 앞으로 카드가 더 늘면 `columns`/`cellSize`/`cardScale`을 같이 줄여야 화면에 들어간다(스크롤은 없다).
+- 타이틀의 버튼 `Selected Color`가 기본값(0.96 흰색)이라 **포커스 자체는 거의 안 보인다.** 지금은 포인터가 그 역할을 하고 있다.

@@ -7,7 +7,11 @@ using UnityEngine.SceneManagement;
 //
 // 매칭 파이프라인은 TypingReceiver가, 안내 문구 조립은 CommandWordReceiver가 맡는다.
 // 여기 남은 것은 "언제 내 차례인가"(멈춰 있을 때), "맞혔을 때 무엇을 하는가", 그리고
-// 일시정지 중 손패 자리를 "계속"/"타이틀" 카드로 바꿔치기하는 연출뿐이다.
+// 일시정지 중 손패 자리를 "계속"/"카드"/"타이틀" 카드로 바꿔치기하는 연출뿐이다.
+//
+// "카드"는 보유 카드 목록(CardCollectionPanel)을 여는 것뿐이고, 그 창이 떠 있는 동안은
+// 우선순위(TypingPriority.CardCollection)가 그쪽으로 넘어가 여기로 입력이 오지 않는다 -
+// "지금 목록이 열려 있나"를 이 클래스가 상태로 들고 갈라줄 필요가 없다는 뜻이다.
 //
 // Time.timeScale = 0 하나로 턴 전환 대기(DeckManager/StageManager)·말풍선(BattleManager)·
 // 타이머 감소(TimerManager)·카드 애니메이션(CardSlotView/HandFanLayout)이 전부 멈춘다 -
@@ -37,8 +41,12 @@ public class PauseManager : CommandWordReceiver
     [SerializeField] private CardSlotView commandCardPrefab;
 
     [Tooltip("전환 애니메이션에서 카드가 움직이는 거리(px). 기존 5장은 이만큼 아래로 가라앉듯 " +
-             "사라지고, 새 명령 카드 2장은 그 자리에서 떠오르듯 나타난다(재개할 땐 반대).")]
+             "사라지고, 새 명령 카드는 그 자리에서 떠오르듯 나타난다(재개할 땐 반대).")]
     [SerializeField] private float commandCardTransitionHeight = 80f;
+
+    [Tooltip("\"카드\"를 쳤을 때 열 보유 카드 목록. 비워두면 카드 명령이 안내에도 뜨지 않고 " +
+             "명령 카드도 만들어지지 않는다 - 열 창이 없는데 단어만 남으면 쳐도 아무 일이 안 일어난다.")]
+    [SerializeField] private CardCollectionPanel cardCollectionPanel;
 
     [Header("명령 단어")]
     [SerializeField]
@@ -46,6 +54,12 @@ public class PauseManager : CommandWordReceiver
         "계속", "resume",
         "계속 진행을 원한다면 \"{0}\"!",
         "Type \"{0}\" to keep playing!");
+
+    [SerializeField]
+    private TypedCommand cardsCommand = new TypedCommand(
+        "카드", "cards",
+        "가진 카드를 보려면 \"{0}\"!",
+        "Type \"{0}\" to see the cards you own!");
 
     [SerializeField]
     private TypedCommand titleCommand = new TypedCommand(
@@ -57,14 +71,21 @@ public class PauseManager : CommandWordReceiver
     private bool _inputWasEnabled;
 
     // 명령 단어를 담아둘 버퍼. 글자마다 Targets가 불리므로 매번 새로 만들지 않는다.
-    private readonly string[] _targets = new string[2];
+    // 순서가 곧 OnCommandMatched의 index이자 화면에 놓이는 카드 순서다.
+    private readonly string[] _targets = new string[3];
+
+    // Targets/명령 카드의 자리 번호. 숫자를 코드 곳곳에 흩뿌리지 않으려고 여기 모아둔다.
+    private const int ResumeIndex = 0;
+    private const int CardsIndex = 1;
+    private const int TitleIndex = 2;
 
     // HandFanLayout.Cards는 매 프레임 "활성 자식만" 다시 모아서 채워지는 리스트라, 카드를
     // 꺼버리고 나면 그 순간부터 목록에서 빠져 참조를 잃는다. 그래서 끄기 전에 5장 전부를
     // 여기 스냅샷으로 저장해뒀다가, 복원할 때 이걸 쓴다.
     private readonly List<CardSlotView> _pausedHandCards = new List<CardSlotView>();
 
-    // ShowCommandCards가 commandCardsLayout 밑에 스폰한 "계속"/"타이틀" 카드. Hide 때 파괴한다.
+    // ShowCommandCards가 commandCardsLayout 밑에 스폰한 명령 카드("계속"/"카드"/"타이틀").
+    // Hide 때 파괴한다.
     private readonly List<CardSlotView> _commandCardInstances = new List<CardSlotView>();
 
     public bool IsPaused => _isPaused;
@@ -79,25 +100,47 @@ public class PauseManager : CommandWordReceiver
     {
         get
         {
-            _targets[0] = resumeCommand.Word(this, nameof(resumeCommand));
-            _targets[1] = titleCommand.Word(this, nameof(titleCommand));
+            _targets[ResumeIndex] = resumeCommand.Word(this, nameof(resumeCommand));
+
+            // 목록 창이 연결되지 않았으면 빈 문자열로 둔다 - 베이스가 빈 항목을 매칭과 진행
+            // 판정 양쪽에서 건너뛰므로, 열 창이 없는데 단어만 살아 있는 상태가 되지 않는다.
+            _targets[CardsIndex] = HasCardCollection
+                ? cardsCommand.Word(this, nameof(cardsCommand))
+                : string.Empty;
+
+            _targets[TitleIndex] = titleCommand.Word(this, nameof(titleCommand));
             return _targets;
         }
     }
+
+    private bool HasCardCollection => cardCollectionPanel != null;
 
     public override string BuildHint()
     {
         return JoinHints(
             resumeCommand.Hint(this, nameof(resumeCommand)),
+            HasCardCollection ? cardsCommand.Hint(this, nameof(cardsCommand)) : string.Empty,
             titleCommand.Hint(this, nameof(titleCommand)));
     }
 
     protected override void OnCommandMatched(int index, bool wasComposing)
     {
-        if (index == 0)
-            Resume();
-        else
-            ReturnToTitle();
+        switch (index)
+        {
+            case ResumeIndex:
+                Resume();
+                break;
+
+            // 목록이 열려 있는 동안은 우선순위가 그쪽(TypingPriority.CardCollection)으로 넘어가
+            // 여기로 입력이 오지 않는다. 닫으면 저절로 돌아오므로 따로 상태를 들 필요가 없다.
+            case CardsIndex:
+                cardCollectionPanel.Open();
+                break;
+
+            case TitleIndex:
+                ReturnToTitle();
+                break;
+        }
     }
 
     private void Awake()
@@ -131,6 +174,15 @@ public class PauseManager : CommandWordReceiver
     // 턴 전환 대기처럼 타이핑이 잠긴 구간에서도 일시정지가 걸린다.
     private void HandleCancel()
     {
+        // 카드 목록이 떠 있으면 ESC는 "한 단계 뒤로" - 목록만 닫고 일시정지 메뉴로 돌아간다.
+        // (타이핑 디스패치는 우선순위가 알아서 갈라주지만 OnCancel은 구독자 전부에게 가므로,
+        // 여기서 갈라주지 않으면 목록을 닫으려던 ESC가 게임까지 재개해버린다.)
+        if (HasCardCollection && cardCollectionPanel.IsOpen)
+        {
+            cardCollectionPanel.Close();
+            return;
+        }
+
         if (_isPaused)
             Resume();
         else
@@ -181,6 +233,11 @@ public class PauseManager : CommandWordReceiver
         _isPaused = false;
         Time.timeScale = 1f;
 
+        // 목록을 띄운 채로 재개(또는 목록 위에서 ESC 두 번)했을 수 있다. 남겨두면 전투 화면
+        // 위에 카드 목록이 그대로 덮인다.
+        if (HasCardCollection)
+            cardCollectionPanel.Close();
+
         // pausePanel을 먼저 끄면 그 아래 있는 명령 카드(commandCardsLayout의 자식)도
         // activeInHierarchy가 함께 false가 되어, 뒤이은 HideCommandCards()의 PlayExit이
         // 코루틴을 새로 못 띄우고 "game object is inactive" 에러를 낸다.
@@ -229,7 +286,13 @@ public class PauseManager : CommandWordReceiver
         // activeInHierarchy가 false라 StartCoroutine이 "game object is inactive" 에러로 실패한다.
         commandCardsLayout.gameObject.SetActive(true);
 
+        // Targets와 같은 순서로 만든다 - 화면에 놓이는 순서가 곧 안내 순서이고,
+        // 목록 창이 없으면 "카드" 카드도 만들지 않는다(쳐도 아무 일이 안 일어나는 카드를 띄우지 않는다).
         SpawnCommandCard(resumeCommand.Word(this, nameof(resumeCommand)));
+
+        if (HasCardCollection)
+            SpawnCommandCard(cardsCommand.Word(this, nameof(cardsCommand)));
+
         SpawnCommandCard(titleCommand.Word(this, nameof(titleCommand)));
     }
 

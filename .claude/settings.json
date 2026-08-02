@@ -4,7 +4,9 @@
       "Bash(awk '/m_EditorClassIdentifier: Assembly-CSharp::\\(BattleManager|StageManager|SpeechBubbleManager|WorldAnchoredUI\\)/{print \"\\\\n--- \" $2 \" ---\"; s=1; next} s&&/^  [a-z]/{print} /^--- !u!/{s=0}' Assets/00_Scenes/SampleScene.unity)",
       "Bash(awk 'NR>=438 && NR<=452' Assets/00_Scenes/SampleScene.unity)",
       "Bash(cd \"c:/Users/user/Desktop/SYL/Projects/StreetTyper\" && echo \"=== ScriptAssemblies ===\" && ls Library/ScriptAssemblies/ 2>/dev/null | head -30 && echo \"=== UnityEngine Managed ===\" && ls \"/c/Program Files/Unity/Hub/Editor/6000.3.19f1/Editor/Data/Managed/UnityEngine/\" 2>/dev/null | head -10)",
-      "Read(//c/Program Files/Unity/Hub/Editor/6000.3.19f1/Editor/Data/Managed/UnityEngine//**)"
+      "Read(//c/Program Files/Unity/Hub/Editor/6000.3.19f1/Editor/Data/Managed/UnityEngine//**)",
+      "Bash(cd \"c:/Users/user/Desktop/SYL/Projects/StreetTyper\" && ls Assembly-CSharp.csproj 2>/dev/null && ls \"C:/Program Files/dotnet/sdk/\")",
+      "Read(//c/Program Files/dotnet/sdk/**)"
     ]
   }
 }

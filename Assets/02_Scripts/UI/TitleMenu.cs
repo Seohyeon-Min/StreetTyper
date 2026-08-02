@@ -111,7 +111,7 @@ public class TitleMenu : MonoBehaviour
             SoundManager.Instance.StopBGM();
         }
 
-        SceneManager.LoadScene(GameScenes.Battle);
+        SceneManager.LoadScene(GameScenes.Intro);
     }
 
     // 닫기는 OptionsPanel이 자기 닫기 버튼으로 직접 처리한다.

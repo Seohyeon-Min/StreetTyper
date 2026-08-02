@@ -4,4 +4,5 @@ public static class GameScenes
 {
     public const string Title = "TitleScene";
     public const string Battle = "SampleScene";
+    public const string Intro = "IntroScene";
 }

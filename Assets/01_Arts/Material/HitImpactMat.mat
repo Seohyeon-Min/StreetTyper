@@ -29,19 +29,19 @@ Material:
     - _BreakAmount: 0.294
     - _BreakFrequency: 5.72
     - _BreakSoftness: 0.29
-    - _BumpScale: 3.5
-    - _BumpStrength: 0.722
+    - _BumpScale: 3.85
+    - _BumpStrength: 0.931
     - _Duration: 0.539
     - _EdgeSoftness: 0.139
     - _FadeStart: 0.785
     - _GrowthPower: 0.32
-    - _Intensity: 3
-    - _MaxRadius: 0.735
-    - _Progress: 0.926
-    - _RingWidth: 0.005
-    - _Seed: 27.5
+    - _Intensity: 4.58
+    - _MaxRadius: 0.602
+    - _Progress: 0.71
+    - _RingWidth: 0.093
+    - _Seed: 29.2
     - _WidthBumpInfluence: 0.979
-    - _WidthSegmentCount: 15.7
+    - _WidthSegmentCount: 12.86
     - _WidthSegmentVariation: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}

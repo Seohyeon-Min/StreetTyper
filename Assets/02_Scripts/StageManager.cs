@@ -78,8 +78,21 @@ public class StageManager : MonoBehaviour
             return;
         }
 
+
         // 인덱스 4(5번째 전투 = 4스테이지 클리어 후)와 인덱스 9(10번째 전투 = 8스테이지 클리어 후)를 보스전으로 설정
         bool isBossBattle = (currentBattleIndex == 4 || currentBattleIndex == 9);
+
+        if (SoundManager.Instance != null)
+        {
+            if (isBossBattle)
+            {
+                SoundManager.Instance.PlayBossBGM(); // 보스전이면 보스 브금 재생
+            }
+            else
+            {
+                SoundManager.Instance.PlayBattleBGM(); // 일반 전투면 일반 브금 재생 (이미 재생 중이면 알아서 무시됨)
+            }
+        }
 
         // 실제 UI 및 통계에 표시될 스테이지 번호 계산 (보스는 카운트 제외)
         int displayStage = currentBattleIndex + 1;

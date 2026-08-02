@@ -4701,6 +4701,26 @@ PrefabInstance:
       value: SoundManager
       objectReference: {fileID: 0}
     - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+      propertyPath: bossBGM.Path
+      value: event:/MommyDragon
+      objectReference: {fileID: 0}
+    - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+      propertyPath: bossBGM.Guid.Data1
+      value: 37277291
+      objectReference: {fileID: 0}
+    - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+      propertyPath: bossBGM.Guid.Data2
+      value: 1080051325
+      objectReference: {fileID: 0}
+    - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+      propertyPath: bossBGM.Guid.Data3
+      value: 1466131864
+      objectReference: {fileID: 0}
+    - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+      propertyPath: bossBGM.Guid.Data4
+      value: -938468500
+      objectReference: {fileID: 0}
+    - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
       propertyPath: battleBGM.Guid.Data1
       value: -1072704160
       objectReference: {fileID: 0}

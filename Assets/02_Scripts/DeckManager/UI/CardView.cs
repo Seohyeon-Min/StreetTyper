@@ -51,22 +51,39 @@ public class CardView : MonoBehaviour
     [Tooltip("위 둘에 해당하지 않는 나머지 카드 전부가 쓰는 배지.")]
     [SerializeField] private Sprite upBadge;
 
+    // 지금 그리고 있는 카드. 어썸처럼 수치가 런 도중 변하는 카드를 다시 써야 해서 들고 있는다.
+    // SetText(명령 카드)로 그린 동안에는 null이라, 아래 갱신이 그 칸을 건드리지 않는다.
+    private CardBase _card;
+
     private void Awake()
     {
         WarnIfUnassigned();
     }
 
+    // 매니저 참조가 아니라 static 이벤트라 이 뷰의 "매니저를 모른다"는 성질은 그대로다
+    // (LanguageSettings.OnChanged와 같은 결).
+    private void OnEnable()
+    {
+        SkillResolver.OnCardValuesChanged += ApplyStatsLabel;
+    }
+
+    private void OnDisable()
+    {
+        SkillResolver.OnCardValuesChanged -= ApplyStatsLabel;
+    }
+
     /// <summary>카드 데이터를 화면에 반영합니다. card가 null이면 글자를 비우고 배지를 숨깁니다.</summary>
     public void SetCard(CardBase card)
     {
+        _card = card;
+
         if (nameText != null)
             nameText.text = card != null ? card.CardName : string.Empty;
 
         if (descriptionText != null)
             descriptionText.text = card != null ? card.Description : string.Empty;
 
-        if (statsText != null)
-            statsText.text = card != null ? card.StatsLabel : string.Empty;
+        ApplyStatsLabel();
 
         // 배지는 스프라이트를 null로 지우지 않고 Image를 끈다. 스프라이트가 없는 Image는
         // 사라지는 게 아니라 흰 사각형으로 그려지기 때문이다.
@@ -96,6 +113,10 @@ public class CardView : MonoBehaviour
     /// 설명/수치 칸은 비우고 배지는 끈다. 프레임은 기본 프레임을 그대로 쓴다.</summary>
     public void SetText(string label)
     {
+        // 실제 카드가 아니므로 비워둔다 - 이게 남아 있으면 어썸 누적이 오를 때
+        // 명령 카드의 빈 수치 칸에 엉뚱한 숫자가 들어간다.
+        _card = null;
+
         if (nameText != null)
             nameText.text = label ?? string.Empty;
 
@@ -110,6 +131,14 @@ public class CardView : MonoBehaviour
 
         if (frameImage != null && defaultFrame != null)
             frameImage.sprite = defaultFrame;
+    }
+
+    // 수치 칸만 지금 값으로 다시 쓴다. 어썸처럼 런 도중 값이 변하는 카드 때문에 필요하다 -
+    // 손패에 어썸이 두 장 떠 있으면(슬롯 간 중복은 의도된 동작) 쓰지 않은 쪽도 같이 갱신되어야 한다.
+    private void ApplyStatsLabel()
+    {
+        if (statsText != null)
+            statsText.text = _card != null ? _card.StatsLabel : string.Empty;
     }
 
     /// <summary>카드 전체의 투명도. CardSlotView의 교체 애니메이션이 부릅니다.</summary>

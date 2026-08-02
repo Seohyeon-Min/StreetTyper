@@ -436,10 +436,16 @@ public class BattleManager : MonoBehaviour
         var fieldName = GetPresentationFieldName(kind);
         var title = presentation.Title(this, fieldName);
 
-        // 보상을 고르는 중에는 "다음"이 막혀 있으므로(보상 수신자가 우선순위상 먼저 가져간다)
-        // 안내도 띄우지 않는다. 칠 수 없는 단어를 안내하면 플레이어만 헷갈린다.
+        // 플레이어가 지금 칠 수 없거나 칠 필요가 없는 단어는 안내하지 않는다 - 두 경우가 있다.
+        //  ① 보상을 고르는 중: 보상 수신자가 우선순위상 입력을 먼저 가져가 "다음"이 막혀 있다.
+        //  ② 자동 진행 대기 중: 보상이 끝나면 StageManager가 알아서 다음 스테이지를 연다.
+        // 반대로 둘 다 아니면(패배의 "다시", 배선이 빠져 자동 진행이 안 걸린 경우) 반드시 띄워야
+        // 한다 - 안 그러면 칠 것도 없고 넘어가지도 않는 화면에 갇힌다.
+        var choosingReward = rewardInputHandler != null && rewardInputHandler.IsSelecting;
+        var advancing = stageManager != null && stageManager.IsAdvancingAutomatically;
+
         string hint = string.Empty;
-        if (resultInputHandler != null && (rewardInputHandler == null || !rewardInputHandler.IsSelecting))
+        if (resultInputHandler != null && !choosingReward && !advancing)
             hint = resultInputHandler.BuildHint();
 
         ApplyResultImage(presentation);

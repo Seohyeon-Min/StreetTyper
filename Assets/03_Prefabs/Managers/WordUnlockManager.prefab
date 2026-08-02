@@ -94,6 +94,14 @@ MonoBehaviour:
     grantedAtStart: 0
   - card: {fileID: 11400000, guid: 20c64e3eba60d7f4e9f319dec87bc545, type: 2}
     grantedAtStart: 0
+  - card: {fileID: 11400000, guid: 64d00c869adb46668cabcbd22f6b0c47, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: 2bd8a2b3898d4db698a29dcd9d8e1103, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: 703a2168ee22401d8fc9a18e858fab49, type: 2}
+    grantedAtStart: 0
+  - card: {fileID: 11400000, guid: e841317681a24753af99a9400ab56ce9, type: 2}
+    grantedAtStart: 0
   wordsPerReward: 3
   luckyBonusWords: 1
   logDebugEvents: 1

@@ -42,10 +42,21 @@ public class StageManager : MonoBehaviour
              "옛 동작으로 떨어진다(경고를 남긴다).")]
     public RewardInputHandler rewardInputHandler;
 
+    [Tooltip("보상 선택이 끝나고 다음 스테이지가 열리기까지의 대기 시간(초). 승리 화면에서 " +
+             "'다음'을 칠 필요가 없어진 대신, 방금 얻은 카드와 VICTORY를 볼 짧은 여유를 준다. " +
+             "0으로 두어도 최소 한 프레임은 기다린다.")]
+    public float rewardAdvanceDelay = 0.6f;
+
     private int currentBattleIndex = 0;
     private int totalBattles = 10;
     private GameObject currentEnemyObject;
     private Coroutine startRoutine;
+    private Coroutine advanceRoutine;
+
+    /// <summary>보상이 끝나 다음 스테이지로 자동으로 넘어가는 중인가. `BattleManager`가
+    /// 결과 화면에 "다음" 안내를 띄울지 정하는 데 쓴다 - 칠 필요가 없는 단어를 안내하면
+    /// 플레이어만 헷갈린다.</summary>
+    public bool IsAdvancingAutomatically => advanceRoutine != null;
 
     private void OnEnable()
     {
@@ -163,6 +174,11 @@ public class StageManager : MonoBehaviour
         if (pendingActionManager != null)
             pendingActionManager.Clear();
 
+        // 이전 스테이지에서 세다 만 턴 누적이 새 스테이지 첫 턴으로 넘어가지 않게 한다
+        // (퍼펙트/니킥/춉/박치기가 읽는 값이다). 어썸의 런 누적은 여기서 건드리지 않는다.
+        if (skillResolver != null)
+            skillResolver.ResetTurn();
+
         if (statusEffectManager != null)
             statusEffectManager.ClearAll();
 
@@ -171,6 +187,14 @@ public class StageManager : MonoBehaviour
 
         if (startRoutine != null)
             StopCoroutine(startRoutine);
+
+        // 자동 진행 대기 중에 플레이어가 "다음"을 쳐서 먼저 넘어왔을 수 있다. 그대로 두면
+        // 남은 코루틴이 뒤늦게 NextStage()를 한 번 더 불러 스테이지를 하나 건너뛴다.
+        if (advanceRoutine != null)
+        {
+            StopCoroutine(advanceRoutine);
+            advanceRoutine = null;
+        }
 
         startRoutine = StartCoroutine(BeginStageAfterDelay());
     }
@@ -233,13 +257,13 @@ public class StageManager : MonoBehaviour
     // (RewardInputHandler가 결과 화면보다 높은 우선순위로 입력을 가져가기 때문이다).
     private void HandleBattleEnded()
     {
-        // 패배에는 보상이 없다. 죽은 쪽이 플레이어면 여기서 끝.
+        // 패배에는 보상도 자동 진행도 없다 - 플레이어가 "다시"를 쳐서 재도전한다.
         if (player == null || player.currentHP <= 0)
             return;
 
-        if (wordUnlockManager == null)
-            return;
-
+        // ⚠️ wordUnlockManager가 없다고 여기서 리턴하면 안 된다. 그 경우에도 BeginRewardRound가
+        // FinishReward로 빠져 자동 진행을 걸어주는데, 여기서 끊으면 보상도 자동 진행도 없이
+        // 승리 화면에 멈춘다(승리에는 "다음" 안내를 띄우지 않으므로 칠 것도 없다).
         BeginRewardRound();
     }
 
@@ -296,14 +320,37 @@ public class StageManager : MonoBehaviour
         FinishReward();
     }
 
-    // 보상이 완전히 끝났다. 카드를 치우고 결과 텍스트를 다시 그려 "다음" 안내가 그때 뜨게 한다
-    // (보상을 고르는 동안에는 "다음"이 막혀 있어서 안내도 숨겨 뒀다).
+    // 보상이 완전히 끝났다. 카드를 치우고 곧바로 다음 스테이지로 넘어간다 - 승리 화면에서
+    // "다음"을 칠 필요가 없다.
+    //
+    // ⚠️ 여기서 NextStage()를 바로 부르면 안 된다. 이 경로는 BattleManager.ShowResult 안의
+    //    OnBattleEnded에서 시작될 수 있는데, 그 호출은 우리가 돌아간 뒤에 이어서 결과 화면을
+    //    그린다 - 스테이지를 먼저 갈아끼우면 그 위에 VICTORY 화면이 덮인다. 코루틴으로 최소
+    //    한 프레임 미뤄 그 호출을 완전히 빠져나온 뒤에 넘긴다.
     private void FinishReward()
     {
         if (rewardCardView != null)
             rewardCardView.Clear();
 
+        if (advanceRoutine != null)
+            StopCoroutine(advanceRoutine);
+
+        advanceRoutine = StartCoroutine(AdvanceAfterReward());
+
+        // 자동 진행이 걸린 상태로 결과 화면을 다시 그린다 - 그래야 "다음" 안내가 뜨지 않는다.
+        // (보상 후보가 아예 없어 선택 창을 건너뛴 경우, 이게 없으면 안내가 잠깐 깜빡인다.)
         if (battleManager != null)
             battleManager.RefreshResult();
+    }
+
+    private IEnumerator AdvanceAfterReward()
+    {
+        // Time.deltaTime 기반이라 일시정지(timeScale = 0) 중에는 멈춰 있는다 - 프로젝트의
+        // 다른 대기와 같은 규칙이다.
+        yield return new WaitForSeconds(rewardAdvanceDelay);
+
+        // NextStage -> LoadStage가 이 코루틴을 멈추려 들기 전에 먼저 비운다.
+        advanceRoutine = null;
+        NextStage();
     }
 }

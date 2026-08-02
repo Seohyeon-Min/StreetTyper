@@ -99,11 +99,14 @@ public class HandFanLayout : MonoBehaviour
         {
             GetTarget(i, count, out var targetPos, out var targetAngle);
 
-            // 타이핑 들림/소모-교체 애니메이션은 CardSlotView가 계산해서 들고 있고,
-            // 실제 위치를 쓰는 건 여기 하나뿐이라 값을 더하기만 하면 된다.
+            // 타이핑 들림/소모-교체/무너짐 애니메이션은 CardSlotView가 계산해서 들고 있고,
+            // 실제 위치·회전을 쓰는 건 여기 하나뿐이라 값을 더하기만 하면 된다.
             var cardView = _cards[i];
             if (cardView != null)
+            {
                 targetPos.y += cardView.VerticalOffset;
+                targetAngle += cardView.RotationOffset;
+            }
 
             var rect = _children[i];
             rect.anchoredPosition = Vector2.Lerp(rect.anchoredPosition, targetPos, t);

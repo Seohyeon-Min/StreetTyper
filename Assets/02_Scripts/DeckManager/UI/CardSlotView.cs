@@ -29,6 +29,21 @@ public class CardSlotView : MonoBehaviour
     [Tooltip("새 카드가 내려와 자리잡는(페이드인) 애니메이션 길이(초)")]
     [SerializeField] private float enterDuration = 0.15f;
 
+    [Header("패배 연출 - 무너짐")]
+    [Tooltip("패배 시 카드가 무너지듯 떨어지는 거리(px).")]
+    [SerializeField] private float collapseFallDistance = 400f;
+
+    [Tooltip("떨어지며 도는 최대 회전각(도). 카드마다 이 범위 안에서 좌우 무작위로 정해진다.")]
+    [SerializeField] private float collapseMaxRotation = 50f;
+
+    [Tooltip("무너져 사라지는 데 걸리는 시간(초).")]
+    [SerializeField] private float collapseDuration = 0.5f;
+
+    [Tooltip("점점 가속하며 떨어지는 느낌을 위한 이징. 기본은 EaseIn(초반 느리게, 후반 빠르게).")]
+    [SerializeField] private AnimationCurve collapseCurve = new AnimationCurve(
+        new Keyframe(0f, 0f, 0f, 0f),
+        new Keyframe(1f, 1f, 2f, 2f));
+
     private bool _subscribed;
     private CardBase _currentCard;
 
@@ -38,6 +53,7 @@ public class CardSlotView : MonoBehaviour
 
     private float _liftAmount;
     private float _swapOffset;
+    private float _collapseRotation;
     private bool _isSwapping;
     private Coroutine _swapCoroutine;
 
@@ -45,6 +61,10 @@ public class CardSlotView : MonoBehaviour
 
     /// <summary>카드가 지금 이 프레임에 떠 있어야 할 높이. HandFanLayout이 부채꼴 목표 위치에 더해서 쓴다.</summary>
     public float VerticalOffset => _isSwapping ? _swapOffset : _liftAmount;
+
+    /// <summary>무너지는 동안 부채꼴 각도에 더할 회전(도). 평소엔 0 - HandFanLayout이 계산하는
+    /// 각도를 그대로 쓴다. VerticalOffset과 같은 자리(HandFanLayout.LateUpdate)에서 더해진다.</summary>
+    public float RotationOffset => _collapseRotation;
 
     /// <summary>
     /// 런타임에 생성된 카드를 슬롯에 연결합니다. HandFanLayout이 프리팹을 찍어낸 직후 호출합니다.
@@ -158,6 +178,45 @@ public class CardSlotView : MonoBehaviour
         RestartSwapCoroutine(EnterRoutine(fromOffset));
     }
 
+    /// <summary>패배 시 카드가 무너지듯 회전하며 떨어져 사라진다. delay를 인덱스에 비례해 다르게
+    /// 주면(호출부 책임) 카드마다 시차가 생겨 한꺼번에 안 무너지고 와르르 무너지는 느낌이 난다.
+    /// PlayExit/PlayEnter와 달리 끝나도 onComplete가 없다 - 이 카드는 다음 RefillAll이 새 내용을
+    /// 채우며 PlaySwap으로 원래 자리로 되돌려 놓을 때까지 그냥 떨어진 채로 남아 있으면 된다.</summary>
+    public void PlayCollapse(float delay)
+    {
+        RestartSwapCoroutine(CollapseRoutine(delay));
+    }
+
+    private IEnumerator CollapseRoutine(float delay)
+    {
+        _isSwapping = true;
+
+        if (delay > 0f)
+            yield return new WaitForSeconds(delay);
+
+        // 카드마다 좌우 무작위 회전을 줘야 한 방향으로 가지런히 쓰러지지 않고 흩어지는 느낌이 난다.
+        var rotationTarget = Random.Range(-collapseMaxRotation, collapseMaxRotation);
+
+        var elapsed = 0f;
+        while (elapsed < collapseDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            var t = collapseCurve.Evaluate(Mathf.Clamp01(elapsed / collapseDuration));
+            _swapOffset = Mathf.Lerp(0f, -collapseFallDistance, t);
+            _collapseRotation = Mathf.Lerp(0f, rotationTarget, t);
+            SetAlpha(Mathf.Lerp(1f, 0f, t));
+            yield return null;
+        }
+
+        _swapOffset = -collapseFallDistance;
+        _collapseRotation = rotationTarget;
+        SetAlpha(0f);
+        _swapCoroutine = null;
+        // _isSwapping은 켜 둔 채로 남긴다 - 꺼버리면 Update()의 타이핑 들림 로직이 다시 돌아
+        // 이미 떨어져 안 보이는 카드를 다시 위로 들어올리려 든다. 다음 PlaySwap(RefillAll)이
+        // _isSwapping을 다시 관리하며 정상 상태로 되돌린다.
+    }
+
     private void RestartSwapCoroutine(IEnumerator routine)
     {
         if (_swapCoroutine != null)
@@ -253,6 +312,10 @@ public class CardSlotView : MonoBehaviour
     {
         _currentCard = card;
         _liftTargetWord = card != null ? card.CardName : null;
+
+        // 무너짐 연출이 남긴 회전을 되돌린다 - 안 그러면 재시작 후 새로 뽑힌 카드가
+        // 기울어진 채로 시작한다(HandFanLayout이 매 프레임 RotationOffset을 더하기 때문).
+        _collapseRotation = 0f;
 
         if (cardView != null)
             cardView.SetCard(card);

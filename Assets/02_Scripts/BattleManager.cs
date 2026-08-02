@@ -33,7 +33,9 @@ public class BattleManager : MonoBehaviour
 
     [Header("Statistics Result UI")]
     public GameObject resultPanel;
-    public TextMeshProUGUI statsText;
+    [Tooltip("resultPanel 안의 제목/라벨/숫자를 각각 그리는 뷰. 라벨과 숫자를 따로 디자인할 수 있게 " +
+             "statsText 한 줄짜리 텍스트 대신 이걸 쓴다.")]
+    [SerializeField] private ResultStatsView resultStatsView;
 
     [Header("Result Presentation")]
     [Tooltip("스테이지를 클리어했을 때의 제목과 이미지")]
@@ -48,26 +50,6 @@ public class BattleManager : MonoBehaviour
     [Tooltip("결과 이미지를 그릴 Image. 비워두면 이미지는 건너뛴다.")]
     [SerializeField] private Image resultImage;
 
-    [Header("통계 문구")]
-    [Tooltip("{0}=제목 {1}=최고 스테이지 {2}=전체 스테이지 {3}=CPM {4}=사용 단어 {5}=가한 피해 {6}=받은 피해")]
-    [SerializeField, TextArea(6, 12)]
-    private string statsFormat =
-        "{0}\n\n" +
-        "최고 도달 스테이지 : {1} / {2}\n" +
-        "평균 타자 속도 (CPM): {3}\n" +
-        "사용한 단어 수 : {4}\n" +
-        "누적 가한 데미지 : {5}\n" +
-        "누적 받은 데미지 : {6}";
-
-    [Tooltip("영어 통계 문구. 자리표시자는 한국어와 같다.")]
-    [SerializeField, TextArea(6, 12)]
-    private string statsFormatEn =
-        "{0}\n\n" +
-        "Highest stage : {1} / {2}\n" +
-        "Average speed (CPM) : {3}\n" +
-        "Words used : {4}\n" +
-        "Total damage dealt : {5}\n" +
-        "Total damage taken : {6}";
 
     [Header("마더 드래곤 대사")]
     [Tooltip("스파링 연출이라 순서가 정해져 있다. 0=시작, 1=1턴 뒤, 2=2턴 뒤, 3=마무리")]
@@ -496,13 +478,36 @@ public class BattleManager : MonoBehaviour
 
     private void ShowStatisticsUI(string titleMessage, Color titleColor, bool showStats)
     {
-        // 결과 화면이 떴으므로 타자 속도 계산을 위한 타이머 중지
-        if (StatisticsManager.Instance != null)
-            StatisticsManager.Instance.StopTracking();
+        var stats = StatisticsManager.Instance;
 
-        if (showStats && resultPanel != null && statsText != null && StatisticsManager.Instance != null)
+        // 결과 화면이 떴으므로 타자 속도 계산을 위한 타이머 중지
+        if (stats != null)
+            stats.StopTracking();
+
+        if (showStats)
         {
-            statsText.text = BuildStatsText(titleMessage);
+            // 패배/전체클리어는 항상 resultPanel(통계)로 보여준다. resultText로 조용히
+            // 폴백하지 않는다 - 폴백하면 배선이 빠진 걸 못 알아채고 엉뚱한 화면이 뜬 채로
+            // 넘어간다(resultText는 아래 else, 즉 일반 스테이지 클리어 전용이다).
+            if (resultPanel == null || resultStatsView == null)
+            {
+                Debug.LogWarning("BattleManager: resultPanel/resultStatsView가 연결되지 않아 통계 화면을 띄울 수 없습니다.", this);
+                return;
+            }
+
+            // 분모를 리터럴로 박으면 스테이지 수를 바꿨을 때 조용히 어긋난다.
+            var totalStages = stageManager != null ? stageManager.totalStages : 0;
+
+            resultStatsView.SetStats(
+                titleMessage,
+                titleColor,
+                stats != null ? stats.highestStageReached : 0,
+                totalStages,
+                stats != null ? Mathf.RoundToInt(stats.GetCPM()) : 0,
+                stats != null ? stats.validWordsUsed : 0,
+                stats != null ? stats.totalDamageDealt : 0,
+                stats != null ? stats.totalDamageTaken : 0);
+
             resultPanel.SetActive(true); // 통계 패널 켜기
 
             // 기존 중앙 텍스트 끄기 (겹침 방지)
@@ -521,27 +526,5 @@ public class BattleManager : MonoBehaviour
             // 통계 패널 끄기 (겹침 방지)
             if (resultPanel != null) resultPanel.SetActive(false);
         }
-    }
-
-    private string BuildStatsText(string titleMessage)
-    {
-        var stats = StatisticsManager.Instance;
-        var format = LanguageSettings.Pick(statsFormat, statsFormatEn, this, nameof(statsFormatEn));
-
-        if (string.IsNullOrEmpty(format))
-            return titleMessage;
-
-        // 분모를 리터럴로 박으면 스테이지 수를 바꿨을 때 조용히 어긋난다.
-        var totalStages = stageManager != null ? stageManager.totalStages : 0;
-
-        return string.Format(
-            format,
-            titleMessage,
-            stats.highestStageReached,
-            totalStages,
-            Mathf.RoundToInt(stats.GetCPM()),
-            stats.validWordsUsed,
-            stats.totalDamageDealt,
-            stats.totalDamageTaken);
     }
 }

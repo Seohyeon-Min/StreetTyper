@@ -34,6 +34,14 @@ public class DeckManager : MonoBehaviour
     }
 
     [SerializeField] private CardSlotManager cardSlotManager;
+
+    [Tooltip("패배 시 손패가 무너지듯 떨어지는 연출에 쓴다(HandleBattleEnded). Card Canvas의 " +
+             "HandFanLayout(Hand)을 연결할 것.")]
+    [SerializeField] private HandFanLayout handFanLayout;
+
+    [Tooltip("패배 연출에서 카드마다 무너지기 시작하는 시간차(초). 0이면 5장이 동시에 떨어진다.")]
+    [SerializeField] private float collapseStagger = 0.06f;
+
     [SerializeField] private CardInputHandler cardInputHandler;
     [SerializeField] private MainBufferManager mainBufferManager;
     [SerializeField] private InputManager inputManager;
@@ -191,9 +199,19 @@ public class DeckManager : MonoBehaviour
                 SoundManager.Instance.StopBGM();
             }
 
-            if (cardSlotManager != null)
+            // 손패를 그냥 비우는 대신 카드마다 시차를 두고 무너지듯 떨어뜨린다. 슬롯 데이터는
+            // 건드리지 않는다 - EmptyAllSlots()가 쏘는 OnSlotChanged(null)는 CardSlotView의
+            // PlaySwap을 다시 불러 방금 시작한 무너짐 코루틴을 그 자리에서 끊어버린다.
+            // 슬롯 데이터는 재시작 시 StageManager.RestartStage -> RefillAll이 통째로 새로
+            // 채우므로 여기서 비워둘 필요가 없다.
+            if (handFanLayout != null)
             {
-                cardSlotManager.EmptyAllSlots();
+                var cards = handFanLayout.Cards;
+                for (var i = 0; i < cards.Count; i++)
+                {
+                    if (cards[i] != null)
+                        cards[i].PlayCollapse(i * collapseStagger);
+                }
             }
 
             if (timerManager != null)

@@ -217,6 +217,11 @@ public class DeckManager : MonoBehaviour
         inputManager.DisableInput();
         inputManager.ClearInput();
 
+        // 여기가 플레이어 턴의 끝이다. "이번 턴에 몇 번 했는가" 누적을 비워야 다음 턴의
+        // 퍼펙트/니킥/춉/박치기가 0에서 다시 센다. 게임오버로 빠지는 경우에도 비워야 하므로
+        // 아래 IsGameOver 검사보다 위에 둔다.
+        skillResolver.ResetTurn();
+
         if (battleManager.IsGameOver)
             yield break;
 

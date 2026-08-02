@@ -40,6 +40,7 @@ public class StageManager : MonoBehaviour
 
     [Header("UI")]
     public TMPro.TextMeshProUGUI stageStartText;
+    public TMPro.TextMeshProUGUI currentStageText;
 
     private int currentBattleIndex = 0;
     private int totalBattles = 10;
@@ -105,6 +106,14 @@ public class StageManager : MonoBehaviour
         // [추가] 최고 도달 스테이지 기록 갱신
         if (StatisticsManager.Instance != null)
             StatisticsManager.Instance.UpdateHighestStage(currentBattleIndex + 1);
+
+        if (currentStageText != null)
+        {
+            if (isBossBattle)
+                currentStageText.text = "MOMMY";
+            else
+                currentStageText.text = $"STAGE {displayStage}";
+        }
 
         if (currentEnemyObject != null)
         {

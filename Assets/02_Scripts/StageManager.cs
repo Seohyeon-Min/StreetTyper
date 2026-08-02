@@ -7,10 +7,14 @@ public class StageManager : MonoBehaviour
 {
     [Header("Stage Settings")]
     public List<GameObject> enemyPrefabs;
+    public GameObject motherDragonPrefab;
     public Transform enemySpawnPoint;
 
     [Tooltip("스테이지가 열리고 플레이어가 타이핑을 시작할 수 있을 때까지의 대기 시간(초)")]
     public float stageStartDelay = 2f;
+
+    [Tooltip("총 스테이지 수")]
+    public int totalStages = 8;
 
     [Header("References")]
     public BattleManager battleManager;
@@ -34,7 +38,8 @@ public class StageManager : MonoBehaviour
     [Tooltip("클리어 보상으로 얻은 단어 카드를 화면에 펼쳐 보여준다.")]
     public RewardCardView rewardCardView;
 
-    private int currentStageIndex = 0;
+    private int currentBattleIndex = 0;
+    private int totalBattles = 10;
     private GameObject currentEnemyObject;
     private Coroutine startRoutine;
 
@@ -60,36 +65,79 @@ public class StageManager : MonoBehaviour
         if (skillResolver != null)
             skillResolver.ResetRun();
 
-        LoadStage(currentStageIndex);
+        LoadStage(currentBattleIndex);
     }
 
     public void LoadStage(int stageIndex)
     {
-        currentStageIndex = stageIndex;
+        currentBattleIndex = stageIndex;
+        // 총 10번의 전투(인덱스 0~9)를 모두 마치고 인덱스 10에 도달하면 게임 클리어
+        if (currentBattleIndex >= totalBattles)
+        {
+            battleManager.ShowGameClear();
+            return;
+        }
+
+        // 인덱스 4(5번째 전투 = 4스테이지 클리어 후)와 인덱스 9(10번째 전투 = 8스테이지 클리어 후)를 보스전으로 설정
+        bool isBossBattle = (currentBattleIndex == 4 || currentBattleIndex == 9);
+
+        // 실제 UI 및 통계에 표시될 스테이지 번호 계산 (보스는 카운트 제외)
+        int displayStage = currentBattleIndex + 1;
+        if (currentBattleIndex >= 4) displayStage -= 1; // 첫 번째 보스전 및 그 이후 인덱스 보정
+        if (currentBattleIndex >= 9) displayStage -= 1; // 두 번째 보스전 및 그 이후 인덱스 보정
+
+        // [추가] 최고 도달 스테이지 기록 갱신
+        if (StatisticsManager.Instance != null)
+            StatisticsManager.Instance.UpdateHighestStage(currentBattleIndex + 1);
 
         if (currentEnemyObject != null)
         {
             Destroy(currentEnemyObject);
         }
 
-        if (currentStageIndex >= enemyPrefabs.Count)
+        // [수정] 8스테이지(인덱스 7) 클리어 시(즉, 9번째 스테이지 진입 시) 게임 종료
+        // 주의: enemyPrefabs.Count가 아닌 totalStages(8)로 검사해야 합니다.
+        if (currentBattleIndex >= totalStages)
         {
             battleManager.ShowGameClear();
             return;
         }
 
-        currentEnemyObject = Instantiate(enemyPrefabs[currentStageIndex], enemySpawnPoint.position, Quaternion.identity);
+        // [수정] 프리팹 결정 로직
+        GameObject prefabToSpawn;
+        if (isBossBattle && motherDragonPrefab != null)
+        {
+            prefabToSpawn = motherDragonPrefab;
+        }
+        else
+        {
+            if (enemyPrefabs != null && enemyPrefabs.Count > 0)
+            {
+                prefabToSpawn = enemyPrefabs[0]; // 일반 스테이지는 무조건 첫 번째 프리팹 사용
+            }
+            else
+            {
+                Debug.LogError("StageManager: Enemy Prefabs 리스트가 비어있습니다! 인스펙터를 확인하세요.");
+                return;
+            }
+        }
+
+        // [핵심] 기존 enemyPrefabs[currentBattleIndex] 대신 prefabToSpawn 변수로 생성!
+        currentEnemyObject = Instantiate(prefabToSpawn, enemySpawnPoint.position, Quaternion.identity);
+
         EnemyBase newEnemyBase = currentEnemyObject.GetComponent<EnemyBase>();
+
+        // [추가] 생성 직후 스탯 스케일링 적용
+        newEnemyBase.ApplyScaling(displayStage - 1);
 
         enemyManager.currentEnemy = newEnemyBase;
         enemyManager.GenerateNextAction();
 
-        // 적 HP 바가 방금 스폰된 적을 따라가게 한다. 뷰가 스스로 적을 찾아다니지 않도록
-        // 스포너가 넘겨주는 기존 방식(HandFanLayout -> CardSlotView.Bind)과 같다.
+        // HP 바 연결
         if (enemyHealthBarAnchor != null)
             enemyHealthBarAnchor.Bind(currentEnemyObject.transform);
         else
-            Debug.LogWarning("StageManager: enemyHealthBarAnchor가 연결되지 않아 적 HP 바가 따라오지 않습니다.", this);
+            Debug.LogWarning("StageManager: enemyHealthBarAnchor가 할당되지 않았습니다.", this);
 
         if (player != null)
         {
@@ -98,10 +146,6 @@ public class StageManager : MonoBehaviour
 
         battleManager.ResetBattle();
 
-        // 대기 시간 동안엔 타이머가 돌지도, 입력이 들어오지도 않아야 한다.
-        // 둘 다 BeginStageAfterDelay가 끝에서 다시 연다.
-        // ResetToFull은 정지까지 겸하므로(StopTimer 대체) 게이지가 0이 아니라
-        // 가득 찬 상태로 멈춰 있게 된다.
         if (timerManager != null)
             timerManager.ResetToFull();
 
@@ -111,21 +155,15 @@ public class StageManager : MonoBehaviour
             inputManager.ClearInput();
         }
 
-        // 이전 스테이지에서 쌓다 만 조합은 넘겨받지 않는다 - 입력창을 비우는 것과 같은 이유다.
         if (wordChainManager != null)
             wordChainManager.ClearChain();
 
-        // 아직 터지지 않은 공격도 같이 버린다 - 새 적에게 지난 스테이지의 공격이 들어가면 안 된다.
         if (pendingActionManager != null)
             pendingActionManager.Clear();
 
-        // 상태이상도 넘겨받지 않는다. 이전 적은 이미 사라졌으므로 얼음 복원은 의미가 없고,
-        // 플레이어에게 걸린 데빌만 되돌아간다.
         if (statusEffectManager != null)
             statusEffectManager.ClearAll();
 
-        // 새 스테이지가 열리는 순간에는 보상 카드가 남아 있으면 안 된다.
-        // RunNextStage가 이미 치우지만, 패배 후 재시작처럼 그 경로를 타지 않는 진입도 있다.
         if (rewardCardView != null)
             rewardCardView.Clear();
 
@@ -135,10 +173,35 @@ public class StageManager : MonoBehaviour
         startRoutine = StartCoroutine(BeginStageAfterDelay());
     }
 
+    public void RestartStage()
+    {
+        if (player != null)
+        {
+            player.currentHP = player.maxHP;
+            player.defense = 0;
+            player.gameObject.SetActive(true);
+            LoadStage(currentBattleIndex);
+        }
+        else
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+    }
+
     // 적이 등장한 뒤 잠깐 두었다가 플레이어 턴을 연다 - 적 턴 이후의 대기와 같은 목적이다.
     private IEnumerator BeginStageAfterDelay()
     {
         yield return new WaitForSeconds(stageStartDelay);
+
+        // [추가된 부분] 대기하는 동안 게임 오버가 되었다면 (예: 킬스위치 즉사) 더 이상 진행하지 않음
+        if (battleManager != null && battleManager.IsGameOver)
+        {
+            startRoutine = null;
+            yield break; // 여기서 코루틴을 강제 종료하여 타이머가 다시 켜지는 것을 막습니다.
+        }
+
+        if (StatisticsManager.Instance != null)
+            StatisticsManager.Instance.StartTracking();
 
         // 손패는 스테이지마다 새로 뽑는다. 안 그러면 이전 스테이지에서 들고 있던 카드가 그대로 남는다.
         if (cardSlotManager != null)
@@ -160,7 +223,7 @@ public class StageManager : MonoBehaviour
     // 여기서는 그 카드를 치우고 다음 스테이지를 여는 일만 한다.
     public void NextStage()
     {
-        LoadStage(currentStageIndex + 1);
+        LoadStage(currentBattleIndex + 1);
     }
 
     // 적 HP가 0이 되어 승패가 갈리는 순간 호출된다(BattleManager.OnBattleEnded).
@@ -179,24 +242,5 @@ public class StageManager : MonoBehaviour
 
         if (rewardCardView != null && reward != null && reward.Count > 0)
             rewardCardView.Show(reward);
-    }
-
-    public void RestartStage()
-    {
-        if (player != null)
-        {
-            player.currentHP = player.maxHP;
-            player.defense = 0;
-
-            // Reactivate the player GameObject if it was disabled
-            player.gameObject.SetActive(true);
-
-            LoadStage(currentStageIndex);
-        }
-        else
-        {
-            // Fallback: Reload the entire scene if the player was completely destroyed
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        }
     }
 }

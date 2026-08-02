@@ -105,6 +105,9 @@ public class EnemyManager : MonoBehaviour
                 currentEnemy.PlayAttackAnimation();
                 player.TakeDamage(currentEnemy.power);
 
+                if (StatisticsManager.Instance != null)
+                    StatisticsManager.Instance.AddDamageTaken(currentEnemy.power);
+
                 if (HitEffectManager.Instance != null)
                 {
                     HitEffectManager.Instance.PlayHitEffect(player.GetComponent<SpriteRenderer>());

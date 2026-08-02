@@ -21,7 +21,11 @@ public class CombatManager : MonoBehaviour
             }
 
             if (action.Damage > 0)
+            {
                 target.TakeDamage(action.Damage, action.IgnoresDefense);
+                if (StatisticsManager.Instance != null)
+                    StatisticsManager.Instance.AddDamageDealt(action.Damage);
+            }
         }
 
         if (action.Defense > 0)

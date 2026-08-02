@@ -26,6 +26,17 @@ public class CardSlotManager : MonoBehaviour
             Debug.LogWarning("CardSlotManager: Word Dictionary가 연결되지 않아 슬롯을 채울 수 없습니다.", this);
     }
 
+    public void EmptyAllSlots()
+    {
+        if (_currentCards == null) return;
+
+        for (int i = 0; i < _currentCards.Length; i++)
+        {
+            _currentCards[i] = null;
+            OnSlotChanged?.Invoke(i, null); // UI(CardSlotView)에 null을 보내서 카드를 화면에서 내림
+        }
+    }
+
     public void ConsumeSlot(int index)
     {
         // 방금 타이핑으로 쓴 카드가 같은 자리에 곧바로 다시 올라오지 않게 한다.

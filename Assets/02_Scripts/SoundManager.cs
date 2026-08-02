@@ -44,6 +44,8 @@ public class SoundManager : MonoBehaviour
     private float _bgmVolume = 1f;
     private float _sfxVolume = 1f;
 
+    private EventReference currentBGM;
+
     // 경로별로 첫 실패만 경고한다. 볼륨을 움직일 때마다 불리므로 그대로 두면 폭주한다.
     private readonly HashSet<string> _warnedBuses = new HashSet<string>();
 
@@ -211,20 +213,34 @@ public class SoundManager : MonoBehaviour
 
         StopBGM();
 
+        if (currentBGM.Guid == bgmEvent.Guid && bgmInstance.isValid())
+        {
+            FMOD.Studio.PLAYBACK_STATE state;
+            bgmInstance.getPlaybackState(out state);
+            if (state == FMOD.Studio.PLAYBACK_STATE.PLAYING || state == FMOD.Studio.PLAYBACK_STATE.STARTING)
+            {
+                return;
+            }
+        }
+
+        StopBGM();
+
+        currentBGM = bgmEvent; // 현재 BGM 기록
+
         bgmInstance = RuntimeManager.CreateInstance(bgmEvent);
         bgmInstance.start();
     }
 
     public void StopBGM()
     {
-        // 한 번도 재생하지 않은 상태에서도 PlayBGM이 먼저 이걸 부른다.
-        // 가드가 없으면 초기화되지 않은 핸들을 건드리게 된다.
         if (!bgmInstance.isValid()) return;
 
-        // STOP_MODE는 FMODUnity와 FMOD.Studio 양쪽에 있어 풀네임이 아니면 모호해진다(CS0104).
-        bgmInstance.stop(FMOD.Studio.STOP_MODE.ALLOWFADEOUT);
+        // [수정] ALLOWFADEOUT 대신 IMMEDIATE를 사용하여 씬 전환 시 노래 겹침 완벽 차단
+        bgmInstance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
         bgmInstance.release();
         bgmInstance.clearHandle();
+
+        currentBGM = new EventReference(); // 초기화
     }
 
     public void PlaySFX(EventReference sfxEvent)

@@ -35,8 +35,12 @@ public class StageManager : MonoBehaviour
     [Tooltip("런이 시작될 때 어썸 누적 횟수를 되돌리기 위해 참조한다.")]
     public SkillResolver skillResolver;
 
-    [Tooltip("클리어 보상으로 얻은 단어 카드를 화면에 펼쳐 보여준다.")]
+    [Tooltip("클리어 보상 후보를 화면에 펼쳐 보여준다.")]
     public RewardCardView rewardCardView;
+
+    [Tooltip("보상 후보 중 하나를 타이핑으로 고르게 하는 수신자. 비워두면 후보를 전부 지급하는 " +
+             "옛 동작으로 떨어진다(경고를 남긴다).")]
+    public RewardInputHandler rewardInputHandler;
 
     private int currentBattleIndex = 0;
     private int totalBattles = 10;
@@ -47,12 +51,18 @@ public class StageManager : MonoBehaviour
     {
         if (battleManager != null)
             battleManager.OnBattleEnded += HandleBattleEnded;
+
+        if (rewardInputHandler != null)
+            rewardInputHandler.OnSelectionFinished += HandleRewardSelectionFinished;
     }
 
     private void OnDisable()
     {
         if (battleManager != null)
             battleManager.OnBattleEnded -= HandleBattleEnded;
+
+        if (rewardInputHandler != null)
+            rewardInputHandler.OnSelectionFinished -= HandleRewardSelectionFinished;
     }
 
     void Start()
@@ -227,8 +237,8 @@ public class StageManager : MonoBehaviour
     }
 
     // 적 HP가 0이 되어 승패가 갈리는 순간 호출된다(BattleManager.OnBattleEnded).
-    // 결과 화면과 함께 이번 판에서 얻은 단어를 바로 펼쳐 보여준다 - 플레이어가 "다음"을 치기 전에
-    // 무엇을 얻었는지 확인할 수 있어야 하기 때문이다.
+    // 보상 후보를 펼쳐 플레이어가 하나를 고르게 한다 - 다 고르기 전에는 "다음"이 먹지 않는다
+    // (RewardInputHandler가 결과 화면보다 높은 우선순위로 입력을 가져가기 때문이다).
     private void HandleBattleEnded()
     {
         // 패배에는 보상이 없다. 죽은 쪽이 플레이어면 여기서 끝.
@@ -238,9 +248,70 @@ public class StageManager : MonoBehaviour
         if (wordUnlockManager == null)
             return;
 
-        var reward = wordUnlockManager.GrantStageClearReward();
+        BeginRewardRound();
+    }
 
-        if (rewardCardView != null && reward != null && reward.Count > 0)
-            rewardCardView.Show(reward);
+    // 보상 한 라운드. 럭키가 쌓여 있으면 선택이 끝난 뒤 여기로 다시 들어온다.
+    private void BeginRewardRound()
+    {
+        // 지금은 호출부 두 곳 모두 null을 걸러내고 들어오지만, 라운드가 여러 경로로 열리게 된
+        // 뒤라 여기서도 막아둔다.
+        if (wordUnlockManager == null)
+        {
+            FinishReward();
+            return;
+        }
+
+        var candidates = wordUnlockManager.RollRewardCandidates();
+
+        // 미보유 단어가 다 떨어졌다. 보상 창을 띄우지 않고 곧바로 결과 화면으로 넘긴다 -
+        // 여기서 멈추면 플레이어가 "다음"을 칠 수도 없어 진행이 막힌다.
+        if (candidates == null || candidates.Count == 0)
+        {
+            FinishReward();
+            return;
+        }
+
+        if (rewardCardView != null)
+            rewardCardView.Show(candidates);
+
+        if (rewardInputHandler != null)
+        {
+            rewardInputHandler.BeginSelection(candidates);
+            return;
+        }
+
+        // 폴백: 고를 수단이 없으면 후보를 전부 지급하는 옛 동작으로 떨어진다.
+        // 조용히 보상이 증발하는 것보다는 낫다.
+        Debug.LogWarning("StageManager: rewardInputHandler가 연결되지 않아 보상을 고를 수 없습니다. " +
+                         "후보를 전부 지급하는 예전 동작으로 대체합니다. 씬 인스턴스에서 연결하세요.", this);
+
+        for (var i = 0; i < candidates.Count; i++)
+            wordUnlockManager.ConfirmReward(candidates[i]);
+
+        FinishReward();
+    }
+
+    // 한 라운드가 끝났다(골랐든 넘겼든). 럭키로 열린 라운드가 남았으면 한 번 더 띄운다.
+    private void HandleRewardSelectionFinished()
+    {
+        if (wordUnlockManager != null && wordUnlockManager.TryConsumeBonusRound())
+        {
+            BeginRewardRound();
+            return;
+        }
+
+        FinishReward();
+    }
+
+    // 보상이 완전히 끝났다. 카드를 치우고 결과 텍스트를 다시 그려 "다음" 안내가 그때 뜨게 한다
+    // (보상을 고르는 동안에는 "다음"이 막혀 있어서 안내도 숨겨 뒀다).
+    private void FinishReward()
+    {
+        if (rewardCardView != null)
+            rewardCardView.Clear();
+
+        if (battleManager != null)
+            battleManager.RefreshResult();
     }
 }

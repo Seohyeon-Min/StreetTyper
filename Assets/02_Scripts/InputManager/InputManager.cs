@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
@@ -9,11 +10,18 @@ public class InputManager : MonoBehaviour
     public string CurrentInput { get; private set; } = string.Empty;
     public string Composition { get; private set; } = string.Empty;
 
+    // 아래 넷은 "지금 입력창이 어떤 상태인가"를 그대로 비추는 뷰(InputFieldDisplay)용이다.
+    // 게임 판단을 하는 쪽은 이 이벤트가 아니라 TypingReceiver로 등록해서 배타적으로 받는다.
     public event Action<char> OnCharacterEntered;
-    public event Action OnSubmit;
     public event Action OnBackspace;
     public event Action<string> OnCompositionChanged;
     public event Action OnInputCleared;
+
+    /// <summary>ESC. 일시정지 토글에 쓴다.</summary>
+    public event Action OnCancel;
+
+    /// <summary>스페이스. 이벤트 대사를 넘기는 데 쓴다.</summary>
+    public event Action OnAdvance;
 
     [SerializeField] private float backspaceRepeatDelay = 0.4f;
     [SerializeField] private float backspaceRepeatInterval = 0.05f;
@@ -38,6 +46,52 @@ public class InputManager : MonoBehaviour
     /// 그대로 되돌리기 위해 필요하다 - 턴 전환 대기처럼 원래 잠겨 있던 중에 멈췄다면
     /// 재개하면서 켜면 안 된다.</summary>
     public bool IsInputEnabled => _inputEnabled;
+
+    // 타이핑을 가져갈 수 있는 대상들. 우선순위 내림차순으로 꽂아 두므로 Dispatch는 앞에서부터
+    // 훑기만 하면 된다. 각 수신자가 OnEnable에서 스스로 등록한다 - 인스펙터로 주입받은
+    // 참조를 통해 등록하는 것이라 서비스 로케이터가 아니라 CardSlotView.Bind와 같은 명시적 주입이다.
+    private readonly List<TypingReceiver> _receivers = new List<TypingReceiver>();
+
+    /// <summary>타이핑 수신자를 등록한다. 우선순위가 높은 쪽이 앞에 오도록 정렬해 넣는다.</summary>
+    public void RegisterReceiver(TypingReceiver receiver)
+    {
+        if (receiver == null || _receivers.Contains(receiver))
+            return;
+
+        var index = 0;
+        while (index < _receivers.Count && _receivers[index].Priority >= receiver.Priority)
+            index++;
+
+        _receivers.Insert(index, receiver);
+    }
+
+    public void UnregisterReceiver(TypingReceiver receiver)
+    {
+        if (receiver != null)
+            _receivers.Remove(receiver);
+    }
+
+    /// <summary>
+    /// 지금 입력을 가져갈 수신자 <b>하나</b>에게만 넘긴다. 우선순위가 높은 쪽부터 훑다가
+    /// 처음으로 자기 차례라고 답한 곳에서 멈춘다.
+    ///
+    /// 예전에는 세 핸들러가 전부 이벤트를 받아놓고 각자 timeScale·IsGameOver를 보며 스스로
+    /// 비켜섰다. 그 구조에서는 일시정지 중에 명령 단어의 첫 글자가 손패 쪽에서 오타로 처리되어
+    /// ClearInput이 불리는 바람에 명령 단어를 끝까지 칠 수 없었다. 여기서 하나만 고르면
+    /// 그런 종류의 사고가 구조적으로 일어나지 않는다.
+    /// </summary>
+    private void DispatchToReceiver(string committed, string composing)
+    {
+        for (var i = 0; i < _receivers.Count; i++)
+        {
+            var receiver = _receivers[i];
+            if (receiver == null || !receiver.isActiveAndEnabled || !receiver.WantsInput())
+                continue;
+
+            receiver.Dispatch(committed, composing);
+            return;
+        }
+    }
 
     private void Start()
     {
@@ -157,11 +211,30 @@ public class InputManager : MonoBehaviour
 
         OnInputCleared?.Invoke();
         OnCompositionChanged?.Invoke(Composition);
+
+        // 수신자에게도 "비었다"를 알려 오타 상태(TypingReceiver의 _notProgressing)를 되돌린다.
+        // 이게 없으면 오타 한 번 뒤에는 두 번째 오타부터 아무 반응이 없다.
+        //
+        // ⚠️ 백스페이스(HandleBackspace)는 일부러 디스패치하지 않는다. 지우는 도중에 평가하면
+        // "펀치가"에서 한 글자를 지운 순간 "펀치"가 매칭되어 의도치 않게 카드가 소비된다.
+        DispatchToReceiver(CurrentInput, Composition);
     }
 
     private void Update()
     {
-        if (!_inputEnabled || Keyboard.current == null)
+        if (Keyboard.current == null)
+            return;
+
+        // ⚠️ ESC와 스페이스는 _inputEnabled 가드보다 위에 있어야 한다.
+        // 턴 전환 대기처럼 타이핑이 잠긴 구간에서도 일시정지는 걸려야 하기 때문이다.
+        // 스페이스는 HandleTextInput이 어차피 버리는 문자라 타이핑과 충돌하지 않는다.
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+            OnCancel?.Invoke();
+
+        if (Keyboard.current.spaceKey.wasPressedThisFrame)
+            OnAdvance?.Invoke();
+
+        if (!_inputEnabled)
             return;
 
         // 한글 조합 중에는 백스페이스를 IME가 먼저 가져가 자모를 지우고, 그 결과가
@@ -187,12 +260,6 @@ public class InputManager : MonoBehaviour
                     HandleBackspace();
                 _backspaceRepeatTimer = backspaceRepeatInterval;
             }
-        }
-
-        if (Keyboard.current.enterKey.wasPressedThisFrame ||
-            Keyboard.current.numpadEnterKey.wasPressedThisFrame)
-        {
-            OnSubmit?.Invoke();
         }
     }
 
@@ -235,6 +302,11 @@ public class InputManager : MonoBehaviour
 
         CurrentInput += character;
         OnCharacterEntered?.Invoke(character);
+
+        // ⚠️ 커밋 경로에서는 조합 문자열을 빈 문자열로 넘긴다. 커밋되는 순간 Composition은
+        // 아직 방금 커밋된 옛 값을 들고 있어서, 그대로 이어붙이면 "펀펀"처럼 중복되어
+        // 오타로 오인된다. 커밋된 글자는 이미 CurrentInput에 들어가 있다.
+        DispatchToReceiver(CurrentInput, string.Empty);
     }
 
     // IME 컨텍스트가 창에 붙은 뒤에 조합을 버리고 변환 모드를 맞춘다. 이 두 가지 모두
@@ -328,6 +400,10 @@ public class InputManager : MonoBehaviour
         Composition = text;
         _lastBackspaceComposition = null;
         OnCompositionChanged?.Invoke(Composition);
+
+        // 조합 중에도 평가해야 한다 - 한 음절 단어(퀵/잽/훅, "계속"의 "속", "다음"의 "음")는
+        // 뒤에 이어질 음절이 없어 IME가 영원히 커밋하지 않는다. 커밋만 기다리면 완성되지 않는다.
+        DispatchToReceiver(CurrentInput, Composition);
     }
 
     private void HandleBackspace()

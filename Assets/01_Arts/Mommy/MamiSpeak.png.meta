@@ -1,0 +1,741 @@
+fileFormatVersion: 2
+guid: 24af523574adb784da35f34dc95dae5c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 6635604914364663595
+    second: MamiSpeak_0
+  - first:
+      213: 9211073767288416248
+    second: MamiSpeak_1
+  - first:
+      213: -6193050437046583563
+    second: MamiSpeak_2
+  - first:
+      213: -2472493013080108334
+    second: MamiSpeak_3
+  - first:
+      213: 222108145336297003
+    second: MamiSpeak_4
+  - first:
+      213: -107151965494536325
+    second: MamiSpeak_5
+  - first:
+      213: -7443535821912323156
+    second: MamiSpeak_6
+  - first:
+      213: -4077610510539193318
+    second: MamiSpeak_7
+  - first:
+      213: 4851169417253442161
+    second: MamiSpeak_8
+  - first:
+      213: -2411978830596745792
+    second: MamiSpeak_9
+  - first:
+      213: 3833654503337412544
+    second: MamiSpeak_10
+  - first:
+      213: -3223183166789908741
+    second: MamiSpeak_11
+  - first:
+      213: 7836742360853363381
+    second: MamiSpeak_12
+  - first:
+      213: 1620928852018025650
+    second: MamiSpeak_13
+  - first:
+      213: 7883910146418116970
+    second: MamiSpeak_14
+  - first:
+      213: -4435832860337488913
+    second: MamiSpeak_15
+  - first:
+      213: 2276514696813487520
+    second: MamiSpeak_16
+  - first:
+      213: -8873796767809904971
+    second: MamiSpeak_17
+  - first:
+      213: -7653802801644276159
+    second: MamiSpeak_18
+  - first:
+      213: -7445445398175354896
+    second: MamiSpeak_19
+  - first:
+      213: 1719183200303807714
+    second: MamiSpeak_20
+  - first:
+      213: 1961005497282929152
+    second: MamiSpeak_21
+  - first:
+      213: -4796424836894926062
+    second: MamiSpeak_22
+  - first:
+      213: 8713758931314045618
+    second: MamiSpeak_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: MamiSpeak_0
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 5021
+        width: 2769
+        height: 1653
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b27ca8e3387661c50800000000000000
+      internalID: 6635604914364663595
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_1
+      rect:
+        serializedVersion: 2
+        x: 3192
+        y: 5021
+        width: 2789
+        height: 1651
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f7252bf9ce44df70800000000000000
+      internalID: 9211073767288416248
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_2
+      rect:
+        serializedVersion: 2
+        x: 6194
+        y: 5021
+        width: 2807
+        height: 1650
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5feb2cf807ddd0aa0800000000000000
+      internalID: -6193050437046583563
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_3
+      rect:
+        serializedVersion: 2
+        x: 9196
+        y: 5021
+        width: 2825
+        height: 1648
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d299b554b0ffadd0800000000000000
+      internalID: -2472493013080108334
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_4
+      rect:
+        serializedVersion: 2
+        x: 12195
+        y: 5021
+        width: 2846
+        height: 1646
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b26ad707e26151300800000000000000
+      internalID: 222108145336297003
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_5
+      rect:
+        serializedVersion: 2
+        x: 15202
+        y: 5021
+        width: 2857
+        height: 1645
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7796b7ead1538ef0800000000000000
+      internalID: -107151965494536325
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_6
+      rect:
+        serializedVersion: 2
+        x: 123
+        y: 3347
+        width: 2867
+        height: 1643
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cab45068b9f33b890800000000000000
+      internalID: -7443535821912323156
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_7
+      rect:
+        serializedVersion: 2
+        x: 3143
+        y: 3347
+        width: 2867
+        height: 1641
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a1489e248da6967c0800000000000000
+      internalID: -4077610510539193318
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_8
+      rect:
+        serializedVersion: 2
+        x: 6164
+        y: 3347
+        width: 2865
+        height: 1639
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17251a4e1e0d25340800000000000000
+      internalID: 4851169417253442161
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_9
+      rect:
+        serializedVersion: 2
+        x: 9185
+        y: 3347
+        width: 2857
+        height: 1638
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c5d484680ee68ed0800000000000000
+      internalID: -2411978830596745792
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_10
+      rect:
+        serializedVersion: 2
+        x: 12205
+        y: 3347
+        width: 2846
+        height: 1636
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c7c00f8570e33530800000000000000
+      internalID: 3833654503337412544
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_11
+      rect:
+        serializedVersion: 2
+        x: 15225
+        y: 3347
+        width: 2836
+        height: 1634
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf60879acf3f443d0800000000000000
+      internalID: -3223183166789908741
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_12
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 1673
+        width: 2827
+        height: 1632
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5babbe608a3b1cc60800000000000000
+      internalID: 7836742360853363381
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_13
+      rect:
+        serializedVersion: 2
+        x: 3172
+        y: 1673
+        width: 2818
+        height: 1631
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b457bee332be7610800000000000000
+      internalID: 1620928852018025650
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_14
+      rect:
+        serializedVersion: 2
+        x: 6191
+        y: 1673
+        width: 2813
+        height: 1632
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a698956e186496d60800000000000000
+      internalID: 7883910146418116970
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_15
+      rect:
+        serializedVersion: 2
+        x: 9211
+        y: 1673
+        width: 2807
+        height: 1635
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: feb349cf381c072c0800000000000000
+      internalID: -4435832860337488913
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_16
+      rect:
+        serializedVersion: 2
+        x: 12229
+        y: 1673
+        width: 2802
+        height: 1637
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a526852e0ec79f10800000000000000
+      internalID: 2276514696813487520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_17
+      rect:
+        serializedVersion: 2
+        x: 15248
+        y: 1673
+        width: 2797
+        height: 1639
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5be5ea5ead0f9d480800000000000000
+      internalID: -8873796767809904971
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_18
+      rect:
+        serializedVersion: 2
+        x: 178
+        y: 0
+        width: 2791
+        height: 1640
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1467a1b47ea38c590800000000000000
+      internalID: -7653802801644276159
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_19
+      rect:
+        serializedVersion: 2
+        x: 3194
+        y: 0
+        width: 2789
+        height: 1642
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ffe037abd67ca890800000000000000
+      internalID: -7445445398175354896
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_20
+      rect:
+        serializedVersion: 2
+        x: 6210
+        y: 0
+        width: 2787
+        height: 1644
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ec7de51304cbd710800000000000000
+      internalID: 1719183200303807714
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_21
+      rect:
+        serializedVersion: 2
+        x: 9227
+        y: 0
+        width: 2784
+        height: 1646
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00223242c14e63b10800000000000000
+      internalID: 1961005497282929152
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_22
+      rect:
+        serializedVersion: 2
+        x: 12245
+        y: 0
+        width: 2779
+        height: 1648
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 21b540df50daf6db0800000000000000
+      internalID: -4796424836894926062
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MamiSpeak_23
+      rect:
+        serializedVersion: 2
+        x: 15263
+        y: 0
+        width: 2775
+        height: 1650
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b27c5f949d7de870800000000000000
+      internalID: 8713758931314045618
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      MamiSpeak_0: 6635604914364663595
+      MamiSpeak_1: 9211073767288416248
+      MamiSpeak_10: 3833654503337412544
+      MamiSpeak_11: -3223183166789908741
+      MamiSpeak_12: 7836742360853363381
+      MamiSpeak_13: 1620928852018025650
+      MamiSpeak_14: 7883910146418116970
+      MamiSpeak_15: -4435832860337488913
+      MamiSpeak_16: 2276514696813487520
+      MamiSpeak_17: -8873796767809904971
+      MamiSpeak_18: -7653802801644276159
+      MamiSpeak_19: -7445445398175354896
+      MamiSpeak_2: -6193050437046583563
+      MamiSpeak_20: 1719183200303807714
+      MamiSpeak_21: 1961005497282929152
+      MamiSpeak_22: -4796424836894926062
+      MamiSpeak_23: 8713758931314045618
+      MamiSpeak_3: -2472493013080108334
+      MamiSpeak_4: 222108145336297003
+      MamiSpeak_5: -107151965494536325
+      MamiSpeak_6: -7443535821912323156
+      MamiSpeak_7: -4077610510539193318
+      MamiSpeak_8: 4851169417253442161
+      MamiSpeak_9: -2411978830596745792
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

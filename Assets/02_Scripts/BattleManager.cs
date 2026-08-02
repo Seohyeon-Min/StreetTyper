@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 using FMODUnity;
 using UnityEngine.InputSystem;
@@ -26,9 +27,68 @@ public class BattleManager : MonoBehaviour
     [Tooltip("결과 화면 안내 문구('다음'/'다시')를 만들 때 참조한다.")]
     public ResultInputHandler resultInputHandler;
 
+    [Tooltip("보상을 고르는 중인지 물어보려고 참조한다. 그동안에는 '다음' 안내를 띄우지 않는다 " +
+             "- 보상 수신자가 우선순위상 입력을 가져가 실제로 칠 수 없기 때문이다.")]
+    [SerializeField] private RewardInputHandler rewardInputHandler;
+
     [Header("Statistics Result UI")]
     public GameObject resultPanel;
     public TextMeshProUGUI statsText;
+
+    [Header("Result Presentation")]
+    [Tooltip("스테이지를 클리어했을 때의 제목과 이미지")]
+    [SerializeField] private ScreenPresentation victoryPresentation = new ScreenPresentation("VICTORY!", "VICTORY!");
+
+    [Tooltip("플레이어가 쓰러졌을 때")]
+    [SerializeField] private ScreenPresentation defeatPresentation = new ScreenPresentation("DEFEAT...", "DEFEAT...");
+
+    [Tooltip("모든 스테이지를 클리어했을 때")]
+    [SerializeField] private ScreenPresentation gameClearPresentation = new ScreenPresentation("ALL STAGES CLEARED!", "ALL STAGES CLEARED!");
+
+    [Tooltip("결과 이미지를 그릴 Image. 비워두면 이미지는 건너뛴다.")]
+    [SerializeField] private Image resultImage;
+
+    [Header("통계 문구")]
+    [Tooltip("{0}=제목 {1}=최고 스테이지 {2}=전체 스테이지 {3}=CPM {4}=사용 단어 {5}=가한 피해 {6}=받은 피해")]
+    [SerializeField, TextArea(6, 12)]
+    private string statsFormat =
+        "{0}\n\n" +
+        "최고 도달 스테이지 : {1} / {2}\n" +
+        "평균 타자 속도 (CPM): {3}\n" +
+        "사용한 단어 수 : {4}\n" +
+        "누적 가한 데미지 : {5}\n" +
+        "누적 받은 데미지 : {6}";
+
+    [Tooltip("영어 통계 문구. 자리표시자는 한국어와 같다.")]
+    [SerializeField, TextArea(6, 12)]
+    private string statsFormatEn =
+        "{0}\n\n" +
+        "Highest stage : {1} / {2}\n" +
+        "Average speed (CPM) : {3}\n" +
+        "Words used : {4}\n" +
+        "Total damage dealt : {5}\n" +
+        "Total damage taken : {6}";
+
+    [Header("마더 드래곤 대사")]
+    [Tooltip("스파링 연출이라 순서가 정해져 있다. 0=시작, 1=1턴 뒤, 2=2턴 뒤, 3=마무리")]
+    [SerializeField]
+    private string[] motherDragonLines =
+    {
+        "어디 한번 실력을 보여보거라!",
+        "제법이구나!",
+        "조금 더 힘을 끌어내 보거라!",
+        "훌륭하다. 여기까지 하마!"
+    };
+
+    [Tooltip("영어 대사. 한국어와 같은 개수로 채울 것 - 비어 있으면 한국어가 그대로 나온다.")]
+    [SerializeField]
+    private string[] motherDragonLinesEn =
+    {
+        "Come, show me what you can do!",
+        "Not bad!",
+        "Draw out more of your power!",
+        "Splendid. That will do."
+    };
 
     [Header("Duration")]
     public float actionBubbleDuration = 1.0f;
@@ -36,36 +96,39 @@ public class BattleManager : MonoBehaviour
     private bool isGameOver = false;
     private bool isEventTriggered = false;
 
+    // 마지막으로 띄운 결과 종류. 보상 선택이 끝난 뒤 같은 화면을 다시 그리려면 필요하다.
+    private ResultKind lastResultKind = ResultKind.Victory;
+
     private GameObject enemyIntentBubbleObj;
     private SpeechBubble enemyIntentBubble;
 
     // 엄마용 전투 전용 변수
     private int mdTurnCount = 0;
-    private string mdIntentString = MotherDragonLine(0);
     private int savedMDDamage = 0;
 
-    // 마더 드래곤이 턴마다 하는 말. 스파링 연출이라 순서가 정해져 있다.
-    // 0=시작, 1=1턴 뒤, 2=2턴 뒤, 3=마무리
-    private static string MotherDragonLine(int index)
+    // ⚠️ 필드 초기화자에서 MotherDragonLine(0)을 부르지 않는다. 직렬화 값은 필드 초기화자보다
+    // 나중에 적용되므로, 인스펙터 배열을 거기서 읽으면 항상 비어 있다. Start와 ResetBattle에서 채운다.
+    private string mdIntentString = string.Empty;
+
+    // 마더 드래곤이 턴마다 하는 말. 인스펙터 배열에서 꺼내며, 영어 배열이 짧거나 비어 있으면
+    // 한국어로 넘어간다 - 대사는 타이핑 대상이 아니라 읽기만 하므로 진행이 막히지는 않는다.
+    private string MotherDragonLine(int index)
     {
-        if (LanguageSettings.IsEnglish)
+        var lines = motherDragonLines;
+
+        if (LanguageSettings.IsEnglish && motherDragonLinesEn != null && index < motherDragonLinesEn.Length &&
+            !string.IsNullOrEmpty(motherDragonLinesEn[index]))
         {
-            return index switch
-            {
-                1 => "Not bad!",
-                2 => "Draw out more of your power!",
-                3 => "Splendid. That will do.",
-                _ => "Come, show me what you can do!"
-            };
+            lines = motherDragonLinesEn;
         }
 
-        return index switch
+        if (lines == null || lines.Length == 0)
         {
-            1 => "제법이구나!",
-            2 => "조금 더 힘을 끌어내 보거라!",
-            3 => "훌륭하다. 여기까지 하마!",
-            _ => "어디 한번 실력을 보여보거라!"
-        };
+            Debug.LogWarning("BattleManager: motherDragonLines가 비어 있어 마더 드래곤 대사가 나오지 않습니다.", this);
+            return string.Empty;
+        }
+
+        return lines[Mathf.Clamp(index, 0, lines.Length - 1)];
     }
 
     //   추가: 대기열 상태 확인용 변수
@@ -75,6 +138,9 @@ public class BattleManager : MonoBehaviour
 
     void Start()
     {
+        // 인스펙터 배열은 이 시점에 채워져 있다(필드 초기화자와 달리).
+        mdIntentString = MotherDragonLine(0);
+
         if (resultText != null) resultText.gameObject.SetActive(false);
 
         if (SpeechBubbleManager.Instance != null)
@@ -103,6 +169,12 @@ public class BattleManager : MonoBehaviour
         // 실제 출시(Release) 빌드에서는 컴파일되지 않도록 안전장치 추가
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         if (Keyboard.current == null) return;
+
+        // 결과 화면이 떠 있는데 킬스위치가 먹으면 그 뒤에서 스테이지가 넘어간다.
+        if (isGameOver) return;
+
+        // 일시정지 메뉴 뒤에서도 마찬가지다. Update는 timeScale 0에서도 계속 돈다.
+        if (Mathf.Approximately(Time.timeScale, 0f)) return;
 
         // 숫자 0 누르면 플레이어 즉사
         if (Keyboard.current.digit0Key.wasPressedThisFrame)
@@ -226,38 +298,16 @@ public class BattleManager : MonoBehaviour
         isWaitingForDragonEnd = false; //   추가됨
 
         if (resultText != null) resultText.gameObject.SetActive(false);
+        if (resultImage != null) resultImage.gameObject.SetActive(false);
         UpdateUI();
     }
 
-    //public void ShowGameClear()
-    //{
-    //    bool wasOver = isGameOver;
-    //    isGameOver = true;
-    //    if (!wasOver) OnBattleEnded?.Invoke();
-
-    //    if (resultText != null)
-    //    {
-    //        resultText.text = "ALL STAGES CLEARED!";
-    //        resultText.gameObject.SetActive(true);
-    //    }
-
-    //    if (playerHealthBar != null) playerHealthBar.Hide();
-    //    if (enemyIntentBubbleObj != null) enemyIntentBubbleObj.SetActive(false);
-
-    //    ShowStatisticsUI("ALL STAGES CLEARED!");
-    //}
-
     public void ShowGameClear()
     {
-        bool wasOver = isGameOver;
-        isGameOver = true;
-        if (!wasOver) OnBattleEnded?.Invoke();
-
         if (playerHealthBar != null) playerHealthBar.Hide();
         if (enemyIntentBubbleObj != null) enemyIntentBubbleObj.SetActive(false);
 
-        // [수정] 통계창 출력 호출
-        ShowStatisticsUI("ALL STAGES CLEARED!", true);
+        ShowResult(ResultKind.GameClear);
     }
 
     public void UpdateUI()
@@ -319,7 +369,7 @@ public class BattleManager : MonoBehaviour
     {
         if (player == null || player.currentHP <= 0)
         {
-            if (!isGameOver) ShowResult("DEFEAT...");
+            if (!isGameOver) ShowResult(ResultKind.Defeat);
         }
         else if (enemyManager != null && enemyManager.currentEnemy != null && enemyManager.currentEnemy.currentHP <= 0)
         {
@@ -344,54 +394,98 @@ public class BattleManager : MonoBehaviour
                 }
                 else
                 {
-                    ShowResult("VICTORY!");
+                    ShowResult(ResultKind.Victory);
                 }
             }
         }
     }
 
-    // message는 결과만 담고("VICTORY!"), 무엇을 입력해야 하는지는 여기서 붙인다.
-    // ResultInputHandler가 명령 단어를 소유하므로 안내도 그쪽에서 만들어야 인스펙터에서
-    // 단어를 바꿨을 때 안내가 같이 따라간다.
-    //public void ShowResult(string message)
-    //{
-    //    bool wasOver = isGameOver;
-    //    isGameOver = true;
-    //    if (!wasOver) OnBattleEnded?.Invoke();
-
-    //    if (resultText != null)
-    //    {
-    //        string hint = string.Empty;
-    //        if (resultInputHandler != null)
-    //        {
-    //            bool isVictory = player != null && player.currentHP > 0;
-    //            hint = resultInputHandler.GetHintText(isVictory);
-    //        }
-
-    //        resultText.text = message + hint;
-    //        resultText.gameObject.SetActive(true);
-    //    }
-    //}
-
-    public void ShowResult(string message)
+    /// <summary>
+    /// 결과 화면을 띄운다. 제목과 이미지는 인스펙터의 ScreenPresentation에서 나오고,
+    /// 무엇을 입력해야 하는지는 ResultInputHandler가 붙인다 - 명령 단어를 소유한 쪽이
+    /// 안내도 만들어야 인스펙터에서 단어를 바꿨을 때 안내가 같이 따라간다.
+    /// </summary>
+    public void ShowResult(ResultKind kind)
     {
         bool wasOver = isGameOver;
         isGameOver = true;
+
+        // ⚠️ OnBattleEnded가 여기서 StageManager의 보상 라운드를 열고 돌아온다.
+        // 그래서 아래 ApplyResult는 "보상을 고르는 중"인 상태에서 그려지고, 선택이 끝나면
+        // StageManager가 RefreshResult()를 불러 다시 그린다.
+        lastResultKind = kind;
         if (!wasOver) OnBattleEnded?.Invoke();
 
-        string hint = string.Empty;
-        if (resultInputHandler != null)
-        {
-            bool isVictory = player != null && player.currentHP > 0;
-            hint = resultInputHandler.GetHintText(isVictory);
-        }
-
-
-        bool showStats = (player == null || player.currentHP <= 0);
-        ShowStatisticsUI(message + hint, showStats);
+        ApplyResult(kind);
     }
 
-    private void ShowStatisticsUI(string titleMessage, bool showStats)
+    /// <summary>결과 화면을 지금 상태에 맞춰 다시 그린다. 보상 선택이 끝났을 때
+    /// StageManager가 부른다 - 그제서야 "다음"을 칠 수 있으므로 안내도 그때 뜬다.</summary>
+    public void RefreshResult()
+    {
+        if (isGameOver)
+            ApplyResult(lastResultKind);
+    }
+
+    private void ApplyResult(ResultKind kind)
+    {
+        var presentation = GetPresentation(kind);
+        var fieldName = GetPresentationFieldName(kind);
+        var title = presentation.Title(this, fieldName);
+
+        // 보상을 고르는 중에는 "다음"이 막혀 있으므로(보상 수신자가 우선순위상 먼저 가져간다)
+        // 안내도 띄우지 않는다. 칠 수 없는 단어를 안내하면 플레이어만 헷갈린다.
+        string hint = string.Empty;
+        if (resultInputHandler != null && (rewardInputHandler == null || !rewardInputHandler.IsSelecting))
+            hint = resultInputHandler.BuildHint();
+
+        ApplyResultImage(presentation);
+
+        // 패배와 전체 클리어에서만 통계를 펼친다. 일반 스테이지 클리어는 곧바로 다음 판으로
+        // 이어지므로 중앙에 제목만 띄운다.
+        bool showStats = kind != ResultKind.Victory;
+        ShowStatisticsUI(title + hint, presentation.TitleColor, showStats);
+    }
+
+    private ScreenPresentation GetPresentation(ResultKind kind)
+    {
+        switch (kind)
+        {
+            case ResultKind.Defeat: return defeatPresentation;
+            case ResultKind.GameClear: return gameClearPresentation;
+            default: return victoryPresentation;
+        }
+    }
+
+    // LanguageSettings.Pick의 누락 경고가 어느 인스펙터 칸인지 알려주도록 필드명을 넘긴다.
+    private string GetPresentationFieldName(ResultKind kind)
+    {
+        switch (kind)
+        {
+            case ResultKind.Defeat: return nameof(defeatPresentation);
+            case ResultKind.GameClear: return nameof(gameClearPresentation);
+            default: return nameof(victoryPresentation);
+        }
+    }
+
+    private void ApplyResultImage(ScreenPresentation presentation)
+    {
+        if (resultImage == null)
+            return;
+
+        // ⚠️ 스프라이트가 없을 때 sprite = null로 두면 사라지는 게 아니라 흰 사각형이 그려진다.
+        // 오브젝트째 꺼야 한다(CardView가 배지를 다루는 방식과 같다).
+        if (presentation.Image == null)
+        {
+            resultImage.gameObject.SetActive(false);
+            return;
+        }
+
+        resultImage.sprite = presentation.Image;
+        resultImage.gameObject.SetActive(true);
+    }
+
+    private void ShowStatisticsUI(string titleMessage, Color titleColor, bool showStats)
     {
         // 결과 화면이 떴으므로 타자 속도 계산을 위한 타이머 중지
         if (StatisticsManager.Instance != null)
@@ -399,15 +493,7 @@ public class BattleManager : MonoBehaviour
 
         if (showStats && resultPanel != null && statsText != null && StatisticsManager.Instance != null)
         {
-            var stats = StatisticsManager.Instance;
-            string statsInfo = $"{titleMessage}\n\n" +
-                               $"최고 도달 스테이지 : {stats.highestStageReached} / 8\n" +
-                               $"평균 타자 속도 (CPM): {Mathf.RoundToInt(stats.GetCPM())}\n" +
-                               $"사용한 단어 수 : {stats.validWordsUsed}\n" +
-                               $"누적 가한 데미지 : {stats.totalDamageDealt}\n" +
-                               $"누적 받은 데미지 : {stats.totalDamageTaken}";
-
-            statsText.text = statsInfo;
+            statsText.text = BuildStatsText(titleMessage);
             resultPanel.SetActive(true); // 통계 패널 켜기
 
             // 기존 중앙 텍스트 끄기 (겹침 방지)
@@ -419,11 +505,34 @@ public class BattleManager : MonoBehaviour
             if (resultText != null)
             {
                 resultText.text = titleMessage;
+                resultText.color = titleColor;
                 resultText.gameObject.SetActive(true); // 기존 중앙 텍스트 켜기
             }
 
             // 통계 패널 끄기 (겹침 방지)
             if (resultPanel != null) resultPanel.SetActive(false);
         }
+    }
+
+    private string BuildStatsText(string titleMessage)
+    {
+        var stats = StatisticsManager.Instance;
+        var format = LanguageSettings.Pick(statsFormat, statsFormatEn, this, nameof(statsFormatEn));
+
+        if (string.IsNullOrEmpty(format))
+            return titleMessage;
+
+        // 분모를 리터럴로 박으면 스테이지 수를 바꿨을 때 조용히 어긋난다.
+        var totalStages = stageManager != null ? stageManager.totalStages : 0;
+
+        return string.Format(
+            format,
+            titleMessage,
+            stats.highestStageReached,
+            totalStages,
+            Mathf.RoundToInt(stats.GetCPM()),
+            stats.validWordsUsed,
+            stats.totalDamageDealt,
+            stats.totalDamageTaken);
     }
 }

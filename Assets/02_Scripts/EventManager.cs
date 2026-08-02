@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.InputSystem;
 using System.Collections.Generic;
 
 public class EventManager : MonoBehaviour
@@ -7,6 +6,9 @@ public class EventManager : MonoBehaviour
     [Header("References")]
     public BattleManager battleManager;
     public CharacterStats player;
+
+    [Tooltip("대사를 넘기는 스페이스 입력을 받기 위해 참조한다. 키보드를 직접 읽지 않는다.")]
+    public InputManager inputManager;
 
     [Header("Mother Dragon Setup")]
     public GameObject motherDragonVisual;
@@ -36,10 +38,25 @@ public class EventManager : MonoBehaviour
     private List<string> activeDialogueLines = new List<string>();
 
     private bool isEventActive = false;
-    public bool IsEventActive => isEventActive;
 
     private int pendingHealAmount = 0;
     private bool wasMotherDragon = false;
+
+    private void OnEnable()
+    {
+        if (inputManager != null)
+            inputManager.OnAdvance += HandleAdvance;
+        else
+            Debug.LogWarning("EventManager: inputManager가 연결되지 않았습니다. 스페이스로 대사를 넘길 수 없어 " +
+                             "마더 드래곤 이벤트에서 진행이 막힙니다(EndEvent가 불리지 않아 결과 화면도 " +
+                             "클리어 보상도 나오지 않습니다). 씬 인스턴스에서 연결하세요.", this);
+    }
+
+    private void OnDisable()
+    {
+        if (inputManager != null)
+            inputManager.OnAdvance -= HandleAdvance;
+    }
 
     void Start()
     {
@@ -86,14 +103,16 @@ public class EventManager : MonoBehaviour
         ShowNextDialogue();
     }
 
+    // 스페이스는 InputManager가 준다. 대사가 떠 있을 때만 의미가 있다.
+    private void HandleAdvance()
+    {
+        if (isEventActive)
+            ShowNextDialogue();
+    }
+
     void Update()
     {
-        if (!isEventActive || Keyboard.current == null) return;
-
-        if (Keyboard.current.spaceKey.wasPressedThisFrame)
-        {
-            ShowNextDialogue();
-        }
+        if (!isEventActive) return;
 
         if (dialogueBubbleObj != null && motherDragonTransform != null && dialogueBubbleObj.activeSelf)
         {
@@ -134,8 +153,9 @@ public class EventManager : MonoBehaviour
         if (battleManager != null)
         {
             battleManager.UpdateUI();
-            // 안내 문구("다음을 입력하세요")는 ShowResult가 ResultInputHandler에서 받아 붙인다.
-            battleManager.ShowResult("VICTORY!");
+            // 제목("VICTORY!")은 BattleManager의 ScreenPresentation에서, 안내 문구는
+            // ResultInputHandler에서 나온다 - 둘 다 인스펙터에서 바꿀 수 있다.
+            battleManager.ShowResult(ResultKind.Victory);
         }
     }
 }

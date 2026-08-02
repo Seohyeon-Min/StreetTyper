@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4537454949968267726
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 487241434307784838}
+  - component: {fileID: 4573702726212017277}
+  m_Layer: 0
+  m_Name: RewardInputHandler
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &487241434307784838
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4537454949968267726}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4573702726212017277
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4537454949968267726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 415e10ddcaa920c4e9cb869f23864b04, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RewardInputHandler
+  inputManager: {fileID: 0}
+  hintSeparator: '
+
+'
+  hintSuffix: 
+  hintSuffixEn: 
+  hintLabel: {fileID: 0}
+  wordUnlockManager: {fileID: 0}
+  rewardCardView: {fileID: 0}
+  skipCommand:
+    korean: "\uB118\uAE30\uAE30"
+    english: skip
+    hintKorean: "\uAC74\uB108\uB6F0\uB824\uBA74 \"{0}\""
+    hintEnglish: Type "{0}" to skip
+  pickHint: "\uC5BB\uC744 \uCE74\uB4DC\uB97C \uC785\uB825\uD558\uC138\uC694"
+  pickHintEn: Type a card name to claim it
+  logDebugEvents: 0

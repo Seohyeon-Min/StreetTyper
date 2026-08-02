@@ -1,56 +1,73 @@
-using TMPro;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 // ESC로 게임을 멈추고 메뉴를 띄운다. 메뉴 선택은 버튼 클릭이 아니라 타이핑으로 한다 -
 // 멈춘 동안 입력창에 "계속"/"타이틀"을 쳐서 고른다.
 //
-// 전투의 단어 조합(WordChainManager/CardInputHandler)과는 완전히 별개의 경로다. 명령 단어는
-// 카드도 사전 단어도 아니므로 InputManager의 이벤트를 여기서 직접 받아 처리한다.
+// 매칭 파이프라인은 TypingReceiver가, 안내 문구 조립은 CommandWordReceiver가 맡는다.
+// 여기 남은 것은 "언제 내 차례인가"(멈춰 있을 때)와 "맞혔을 때 무엇을 하는가"뿐이다.
 //
 // Time.timeScale = 0 하나로 턴 전환 대기(DeckManager/StageManager)·말풍선(BattleManager)·
 // 타이머 감소(TimerManager)·카드 애니메이션(CardSlotView/HandFanLayout)이 전부 멈춘다 -
 // 시간에 의존하는 코드가 모두 deltaTime/WaitForSeconds 기반이라 개별 정지 처리는 하지 않는다.
-public class PauseManager : MonoBehaviour
+public class PauseManager : CommandWordReceiver
 {
     [Header("UI")]
     [Tooltip("일시정지 창 루트. 평소엔 비활성이어야 한다.")]
     [SerializeField] private GameObject pausePanel;
 
-    [Tooltip("안내 문구 라벨. 비워두면 씬에 적어둔 글자가 그대로 남는다 - 그 경우 " +
-             "명령 단어나 언어를 바꿔도 안내가 따라오지 않는다.")]
-    [SerializeField] private TMP_Text hintText;
+    [Header("명령 단어")]
+    [SerializeField]
+    private TypedCommand resumeCommand = new TypedCommand(
+        "계속", "resume",
+        "계속 진행을 원한다면 \"{0}\"!",
+        "Type \"{0}\" to keep playing!");
 
-    [Header("References")]
-    [SerializeField] private InputManager inputManager;
-
-    [Header("명령 단어 - 한국어")]
-    [Tooltip("치면 일시정지가 풀리는 단어")]
-    [SerializeField] private string resumeWord = "계속";
-
-    [Tooltip("치면 타이틀 씬으로 돌아가는 단어")]
-    [SerializeField] private string titleWord = "타이틀";
-
-    [Header("명령 단어 - 영어")]
-    [Tooltip("소문자로 적을 것. 입력이 소문자로 정규화되어 들어옵니다.")]
-    [SerializeField] private string resumeWordEn = "resume";
-
-    [SerializeField] private string titleWordEn = "title";
-
-    [Header("안내 문구")]
-    [Tooltip("{0}=계속 단어, {1}=타이틀 단어")]
-    [SerializeField, TextArea] private string hintFormat = "계속 진행을 원한다면 \"{0}\"!\n타이틀로 돌아가길 원한다면 \"{1}\"!\n을 입력해주세요!";
-
-    [SerializeField, TextArea] private string hintFormatEn = "Type \"{0}\" to keep playing!\nType \"{1}\" to return to the title!";
+    [SerializeField]
+    private TypedCommand titleCommand = new TypedCommand(
+        "타이틀", "title",
+        "타이틀로 돌아가길 원한다면 \"{0}\"!",
+        "Type \"{0}\" to return to the title!");
 
     private bool _isPaused;
     private bool _inputWasEnabled;
 
+    // 명령 단어를 담아둘 버퍼. 글자마다 Targets가 불리므로 매번 새로 만들지 않는다.
+    private readonly string[] _targets = new string[2];
+
     public bool IsPaused => _isPaused;
 
-    private string ResumeWord => LanguageSettings.Pick(resumeWord, resumeWordEn, this, "resumeWordEn");
-    private string TitleWord => LanguageSettings.Pick(titleWord, titleWordEn, this, "titleWordEn");
+    /// 일시정지는 무엇보다 우선한다 - 멈춘 화면에서 명령 단어의 첫 글자가 손패 쪽으로 새면
+    /// 그 자리에서 오타 처리되어 명령 단어를 끝까지 칠 수 없다.
+    public override TypingPriority Priority => TypingPriority.Pause;
+
+    public override bool WantsInput() => _isPaused;
+
+    protected override IReadOnlyList<string> Targets
+    {
+        get
+        {
+            _targets[0] = resumeCommand.Word(this, nameof(resumeCommand));
+            _targets[1] = titleCommand.Word(this, nameof(titleCommand));
+            return _targets;
+        }
+    }
+
+    public override string BuildHint()
+    {
+        return JoinHints(
+            resumeCommand.Hint(this, nameof(resumeCommand)),
+            titleCommand.Hint(this, nameof(titleCommand)));
+    }
+
+    protected override void OnCommandMatched(int index, bool wasComposing)
+    {
+        if (index == 0)
+            Resume();
+        else
+            ReturnToTitle();
+    }
 
     private void Awake()
     {
@@ -61,111 +78,32 @@ public class PauseManager : MonoBehaviour
             pausePanel.SetActive(false);
         else
             Debug.LogWarning("PauseManager: pausePanel이 연결되지 않았습니다.", this);
-
-        if (inputManager == null)
-            Debug.LogWarning("PauseManager: inputManager가 연결되지 않아 명령 단어를 입력받을 수 없습니다.", this);
     }
 
-    private void OnEnable()
+    protected override void OnEnable()
     {
-        if (inputManager == null)
-            return;
+        base.OnEnable();
 
-        // 조합 중에도 평가해야 하므로 두 이벤트를 모두 구독한다(이유는 Evaluate 주석 참조).
-        inputManager.OnCharacterEntered += HandleCharacterEntered;
-        inputManager.OnCompositionChanged += HandleCompositionChanged;
+        if (inputManager != null)
+            inputManager.OnCancel += HandleCancel;
     }
 
-    private void OnDisable()
+    protected override void OnDisable()
     {
-        if (inputManager == null)
-            return;
+        base.OnDisable();
 
-        inputManager.OnCharacterEntered -= HandleCharacterEntered;
-        inputManager.OnCompositionChanged -= HandleCompositionChanged;
+        if (inputManager != null)
+            inputManager.OnCancel -= HandleCancel;
     }
 
-    // Update는 timeScale 0에서도 계속 돌기 때문에 멈춘 상태에서도 ESC를 받을 수 있다.
-    private void Update()
+    // ESC는 InputManager가 준다. 그쪽에서 입력 잠금(_inputEnabled)보다 위에서 읽으므로
+    // 턴 전환 대기처럼 타이핑이 잠긴 구간에서도 일시정지가 걸린다.
+    private void HandleCancel()
     {
-        if (Keyboard.current == null)
-            return;
-
-        if (!Keyboard.current.escapeKey.wasPressedThisFrame)
-            return;
-
         if (_isPaused)
             Resume();
         else
             Pause();
-    }
-
-    // 글자가 커밋되는 순간 Composition은 아직 방금 커밋된 옛 값을 들고 있을 수 있다.
-    // 그걸 이어붙이면 "계계"처럼 중복되므로, 커밋 경로에서는 조합 문자열을 비워서 평가한다.
-    private void HandleCharacterEntered(char _)
-    {
-        Evaluate(string.Empty);
-    }
-
-    private void HandleCompositionChanged(string composing)
-    {
-        Evaluate(composing);
-    }
-
-    // 조합 중에도 평가하는 이유는 CardInputHandler와 같다 - "계속"의 마지막 음절 "속"은
-    // 뒤에 이어질 글자가 없어 IME가 영영 커밋하지 않는다. 커밋만 기다리면 명령 단어가
-    // 절대 완성되지 않는다.
-    private void Evaluate(string composing)
-    {
-        if (!_isPaused || inputManager == null)
-            return;
-
-        var committed = inputManager.CurrentInput;
-        var typed = committed + composing;
-
-        // ClearInput()이 OnCompositionChanged를 발생시켜 이 메서드가 재진입한다.
-        // 그때는 입력이 비어 있으므로 여기서 빠져나가 무한 재귀가 되지 않는다.
-        if (typed.Length == 0)
-            return;
-
-        var resume = ResumeWord;
-        var title = TitleWord;
-
-        if (typed == resume)
-        {
-            inputManager.ClearInput();
-            Resume();
-            return;
-        }
-
-        if (typed == title)
-        {
-            inputManager.ClearInput();
-            ReturnToTitle();
-            return;
-        }
-
-        // 두 단어 중 어느 쪽으로도 진행 중이 아니면 오타다. 입력창을 비워 처음부터 다시 치게 한다.
-        // 매칭 판정은 전투 쪽과 같은 기준(InputManager.IsValidProgress)을 쓴다.
-        if (InputManager.IsValidProgress(committed, composing, resume) ||
-            InputManager.IsValidProgress(committed, composing, title))
-            return;
-
-        inputManager.ClearInput();
-    }
-
-    // 안내 문구를 명령 단어에서 만들어 넣는다. 씬에 글자를 박아두면 단어를 바꾸거나 언어를
-    // 바꿔도 안내만 옛 상태로 남는다(결과 화면의 ResultInputHandler.GetHintText와 같은 이유).
-    private void RefreshHint()
-    {
-        if (hintText == null)
-            return;
-
-        var format = LanguageSettings.IsEnglish ? hintFormatEn : hintFormat;
-        if (string.IsNullOrEmpty(format))
-            return;
-
-        hintText.text = string.Format(format, ResumeWord, TitleWord);
     }
 
     public void Pause()
@@ -182,10 +120,12 @@ public class PauseManager : MonoBehaviour
         {
             // 메뉴를 타이핑으로 고르므로 입력을 끄지 않는다 - 오히려 꺼져 있었다면 켠다.
             // (턴 전환 대기나 결과 화면에서 멈췄다면 원래 잠겨 있다.)
-            // EnableInput은 한글 모드까지 다시 강제하므로 명령 단어를 바로 칠 수 있다.
+            // EnableInput은 IME 모드까지 다시 맞춰주므로 명령 단어를 바로 칠 수 있다.
             inputManager.EnableInput();
 
-            // 치다 만 글자가 명령 단어와 섞이지 않게 비운다.
+            // ⚠️ ClearInput을 따로 불러야 한다. EnableInput은 이미 켜져 있으면 곧바로 리턴해서
+            // 내부의 ClearInput까지 건너뛰는데, 일시정지는 보통 입력이 켜진 플레이어 턴 중에
+            // 걸린다 - 그때 치다 만 글자가 남아 명령 단어에 섞인다.
             inputManager.ClearInput();
         }
 
@@ -228,9 +168,8 @@ public class PauseManager : MonoBehaviour
         Time.timeScale = 1f;
 
         if (SoundManager.Instance != null)
-        {
             SoundManager.Instance.StopBGM();
-        }
+
         SceneManager.LoadScene(GameScenes.Title);
     }
 }

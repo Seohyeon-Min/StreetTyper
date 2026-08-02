@@ -129,6 +129,13 @@ public class EventManager : MonoBehaviour
             {
                 dialogueBubbleScript.Setup(activeDialogueLines[currentLineIndex]);
             }
+
+            if (motherDragonVisual != null)
+            {
+                Animator anim = motherDragonVisual.GetComponent<Animator>();
+                if (anim != null) anim.SetTrigger("Speak");
+            }
+
             currentLineIndex++;
         }
         else

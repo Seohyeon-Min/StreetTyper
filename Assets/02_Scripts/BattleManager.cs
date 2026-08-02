@@ -11,6 +11,9 @@ public class BattleManager : MonoBehaviour
     public StageManager stageManager;
     public EventManager eventManager;
 
+    [Tooltip("적 인텐트 말풍선을 내 턴(TurnPhase.PlayerInput)일 때만 보여주기 위해 참조한다.")]
+    public DeckManager deckManager;
+
     [Header("Player Reference")]
     public CharacterStats player;
 
@@ -89,6 +92,9 @@ public class BattleManager : MonoBehaviour
         if (SoundManager.Instance != null)
             SoundManager.Instance.PlayBattleBGM();
 
+        if (deckManager != null)
+            deckManager.OnTurnPhaseChanged += HandleTurnPhaseChanged;
+
         UpdateUI();
     }
 
@@ -122,6 +128,26 @@ public class BattleManager : MonoBehaviour
             }
         }
 #endif
+    }
+
+    private void OnDestroy()
+    {
+        if (deckManager != null)
+            deckManager.OnTurnPhaseChanged -= HandleTurnPhaseChanged;
+    }
+
+    // 내 턴(PlayerInput)이 아니면(공격 애니메이션 재생 중, 적 턴 등) 적 인텐트 말풍선을 숨긴다.
+    // 다시 내 턴이 되면 UpdateUI()가 적이 살아있는지부터 다시 판단해서 알아서 켠다.
+    private void HandleTurnPhaseChanged(DeckManager.TurnPhase phase)
+    {
+        if (phase == DeckManager.TurnPhase.PlayerInput)
+        {
+            UpdateUI();
+            return;
+        }
+
+        if (enemyIntentBubbleObj != null)
+            enemyIntentBubbleObj.SetActive(false);
     }
 
     public void OnPlayerActionResolved(string bubbleText)
@@ -253,19 +279,31 @@ public class BattleManager : MonoBehaviour
             if (enemyHealthBar != null)
                 enemyHealthBar.UpdateUI(enemy.currentHP, enemy.maxHP, enemy.defense);
 
-            if (enemyIntentBubbleObj != null && enemyIntentBubble != null)
+            // 내 턴(PlayerInput)일 때만 인텐트 말풍선을 보여준다. UpdateUI()는 펀치 한 번마다
+            // (PlayPendingActions 안에서) HP 갱신용으로 계속 호출되므로, 여기서 페이즈를 안 보면
+            // 애니메이션 재생 중에도 펀치마다 말풍선이 다시 켜졌다 꺼졌다 한다.
+            var isPlayerInputPhase = deckManager == null || deckManager.CurrentPhase == DeckManager.TurnPhase.PlayerInput;
+
+            if (enemyIntentBubbleObj != null && enemyIntentBubble != null && isPlayerInputPhase)
             {
                 enemyIntentBubbleObj.SetActive(true);
 
-                string currentIntent = enemy.isMotherDragon ? mdIntentString : enemyManager.GetIntentString();
-
-                enemyIntentBubble.Setup(currentIntent);
+                // 마더 드래곤은 대사(텍스트)를 그대로 쓰고, 일반 적은 아이콘 + ActionType별 색이
+                // 입혀진 텍스트를 같이 보여준다.
+                if (enemy.isMotherDragon)
+                    enemyIntentBubble.Setup(mdIntentString);
+                else
+                    enemyIntentBubble.SetupIntent(enemyManager.GetIntentIcon(), enemyManager.GetIntentString(), enemyManager.GetIntentColor());
 
                 if (SpeechBubbleManager.Instance != null)
                 {
                     enemyIntentBubbleObj.GetComponent<RectTransform>().position =
                         SpeechBubbleManager.Instance.GetBubbleScreenPosition(enemy.BubblePosition, false);
                 }
+            }
+            else if (enemyIntentBubbleObj != null && !isPlayerInputPhase)
+            {
+                enemyIntentBubbleObj.SetActive(false);
             }
         }
         else

@@ -23,6 +23,9 @@ public class PauseManager : MonoBehaviour
              "명령 단어나 언어를 바꿔도 안내가 따라오지 않는다.")]
     [SerializeField] private TMP_Text hintText;
 
+    [Tooltip("\"PAUSE\" 제목이 가운데서부터 열리는 연출. pausePanel을 켤 때마다 재생한다. 비워두면 재생하지 않는다.")]
+    [SerializeField] private TextGateRevealAnimation titleReveal;
+
     [Header("References")]
     [SerializeField] private InputManager inputManager;
 
@@ -221,6 +224,11 @@ public class PauseManager : MonoBehaviour
         if (pausePanel != null)
             pausePanel.SetActive(true);
 
+        if (titleReveal != null)
+            titleReveal.Play();
+        else
+            Debug.LogWarning("PauseManager: titleReveal이 연결되지 않아 PAUSE 열림 연출이 재생되지 않습니다.", this);
+
         ShowCommandCards();
 
         Time.timeScale = 0f;
@@ -234,10 +242,14 @@ public class PauseManager : MonoBehaviour
         _isPaused = false;
         Time.timeScale = 1f;
 
+        // pausePanel을 먼저 끄면 그 아래 있는 명령 카드(commandCardsLayout의 자식)도
+        // activeInHierarchy가 함께 false가 되어, 뒤이은 HideCommandCards()의 PlayExit이
+        // 코루틴을 새로 못 띄우고 "game object is inactive" 에러를 낸다.
+        // 카드가 아직 활성 상태일 때 퇴장 애니메이션을 먼저 걸어두고, 패널은 그 뒤에 끈다.
+        HideCommandCards();
+
         if (pausePanel != null)
             pausePanel.SetActive(false);
-
-        HideCommandCards();
 
         if (inputManager != null)
         {
@@ -273,6 +285,11 @@ public class PauseManager : MonoBehaviour
         if (commandCardsLayout == null || commandCardPrefab == null)
             return;
 
+        // commandCardsLayout 자신이 꺼진 채로 시작할 수 있다(pausePanel과 같은 습관으로 씬에
+        // 비활성으로 남아 있는 경우). 자식(새 카드)만 SetActive(true)해도 부모가 꺼져 있으면
+        // activeInHierarchy가 false라 StartCoroutine이 "game object is inactive" 에러로 실패한다.
+        commandCardsLayout.gameObject.SetActive(true);
+
         SpawnCommandCard(ResumeWord);
         SpawnCommandCard(TitleWord);
     }
@@ -286,14 +303,15 @@ public class PauseManager : MonoBehaviour
 
     private void HideCommandCards()
     {
-        // 명령 카드는 아래로 가라앉듯 사라진 뒤 파괴한다(스폰할 때 올라온 것과 반대 방향).
+        // 명령 카드는 애니메이션 없이 바로 파괴한다. commandCardsLayout(PauseHand)이 pausePanel의
+        // 자식이라 이 직후 pausePanel이 꺼지면 카드도 같이 화면에서 사라지므로, 퇴장 애니메이션을
+        // 걸어도 어차피 안 보인다 - 그리고 걸어봤자 코루틴이 시작되자마자 부모가 꺼지면서 잘려
+        // Destroy가 끝내 호출되지 않고 비활성 상태로 계속 쌓이기만 한다(이유는 ShowCommandCards
+        // 주석 참조 - 같은 activeInHierarchy 문제의 반대 방향).
         foreach (var instance in _commandCardInstances)
         {
-            if (instance == null)
-                continue;
-
-            var toDestroy = instance;
-            toDestroy.PlayExit(-commandCardTransitionHeight, () => Destroy(toDestroy.gameObject));
+            if (instance != null)
+                Destroy(instance.gameObject);
         }
         _commandCardInstances.Clear();
 

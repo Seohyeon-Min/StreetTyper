@@ -2304,6 +2304,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 5964062023576382838, guid: 4b3e0a97b3d0db64eba3274caf761181, type: 3}
   m_PrefabInstance: {fileID: 8995351106001376285}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1173419601 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4637003702455704162, guid: 4b3e0a97b3d0db64eba3274caf761181, type: 3}
+  m_PrefabInstance: {fileID: 8995351106001376285}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1173419597}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ed8a3bb8ec0ded43a806201686f6d96, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextGateRevealAnimation
 --- !u!1001 &1180301410
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3537,6 +3548,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PauseManager
   pausePanel: {fileID: 1173419597}
   hintText: {fileID: 0}
+  titleReveal: {fileID: 1173419601}
   inputManager: {fileID: 2533025945593742310}
   handFanLayout: {fileID: 1259881543}
   cardSlotManager: {fileID: 1084949171}
@@ -5380,6 +5392,18 @@ PrefabInstance:
     - target: {fileID: 10990203855623647, guid: 4b3e0a97b3d0db64eba3274caf761181, type: 3}
       propertyPath: m_Material
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3736478562971646970, guid: 4b3e0a97b3d0db64eba3274caf761181, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 4637003702455704162, guid: 4b3e0a97b3d0db64eba3274caf761181, type: 3}
+      propertyPath: duration
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 4637003702455704162, guid: 4b3e0a97b3d0db64eba3274caf761181, type: 3}
+      propertyPath: barOvershoot
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 5807197443116478052, guid: 4b3e0a97b3d0db64eba3274caf761181, type: 3}
       propertyPath: m_Name

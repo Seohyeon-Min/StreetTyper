@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a9684e27ffb23a49b13d2ffd843db05, type: 3}
   m_Name: Chop
   m_EditorClassIdentifier: Assembly-CSharp::ActionCardData
-  cardName: "\uCD89"
+  cardName: "\uCD19"
   description: "\uC774\uBC88 \uD134 \uC561\uC158\uB2F9 \uC704\uB825 +2"
-  statsLabel: "{0}"
-  cardNameEn: "chop"
-  descriptionEn: "+2 power per action"
-  statsLabelEn: "{0}"
+  statsLabel: '{0}'
+  cardNameEn: chop
+  descriptionEn: +2 power per action
+  statsLabelEn: '{0}'
   icon: {fileID: 0}
   actionKind: 0
   strengthBonus: 0

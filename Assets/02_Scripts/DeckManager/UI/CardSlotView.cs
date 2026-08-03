@@ -174,12 +174,14 @@ public class CardSlotView : MonoBehaviour
 
     /// <summary>offset 위치(투명)에서 시작해 제자리(0, 불투명)까지 움직이며 페이드인한다.
     /// setContent가 있으면 애니메이션을 시작하기 전에 먼저 불러서 내용을 채운다(BindStatic이나
-    /// Bind 등 무엇이든). 꺼져 있던 오브젝트라도 자동으로 켠다.</summary>
-    public void PlayEnter(float fromOffset, System.Action setContent = null)
+    /// Bind 등 무엇이든). 꺼져 있던 오브젝트라도 자동으로 켠다. duration을 비워두면 인스펙터의
+    /// enterDuration을 쓴다 - 어떤 화면은 더 천천히 떠오르게 하고 싶을 때만 넘긴다(예: 결과
+    /// 화면의 "다시하기"/"타이틀로").</summary>
+    public void PlayEnter(float fromOffset, System.Action setContent = null, float? duration = null)
     {
         gameObject.SetActive(true);
         setContent?.Invoke();
-        RestartSwapCoroutine(EnterRoutine(fromOffset));
+        RestartSwapCoroutine(EnterRoutine(fromOffset, duration ?? enterDuration));
     }
 
     /// <summary>패배 시 카드가 무너지듯 회전하며 떨어져 사라진다. delay를 인덱스에 비례해 다르게
@@ -238,10 +240,10 @@ public class CardSlotView : MonoBehaviour
         _swapCoroutine = null;
     }
 
-    private IEnumerator EnterRoutine(float fromOffset)
+    private IEnumerator EnterRoutine(float fromOffset, float duration)
     {
         _isSwapping = true;
-        yield return AnimateSwap(fromOffset, 0f, 0f, 1f, enterDuration);
+        yield return AnimateSwap(fromOffset, 0f, 0f, 1f, duration);
         _isSwapping = false;
         _swapCoroutine = null;
     }
@@ -300,13 +302,19 @@ public class CardSlotView : MonoBehaviour
 
     private void Refresh()
     {
-        var cards = cardSlotManager != null ? cardSlotManager.CurrentCards : null;
+        // ⚠️ 슬롯에 묶이지 않은 카드는 손대지 않는다. 일시정지 명령 카드가 그렇다 -
+        // BindStatic이 이미 내용을 채워놨는데 여기서 비우면 그걸 지워버린다.
+        // (Start()가 Refresh를 부르는데, 명령 카드는 Instantiate -> BindStatic -> Start 순서라
+        //  Start가 항상 나중이다. 실제로 카드가 통째로 비어 보이는 회귀가 났던 자리다.)
+        if (cardSlotManager == null)
+            return;
 
-        // ⚠️ 슬롯을 읽을 수 없으면 그냥 리턴하지 말고 빈 카드로 둔다. 두고 나오면 Card.prefab에
-        // 저장돼 있는 예시 문구("파워" / "테스트테스트…" / "+1")가 그대로 화면에 보인다.
-        // 실제로 걸리는 경로가 있다: 이 프로젝트엔 스크립트 실행 순서 설정이 없어서
-        // HandFanLayout이 카드를 스폰하고 Bind할 때 CardSlotManager.Awake가 아직 안 돌았을 수 있고,
-        // 그러면 _currentCards가 null이라 여기로 온다(다음 RefillAll까지 예시 문구가 남는다).
+        // 여기부터는 슬롯 카드다. 슬롯을 읽을 수 없으면 그냥 리턴하지 말고 빈 카드로 둔다 -
+        // 두고 나오면 Card.prefab에 저장돼 있는 예시 문구("파워" / "테스트테스트…" / "+1")가
+        // 그대로 화면에 보인다. 이 프로젝트엔 스크립트 실행 순서 설정이 없어서 HandFanLayout이
+        // 카드를 스폰하고 Bind할 때 CardSlotManager.Awake가 아직 안 돌았을 수 있고, 그러면
+        // _currentCards가 null이라 여기로 온다.
+        var cards = cardSlotManager.CurrentCards;
         if (cards == null || slotIndex < 0 || slotIndex >= cards.Count)
         {
             SetCard(null);

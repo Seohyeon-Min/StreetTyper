@@ -13,8 +13,8 @@ public class StageManager : MonoBehaviour
     [Tooltip("스테이지가 열리고 플레이어가 타이핑을 시작할 수 있을 때까지의 대기 시간(초)")]
     public float stageStartDelay = 2f;
 
-    [Tooltip("총 스테이지 수")]
-    public int totalStages = 8;
+    [Tooltip("총 스테이지 수(결과 화면의 '최고 도달 스테이지' 분모로만 쓰인다 - 스폰 로직과 무관)")]
+    public int totalStages = 12;
 
     [Header("References")]
     public BattleManager battleManager;

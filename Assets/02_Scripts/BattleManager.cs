@@ -35,6 +35,12 @@ public class BattleManager : MonoBehaviour
              "statsText 한 줄짜리 텍스트 대신 이걸 쓴다.")]
     [SerializeField] private ResultStatsView resultStatsView;
 
+    [Tooltip("resultPanel이 뜰 때 같이 재생할 TextGateRevealAnimation들(제목 텍스트, 배경 " +
+             "윈도우 등 - 마스크마다 컴포넌트가 하나씩 따로 필요하다). PauseManager.titleReveal과 " +
+             "같은 컴포넌트지만 여긴 아무도 Play()를 부르지 않으면 마스크가 계속 닫힌 채(폭 0)로 " +
+             "남는다 - ShowStatisticsUI가 resultPanel을 켤 때 여기 담긴 것 전부를 같이 재생한다.")]
+    [SerializeField] private TextGateRevealAnimation[] resultReveals;
+
     [Header("Result Presentation")]
     [Tooltip("⚠️ 지금은 화면에 나오지 않는다. 일반 스테이지 클리어는 결과를 띄우지 않고 곧바로 " +
              "보상 선택으로 넘어가기 때문이다(ApplyResult 참조). 여기를 채워도 보이지 않는다.")]
@@ -519,5 +525,14 @@ public class BattleManager : MonoBehaviour
             stats != null ? stats.totalDamageTaken : 0);
 
         resultPanel.SetActive(true);
+
+        if (resultReveals != null)
+        {
+            foreach (var reveal in resultReveals)
+            {
+                if (reveal != null)
+                    reveal.Play();
+            }
+        }
     }
 }

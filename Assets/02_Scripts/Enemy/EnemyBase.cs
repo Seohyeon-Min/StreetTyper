@@ -22,6 +22,11 @@ public class EnemyBase : CharacterStats
             maxHP = Mathf.RoundToInt(enemyData.maxHP * multiplier);
             currentHP = maxHP;
             power = Mathf.RoundToInt(enemyData.power * multiplier);
+
+            // 새로 등장한 적은 방어도가 없는 상태에서 시작해야 한다. 적 방어도는 턴마다 비워주는
+            // 곳이 없어서(플레이어 쪽만 DeckManager가 비운다) 한 번 남으면 계속 쌓인 채로 간다.
+            defense = 0;
+
             isScaled = true;
         }
     }

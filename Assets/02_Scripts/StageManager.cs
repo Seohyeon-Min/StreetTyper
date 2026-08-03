@@ -187,6 +187,11 @@ public class StageManager : MonoBehaviour
         else
             Debug.LogWarning("StageManager: enemyHealthBarAnchor가 할당되지 않았습니다.", this);
 
+        // 스테이지를 넘어갈 때도 플레이어 방어도를 비운다. 턴마다 비우는 곳이 따로 있지만
+        // (DeckManager.RunTurnTransition) 마지막 턴에 쌓은 방어도가 남은 채 다음 스테이지로
+        // 넘어가는 경로가 생기지 않도록 여기서도 확실히 0으로 둔다.
+        // ⚠️ 적 방어도는 여기서도 건드리지 않는다 - 적은 방어를 쌓아 단단해지는 게 의도된 밸런스이고,
+        // 줄어드는 건 플레이어가 때릴 때뿐이다(새 적은 EnemyBase.ApplyScaling이 0에서 시작시킨다).
         if (player != null)
         {
             player.defense = 0;

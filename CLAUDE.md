@@ -149,7 +149,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 
 대기 중에는 **입력이 잠기고 타이머도 멈춘다**(`DisableInput` + `StopTimer`). 대기가 끝나는 쪽에서 다시 열어주므로, 새 대기 구간을 추가할 땐 반드시 짝을 맞출 것.
 
-스크립트 폴더는 시스템 단위로 나뉘고, 뷰는 각 시스템 아래 `UI/` 하위 폴더에 둔다(`DeckManager/UI/`, `Timer/UI/`, `WordChainManager/UI/`, `Combat/UI/`). 예외는 특정 시스템에 속하지 않는 화면 단위 UI인 `02_Scripts/UI/`(`TitleMenu`/`OptionsPanel`/`PauseManager`/`CardCollectionPanel`/`MenuKeyboardNavigator`/`ResultInputHandler`/`ScreenPresentation`/`TextGateRevealAnimation`/`WorldAnchoredUI`/`TMPCornerWarp`)와 최상위에 흩어져 있는 것들(`GameScenes.cs`·`LanguageSettings.cs`·`BattleManager`·`StageManager`·`EventManager`·`IntroManager`·`SoundManager`·`StatisticsManager`·`SpeechBubble(Manager)`·`HPBarUI`·`CameraShake`·`FloatingDamage*`)이다.
+스크립트 폴더는 시스템 단위로 나뉘고, 뷰는 각 시스템 아래 `UI/` 하위 폴더에 둔다(`DeckManager/UI/`, `Timer/UI/`, `WordChainManager/UI/`, `Combat/UI/`). 예외는 특정 시스템에 속하지 않는 화면 단위 UI인 `02_Scripts/UI/`(`TitleMenu`/`OptionsPanel`/`PauseManager`/`CardCollectionPanel`/`CardDeletePanel`/`MenuKeyboardNavigator`/`ResultInputHandler`/`ResultStatsView`/`ScreenPresentation`/`TextGateRevealAnimation`/`WorldAnchoredUI`/`TMPCornerWarp`)와 최상위에 흩어져 있는 것들(`GameScenes.cs`·`LanguageSettings.cs`·`BattleManager`·`StageManager`·`EventManager`·`IntroManager`·`SoundManager`·`StatisticsManager`·`SpeechBubble(Manager)`·`HPBarUI`·`CameraShake`·`FloatingDamage*`)이다.
 
 - **`TMPCornerWarp`** (`02_Scripts/UI/`) — TMP 텍스트 각 글자의 **위쪽 두 꼭짓점만** `topSkewX`만큼 오른쪽으로 밀어 이탤릭처럼 기울이는 정적 효과(애니메이션 없음). `[ExecuteAlways]`라 Play를 누르지 않아도 씬 뷰에서 바로 보인다. 폰트에 이탤릭 웨이트가 없어도 기울일 수 있게 하는 용도다.
 
@@ -398,11 +398,18 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
     - 숨김은 **자식 말풍선의 `SetActive`**로 한다(목록이 비었을 때 + 턴 종료 `OnTimeExpired`). 자기 자신을 끄는 게 아니라 자식만 끄므로 `LateUpdate`와 이벤트 구독이 계속 살아 있다 — 예전에 `CanvasGroup.alpha`로 숨기면서 `WorldAnchoredUI`와 알파 소유권이 충돌하던 문제가 이 구조로 사라졌다.
     - 한글 문장이 들어가므로 **말풍선 라벨 폰트는 Paperlogy여야 한다.**
 - **`CharacterStats`** — `TakeDamage(damage, ignoreDefense = false)`, `Heal`, `AddDefense`, `IncreasePower`, private `Die()` → `Destroy(gameObject)`(그래서 호출자들이 매 프레임 null 체크한다).
+  - **피해를 깎는 상시 "방어력" 스탯은 없다.** 스탯은 `maxHP`/`currentHP`/`power`/`defense` 넷뿐이고 `power`는 공격에만 쓰인다. 방어에 관여하는 값은 넷이며 성격이 다르다 — **`defense`**(유일하게 피해를 막는 값. 쌓였다 닳는 소모품) · `EnemyData.defensePower`(적이 Defend할 때 쌓는 **양**) · `damageTakenMultiplier`(배율, 데빌만 0.75) · `ResolvedAction.DamageReduction`(데빌이 실어 보내 위 배율로 변환된다).
+  - **계산 순서**: `× damageTakenMultiplier` → `defense`가 있는 만큼 흡수(그만큼 `defense`도 닳음) → **넘친 만큼은 반드시 HP로.** `IgnoresDefense`(킥)는 흡수를 건너뛰고, `BreaksEnemyDefense`(어퍼컷)는 때리기 전에 `defense = 0`으로 만든다.
+  - 흡수는 `Mathf.Min(defense, damage)` 한 줄로 계산한다 — 예전엔 `defense >= damage`로 두 갈래로 나눴는데, 한쪽 부호를 잘못 쓰면 넘친 피해가 통째로 사라질 수 있어 합쳤다. 음수 피해 가드도 여기 있다(`SkillResolver`가 이미 막지만 적 공격·디버그 킬스위치 등 경로가 여럿이다).
+  - **로그가 입력값까지 찍는다** — `피해 10 / 방어 15 -> 5 / HP 150 -> 150 (실피해 0)`. "피해가 0으로 들어왔다"와 "방어가 다 먹었다"를 구분하려면 이 로그를 볼 것.
   - `damageTakenMultiplier`(기본 1)를 `TakeDamage` 맨 앞에서 곱한다. 데빌이 이걸 0.75로 낮춘다 — **공격하는 쪽이 아니라 받는 쪽에서** 처리하는 이유는 적 공격이 `EnemyManager`(다른 작업자 파일)에서 나가기 때문이다.
 - **`PlayerBattleVisuals`** (`Character/`) — 플레이어 공격 연출. `MoveToEnemyCoroutine`(적 앞 `dashOffset`까지 돌진) → `PlayAttackAnimation(isFirstAttack, speedMultiplier)` → `MoveToOriginCoroutine`(복귀). 첫 타는 `Punch1`, 이후는 `Punch2~4` 중 랜덤 트리거다.
   - `speedMultiplier`가 `Animator.speed`에 그대로 들어가므로, 쌓인 공격이 많아 간격이 압축되면 애니메이션도 같이 빨라진다. 턴이 끝나면 `ResetAnimationSpeed()`로 1.0으로 되돌린다.
   - `Start()`에서 원래 위치를 기억하므로 **시작 위치를 런타임에 옮기면 복귀 지점이 어긋난다.**
-- **`EnemyBase : CharacterStats`** — `EnemyData`(SO)를 런타임 스탯으로 옮기는 다리. `Start()`에서 `maxHP`/`power`/`gameObject.name`을 에셋값으로 덮어쓴다. **`enemyData`가 비어 있으면 `base.Start()`로 폴백**해 프리팹에 박힌 인스펙터 값을 그대로 쓰므로, 적이 엉뚱한 체력으로 나오면 프리팹의 `enemyData` 연결부터 확인할 것(조용히 넘어간다). `enemyManager.currentEnemy`의 타입이자 `StageManager`가 스폰 직후 `GetComponent`로 집어오는 타입이다.
+- **`EnemyBase : CharacterStats`** — `EnemyData`(SO)를 런타임 스탯으로 옮기는 다리. `enemyManager.currentEnemy`의 타입이자 `StageManager`가 스폰 직후 `GetComponent`로 집어오는 타입이다.
+  - **스탯이 정해지는 곳이 둘이고 `isScaled` 플래그로 갈린다.** `StageManager`가 스폰 직후 부르는 **`ApplyScaling(stageIndex)`**(스테이지당 +20%로 `maxHP`/`power`를 정하고 `currentHP`·`defense`를 초기화한 뒤 `isScaled = true`)와, 그게 안 걸렸을 때만 도는 **`Start()`**(에셋값 그대로)다. `Start()`는 `ApplyScaling`보다 **나중에** 돌기 때문에 이 순서가 성립한다.
+  - ⚠️ **`enemyData`가 비어 있으면 두 분기가 <b>모두</b> 건너뛰어져 프리팹에 박힌 인스펙터 값이 그대로 남는다.** (예전 문서엔 "`base.Start()`로 폴백한다"고 적혀 있었지만 **`base.Start()`를 부르지 않는다** — `CharacterStats.Start()`의 `currentHP = maxHP`조차 안 돈다.) 마더 드래곤이 9999를 유지하는 게 이 경로다. 적이 엉뚱한 체력으로 나오면 프리팹의 `enemyData` 연결부터 확인할 것 — 조용히 넘어간다.
+  - ⚠️ **`Start()`가 `animator = GetComponent<Animator>()`로 인스펙터 연결을 덮어쓴다.** 같은 오브젝트에 `Animator`가 없거나 자식에 있으면 인스펙터에 넣어둔 참조가 날아간다.
 - **`EnemyManager`** — 가중치로 다음 의도를 굴리고(`ActionType { Attack, Defend, Buff }`) `ExecuteEnemyTurn(player)`에서 실행. **액션 enum이 두 개 있다**: 카드의 `ActionKind { Attack, Defense }`와 이것.
   - **적 인텐트는 아이콘 + 색 입힌 숫자로 보여준다.** 인스펙터에 `attackIcon`/`defendIcon`/`buffIcon`(`01_Arts/UI/Attack`·`shield`·`Up`)과 `attackColor`/`defendColor`/`buffColor`가 있고, `GetIntentIcon()`/`GetIntentColor()`로 꺼낸다.
   - ⚠️ **`GetIntentString()`은 이제 숫자만 돌려준다.** 예전의 `"Intent: Attack (10)"` 같은 라벨 문구가 아니다 — 무슨 행동인지는 아이콘이 말하므로 텍스트에서 뺐다. 이 문자열을 파싱하거나 라벨로 그대로 쓰는 코드를 만들지 말 것.
@@ -646,7 +653,11 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - ⚠️ **이건 `SoundManager` 전체에 걸리는 함정이다.** `titleBGM`/`battleBGM`/`punchSounds[]` 등은 프리팹에 값이 있어서 지금 동작하는 것뿐이다 — **`SoundManager`에 새 `EventReference` 필드를 추가하면 반드시 프리팹에 채울 것.** 씬 인스턴스에서만 채우면 타이틀부터 시작하는 실제 경로에서 증발한다.
 - ⚠️ **`SoundManager.PlayBGM`의 "같은 BGM이면 그대로 둔다" 가드가 죽어 있다.** 중복 판정(`currentBGM.Guid == bgmEvent.Guid && bgmInstance.isValid()`)보다 **먼저** `StopBGM()`을 부르는데, 그 안에서 `currentBGM`이 초기화되고 인스턴스가 release되므로 조건이 절대 참이 되지 않는다. 그래서 `StageManager.LoadStage`가 스테이지마다 `PlayBattleBGM()`을 불러 **같은 곡이 매번 처음부터 다시 재생된다**(주석의 "이미 재생 중이면 알아서 무시됨"은 사실이 아니다). 고치려면 앞쪽 `StopBGM()` 한 줄을 지우면 된다 — 뒤쪽에 같은 호출이 이미 있다.
 - **옵션 창의 SFX 슬라이더는 타이틀에서 미리듣기가 안 된다.** 타이틀 씬에서 SFX를 재생하는 코드가 없어서 움직여도 들리는 변화가 없다(값은 정상 반영된다). 미리듣기를 붙이려면 슬라이더를 놓을 때 `event:/Kick`을 한 번 재생하면 된다.
-- **방어도에 상한이 없다.** 턴 초기화는 생겼다 — `DeckManager.RunTurnTransition`이 적 턴이 끝난 뒤 `player.defense = 0`으로 비우고(`StageManager`도 스테이지 시작/재시작에서 비운다), 적 방어도는 건드리지 않는다(적은 자기 턴에 스스로 쌓는다). 다만 **한 턴 안에서 `AddDefense`를 누적하는 데는 여전히 상한이 없다.** GDD에 규칙이 없어 그대로 두었지만 밸런스상 확인이 필요하다.
+- **방어도에 상한이 없고, 플레이어와 적의 초기화 규칙이 일부러 다르다.**
+  - **플레이어**: 턴마다(`DeckManager.RunTurnTransition`의 `player.defense = 0`) + 스테이지마다(`StageManager.LoadStage`·`RestartStage`) 비운다. 턴마다 비우지 않으면 **가드를 반복하는 것만으로 영구 무적**이 된다.
+  - **적**: 어디서도 비우지 않는다. 줄어드는 건 플레이어가 때릴 때(`TakeDamage`가 흡수한 만큼)와 어퍼컷(`BreaksEnemyDefense`)뿐이고, 새 적은 `EnemyBase.ApplyScaling`이 0에서 시작시킨다. **이건 버그가 아니라 확정된 밸런스다 — 턴마다 초기화하지 말 것**(그러면 `EnemyData.defendChance` 30%가 사실상 무의미해진다).
+  - ⚠️ **그래서 적이 Defend를 연달아 고르면 방어가 쌓여 한동안 HP가 전혀 안 줄어든다**(`defensePower`가 5라 두 번이면 10). "공격이 방어보다 큰데 체력이 안 닳는다"로 보이지만 정상 동작이다 — 실제로 이걸 버그로 오해한 적이 있다. 확인은 `CharacterStats.TakeDamage`의 로그로 한다(아래).
+  - 한 턴 안에서 `AddDefense`를 누적하는 데는 여전히 상한이 없다. GDD에 규칙이 없어 그대로 두었다.
 - **공격 말풍선이 꺼져 있다.** `DeckManager.PlayPendingActions`에서 `battleManager.OnPlayerActionResolved(BuildBubbleText(...))` 호출이 **빠졌다**(그 자리에 주석으로 경위만 남아 있다). 타격 수치는 이제 말풍선이 아니라 `FloatingDamageManager`가 띄운다. `BattleManager.OnPlayerActionResolved`와 `DeckManager.BuildBubbleText`는 살아 있지만 **아무도 부르지 않는 죽은 코드**다.
   - ⚠️ **그 자리에는 대신 `battleManager.UpdateUI()`가 있다. 같이 지우지 말 것.** `OnPlayerActionResolved`는 말풍선과 **UI 갱신 두 가지**를 했는데, 말풍선을 없애려고 호출을 통째로 주석 처리했다가 갱신까지 사라진 적이 있다. 그때 증상은 "**쌓인 공격이 한 번에 적용된다**"였다 — 수치는 한 대씩 정상적으로 깎이는데 HP 바만 그대로 있다가 턴 끝에 한 번에 뚝 떨어진 것이다.
   - ⚠️ **이 `UpdateUI()`는 반드시 럭키(`LootBonusOnKill`) 처리보다 뒤에 있어야 한다.** `UpdateUI` → `CheckGameState` → `ShowResult` → `OnBattleEnded`가 한 호출 안에서 이어지고 그 안에서 `StageManager`가 클리어 보상을 지급하므로, 앞으로 옮기면 럭키 보너스가 다음 스테이지 보상에 얹혀 **로그만 찍히고 카드는 3장 그대로**가 된다.

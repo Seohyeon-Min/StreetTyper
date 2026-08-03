@@ -158,7 +158,7 @@ public class DeckManager : MonoBehaviour
         {
             Debug.Log($"Resolved [{skillName}]: Damage={action.Damage} Defense={action.Defense} Heal={action.Heal} " +
                       $"IgnoresDefense={action.IgnoresDefense} BreaksEnemyDefense={action.BreaksEnemyDefense} " +
-                      $"Status={action.StatusEffect} DamageReduction={action.DamageReduction} " +
+                      $"Status=[{string.Join(", ", action.StatusEffects)}] DamageReduction={action.DamageReduction} " +
                       $"TimerChange={action.TimerChange} LootBonusOnKill={action.LootBonusOnKill}");
         }
 

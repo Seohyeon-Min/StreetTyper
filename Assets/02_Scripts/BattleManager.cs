@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using FMODUnity;
 using UnityEngine.InputSystem;
 
@@ -23,11 +22,10 @@ public class BattleManager : MonoBehaviour
     public HealthBarUI enemyHealthBar;
 
     [Header("Game Result UI")]
-    public TextMeshProUGUI resultText;
-    [Tooltip("결과 화면 안내 문구('다음'/'다시')를 만들 때 참조한다.")]
+    [Tooltip("결과 화면 안내 문구('다시')를 만들 때 참조한다.")]
     public ResultInputHandler resultInputHandler;
 
-    [Tooltip("보상을 고르는 중인지 물어보려고 참조한다. 그동안에는 '다음' 안내를 띄우지 않는다 " +
+    [Tooltip("보상을 고르는 중인지 물어보려고 참조한다. 그동안에는 안내를 띄우지 않는다 " +
              "- 보상 수신자가 우선순위상 입력을 가져가 실제로 칠 수 없기 때문이다.")]
     [SerializeField] private RewardInputHandler rewardInputHandler;
 
@@ -38,7 +36,8 @@ public class BattleManager : MonoBehaviour
     [SerializeField] private ResultStatsView resultStatsView;
 
     [Header("Result Presentation")]
-    [Tooltip("스테이지를 클리어했을 때의 제목과 이미지")]
+    [Tooltip("⚠️ 지금은 화면에 나오지 않는다. 일반 스테이지 클리어는 결과를 띄우지 않고 곧바로 " +
+             "보상 선택으로 넘어가기 때문이다(ApplyResult 참조). 여기를 채워도 보이지 않는다.")]
     [SerializeField] private ScreenPresentation victoryPresentation = new ScreenPresentation("VICTORY!", "VICTORY!");
 
     [Tooltip("플레이어가 쓰러졌을 때")]
@@ -123,7 +122,7 @@ public class BattleManager : MonoBehaviour
         // 인스펙터 배열은 이 시점에 채워져 있다(필드 초기화자와 달리).
         mdIntentString = MotherDragonLine(0);
 
-        if (resultText != null) resultText.gameObject.SetActive(false);
+        HideResultUI();
 
         if (SpeechBubbleManager.Instance != null)
         {
@@ -282,8 +281,7 @@ public class BattleManager : MonoBehaviour
         savedMDDamage = 0;
         isWaitingForDragonEnd = false; //   추가됨
 
-        if (resultText != null) resultText.gameObject.SetActive(false);
-        if (resultImage != null) resultImage.gameObject.SetActive(false);
+        HideResultUI();
         UpdateUI();
     }
 
@@ -414,15 +412,30 @@ public class BattleManager : MonoBehaviour
 
     private void ApplyResult(ResultKind kind)
     {
+        // 통계 추적은 결과 종류와 무관하게 여기서 멈춘다. 보상을 고르는 시간이 플레이 타임에
+        // 들어가면 CPM이 실제보다 낮게 나온다. (예전엔 ShowStatisticsUI 안에 있었는데, 일반
+        // 클리어에서 그 호출 자체가 사라지면서 이리로 올렸다 - 같이 없애면 시간이 계속 흐른다.)
+        if (StatisticsManager.Instance != null)
+            StatisticsManager.Instance.StopTracking();
+
+        // ⚠️ 일반 스테이지 클리어는 결과를 띄우지 않는다. 곧바로 보상 선택으로 이어지는데
+        // ResultPanel이 풀스크린이고 End Canvas(14)가 RewardCanvas(3)보다 위라, 띄우면 고를
+        // 카드를 통째로 덮어버린다. 승리 표시는 보상 화면과 자동 진행이 대신한다.
+        if (kind == ResultKind.Victory)
+        {
+            HideResultUI();
+            return;
+        }
+
         var presentation = GetPresentation(kind);
         var fieldName = GetPresentationFieldName(kind);
         var title = presentation.Title(this, fieldName);
 
         // 플레이어가 지금 칠 수 없거나 칠 필요가 없는 단어는 안내하지 않는다 - 두 경우가 있다.
-        //  ① 보상을 고르는 중: 보상 수신자가 우선순위상 입력을 먼저 가져가 "다음"이 막혀 있다.
+        //  ① 보상을 고르는 중: 보상 수신자가 우선순위상 입력을 먼저 가져간다.
         //  ② 자동 진행 대기 중: 보상이 끝나면 StageManager가 알아서 다음 스테이지를 연다.
-        // 반대로 둘 다 아니면(패배의 "다시", 배선이 빠져 자동 진행이 안 걸린 경우) 반드시 띄워야
-        // 한다 - 안 그러면 칠 것도 없고 넘어가지도 않는 화면에 갇힌다.
+        // 반대로 둘 다 아니면(패배의 "다시") 반드시 띄워야 한다 - 안 그러면 칠 것도 없고
+        // 넘어가지도 않는 화면에 갇힌다.
         var choosingReward = rewardInputHandler != null && rewardInputHandler.IsSelecting;
         var advancing = stageManager != null && stageManager.IsAdvancingAutomatically;
 
@@ -431,11 +444,14 @@ public class BattleManager : MonoBehaviour
             hint = resultInputHandler.BuildHint();
 
         ApplyResultImage(presentation);
+        ShowStatisticsUI(title + hint, presentation.TitleColor);
+    }
 
-        // 패배와 전체 클리어에서만 통계를 펼친다. 일반 스테이지 클리어는 곧바로 다음 판으로
-        // 이어지므로 중앙에 제목만 띄운다.
-        bool showStats = kind != ResultKind.Victory;
-        ShowStatisticsUI(title + hint, presentation.TitleColor, showStats);
+    /// <summary>결과 UI를 통째로 감춘다. 전투가 시작될 때와 일반 스테이지 클리어에서 쓴다.</summary>
+    private void HideResultUI()
+    {
+        if (resultPanel != null) resultPanel.SetActive(false);
+        if (resultImage != null) resultImage.gameObject.SetActive(false);
     }
 
     private ScreenPresentation GetPresentation(ResultKind kind)
@@ -476,55 +492,32 @@ public class BattleManager : MonoBehaviour
         resultImage.gameObject.SetActive(true);
     }
 
-    private void ShowStatisticsUI(string titleMessage, Color titleColor, bool showStats)
+    /// <summary>승패를 보여주는 유일한 창구. 패배와 전체 클리어에서만 불린다.</summary>
+    private void ShowStatisticsUI(string titleMessage, Color titleColor)
     {
         var stats = StatisticsManager.Instance;
 
-        // 결과 화면이 떴으므로 타자 속도 계산을 위한 타이머 중지
-        if (stats != null)
-            stats.StopTracking();
-
-        if (showStats)
+        // 조용히 폴백하지 않는다 - 폴백할 곳이 있으면 배선이 빠진 걸 못 알아채고
+        // 엉뚱한 화면이 뜬 채로 넘어간다.
+        if (resultPanel == null || resultStatsView == null)
         {
-            // 패배/전체클리어는 항상 resultPanel(통계)로 보여준다. resultText로 조용히
-            // 폴백하지 않는다 - 폴백하면 배선이 빠진 걸 못 알아채고 엉뚱한 화면이 뜬 채로
-            // 넘어간다(resultText는 아래 else, 즉 일반 스테이지 클리어 전용이다).
-            if (resultPanel == null || resultStatsView == null)
-            {
-                Debug.LogWarning("BattleManager: resultPanel/resultStatsView가 연결되지 않아 통계 화면을 띄울 수 없습니다.", this);
-                return;
-            }
-
-            // 분모를 리터럴로 박으면 스테이지 수를 바꿨을 때 조용히 어긋난다.
-            var totalStages = stageManager != null ? stageManager.totalStages : 0;
-
-            resultStatsView.SetStats(
-                titleMessage,
-                titleColor,
-                stats != null ? stats.highestStageReached : 0,
-                totalStages,
-                stats != null ? Mathf.RoundToInt(stats.GetCPM()) : 0,
-                stats != null ? stats.validWordsUsed : 0,
-                stats != null ? stats.totalDamageDealt : 0,
-                stats != null ? stats.totalDamageTaken : 0);
-
-            resultPanel.SetActive(true); // 통계 패널 켜기
-
-            // 기존 중앙 텍스트 끄기 (겹침 방지)
-            if (resultText != null) resultText.gameObject.SetActive(false);
+            Debug.LogWarning("BattleManager: resultPanel/resultStatsView가 연결되지 않아 결과 화면을 띄울 수 없습니다.", this);
+            return;
         }
-        else
-        {
-            // 통계를 보여주지 않는 경우 (일반 스테이지 클리어)
-            if (resultText != null)
-            {
-                resultText.text = titleMessage;
-                resultText.color = titleColor;
-                resultText.gameObject.SetActive(true); // 기존 중앙 텍스트 켜기
-            }
 
-            // 통계 패널 끄기 (겹침 방지)
-            if (resultPanel != null) resultPanel.SetActive(false);
-        }
+        // 분모를 리터럴로 박으면 스테이지 수를 바꿨을 때 조용히 어긋난다.
+        var totalStages = stageManager != null ? stageManager.totalStages : 0;
+
+        resultStatsView.SetStats(
+            titleMessage,
+            titleColor,
+            stats != null ? stats.highestStageReached : 0,
+            totalStages,
+            stats != null ? Mathf.RoundToInt(stats.GetCPM()) : 0,
+            stats != null ? stats.validWordsUsed : 0,
+            stats != null ? stats.totalDamageDealt : 0,
+            stats != null ? stats.totalDamageTaken : 0);
+
+        resultPanel.SetActive(true);
     }
 }

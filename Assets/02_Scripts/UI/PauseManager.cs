@@ -48,24 +48,18 @@ public class PauseManager : CommandWordReceiver
              "명령 카드도 만들어지지 않는다 - 열 창이 없는데 단어만 남으면 쳐도 아무 일이 안 일어난다.")]
     [SerializeField] private CardCollectionPanel cardCollectionPanel;
 
-    [Header("명령 단어")]
-    [SerializeField]
-    private TypedCommand resumeCommand = new TypedCommand(
-        "계속", "resume",
-        "계속 진행을 원한다면 \"{0}\"!",
-        "Type \"{0}\" to keep playing!");
+    // 명령 단어는 CommandCardData 에셋이다 - 단어(한/영)와 카드 겉모습이 한 곳에 모여 있고,
+    // 화면에 카드로 그대로 뜨므로 안내 문구가 따로 필요 없다. 씬 오브젝트가 아니라 에셋 참조라
+    // 프리팹에 그대로 저장된다(이 프로젝트에서 드문 경우다).
+    [Header("명령 카드")]
+    [Tooltip("일시정지를 풀 카드. 04_Data/Cards/Commands/Resume")]
+    [SerializeField] private CommandCardData resumeCard;
 
-    [SerializeField]
-    private TypedCommand cardsCommand = new TypedCommand(
-        "카드", "cards",
-        "가진 카드를 보려면 \"{0}\"!",
-        "Type \"{0}\" to see the cards you own!");
+    [Tooltip("보유 카드 목록을 열 카드. 04_Data/Cards/Commands/Cards")]
+    [SerializeField] private CommandCardData cardsCard;
 
-    [SerializeField]
-    private TypedCommand titleCommand = new TypedCommand(
-        "타이틀", "title",
-        "타이틀로 돌아가길 원한다면 \"{0}\"!",
-        "Type \"{0}\" to return to the title!");
+    [Tooltip("타이틀로 나갈 카드. 04_Data/Cards/Commands/Title")]
+    [SerializeField] private CommandCardData titleCard;
 
     private bool _isPaused;
     private bool _inputWasEnabled;
@@ -100,28 +94,25 @@ public class PauseManager : CommandWordReceiver
     {
         get
         {
-            _targets[ResumeIndex] = resumeCommand.Word(this, nameof(resumeCommand));
+            _targets[ResumeIndex] = WordOf(resumeCard);
 
             // 목록 창이 연결되지 않았으면 빈 문자열로 둔다 - 베이스가 빈 항목을 매칭과 진행
             // 판정 양쪽에서 건너뛰므로, 열 창이 없는데 단어만 살아 있는 상태가 되지 않는다.
-            _targets[CardsIndex] = HasCardCollection
-                ? cardsCommand.Word(this, nameof(cardsCommand))
-                : string.Empty;
+            _targets[CardsIndex] = HasCardCollection ? WordOf(cardsCard) : string.Empty;
 
-            _targets[TitleIndex] = titleCommand.Word(this, nameof(titleCommand));
+            _targets[TitleIndex] = WordOf(titleCard);
             return _targets;
         }
     }
 
-    private bool HasCardCollection => cardCollectionPanel != null;
+    private bool HasCardCollection => cardCollectionPanel != null && cardsCard != null;
 
-    public override string BuildHint()
-    {
-        return JoinHints(
-            resumeCommand.Hint(this, nameof(resumeCommand)),
-            HasCardCollection ? cardsCommand.Hint(this, nameof(cardsCommand)) : string.Empty,
-            titleCommand.Hint(this, nameof(titleCommand)));
-    }
+    // 카드가 연결되지 않았으면 빈 문자열이다. 베이스가 빈 항목을 건너뛰므로 그 명령만 조용히
+    // 사라지고 나머지는 그대로 동작한다(연결 누락은 Awake에서 따로 경고한다).
+    private static string WordOf(CommandCardData card) => card != null ? card.CardName : string.Empty;
+
+    // 명령 단어가 카드로 화면에 그대로 뜨므로 안내 문구를 따로 쓰지 않는다.
+    public override string BuildHint() => string.Empty;
 
     protected override void OnCommandMatched(int index, bool wasComposing)
     {
@@ -152,6 +143,14 @@ public class PauseManager : CommandWordReceiver
             pausePanel.SetActive(false);
         else
             Debug.LogWarning("PauseManager: pausePanel이 연결되지 않았습니다.", this);
+
+        // 명령 카드가 비어 있으면 그 단어는 조용히 사라진다. 멈춘 화면에서 나갈 방법이 없어지는
+        // 종류의 누락이라 화면에 나오기 전에 알린다.
+        if (resumeCard == null)
+            Debug.LogWarning("PauseManager: resumeCard가 연결되지 않아 일시정지를 풀 단어가 없습니다.", this);
+
+        if (titleCard == null)
+            Debug.LogWarning("PauseManager: titleCard가 연결되지 않아 타이틀로 나갈 단어가 없습니다.", this);
     }
 
     protected override void OnEnable()
@@ -286,21 +285,26 @@ public class PauseManager : CommandWordReceiver
         // activeInHierarchy가 false라 StartCoroutine이 "game object is inactive" 에러로 실패한다.
         commandCardsLayout.gameObject.SetActive(true);
 
-        // Targets와 같은 순서로 만든다 - 화면에 놓이는 순서가 곧 안내 순서이고,
+        // Targets와 같은 순서로 만든다 - 화면에 놓이는 순서가 곧 명령 순서이고,
         // 목록 창이 없으면 "카드" 카드도 만들지 않는다(쳐도 아무 일이 안 일어나는 카드를 띄우지 않는다).
-        SpawnCommandCard(resumeCommand.Word(this, nameof(resumeCommand)));
+        SpawnCommandCard(resumeCard);
 
         if (HasCardCollection)
-            SpawnCommandCard(cardsCommand.Word(this, nameof(cardsCommand)));
+            SpawnCommandCard(cardsCard);
 
-        SpawnCommandCard(titleCommand.Word(this, nameof(titleCommand)));
+        SpawnCommandCard(titleCard);
     }
 
-    private void SpawnCommandCard(string label)
+    private void SpawnCommandCard(CommandCardData card)
     {
+        // 연결이 빠진 명령은 아예 만들지 않는다 - 빈 카드가 자리만 차지하면 부채꼴 배치가
+        // 어긋나고 플레이어는 칠 수 없는 카드를 보게 된다(Targets 쪽도 같은 이유로 비운다).
+        if (card == null)
+            return;
+
         var instance = Instantiate(commandCardPrefab, commandCardsLayout.transform, false);
         _commandCardInstances.Add(instance);
-        instance.PlayEnter(-commandCardTransitionHeight, () => instance.BindStatic(label, inputManager));
+        instance.PlayEnter(-commandCardTransitionHeight, () => instance.BindStatic(card, inputManager));
     }
 
     private void HideCommandCards()

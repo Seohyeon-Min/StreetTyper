@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
   cardName: "\uB4DC\uB808\uC778"
   icon: {fileID: 0}
-  description: "\uD53C\uD574\uC758 10% \uD68C\uBCF5"
+  description: "\uD53C\uD574\uC758 {1}% \uD68C\uBCF5"
   statsLabel: "\uD761\uD608"
   cardNameEn: "drain"
-  descriptionEn: "Heals 10% of damage dealt"
+  descriptionEn: "Heals {1}% of damage dealt"
   statsLabelEn: "LIFE"
   effectType: 3
   statusEffect: 0

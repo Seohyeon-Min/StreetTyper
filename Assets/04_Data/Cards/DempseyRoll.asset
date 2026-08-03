@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActionCardData
   cardName: "\uB380\uD504\uC2DC\uB864"
   icon: {fileID: 0}
-  description: "2~5\uD68C \uC5F0\uD0C0"
+  description: "{0}~{1}\uD0C0, \uCD94\uAC00 {2}%"
   statsLabel: "\uC5F0\uD0C0"
   cardNameEn: "dempsey"
-  descriptionEn: "Chains 2-5 hits at 50%"
+  descriptionEn: "{0}-{1} hits, +1 at {2}%"
   statsLabelEn: "COMBO"
   actionKind: 0
   strengthBonus: 0

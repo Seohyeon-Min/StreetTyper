@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
   cardName: "\uD2B8\uB9AC\uD50C"
   icon: {fileID: 0}
-  description: "\uD0C0\uACA9 3\uD68C"
+  description: "\uD0C0\uACA9 {1}\uD68C"
   statsLabel: "3\uD68C"
   cardNameEn: "triple"
-  descriptionEn: "Triples the hit count"
+  descriptionEn: "Hits {1} times"
   statsLabelEn: "x3"
   effectType: 6
   statusEffect: 0

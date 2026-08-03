@@ -50,6 +50,14 @@ public class ActionCardData : CardBase
     /// </summary>
     public int CurrentStrengthBonus => strengthBonus + SkillResolver.ScalingBonus(scalingSource, scalingPerUnit);
 
+    /// <summary>콤보 확률을 설명에 그대로 띄운다 - {0}=최소 타수, {1}=최대 타수, {2}=추가 타수 확률.
+    ///
+    /// 뎀프시롤이 이걸 쓴다. "2~5회"라고만 적으면 균등 분포처럼 읽히는데 실제 <see cref="SkillResolver"/>는
+    /// <b>최소 타수에서 시작해 추가 타수마다 확률을 새로 굴린다</b>(2타 50%, 3타 25%, 4·5타 각 12.5%).
+    /// 확률을 같이 보여줘야 실제 세기를 가늠할 수 있다. 포맷 자리가 없으면 적힌 그대로 나온다.</summary>
+    public override string Description =>
+        Fill(RawDescription, comboMinHits, comboMaxHits, comboChancePercent);
+
     /// <summary>
     /// 니킥/춉/박치기처럼 이번 턴 상황에 따라 위력이 변하는 카드는 지금 수치를 그대로
     /// 보여준다 - 어썸과 같은 이유다(고정 문구로는 지금 얼마인지 알 수가 없다).

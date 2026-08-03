@@ -41,15 +41,23 @@ public class CombatManager : MonoBehaviour
     // 지속 감소와 화상 피해는 DeckManager가 적 턴 직후에 처리한다.
     private void ApplyStatusEffects(ResolvedAction action, CharacterStats player, CharacterStats target)
     {
+        var hasStatus = action.StatusEffects != null && action.StatusEffects.Count > 0;
+
         if (statusEffectManager == null)
         {
-            if (action.StatusEffect != StatusEffectType.None || action.DamageReduction > 0f)
+            if (hasStatus || action.DamageReduction > 0f)
                 Debug.LogWarning("CombatManager: statusEffectManager가 연결되지 않아 상태이상이 적용되지 않습니다.", this);
             return;
         }
 
-        if (action.StatusEffect != StatusEffectType.None && target != null)
-            statusEffectManager.ApplyToEnemy(action.StatusEffect, target);
+        // 컬러풀은 화상·마비·얼음을 각각 굴려 걸린 것을 전부 담아 온다. 하나씩 거는 건
+        // StatusEffectManager가 이미 할 줄 알고(_enemyEffects가 Dictionary라 여러 개를 동시에 든다),
+        // 여기서는 담겨 온 만큼 반복해서 넘기기만 하면 된다.
+        if (hasStatus && target != null)
+        {
+            for (var i = 0; i < action.StatusEffects.Count; i++)
+                statusEffectManager.ApplyToEnemy(action.StatusEffects[i], target);
+        }
 
         // 데빌은 적이 아니라 시전자(플레이어)가 받는 피해를 줄인다.
         if (action.DamageReduction > 0f)

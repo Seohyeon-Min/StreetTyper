@@ -19,5 +19,7 @@ MonoBehaviour:
   cardNameEn: "lucky"
   descriptionEn: "One extra reward card on kill"
   statsLabelEn: "LOOT"
+  lootPendingStatsLabel: "\uBCF4\uC0C1\uB428"
+  lootPendingStatsLabelEn: "LOOTED"
   effectType: 4
   value: 0

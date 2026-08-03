@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
   cardName: "\uC2A4\uB9C8\uD2B8"
   icon: {fileID: 0}
-  description: "50% \uD655\uB960 \uD53C\uD574 2\uBC30"
+  description: "{0}% \uD655\uB960 \uD53C\uD574 {1}\uBC30"
   statsLabel: "\uCE58\uBA85"
   cardNameEn: "smart"
-  descriptionEn: "50% chance to deal double damage"
+  descriptionEn: "{0}% chance for {1}x damage"
   statsLabelEn: "CRIT"
   effectType: 5
   statusEffect: 0

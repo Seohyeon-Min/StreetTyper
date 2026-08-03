@@ -41,6 +41,10 @@ public class CardView : MonoBehaviour
     [Tooltip("액션이 아닌 카드(모디파이어/타임/타입) 전부가 쓰는 프레임.")]
     [SerializeField] private Sprite defaultFrame;
 
+    [Tooltip("명령 카드(넘기기/지우기/계속/카드/타이틀)용 프레임. 조합에 쓰는 카드가 아니라는 게 " +
+             "한눈에 보이도록 다른 색을 씁니다. 비워두면 defaultFrame으로 대신합니다.")]
+    [SerializeField] private Sprite commandFrame;
+
     [Header("효과 배지")]
     [Tooltip("액션 카드에 붙는 배지.")]
     [SerializeField] private Sprite actionBadge;
@@ -52,12 +56,28 @@ public class CardView : MonoBehaviour
     [SerializeField] private Sprite upBadge;
 
     // 지금 그리고 있는 카드. 어썸처럼 수치가 런 도중 변하는 카드를 다시 써야 해서 들고 있는다.
-    // SetText(명령 카드)로 그린 동안에는 null이라, 아래 갱신이 그 칸을 건드리지 않는다.
+    // 빈 슬롯에서는 null이라, 수치 갱신(ApplyStatsLabel)이 그 칸을 건드리지 않는다.
     private CardBase _card;
+
+    // Card.prefab에 박혀 있는 원래 프레임. 빈 슬롯이 되면 여기로 되돌린다 - 안 그러면
+    // 직전 카드의 카테고리 프레임(분홍/회색)이 그대로 남아 "이전 카드가 아직 있는" 것처럼 보인다.
+    // Awake에서 한 번만 읽는 게 중요하다. 나중에 읽으면 이미 갈아끼운 프레임이 "원래 것"으로 굳는다.
+    private Sprite _prefabFrame;
+    private bool _prefabFrameCaptured;
 
     private void Awake()
     {
+        CapturePrefabFrame();
         WarnIfUnassigned();
+    }
+
+    private void CapturePrefabFrame()
+    {
+        if (_prefabFrameCaptured || frameImage == null)
+            return;
+
+        _prefabFrame = frameImage.sprite;
+        _prefabFrameCaptured = true;
     }
 
     // 매니저 참조가 아니라 static 이벤트라 이 뷰의 "매니저를 모른다"는 성질은 그대로다
@@ -72,34 +92,34 @@ public class CardView : MonoBehaviour
         SkillResolver.OnCardValuesChanged -= ApplyStatsLabel;
     }
 
-    /// <summary>카드 데이터를 화면에 반영합니다. card가 null이면 글자를 비우고 배지를 숨깁니다.</summary>
+    /// <summary>카드 데이터를 화면에 반영합니다. card가 null이면 <see cref="Clear"/>와 같습니다.</summary>
     public void SetCard(CardBase card)
     {
+        if (card == null)
+        {
+            Clear();
+            return;
+        }
+
         _card = card;
 
         if (nameText != null)
-            nameText.text = card != null ? card.CardName : string.Empty;
+            nameText.text = card.CardName;
 
         if (descriptionText != null)
-            descriptionText.text = card != null ? card.Description : string.Empty;
+            descriptionText.text = card.Description;
 
         ApplyStatsLabel();
 
         // 배지는 스프라이트를 null로 지우지 않고 Image를 끈다. 스프라이트가 없는 Image는
         // 사라지는 게 아니라 흰 사각형으로 그려지기 때문이다.
-        // 규칙상 배지가 없는 카드는 없지만, 인스펙터에 스프라이트를 안 넣었을 때도 같은 이유로 끈다.
-        var badge = card != null ? BadgeFor(card) : null;
+        var badge = BadgeFor(card);
         if (badgeImage != null)
         {
             badgeImage.enabled = badge != null;
             if (badge != null)
                 badgeImage.sprite = badge;
         }
-
-        // 프레임은 빈 슬롯에서도 남겨둔다 - 카드 자리가 통째로 사라지는 것보다
-        // 글자만 빠진 빈 카드로 보이는 편이 손패 배치가 흔들리지 않는다.
-        if (card == null)
-            return;
 
         // 프레임 스프라이트가 비어 있으면 프리팹에 박아둔 것을 그대로 둔다.
         // null로 덮어쓰면 Play 시작과 동시에 카드 프레임이 사라진다(예전에 실제로 났던 버그다).
@@ -108,17 +128,20 @@ public class CardView : MonoBehaviour
             frameImage.sprite = frame;
     }
 
-    /// <summary>CardBase 데이터 없이 이름 칸만 채운다 - 일시정지 중 "계속"/"타이틀" 같은 명령
-    /// 단어를 카드 모양으로 보여줄 때처럼, 실제 카드가 아닌 텍스트를 그릴 때 쓴다.
-    /// 설명/수치 칸은 비우고 배지는 끈다. 프레임은 기본 프레임을 그대로 쓴다.</summary>
-    public void SetText(string label)
+    /// <summary>빈 카드로 되돌린다 - <b>Card.prefab의 기본 카드 이미지만 남고 글자와 배지는 전부
+    /// 사라진다.</b> 스테이지가 바뀌어 손패를 비울 때(<c>CardSlotManager.EmptyAllSlots</c>) 쓴다.
+    ///
+    /// ⚠️ <b>프레임을 프리팹 원본으로 되돌리는 게 핵심이다.</b> 예전에는 "프레임은 빈 슬롯에서도
+    /// 남겨둔다"며 그냥 뒀는데, 그러면 직전 카드의 카테고리 프레임(분홍 액션/회색 명령)이 그대로
+    /// 남아 <b>이전 카드가 아직 손에 있는 것처럼 보인다.</b>
+    ///
+    /// 프레임 자체를 끄지는 않는다 - 카드 자리가 통째로 사라지면 부채꼴 배치가 흔들린다.</summary>
+    public void Clear()
     {
-        // 실제 카드가 아니므로 비워둔다 - 이게 남아 있으면 어썸 누적이 오를 때
-        // 명령 카드의 빈 수치 칸에 엉뚱한 숫자가 들어간다.
         _card = null;
 
         if (nameText != null)
-            nameText.text = label ?? string.Empty;
+            nameText.text = string.Empty;
 
         if (descriptionText != null)
             descriptionText.text = string.Empty;
@@ -129,9 +152,16 @@ public class CardView : MonoBehaviour
         if (badgeImage != null)
             badgeImage.enabled = false;
 
-        if (frameImage != null && defaultFrame != null)
-            frameImage.sprite = defaultFrame;
+        // Awake보다 먼저 불릴 수 있다(런타임 생성 직후 Bind -> Refresh 경로). 그때도 원본을 잡는다.
+        CapturePrefabFrame();
+
+        if (frameImage != null && _prefabFrame != null)
+            frameImage.sprite = _prefabFrame;
     }
+
+    // 예전에는 SetText(문자열)로 명령 단어를 카드처럼 그렸다. 지금은 명령 단어도 CommandCardData
+    // 에셋이라 SetCard 하나로 그린다 - 손패·보상·일시정지가 같은 규칙으로 그려지고, 프레임과
+    // 문구를 인스펙터에서 바꿀 수 있다. 그 메서드로 되돌리지 말 것.
 
     // 수치 칸만 지금 값으로 다시 쓴다. 어썸처럼 런 도중 값이 변하는 카드 때문에 필요하다 -
     // 손패에 어썸이 두 장 떠 있으면(슬롯 간 중복은 의도된 동작) 쓰지 않은 쪽도 같이 갱신되어야 한다.
@@ -150,7 +180,19 @@ public class CardView : MonoBehaviour
 
     private Sprite FrameFor(CardBase card)
     {
-        return card.Category == CardCategory.Action ? actionFrame : defaultFrame;
+        switch (card.Category)
+        {
+            case CardCategory.Action:
+                return actionFrame;
+
+            // 명령 카드 프레임이 비어 있으면 기본 프레임으로 떨어진다 - null을 돌려주면
+            // SetCard가 프레임을 그대로 두므로 직전 카드의 프레임이 남는다.
+            case CardCategory.Command:
+                return commandFrame != null ? commandFrame : defaultFrame;
+
+            default:
+                return defaultFrame;
+        }
     }
 
     // 배지는 "무슨 효과인가"의 표현이라 조합 규칙상의 분류(Category)와 기준이 다르다.
@@ -158,6 +200,11 @@ public class CardView : MonoBehaviour
     // 지금은 결과가 같지만, Time으로 분류되는 건 AttributeCardData.Category의 구현 세부사항이다.
     private Sprite BadgeFor(CardBase card)
     {
+        // 명령 카드는 "무슨 효과인가"가 없으므로 배지를 달지 않는다. null을 돌려주면
+        // SetCard가 Image를 꺼준다(스프라이트만 지우면 흰 사각형이 남는다).
+        if (card.Category == CardCategory.Command)
+            return null;
+
         if (card is AttributeCardData attribute && attribute.EffectType == AttributeEffectType.RepeatAction)
             return multiplyBadge;
 

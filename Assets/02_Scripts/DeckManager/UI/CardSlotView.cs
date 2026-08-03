@@ -80,19 +80,23 @@ public class CardSlotView : MonoBehaviour
         Refresh();
     }
 
-    /// <summary>CardSlotManager 슬롯 없이, 고정된 단어 하나를 카드처럼 보여준다(예: 일시정지 중
+    /// <summary>CardSlotManager 슬롯 없이, 명령 카드 하나를 보여준다(예: 일시정지 중
     /// "계속"/"타이틀"). 기존 슬롯 구독은 끊어서 CurrentCards가 바뀌어도 이 카드는 영향받지
     /// 않는다 - 애초에 슬롯을 대표하는 게 아니라 빌려 쓰는 것뿐이다. slotIndex는 건드리지 않고
     /// 그대로 남겨둔다 - 나중에 원래 슬롯으로 복원할 때 필요하다.</summary>
-    public void BindStatic(string label, InputManager input)
+    public void BindStatic(CardBase card, InputManager input)
     {
         Unsubscribe();
         inputManager = input;
+
+        // ⚠️ _currentCard는 비워 둔다. 이건 "이 슬롯이 대표하는 손패 카드"라서, 빌려 쓰는 명령
+        // 카드를 넣으면 슬롯 로직이 진짜 손패 카드로 오인한다. 타이핑 들림 판정이 실제로 비교하는
+        // 건 아래 _liftTargetWord 쪽이라 이렇게 갈라둬도 동작에는 문제가 없다.
         _currentCard = null;
-        _liftTargetWord = label;
+        _liftTargetWord = card != null ? card.CardName : null;
 
         if (cardView != null)
-            cardView.SetText(label);
+            cardView.SetCard(card);
     }
 
     private void OnEnable()
@@ -296,12 +300,18 @@ public class CardSlotView : MonoBehaviour
 
     private void Refresh()
     {
-        if (cardSlotManager == null)
-            return;
+        var cards = cardSlotManager != null ? cardSlotManager.CurrentCards : null;
 
-        var cards = cardSlotManager.CurrentCards;
+        // ⚠️ 슬롯을 읽을 수 없으면 그냥 리턴하지 말고 빈 카드로 둔다. 두고 나오면 Card.prefab에
+        // 저장돼 있는 예시 문구("파워" / "테스트테스트…" / "+1")가 그대로 화면에 보인다.
+        // 실제로 걸리는 경로가 있다: 이 프로젝트엔 스크립트 실행 순서 설정이 없어서
+        // HandFanLayout이 카드를 스폰하고 Bind할 때 CardSlotManager.Awake가 아직 안 돌았을 수 있고,
+        // 그러면 _currentCards가 null이라 여기로 온다(다음 RefillAll까지 예시 문구가 남는다).
         if (cards == null || slotIndex < 0 || slotIndex >= cards.Count)
+        {
+            SetCard(null);
             return;
+        }
 
         SetCard(cards[slotIndex]);
     }

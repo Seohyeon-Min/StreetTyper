@@ -52,7 +52,7 @@ public class WordUnlockManager : MonoBehaviour
         wordDictionary.Clear();
 
         // 런이 다시 시작되는 지점이다. 지난 런에서 쌓다 만 럭키 라운드가 이월되지 않게 비운다.
-        _pendingBonusRounds = 0;
+        SetBonusRounds(0);
         _offered.Clear();
 
         _granted.Clear();
@@ -134,10 +134,19 @@ public class WordUnlockManager : MonoBehaviour
     /// luckyBonusRounds만큼 라운드를 더 연다. 한 턴에 여러 번 성공하면 그만큼 쌓인다.</summary>
     public void AddLuckyBonus()
     {
-        _pendingBonusRounds += luckyBonusRounds;
+        SetBonusRounds(_pendingBonusRounds + luckyBonusRounds);
 
         if (logDebugEvents)
             Debug.Log($"WordUnlock: 럭키 처치 - 보상 라운드 +{luckyBonusRounds} (누적 +{_pendingBonusRounds})", this);
+    }
+
+    /// <summary>보너스 라운드 수를 바꾸는 <b>유일한 통로</b>. 값을 넣고 럭키 카드가 읽는 창구까지
+    /// 같이 갱신한다 - 한쪽만 바꾸면 카드에 "보상됨"이 남거나 반대로 안 뜬다.
+    /// (카드는 ScriptableObject라 이 컴포넌트를 참조할 수 없어 static 창구를 거친다.)</summary>
+    private void SetBonusRounds(int rounds)
+    {
+        _pendingBonusRounds = Mathf.Max(0, rounds);
+        SkillResolver.SetLootBonusRounds(_pendingBonusRounds);
     }
 
     /// <summary>남은 보너스 라운드가 있으면 하나 소비하고 true를 돌려준다.
@@ -147,7 +156,7 @@ public class WordUnlockManager : MonoBehaviour
         if (_pendingBonusRounds <= 0)
             return false;
 
-        _pendingBonusRounds--;
+        SetBonusRounds(_pendingBonusRounds - 1);
 
         if (logDebugEvents)
             Debug.Log($"WordUnlock: 럭키 보상 라운드 소비 (남은 {_pendingBonusRounds})", this);
@@ -204,6 +213,15 @@ public class WordUnlockManager : MonoBehaviour
             {
                 Debug.LogWarning($"WordUnlockManager: All Words[{i}]에 카드가 비어 있습니다.", this);
                 continue;
+            }
+
+            // 명령 카드(넘기기/계속 등)는 해금 대상이 아니다. 여기 들어가면 클리어 보상 후보로
+            // 나오고, 고르면 사전에 들어가 손패에 뜬다. CardBase를 상속하는 이상 드래그로 꽂힐 수
+            // 있으니 화면에 나오기 전에 시끄럽게 알린다.
+            if (entry.card.Category == CardCategory.Command)
+            {
+                Debug.LogWarning($"WordUnlockManager: All Words[{i}]의 '{entry.card.CardName}'은(는) 명령 카드라 " +
+                                 "해금 목록에 들어가면 안 됩니다. 보상 후보로 나와 사전에 섞입니다.", this);
             }
 
             for (var j = i + 1; j < allWords.Count; j++)

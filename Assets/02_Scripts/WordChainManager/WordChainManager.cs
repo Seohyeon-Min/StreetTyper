@@ -32,6 +32,16 @@ public class WordChainManager : MonoBehaviour
         if (card == null)
             return WordSubmitResult.NotOwned;
 
+        // 명령 카드(넘기기/계속 등)는 조합 단어가 아니다. IsCategoryFull이 모르는 분류를
+        // "안 참" 취급하므로 여기서 막지 않으면 체인에 무제한으로 쌓인다.
+        // 사전에 애초에 못 들어가지만(WordDictionary.AddInternal), 경로가 늘어도 안전하도록 여기도 막는다.
+        if (card.Category == CardCategory.Command)
+        {
+            if (logDebugEvents)
+                Debug.Log($"WordChain: {card.CardName} skipped (command card)", this);
+            return WordSubmitResult.NotOwned;
+        }
+
         // 완성된 체인 뒤에 유효한 새 단어가 들어오면 그 순간을 다음 체인의 시작으로 보고
         // 여기서 자동으로 비운다. SkillResolver 같은 소비 시스템이 생기면 그쪽이
         // OnChainCompleted 직후 스스로 ClearChain을 부를 테니, 그때는 이미 비어 있어 무해하다.

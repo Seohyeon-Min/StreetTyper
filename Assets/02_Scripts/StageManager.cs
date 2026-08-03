@@ -52,6 +52,9 @@ public class StageManager : MonoBehaviour
     public TMPro.TextMeshProUGUI currentStageText;
 
     private int currentBattleIndex = 0;
+
+    // 지금 스테이지에 스폰된 적이 마더 드래곤인가. 보상에 "지우기" 카드를 놓을지 판단하는 데 쓴다.
+    private bool stageWasMotherDragon;
     private int totalBattles = 10;
     private GameObject currentEnemyObject;
     private Coroutine startRoutine;
@@ -165,6 +168,13 @@ public class StageManager : MonoBehaviour
 
         EnemyBase newEnemyBase = currentEnemyObject.GetComponent<EnemyBase>();
 
+        // 이번 스테이지가 마더 드래곤이었는지 기억한다. 클리어 보상에 "지우기" 카드를 놓을지
+        // 정하는 데 쓰고, 그때는 적이 이미 비활성이라 다시 물어볼 수 없다.
+        //
+        // isBossBattle(인덱스 4/9)이 아니라 실제로 스폰된 적을 보는 게 맞다 - motherDragonPrefab이
+        // 비어 있으면 보스전 인덱스여도 일반 적이 나오기 때문이다.
+        stageWasMotherDragon = newEnemyBase != null && newEnemyBase.isMotherDragon;
+
         // [추가] 생성 직후 스탯 스케일링 적용
         newEnemyBase.ApplyScaling(displayStage - 1);
 
@@ -195,6 +205,12 @@ public class StageManager : MonoBehaviour
 
         if (wordChainManager != null)
             wordChainManager.ClearChain();
+
+        // 손패도 여기서 비운다. 새로 뽑는 건 stageStartDelay가 끝난 뒤 BeginStageAfterDelay ->
+        // RefillAll이 하므로, 비우지 않으면 새 적이 등장하는 그 몇 초 동안 이전 스테이지의
+        // 카드가 그대로 남아 있다. 비운 자리는 빈 카드로 보이고 타이핑에도 반응하지 않는다.
+        if (cardSlotManager != null)
+            cardSlotManager.EmptyAllSlots();
 
         if (pendingActionManager != null)
             pendingActionManager.Clear();
@@ -328,14 +344,17 @@ public class StageManager : MonoBehaviour
             return;
         }
 
-        if (rewardCardView != null)
-            rewardCardView.Show(candidates);
-
+        // 카드를 펼치는 것도 BeginSelection이 한다 - 줄에 명령 카드까지 섞이므로, 단어를 가진
+        // 쪽이 순서를 정해야 매칭 인덱스와 화면 배치가 어긋나지 않는다.
         if (rewardInputHandler != null)
         {
-            rewardInputHandler.BeginSelection(candidates);
+            rewardInputHandler.BeginSelection(candidates, stageWasMotherDragon);
             return;
         }
+
+        // 폴백 경로에서는 고를 수단이 없으니 표시만이라도 해준다.
+        if (rewardCardView != null)
+            rewardCardView.Show(candidates);
 
         // 폴백: 고를 수단이 없으면 후보를 전부 지급하는 옛 동작으로 떨어진다.
         // 조용히 보상이 증발하는 것보다는 낫다.

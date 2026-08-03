@@ -29,6 +29,15 @@ public class ModifierCardData : CardBase
              "고르고, 1단위당 더할 값은 위 value입니다.")]
     [SerializeField] private TurnScalingSource scalingSource;
 
+    [Header("럭키 - 보상이 쌓였을 때")]
+    [Tooltip("effectType이 Loot Bonus On Kill일 때만 씁니다(럭키). 럭키로 얻은 보상 라운드가 아직 " +
+             "남아 있는 동안 수치 칸에 statsLabel 대신 띄울 문구입니다. 비워두면 statsLabel 그대로 " +
+             "나옵니다. 칸이 좁으니(42pt) 짧게 적을 것.")]
+    [SerializeField] private string lootPendingStatsLabel;
+
+    [Tooltip("위 문구의 영어판. 비워두면 한국어로 대체되고 경고가 남습니다.")]
+    [SerializeField] private string lootPendingStatsLabelEn;
+
     public ModifierEffectType EffectType => effectType;
     public float Value => value;
     public TurnScalingSource ScalingSource => scalingSource;
@@ -60,6 +69,19 @@ public class ModifierCardData : CardBase
         get
         {
             var label = base.StatsLabel;
+
+            // ⚠️ 럭키는 아래 "{0} 가드"보다 먼저 처리해야 한다. 포맷을 쓰지 않고 문구 자체를
+            // 갈아끼우는 유일한 케이스라, 가드에 걸리면(statsLabel에 {0}이 없다) 여기까지 오지 못한다.
+            //
+            // 보상이 쌓였다/아니다는 이분법이라 포맷 대신 완성된 문구를 따로 둔다 - "{0}"에 넣을
+            // "됨"/"ED" 같은 조각을 코드에 박으면 인스펙터에서 문구를 못 바꾸게 된다.
+            if (effectType == ModifierEffectType.LootBonusOnKill
+                && SkillResolver.LootBonusRounds > 0
+                && !string.IsNullOrEmpty(lootPendingStatsLabel))
+            {
+                return LanguageSettings.Pick(
+                    lootPendingStatsLabel, lootPendingStatsLabelEn, this, nameof(lootPendingStatsLabelEn));
+            }
 
             if (string.IsNullOrEmpty(label) || !label.Contains("{0}"))
                 return label;

@@ -26,6 +26,27 @@ public class CardSlotManager : MonoBehaviour
             Debug.LogWarning("CardSlotManager: Word Dictionary가 연결되지 않아 슬롯을 채울 수 없습니다.", this);
     }
 
+    /// <summary>다시 뽑지 않고 5칸을 통째로 비운다. 스테이지가 바뀌는 순간 이전 스테이지의 카드가
+    /// 화면에 남아 있지 않게 하려는 것이고, 새로 뽑는 건 stageStartDelay가 끝난 뒤 RefillAll이 한다.
+    ///
+    /// RefillAll의 "사전이 비었으면 손대지 않는다" 가드는 여기 없다 - 비우는 게 목적이라
+    /// 사전 상태와 무관하다.</summary>
+    public void EmptyAllSlots()
+    {
+        if (_currentCards == null)
+            return;
+
+        for (var i = 0; i < _currentCards.Length; i++)
+        {
+            // 이미 빈 칸은 건드리지 않는다 - 괜히 이벤트를 쏘면 CardSlotView가 교체 연출을 다시 돌린다.
+            if (_currentCards[i] == null)
+                continue;
+
+            _currentCards[i] = null;
+            OnSlotChanged?.Invoke(i, null);
+        }
+    }
+
     public void ConsumeSlot(int index)
     {
         // 방금 타이핑으로 쓴 카드가 같은 자리에 곧바로 다시 올라오지 않게 한다.

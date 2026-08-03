@@ -42,6 +42,29 @@ public class SkillResolver : MonoBehaviour
     public static int SecondsSpentThisTurn => Mathf.RoundToInt(-_timerChangeThisTurn);
 
     /// <summary>
+    /// 럭키로 쌓여 아직 쓰지 않은 추가 보상 라운드 수. 럭키 카드가 자기 수치 칸에
+    /// "보상됨"을 띄우는 데 쓴다 - 처치 순간에는 아무 표시가 없어서 보상 창이 한 번 더 열려도
+    /// 왜인지 알 수가 없었다.
+    ///
+    /// ⚠️ <b>값의 주인은 여기가 아니라 <see cref="WordUnlockManager"/>다.</b> 여기 있는 건
+    /// "카드 에셋이 읽을 수 있는 창구"일 뿐이라 <see cref="SetLootBonusRounds"/>를 통해서만 바뀐다
+    /// (카드는 ScriptableObject라 씬 컴포넌트를 참조할 수 없다 - AwesomeBonus와 같은 이유다).
+    /// </summary>
+    public static int LootBonusRounds { get; private set; }
+
+    /// <summary>럭키 누적이 바뀌었을 때 <see cref="WordUnlockManager"/>가 부른다.
+    /// 값이 실제로 달라졌을 때만 카드 갱신을 알린다 - 매번 쏘면 손패 전체가 불필요하게 다시 그려진다.</summary>
+    public static void SetLootBonusRounds(int rounds)
+    {
+        var clamped = Mathf.Max(0, rounds);
+        if (LootBonusRounds == clamped)
+            return;
+
+        LootBonusRounds = clamped;
+        OnCardValuesChanged?.Invoke();
+    }
+
+    /// <summary>
     /// 카드에 띄우는 수치(<see cref="AwesomeBonus"/>·이번 턴 누적)가 바뀌었다.
     ///
     /// 이미 그려둔 카드를 다시 쓰게 하는 게 목적이다 - 손패에 어썸이 두 장 떠 있거나
@@ -59,6 +82,7 @@ public class SkillResolver : MonoBehaviour
         ActionsThisTurn = 0;
         ModifiersThisTurn = 0;
         _timerChangeThisTurn = 0f;
+        LootBonusRounds = 0;
         OnCardValuesChanged = null;
     }
 
@@ -138,8 +162,11 @@ public class SkillResolver : MonoBehaviour
         var criticalChancePercent = 0f;
         var criticalMultiplier = 1f;
         var lootBonusOnKill = false;
-        var statusEffect = StatusEffectType.None;
         var usedAwesome = false;
+
+        // 컬러풀이 셋을 각각 굴리므로 여러 개가 담길 수 있다. Type 카테고리는 체인에 최대 1장이라
+        // 상태이상을 넣는 카드는 언제나 하나뿐이지만, 그 하나가 여러 개를 걸 수 있다.
+        var result = new ResolvedAction();
 
         foreach (var word in chain)
         {
@@ -190,13 +217,19 @@ public class SkillResolver : MonoBehaviour
                         break;
                     case AttributeEffectType.StatusChanceSingle:
                         if (RollStatusChance(attribute.ChancePercent))
-                            statusEffect = attribute.StatusEffect;
+                            result.StatusEffects.Add(attribute.StatusEffect);
                         break;
                     case AttributeEffectType.StatusChanceAll:
-                        // StatusEffectType이 값 하나뿐이라 셋을 동시에 못 담는다 - GDD의
-                        // "화상 > 마비 > 얼음" 우선순위를 "하나만 나타난다면 화상"으로 단순화했다.
+                        // 컬러풀 - 화상·마비·얼음을 각각 따로 굴려 걸린 것을 전부 건다.
+                        // 셋 다 걸릴 수도, 하나도 안 걸릴 수도 있다.
                         if (RollStatusChance(attribute.ChancePercent))
-                            statusEffect = StatusEffectType.Burn;
+                            result.StatusEffects.Add(StatusEffectType.Burn);
+
+                        if (RollStatusChance(attribute.ChancePercent))
+                            result.StatusEffects.Add(StatusEffectType.Paralysis);
+
+                        if (RollStatusChance(attribute.ChancePercent))
+                            result.StatusEffects.Add(StatusEffectType.Freeze);
                         break;
                 }
             }
@@ -215,15 +248,12 @@ public class SkillResolver : MonoBehaviour
         if (UnityEngine.Random.Range(0f, 100f) < criticalChancePercent)
             totalValue = Mathf.RoundToInt(totalValue * criticalMultiplier);
 
-        var result = new ResolvedAction
-        {
-            IgnoresDefense = actionCard.IgnoresDefense,
-            BreaksEnemyDefense = actionCard.BreaksEnemyDefense,
-            StatusEffect = statusEffect,
-            DamageReduction = damageReduction,
-            TimerChange = timerChange,
-            LootBonusOnKill = lootBonusOnKill
-        };
+        // result는 상태이상을 담으려고 위에서 미리 만들어 뒀다(컬러풀이 여러 개를 넣는다).
+        result.IgnoresDefense = actionCard.IgnoresDefense;
+        result.BreaksEnemyDefense = actionCard.BreaksEnemyDefense;
+        result.DamageReduction = damageReduction;
+        result.TimerChange = timerChange;
+        result.LootBonusOnKill = lootBonusOnKill;
 
         if (actionCard.ActionKind == ActionKind.Attack)
             result.Damage = totalValue;

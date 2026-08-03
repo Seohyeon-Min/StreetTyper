@@ -97,6 +97,17 @@ public class WordDictionary : MonoBehaviour
         return added;
     }
 
+    /// <summary>사전에서 한 장을 뺀다. 마더 드래곤 보상의 "지우기"가 쓴다.
+    /// <see cref="AddWord"/>의 대칭형이고, 실제로 빠졌을 때만 이벤트를 쏜다.</summary>
+    public bool RemoveWord(CardBase card)
+    {
+        if (card == null || !_words.Remove(card))
+            return false;
+
+        OnWordsChanged?.Invoke();
+        return true;
+    }
+
     public void Clear()
     {
         if (_words.Count == 0)
@@ -110,6 +121,16 @@ public class WordDictionary : MonoBehaviour
     {
         if (card == null || _words.Contains(card))
             return false;
+
+        // 명령 카드(넘기기/계속 등)는 조합에 쓰는 단어가 아니다. 사전에 들어가면 손패에 떠서
+        // 타이핑으로 소비되고 체인에도 들어가려 든다 - CardBase를 상속하는 이상 실수로 꽂힐 수
+        // 있으므로 받는 쪽에서 막는다.
+        if (card.Category == CardCategory.Command)
+        {
+            Debug.LogWarning($"WordDictionary: 명령 카드 '{card.CardName}'는 사전에 넣을 수 없습니다. " +
+                             "WordUnlockManager의 All Words 목록에 섞여 있는지 확인하세요.", this);
+            return false;
+        }
 
         _words.Add(card);
         return true;

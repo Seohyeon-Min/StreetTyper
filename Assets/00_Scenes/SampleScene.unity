@@ -1863,7 +1863,7 @@ Transform:
   - {fileID: 1297032332}
   - {fileID: 1673106073}
   - {fileID: 1345488954}
-  m_Father: {fileID: 896204145}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &772276441 stripped
 GameObject:
@@ -2070,7 +2070,6 @@ Transform:
   - {fileID: 524534440}
   - {fileID: 108802002}
   - {fileID: 1439353701}
-  - {fileID: 769049984}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &933936577 stripped
@@ -3121,7 +3120,7 @@ SpriteRenderer:
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: b8f73837cdb734443bb723ce2d2f6b0f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 0.24705882}
-  m_FlipX: 0
+  m_FlipX: 1
   m_FlipY: 0
   m_DrawMode: 0
   m_Size: {x: 38.399998, y: 10.85625}
@@ -8356,6 +8355,7 @@ SceneRoots:
   - {fileID: 1614671412}
   - {fileID: 2092489548}
   - {fileID: 896204145}
+  - {fileID: 769049984}
   - {fileID: 42189645}
   - {fileID: 996254194}
   - {fileID: 980695514}

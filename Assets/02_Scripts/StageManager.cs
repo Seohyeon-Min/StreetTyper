@@ -48,7 +48,14 @@ public class StageManager : MonoBehaviour
     public float rewardAdvanceDelay = 0.6f;
 
     [Header("UI")]
-    public TMPro.TextMeshProUGUI stageStartText;
+    [Tooltip("스테이지 등장 연출로 켜고 끌 오브젝트. 문구는 코드가 써 넣지 않으므로, 필요하면 " +
+             "오브젝트 자체(프리팹/애니메이션)에 미리 담아둘 것.")]
+    public GameObject stageStartObject;
+
+    [Tooltip("stageStartObject에 붙은 등장/퇴장 연출(확대→축소 페이드인으로 등장, 축소 " +
+             "페이드아웃으로 퇴장). 비워두면 퇴장 시 그냥 SetActive(false)로 즉시 끈다.")]
+    public StageStartEffect stageStartEffect;
+
     public TMPro.TextMeshProUGUI currentStageText;
 
     private int currentBattleIndex = 0;
@@ -250,14 +257,9 @@ public class StageManager : MonoBehaviour
         // 새 스테이지를 로드하는 시점이므로 "보상 뒤 자동 진행 중" 상태는 끝난다.
         _advancingAfterReward = false;
 
-        if (stageStartText != null)
+        if (stageStartObject != null)
         {
-            if (isBossBattle)
-                stageStartText.text = "MOMMY DRAGON";
-            else
-                stageStartText.text = $"STAGE {displayStage}\nSTART!";
-
-            stageStartText.gameObject.SetActive(true);
+            stageStartObject.SetActive(true);
         }
 
         startRoutine = StartCoroutine(BeginStageAfterDelay());
@@ -283,10 +285,12 @@ public class StageManager : MonoBehaviour
     {
         yield return new WaitForSeconds(stageStartDelay);
 
-        if (stageStartText != null)
-        {
-            stageStartText.gameObject.SetActive(false);
-        }
+        // stageStartEffect가 있으면 축소하며 페이드아웃하는 연출을 맡기고(백그라운드로 흘러가며,
+        // 턴 시작을 더 늦추지는 않는다), 없으면 예전처럼 바로 끈다.
+        if (stageStartEffect != null)
+            stageStartEffect.PlayExit(null);
+        else if (stageStartObject != null)
+            stageStartObject.SetActive(false);
 
         // [추가된 부분] 대기하는 동안 게임 오버가 되었다면 (예: 킬스위치 즉사) 더 이상 진행하지 않음
         if (battleManager != null && battleManager.IsGameOver)

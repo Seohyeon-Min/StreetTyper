@@ -31,7 +31,8 @@ public class SkillResolver : MonoBehaviour
     // ── 이번 턴 누적 ────────────────────────────────────────────────────────
     // 퍼펙트/니킥/춉/박치기(TurnScalingSource)가 읽는 값이다. 위 AwesomeBonus와 같은 이유로
     // static이다 - 카드 에셋이 자기 StatsLabel에 지금 값을 띄워야 하기 때문이다.
-    // 턴이 끝날 때 DeckManager가, 스테이지가 바뀔 때 StageManager가 ResetTurn()으로 비운다.
+    // 턴이 끝날 때 DeckManager가 ResetTurn()으로, 스테이지가 바뀔 때 StageManager가
+    // ResetStage()(그 안에서 ResetTurn을 부른다)로 비운다.
 
     /// <summary>이번 턴에 완성한 조합(액션)의 수.</summary>
     public static int ActionsThisTurn { get; private set; }
@@ -57,9 +58,11 @@ public class SkillResolver : MonoBehaviour
     /// </summary>
     public static int LootBonusRounds { get; private set; }
 
-    /// <summary>이번 런에서 럭키를 쓴 횟수. 쓸수록 확률이 오르므로 이 값이 곧 확률의 단계다.
-    /// 어썸(<see cref="AwesomeBonus"/>)과 같은 런 단위 상태라 <see cref="ResetRun"/>이 되돌린다 -
-    /// 스테이지가 바뀌어도 유지되고, 타이틀로 나갔다 오면 0에서 다시 시작한다.</summary>
+    /// <summary>이번 <b>스테이지</b>에서 럭키를 쓴 횟수. 쓸수록 확률이 오르므로 이 값이 곧
+    /// 확률의 단계다. <see cref="ResetStage"/>가 되돌리므로 <b>스테이지가 바뀌면 기본 확률로
+    /// 돌아간다</b> - 한 스테이지 안에서 몰아 쓰는 게 이득이 되게 하려는 것이다.
+    ///
+    /// ⚠️ 어썸(<see cref="AwesomeBonus"/>)과 범위가 다르다. 그쪽은 런 내내 누적된다.</summary>
     public static int LuckyUses { get; private set; }
 
     /// <summary>
@@ -120,8 +123,17 @@ public class SkillResolver : MonoBehaviour
     public void ResetRun()
     {
         AwesomeBonus = 0;
+        ResetStage();
+    }
 
-        // 럭키 확률도 런 단위다 - 새 런은 다시 기본 확률에서 시작한다.
+    /// <summary>스테이지가 새로 열릴 때 호출한다(<see cref="StageManager.LoadStage"/>).
+    /// 어썸(런 단위)은 건드리지 않고 <b>럭키 확률 누적만</b> 되돌린 뒤 턴 누적까지 비운다.
+    ///
+    /// 누적의 범위가 셋으로 갈린다 - 런(어썸) ⊃ 스테이지(럭키 확률) ⊃ 턴(퍼펙트·니킥·촙·박치기).
+    /// 새 누적을 추가할 때 어느 단계에 속하는지부터 정하고 그 메서드에 넣을 것.</summary>
+    public void ResetStage()
+    {
+        // 럭키 확률은 스테이지 단위다 - 새 스테이지는 다시 기본 확률에서 시작한다.
         LuckyUses = 0;
 
         ResetTurn();
@@ -306,7 +318,7 @@ public class SkillResolver : MonoBehaviour
             // 실제 보상 창은 스테이지를 클리어할 때 열린다. 확률을 조정하며 확인할 때 그 간극을
             // 오작동과 구분할 수 없어서 판정 결과를 남긴다(조합에 럭키가 있을 때만 찍힌다).
             if (logLuckyRolls)
-                Debug.Log($"SkillResolver: 럭키 판정 - 확률 {luckyChance:F0}% (이번 런 사용 {LuckyUses}회), " +
+                Debug.Log($"SkillResolver: 럭키 판정 - 확률 {luckyChance:F0}% (이번 스테이지 사용 {LuckyUses}회), " +
                           $"굴림 {luckyRoll:F1} -> {(lootBonusOnKill ? "성공(클리어 보상 +1회)" : "실패")}", this);
         }
 
@@ -326,9 +338,10 @@ public class SkillResolver : MonoBehaviour
         if (usedAwesome)
             AwesomeBonus++;
 
-        // 럭키도 같은 규칙이다 - 첫 사용은 기본 확률(10%)로 굴리고, 그 다음부터 올라간다.
+        // 럭키도 같은 규칙이다 - 그 스테이지의 첫 사용은 기본 확률로 굴리고, 그 다음부터 올라간다.
         // ⚠️ 성공했는지가 아니라 <b>썼는지</b>로 센다. "쓸수록 오른다"는 규칙이라 실패해도
         // 다음 확률은 올라가야 한다(안 그러면 운이 나쁠수록 계속 나빠진다).
+        // ⚠️ 이 누적은 <b>스테이지 단위</b>다(ResetStage). 어썸의 런 단위 누적과 헷갈리지 말 것.
         if (luckyCard != null)
             LuckyUses++;
 

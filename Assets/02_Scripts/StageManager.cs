@@ -306,10 +306,11 @@ public class StageManager : MonoBehaviour
         if (pendingActionManager != null)
             pendingActionManager.Clear();
 
-        // 이전 스테이지에서 세다 만 턴 누적이 새 스테이지 첫 턴으로 넘어가지 않게 한다
-        // (퍼펙트/니킥/춉/박치기가 읽는 값이다). 어썸의 런 누적은 여기서 건드리지 않는다.
+        // 스테이지 단위 누적을 되돌린다 - 럭키 확률(LuckyUses)이 여기서 기본값으로 돌아가고,
+        // 세다 만 턴 누적(퍼펙트/니킥/촙/박치기)도 새 스테이지 첫 턴으로 넘어가지 않게 같이 비운다.
+        // 어썸의 런 누적은 여기서 건드리지 않는다.
         if (skillResolver != null)
-            skillResolver.ResetTurn();
+            skillResolver.ResetStage();
 
         if (statusEffectManager != null)
             statusEffectManager.ClearAll();

@@ -7,11 +7,11 @@ public class BackgroundScroller : MonoBehaviour
     [Tooltip("배경이 이동할 최대 속도")]
     public float maxSpeed = 15f;
 
-    [Tooltip("배경이 이동할 왼쪽 끝 X 좌표 (화면 밖)")]
-    public float leftBound = -25f;
+    [Tooltip("모든 배경이 공통으로 사라질 화면 왼쪽 밖 경계선")]
+    public float leftBound = -17.75f;
 
-    [Tooltip("배경이 다시 나타날 오른쪽 끝 X 좌표 (화면 밖)")]
-    public float rightBound = 25f;
+    [Tooltip("왼쪽 끝에 도달했을 때 오른쪽으로 점프할 총 거리 (10 × (1920 ÷ 1080); 17.777) * 2")]
+    public float loopJumpDistance = 35.5f;
 
     private float _currentSpeed = 0f;
     private Coroutine _speedCoroutine;
@@ -24,14 +24,13 @@ public class BackgroundScroller : MonoBehaviour
             // 왼쪽으로 이동
             transform.position += Vector3.left * _currentSpeed * Time.deltaTime;
 
-            // 왼쪽 경계를 넘어가면 오른쪽 경계로 순간이동 (루프)
+            // 왼쪽 경계를 넘어가면, 특정 좌표로 강제 이동하는 대신 총 길이만큼 밀어줍니다.
             if (transform.position.x <= leftBound)
             {
-                transform.position = new Vector3(rightBound, transform.position.y, transform.position.z);
+                transform.position += new Vector3(loopJumpDistance, 0f, 0f);
             }
         }
     }
-
 
     /// <summary>
     /// 트랜지션 시작 시 호출되어 배경을 빠르게 이동시킵니다.

@@ -3,77 +3,77 @@ guid: 24af523574adb784da35f34dc95dae5c
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6635604914364663595
-    second: MamiSpeak_0
+      213: -6403568235580201775
+    second: MotherDragonSpeak_0
   - first:
-      213: 9211073767288416248
-    second: MamiSpeak_1
+      213: 3991324993772801368
+    second: MotherDragonSpeak_1
   - first:
-      213: -6193050437046583563
-    second: MamiSpeak_2
+      213: 6619308141087104403
+    second: MotherDragonSpeak_2
   - first:
-      213: -2472493013080108334
-    second: MamiSpeak_3
+      213: 8694902677561814776
+    second: MotherDragonSpeak_3
   - first:
-      213: 222108145336297003
-    second: MamiSpeak_4
+      213: -6651711575354925489
+    second: MotherDragonSpeak_4
   - first:
-      213: -107151965494536325
-    second: MamiSpeak_5
+      213: 6101086929656735665
+    second: MotherDragonSpeak_5
   - first:
-      213: -7443535821912323156
-    second: MamiSpeak_6
+      213: -6036802412805828918
+    second: MotherDragonSpeak_6
   - first:
-      213: -4077610510539193318
-    second: MamiSpeak_7
+      213: 5420243163673796688
+    second: MotherDragonSpeak_7
   - first:
-      213: 4851169417253442161
-    second: MamiSpeak_8
+      213: 9019054807280181086
+    second: MotherDragonSpeak_8
   - first:
-      213: -2411978830596745792
-    second: MamiSpeak_9
+      213: -8027511226856823119
+    second: MotherDragonSpeak_9
   - first:
-      213: 3833654503337412544
-    second: MamiSpeak_10
+      213: 1467456682698373268
+    second: MotherDragonSpeak_10
   - first:
-      213: -3223183166789908741
-    second: MamiSpeak_11
+      213: -2548348292912138957
+    second: MotherDragonSpeak_11
   - first:
-      213: 7836742360853363381
-    second: MamiSpeak_12
+      213: -6371596783537881476
+    second: MotherDragonSpeak_12
   - first:
-      213: 1620928852018025650
-    second: MamiSpeak_13
+      213: -5763261119136714984
+    second: MotherDragonSpeak_13
   - first:
-      213: 7883910146418116970
-    second: MamiSpeak_14
+      213: 3076282631122266787
+    second: MotherDragonSpeak_14
   - first:
-      213: -4435832860337488913
-    second: MamiSpeak_15
+      213: -4250104745166762225
+    second: MotherDragonSpeak_15
   - first:
-      213: 2276514696813487520
-    second: MamiSpeak_16
+      213: -7008998452049933596
+    second: MotherDragonSpeak_16
   - first:
-      213: -8873796767809904971
-    second: MamiSpeak_17
+      213: -3348100392518887350
+    second: MotherDragonSpeak_17
   - first:
-      213: -7653802801644276159
-    second: MamiSpeak_18
+      213: -7231757232919083373
+    second: MotherDragonSpeak_18
   - first:
-      213: -7445445398175354896
-    second: MamiSpeak_19
+      213: -2728049055362046790
+    second: MotherDragonSpeak_19
   - first:
-      213: 1719183200303807714
-    second: MamiSpeak_20
+      213: -5254874211801643397
+    second: MotherDragonSpeak_20
   - first:
-      213: 1961005497282929152
-    second: MamiSpeak_21
+      213: -7449576226674494294
+    second: MotherDragonSpeak_21
   - first:
-      213: -4796424836894926062
-    second: MamiSpeak_22
+      213: 8122664453514017816
+    second: MotherDragonSpeak_22
   - first:
-      213: 8713758931314045618
-    second: MamiSpeak_23
+      213: 5194658339135742418
+    second: MotherDragonSpeak_23
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -169,529 +169,529 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: MamiSpeak_0
+      name: MotherDragonSpeak_0
       rect:
         serializedVersion: 2
-        x: 192
-        y: 5021
-        width: 2769
-        height: 1653
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 2511
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b27ca8e3387661c50800000000000000
-      internalID: 6635604914364663595
+      spriteID: 1d464470e94f127a0800000000000000
+      internalID: -6403568235580201775
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_1
+      name: MotherDragonSpeak_1
       rect:
         serializedVersion: 2
-        x: 3192
-        y: 5021
-        width: 2789
-        height: 1651
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 1507
+        y: 2511
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8f7252bf9ce44df70800000000000000
-      internalID: 9211073767288416248
+      spriteID: 85d47f45fe8046730800000000000000
+      internalID: 3991324993772801368
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_2
+      name: MotherDragonSpeak_2
       rect:
         serializedVersion: 2
-        x: 6194
-        y: 5021
-        width: 2807
-        height: 1650
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 3014
+        y: 2511
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5feb2cf807ddd0aa0800000000000000
-      internalID: -6193050437046583563
+      spriteID: 39d19580fa18cdb50800000000000000
+      internalID: 6619308141087104403
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_3
+      name: MotherDragonSpeak_3
       rect:
         serializedVersion: 2
-        x: 9196
-        y: 5021
-        width: 2825
-        height: 1648
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 4521
+        y: 2511
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2d299b554b0ffadd0800000000000000
-      internalID: -2472493013080108334
+      spriteID: 8fe2aaceaef7aa870800000000000000
+      internalID: 8694902677561814776
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_4
+      name: MotherDragonSpeak_4
       rect:
         serializedVersion: 2
-        x: 12195
-        y: 5021
-        width: 2846
-        height: 1646
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 6028
+        y: 2511
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b26ad707e26151300800000000000000
-      internalID: 222108145336297003
+      spriteID: f4e9d92809f50b3a0800000000000000
+      internalID: -6651711575354925489
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_5
+      name: MotherDragonSpeak_5
       rect:
         serializedVersion: 2
-        x: 15202
-        y: 5021
-        width: 2857
-        height: 1645
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 7535
+        y: 2511
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b7796b7ead1538ef0800000000000000
-      internalID: -107151965494536325
+      spriteID: 1b7e7f1dc3a6ba450800000000000000
+      internalID: 6101086929656735665
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_6
+      name: MotherDragonSpeak_6
       rect:
         serializedVersion: 2
-        x: 123
-        y: 3347
-        width: 2867
-        height: 1643
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 1674
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: cab45068b9f33b890800000000000000
-      internalID: -7443535821912323156
+      spriteID: acecc7d9038f83ca0800000000000000
+      internalID: -6036802412805828918
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_7
+      name: MotherDragonSpeak_7
       rect:
         serializedVersion: 2
-        x: 3143
-        y: 3347
-        width: 2867
-        height: 1641
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 1507
+        y: 1674
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a1489e248da6967c0800000000000000
-      internalID: -4077610510539193318
+      spriteID: 050240f8072983b40800000000000000
+      internalID: 5420243163673796688
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_8
+      name: MotherDragonSpeak_8
       rect:
         serializedVersion: 2
-        x: 6164
-        y: 3347
-        width: 2865
-        height: 1639
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 3014
+        y: 1674
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 17251a4e1e0d25340800000000000000
-      internalID: 4851169417253442161
+      spriteID: e5fd6bdef8e1a2d70800000000000000
+      internalID: 9019054807280181086
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_9
+      name: MotherDragonSpeak_9
       rect:
         serializedVersion: 2
-        x: 9185
-        y: 3347
-        width: 2857
-        height: 1638
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 4521
+        y: 1674
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0c5d484680ee68ed0800000000000000
-      internalID: -2411978830596745792
+      spriteID: 1b62dbc121d889090800000000000000
+      internalID: -8027511226856823119
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_10
+      name: MotherDragonSpeak_10
       rect:
         serializedVersion: 2
-        x: 12205
-        y: 3347
-        width: 2846
-        height: 1636
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 6028
+        y: 1674
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0c7c00f8570e33530800000000000000
-      internalID: 3833654503337412544
+      spriteID: 4987287f3147d5410800000000000000
+      internalID: 1467456682698373268
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_11
+      name: MotherDragonSpeak_11
       rect:
         serializedVersion: 2
-        x: 15225
-        y: 3347
-        width: 2836
-        height: 1634
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 7535
+        y: 1674
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: bf60879acf3f443d0800000000000000
-      internalID: -3223183166789908741
+      spriteID: 335bff4bab272acd0800000000000000
+      internalID: -2548348292912138957
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_12
+      name: MotherDragonSpeak_12
       rect:
         serializedVersion: 2
-        x: 153
-        y: 1673
-        width: 2827
-        height: 1632
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 837
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5babbe608a3b1cc60800000000000000
-      internalID: 7836742360853363381
+      spriteID: c7ef339cb7a8397a0800000000000000
+      internalID: -6371596783537881476
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_13
+      name: MotherDragonSpeak_13
       rect:
         serializedVersion: 2
-        x: 3172
-        y: 1673
-        width: 2818
-        height: 1631
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 1507
+        y: 837
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2b457bee332be7610800000000000000
-      internalID: 1620928852018025650
+      spriteID: 81f29061c88c400b0800000000000000
+      internalID: -5763261119136714984
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_14
+      name: MotherDragonSpeak_14
       rect:
         serializedVersion: 2
-        x: 6191
-        y: 1673
-        width: 2813
-        height: 1632
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 3014
+        y: 837
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a698956e186496d60800000000000000
-      internalID: 7883910146418116970
+      spriteID: 3aa2fb011c621ba20800000000000000
+      internalID: 3076282631122266787
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_15
+      name: MotherDragonSpeak_15
       rect:
         serializedVersion: 2
-        x: 9211
-        y: 1673
-        width: 2807
-        height: 1635
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 4521
+        y: 837
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: feb349cf381c072c0800000000000000
-      internalID: -4435832860337488913
+      spriteID: f0f022690489405c0800000000000000
+      internalID: -4250104745166762225
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_16
+      name: MotherDragonSpeak_16
       rect:
         serializedVersion: 2
-        x: 12229
-        y: 1673
-        width: 2802
-        height: 1637
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 6028
+        y: 837
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0a526852e0ec79f10800000000000000
-      internalID: 2276514696813487520
+      spriteID: 4ea0d4a0b090bbe90800000000000000
+      internalID: -7008998452049933596
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_17
+      name: MotherDragonSpeak_17
       rect:
         serializedVersion: 2
-        x: 15248
-        y: 1673
-        width: 2797
-        height: 1639
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 7535
+        y: 837
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5be5ea5ead0f9d480800000000000000
-      internalID: -8873796767809904971
+      spriteID: a48d0979e682981d0800000000000000
+      internalID: -3348100392518887350
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_18
+      name: MotherDragonSpeak_18
       rect:
         serializedVersion: 2
-        x: 178
+        x: 0
         y: 0
-        width: 2791
-        height: 1640
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1467a1b47ea38c590800000000000000
-      internalID: -7653802801644276159
+      spriteID: 3960ff5bc13a3ab90800000000000000
+      internalID: -7231757232919083373
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_19
+      name: MotherDragonSpeak_19
       rect:
         serializedVersion: 2
-        x: 3194
+        x: 1507
         y: 0
-        width: 2789
-        height: 1642
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0ffe037abd67ca890800000000000000
-      internalID: -7445445398175354896
+      spriteID: ab42e4586d5042ad0800000000000000
+      internalID: -2728049055362046790
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_20
+      name: MotherDragonSpeak_20
       rect:
         serializedVersion: 2
-        x: 6210
+        x: 3014
         y: 0
-        width: 2787
-        height: 1644
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2ec7de51304cbd710800000000000000
-      internalID: 1719183200303807714
+      spriteID: b76c332febfe217b0800000000000000
+      internalID: -5254874211801643397
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_21
+      name: MotherDragonSpeak_21
       rect:
         serializedVersion: 2
-        x: 9227
+        x: 4521
         y: 0
-        width: 2784
-        height: 1646
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 00223242c14e63b10800000000000000
-      internalID: 1961005497282929152
+      spriteID: aa43fd134e9cd9890800000000000000
+      internalID: -7449576226674494294
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_22
+      name: MotherDragonSpeak_22
       rect:
         serializedVersion: 2
-        x: 12245
+        x: 6028
         y: 0
-        width: 2779
-        height: 1648
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 21b540df50daf6db0800000000000000
-      internalID: -4796424836894926062
+      spriteID: 81c3565e84089b070800000000000000
+      internalID: 8122664453514017816
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiSpeak_23
+      name: MotherDragonSpeak_23
       rect:
         serializedVersion: 2
-        x: 15263
+        x: 7535
         y: 0
-        width: 2775
-        height: 1650
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        width: 1507
+        height: 837
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2b27c5f949d7de870800000000000000
-      internalID: 8713758931314045618
+      spriteID: 2d1e4b9ac32271840800000000000000
+      internalID: 5194658339135742418
       vertices: []
       indices: 
       edges: []
@@ -700,7 +700,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 6833bcad7840e3d4c9c3bee92a386664
     internalID: 0
     vertices: []
     indices: 
@@ -708,32 +708,34 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":6.0,"y":4.0},"gridSpriteSize":{"x":1507.0,"y":837.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":7,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      MamiSpeak_0: 6635604914364663595
-      MamiSpeak_1: 9211073767288416248
-      MamiSpeak_10: 3833654503337412544
-      MamiSpeak_11: -3223183166789908741
-      MamiSpeak_12: 7836742360853363381
-      MamiSpeak_13: 1620928852018025650
-      MamiSpeak_14: 7883910146418116970
-      MamiSpeak_15: -4435832860337488913
-      MamiSpeak_16: 2276514696813487520
-      MamiSpeak_17: -8873796767809904971
-      MamiSpeak_18: -7653802801644276159
-      MamiSpeak_19: -7445445398175354896
-      MamiSpeak_2: -6193050437046583563
-      MamiSpeak_20: 1719183200303807714
-      MamiSpeak_21: 1961005497282929152
-      MamiSpeak_22: -4796424836894926062
-      MamiSpeak_23: 8713758931314045618
-      MamiSpeak_3: -2472493013080108334
-      MamiSpeak_4: 222108145336297003
-      MamiSpeak_5: -107151965494536325
-      MamiSpeak_6: -7443535821912323156
-      MamiSpeak_7: -4077610510539193318
-      MamiSpeak_8: 4851169417253442161
-      MamiSpeak_9: -2411978830596745792
+      MotherDragonSpeak_0: -6403568235580201775
+      MotherDragonSpeak_1: 3991324993772801368
+      MotherDragonSpeak_10: 1467456682698373268
+      MotherDragonSpeak_11: -2548348292912138957
+      MotherDragonSpeak_12: -6371596783537881476
+      MotherDragonSpeak_13: -5763261119136714984
+      MotherDragonSpeak_14: 3076282631122266787
+      MotherDragonSpeak_15: -4250104745166762225
+      MotherDragonSpeak_16: -7008998452049933596
+      MotherDragonSpeak_17: -3348100392518887350
+      MotherDragonSpeak_18: -7231757232919083373
+      MotherDragonSpeak_19: -2728049055362046790
+      MotherDragonSpeak_2: 6619308141087104403
+      MotherDragonSpeak_20: -5254874211801643397
+      MotherDragonSpeak_21: -7449576226674494294
+      MotherDragonSpeak_22: 8122664453514017816
+      MotherDragonSpeak_23: 5194658339135742418
+      MotherDragonSpeak_3: 8694902677561814776
+      MotherDragonSpeak_4: -6651711575354925489
+      MotherDragonSpeak_5: 6101086929656735665
+      MotherDragonSpeak_6: -6036802412805828918
+      MotherDragonSpeak_7: 5420243163673796688
+      MotherDragonSpeak_8: 9019054807280181086
+      MotherDragonSpeak_9: -8027511226856823119
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

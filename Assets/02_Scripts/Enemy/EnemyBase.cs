@@ -81,6 +81,7 @@ public class EnemyBase : CharacterStats
             yield return null;
         }
         transform.position = targetPos;
+        originalPosition = targetPos;
     }
 
     // 원래 스폰 위치로 복귀한다.

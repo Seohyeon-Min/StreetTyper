@@ -361,8 +361,17 @@ public class StageManager : MonoBehaviour
     // (RewardInputHandler가 결과 화면보다 높은 우선순위로 입력을 가져가기 때문이다).
     private void HandleBattleEnded()
     {
-        // 패배에는 보상도 자동 진행도 없다 - 플레이어가 "다시"를 쳐서 재도전한다.
+        // 패배에는 보상도 자동 진행도 없다 - 플레이어가 "다시하기"를 쳐서 재도전한다.
         if (player == null || player.currentHP <= 0)
+            return;
+
+        // ⚠️ 런이 끝났으면(패배·전체 클리어) 보상 라운드를 열지 않는다. 전체 클리어는 플레이어가
+        // 살아 있어서 위 HP 검사에 걸리지 않는데, 그대로 두면 결과 화면이 뜬 <b>뒤에</b> 보상 창이
+        // 한 번 더 올라온다 - 더 갈 스테이지가 없으니 거기서 카드를 골라봐야 쓸 곳도 없다.
+        //
+        // 마지막 스테이지의 보상은 이 시점이 아니라 그 직전 Victory에서 이미 받았다.
+        // (OnBattleEnded가 kind가 바뀔 때도 나가게 되면서 이 경로가 생겼다 - ShowResult 참조.)
+        if (battleManager != null && battleManager.IsFinalResult)
             return;
 
         // ⚠️ wordUnlockManager가 없다고 여기서 리턴하면 안 된다. 그 경우에도 BeginRewardRound가

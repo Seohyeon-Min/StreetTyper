@@ -10,9 +10,6 @@ using UnityEngine;
 // 라벨 문구는 언어가 바뀔 때만(RefreshLabels), 값은 결과가 뜰 때마다(SetStats) 갱신한다.
 public class ResultStatsView : MonoBehaviour
 {
-    [Header("제목")]
-    [SerializeField] private TMP_Text titleText;
-
     [Header("라벨 (배치·디자인은 프리팹에서, 문구만 여기서 채운다)")]
     [SerializeField] private TMP_Text highestStageLabel;
     [SerializeField] private TMP_Text cpmLabel;
@@ -69,17 +66,15 @@ public class ResultStatsView : MonoBehaviour
             label.text = LanguageSettings.Pick(korean, english, this, fieldName);
     }
 
-    /// <summary>결과 화면이 뜰 때마다 제목과 수치를 채운다. 비어 있는 칸은 조용히 건너뛴다 -
-    /// 디자인 단계에서 아직 안 만든 줄이 있어도 나머지는 정상 표시된다.</summary>
-    public void SetStats(string title, Color titleColor, int highestStage, int totalStages,
+    /// <summary>결과 화면이 뜰 때마다 수치를 채운다. 비어 있는 칸은 조용히 건너뛴다 -
+    /// 디자인 단계에서 아직 안 만든 줄이 있어도 나머지는 정상 표시된다.
+    ///
+    /// 제목("DEFEAT..." 등)은 여기서 다루지 않는다 - 결과 창의 겉모습은 `ResultPanel.prefab`
+    /// 자체가 갖는다. 옛 제목 칸은 프리팹에서 연결조차 되어 있지 않아 화면에 나가지 않았고,
+    /// 그걸 채우던 `BattleManager`의 `ScreenPresentation` 세 벌과 함께 삭제됐다.</summary>
+    public void SetStats(int highestStage, int totalStages,
         int cpm, int wordsUsed, int damageDealt, int damageTaken)
     {
-        if (titleText != null)
-        {
-            titleText.text = title;
-            titleText.color = titleColor;
-        }
-
         if (highestStageValue != null) highestStageValue.text = $"{highestStage} / {totalStages}";
         if (cpmValue != null) cpmValue.text = cpm.ToString();
         if (wordsUsedValue != null) wordsUsedValue.text = wordsUsed.ToString();

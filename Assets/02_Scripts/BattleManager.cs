@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
 using FMODUnity;
 using UnityEngine.InputSystem;
 
@@ -22,40 +21,14 @@ public class BattleManager : MonoBehaviour
     public HealthBarUI playerHealthBar;
     public HealthBarUI enemyHealthBar;
 
-    [Header("Game Result UI")]
-    [Tooltip("결과 화면 안내 문구('다시')를 만들 때 참조한다.")]
-    public ResultInputHandler resultInputHandler;
+    // 결과 화면은 종류마다 프리팹이 따로다 - 코드가 제목을 갈아끼우지 않고 어느 패널을 켤지만
+    // 정한다. 겉모습은 DefeatPanel/GameClearPanel 변형이 통째로 갖는다(ResultPanelView 참조).
+    [Header("Result Panels")]
+    [Tooltip("플레이어가 쓰러졌을 때 띄울 결과 창 한 벌.")]
+    [SerializeField] private ResultPanelView defeatResult;
 
-    [Tooltip("보상을 고르는 중인지 물어보려고 참조한다. 그동안에는 안내를 띄우지 않는다 " +
-             "- 보상 수신자가 우선순위상 입력을 가져가 실제로 칠 수 없기 때문이다.")]
-    [SerializeField] private RewardInputHandler rewardInputHandler;
-
-    [Header("Statistics Result UI")]
-    public GameObject resultPanel;
-    [Tooltip("resultPanel 안의 제목/라벨/숫자를 각각 그리는 뷰. 라벨과 숫자를 따로 디자인할 수 있게 " +
-             "statsText 한 줄짜리 텍스트 대신 이걸 쓴다.")]
-    [SerializeField] private ResultStatsView resultStatsView;
-
-    [Tooltip("resultPanel이 뜰 때 같이 재생할 TextGateRevealAnimation들(제목 텍스트, 배경 " +
-             "윈도우 등 - 마스크마다 컴포넌트가 하나씩 따로 필요하다). PauseManager.titleReveal과 " +
-             "같은 컴포넌트지만 여긴 아무도 Play()를 부르지 않으면 마스크가 계속 닫힌 채(폭 0)로 " +
-             "남는다 - ShowStatisticsUI가 resultPanel을 켤 때 여기 담긴 것 전부를 같이 재생한다.")]
-    [SerializeField] private TextGateRevealAnimation[] resultReveals;
-
-    [Header("Result Presentation")]
-    [Tooltip("⚠️ 지금은 화면에 나오지 않는다. 일반 스테이지 클리어는 결과를 띄우지 않고 곧바로 " +
-             "보상 선택으로 넘어가기 때문이다(ApplyResult 참조). 여기를 채워도 보이지 않는다.")]
-    [SerializeField] private ScreenPresentation victoryPresentation = new ScreenPresentation("VICTORY!", "VICTORY!");
-
-    [Tooltip("플레이어가 쓰러졌을 때")]
-    [SerializeField] private ScreenPresentation defeatPresentation = new ScreenPresentation("DEFEAT...", "DEFEAT...");
-
-    [Tooltip("모든 스테이지를 클리어했을 때")]
-    [SerializeField] private ScreenPresentation gameClearPresentation = new ScreenPresentation("ALL STAGES CLEARED!", "ALL STAGES CLEARED!");
-
-    [Tooltip("결과 이미지를 그릴 Image. 비워두면 이미지는 건너뛴다.")]
-    [SerializeField] private Image resultImage;
-
+    [Tooltip("모든 스테이지를 클리어했을 때 띄울 결과 창 한 벌.")]
+    [SerializeField] private ResultPanelView gameClearResult;
 
     [Header("마더 드래곤 대사")]
     [Tooltip("스파링 연출이라 순서가 정해져 있다. 0=시작, 1=1턴 뒤, 2=2턴 뒤, 3=마무리")]
@@ -413,9 +386,9 @@ public class BattleManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 결과 화면을 띄운다. 제목과 이미지는 인스펙터의 ScreenPresentation에서 나오고,
-    /// 무엇을 입력해야 하는지는 ResultInputHandler가 붙인다 - 명령 단어를 소유한 쪽이
-    /// 안내도 만들어야 인스펙터에서 단어를 바꿨을 때 안내가 같이 따라간다.
+    /// 결과 화면을 띄운다. 제목과 이미지는 `ResultPanel.prefab`이 통째로 갖고 여기서는
+    /// 수치만 넘긴다. 무엇을 입력해야 하는지는 `ResultInputHandler`가 손패 자리에 띄우는
+    /// 명령 카드("다시하기"/"카드"/"타이틀")가 그대로 보여준다.
     /// </summary>
     public void ShowResult(ResultKind kind)
     {
@@ -457,7 +430,7 @@ public class BattleManager : MonoBehaviour
             StatisticsManager.Instance.StopTracking();
 
         // ⚠️ 일반 스테이지 클리어는 결과를 띄우지 않는다. 곧바로 보상 선택으로 이어지는데
-        // ResultPanel이 풀스크린이고 End Canvas(14)가 RewardCanvas(3)보다 위라, 띄우면 고를
+        // 결과 창이 풀스크린이고 End Canvas(13)가 RewardCanvas(3)보다 위라, 띄우면 고를
         // 카드를 통째로 덮어버린다. 승리 표시는 보상 화면과 자동 진행이 대신한다.
         if (kind == ResultKind.Victory)
         {
@@ -465,106 +438,56 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        var presentation = GetPresentation(kind);
-        var fieldName = GetPresentationFieldName(kind);
-        var title = presentation.Title(this, fieldName);
+        // ⚠️ 반대쪽 패널을 먼저 끈다. 마지막 스테이지는 Victory(숨김) -> GameClear(표시)로
+        // 넘어가고 재시작도 같은 화면에서 시작하므로, 안 끄면 반대쪽이 켜진 채 겹칠 수 있다.
+        HideResultUI();
 
-        // 플레이어가 지금 칠 수 없거나 칠 필요가 없는 단어는 안내하지 않는다 - 두 경우가 있다.
-        //  ① 보상을 고르는 중: 보상 수신자가 우선순위상 입력을 먼저 가져간다.
-        //  ② 자동 진행 대기 중: 보상이 끝나면 StageManager가 알아서 다음 스테이지를 연다.
-        // 반대로 둘 다 아니면(패배의 "다시") 반드시 띄워야 한다 - 안 그러면 칠 것도 없고
-        // 넘어가지도 않는 화면에 갇힌다.
-        var choosingReward = rewardInputHandler != null && rewardInputHandler.IsSelecting;
-        var advancing = stageManager != null && stageManager.IsAdvancingAutomatically;
-
-        string hint = string.Empty;
-        if (resultInputHandler != null && !choosingReward && !advancing)
-            hint = resultInputHandler.BuildHint();
-
-        ApplyResultImage(presentation);
-        ShowStatisticsUI(title + hint, presentation.TitleColor);
-    }
-
-    /// <summary>결과 UI를 통째로 감춘다. 전투가 시작될 때와 일반 스테이지 클리어에서 쓴다.</summary>
-    private void HideResultUI()
-    {
-        if (resultPanel != null) resultPanel.SetActive(false);
-        if (resultImage != null) resultImage.gameObject.SetActive(false);
-    }
-
-    private ScreenPresentation GetPresentation(ResultKind kind)
-    {
-        switch (kind)
+        var view = PanelFor(kind);
+        if (view == null)
         {
-            case ResultKind.Defeat: return defeatPresentation;
-            case ResultKind.GameClear: return gameClearPresentation;
-            default: return victoryPresentation;
-        }
-    }
-
-    // LanguageSettings.Pick의 누락 경고가 어느 인스펙터 칸인지 알려주도록 필드명을 넘긴다.
-    private string GetPresentationFieldName(ResultKind kind)
-    {
-        switch (kind)
-        {
-            case ResultKind.Defeat: return nameof(defeatPresentation);
-            case ResultKind.GameClear: return nameof(gameClearPresentation);
-            default: return nameof(victoryPresentation);
-        }
-    }
-
-    private void ApplyResultImage(ScreenPresentation presentation)
-    {
-        if (resultImage == null)
-            return;
-
-        // ⚠️ 스프라이트가 없을 때 sprite = null로 두면 사라지는 게 아니라 흰 사각형이 그려진다.
-        // 오브젝트째 꺼야 한다(CardView가 배지를 다루는 방식과 같다).
-        if (presentation.Image == null)
-        {
-            resultImage.gameObject.SetActive(false);
+            Debug.LogWarning($"BattleManager: {FieldNameFor(kind)}가 없어 결과 화면을 띄울 수 없습니다.", this);
             return;
         }
 
-        resultImage.sprite = presentation.Image;
-        resultImage.gameObject.SetActive(true);
-    }
-
-    /// <summary>승패를 보여주는 유일한 창구. 패배와 전체 클리어에서만 불린다.</summary>
-    private void ShowStatisticsUI(string titleMessage, Color titleColor)
-    {
         var stats = StatisticsManager.Instance;
-
-        // 조용히 폴백하지 않는다 - 폴백할 곳이 있으면 배선이 빠진 걸 못 알아채고
-        // 엉뚱한 화면이 뜬 채로 넘어간다.
-        if (resultPanel == null || resultStatsView == null)
-        {
-            Debug.LogWarning("BattleManager: resultPanel/resultStatsView가 연결되지 않아 결과 화면을 띄울 수 없습니다.", this);
-            return;
-        }
 
         // 분모를 리터럴로 박으면 스테이지 수를 바꿨을 때 조용히 어긋난다.
         var totalStages = stageManager != null ? stageManager.totalStages : 0;
 
-        resultStatsView.SetStats(
-            titleMessage,
-            titleColor,
+        view.Show(
             stats != null ? stats.highestStageReached : 0,
             totalStages,
             stats != null ? Mathf.RoundToInt(stats.GetCPM()) : 0,
             stats != null ? stats.validWordsUsed : 0,
             stats != null ? stats.totalDamageDealt : 0,
-            stats != null ? stats.totalDamageTaken : 0);
-
-        resultPanel.SetActive(true);
-
-        if (resultReveals != null)
-        {
-            foreach (var reveal in resultReveals)
-            {
-                if (reveal != null)
-                    reveal.Play();
-            }
-        }
+            stats != null ? stats.totalDamageTaken : 0,
+            this,
+            FieldNameFor(kind));
     }
+
+    /// <summary>결과 종류에 맞는 화면. Victory는 결과를 띄우지 않으므로 여기 오지 않는다
+    /// (<see cref="ApplyResult"/>가 앞에서 걸러낸다).</summary>
+    private ResultPanelView PanelFor(ResultKind kind)
+    {
+        return kind == ResultKind.GameClear ? gameClearResult : defeatResult;
+    }
+
+    // 배선 누락 경고가 어느 인스펙터 칸인지 알려주도록 필드명을 넘긴다.
+    private string FieldNameFor(ResultKind kind)
+    {
+        return kind == ResultKind.GameClear ? nameof(gameClearResult) : nameof(defeatResult);
+    }
+
+    /// <summary>결과 UI를 통째로 감춘다. 전투가 시작될 때와 일반 스테이지 클리어에서 쓴다.
+    ///
+    /// ⚠️ <b>둘 다 끈다.</b> 하나만 끄면 결과 종류가 바뀌는 경로(마지막 스테이지의
+    /// Victory -> GameClear, 패배 후 "다시하기")에서 반대쪽이 켜진 채 남는다.</summary>
+    private void HideResultUI()
+    {
+        // Unity는 [SerializeField]인 [Serializable] 클래스의 인스턴스를 항상 만들어 주지만,
+        // 스크립트를 막 바꿔 아직 재직렬화되지 않은 순간에는 비어 있을 수 있다.
+        defeatResult?.Hide();
+        gameClearResult?.Hide();
+    }
+
 }

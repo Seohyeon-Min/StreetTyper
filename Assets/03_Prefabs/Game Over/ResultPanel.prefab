@@ -1295,7 +1295,6 @@ GameObject:
   - component: {fileID: 2667399987066116425}
   - component: {fileID: 1416634181684043029}
   - component: {fileID: 2635456060886403802}
-  - component: {fileID: 1767128170591847121}
   m_Layer: 5
   m_Name: ResultPanel
   m_TagString: Untagged
@@ -1376,7 +1375,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72918fcb2df66664a8d7bd2c47ed982f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ResultStatsView
-  titleText: {fileID: 0}
   highestStageLabel: {fileID: 8702135520673300608}
   cpmLabel: {fileID: 8605952453005934376}
   wordsUsedLabel: {fileID: 9146295239919830307}
@@ -1413,49 +1411,6 @@ MonoBehaviour:
   fullWidth: 463.3
   leftBar: {fileID: 3123268390839780425}
   rightBar: {fileID: 5499396945014616361}
-  barOvershoot: 24
-  duration: 0.6
-  revealRatio: 0.7
-  curve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
---- !u!114 &1767128170591847121
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4807335482821139485}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ed8a3bb8ec0ded43a806201686f6d96, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextGateRevealAnimation
-  maskRect: {fileID: 0}
-  fullWidth: 1100
-  leftBar: {fileID: 0}
-  rightBar: {fileID: 0}
   barOvershoot: 24
   duration: 0.6
   revealRatio: 0.7

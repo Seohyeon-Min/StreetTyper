@@ -48,6 +48,11 @@ public class PauseManager : CommandWordReceiver
              "명령 카드도 만들어지지 않는다 - 열 창이 없는데 단어만 남으면 쳐도 아무 일이 안 일어난다.")]
     [SerializeField] private CardCollectionPanel cardCollectionPanel;
 
+    [Tooltip("런이 끝났는지(패배·전체 클리어) 물어보려고 참조한다. 그 상태에서는 ESC로 멈출 수 " +
+             "없다 - 결과 화면이 이미 \"다시하기\"/\"카드\"/\"타이틀\"을 명령 카드로 띄우고 " +
+             "있어서, 그 위에 같은 자리를 쓰는 일시정지 메뉴가 겹치면 안 된다.")]
+    [SerializeField] private BattleManager battleManager;
+
     // 명령 단어는 CommandCardData 에셋이다 - 단어(한/영)와 카드 겉모습이 한 곳에 모여 있고,
     // 화면에 카드로 그대로 뜨므로 안내 문구가 따로 필요 없다. 씬 오브젝트가 아니라 에셋 참조라
     // 프리팹에 그대로 저장된다(이 프로젝트에서 드문 경우다).
@@ -182,10 +187,24 @@ public class PauseManager : CommandWordReceiver
             return;
         }
 
+        // 멈춰 있었다면 게임 상태와 무관하게 풀 수 있어야 한다 - 이 검사가 아래 결과 화면
+        // 가드보다 먼저 와야 "멈춘 채로 갇히는" 경우가 생기지 않는다.
         if (_isPaused)
+        {
             Resume();
-        else
-            Pause();
+            return;
+        }
+
+        // ⚠️ 런이 끝난 뒤(패배·전체 클리어)에는 멈출 수 없다. 결과 화면이 이미 손패 자리에
+        // 명령 카드를 띄우고 있는데(ResultInputHandler), 일시정지가 같은 PauseHand를 쓰므로
+        // 겹치면 두 화면의 카드가 서로를 밀어낸다. 애초에 멈출 게임도 남아 있지 않다.
+        //
+        // 일반 스테이지 클리어(보상 선택 중)는 여기 걸리지 않는다 - 그때는 게임이 이어지고
+        // 있어서 멈출 수 있어야 한다(IsGameOver가 아니라 IsFinalResult를 보는 이유다).
+        if (battleManager != null && battleManager.IsFinalResult)
+            return;
+
+        Pause();
     }
 
     public void Pause()

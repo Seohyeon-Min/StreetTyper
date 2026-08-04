@@ -20,6 +20,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - **다만 터미널에서 Roslyn으로 미리 걸러낼 수는 있다.** 에디터를 열기 전 문법 오류를 잡는 용도로 실제로 성공한 경로다(빌드 스크립트가 아니라 1회성 검증이다):
     1. Unity가 생성한 `Assembly-CSharp.csproj`에서 `<HintPath>`(약 330개)와 `<DefineConstants>`를 뽑아 응답 파일(`.rsp`)로 만든다.
     2. 소스는 csproj의 `<Compile Include>` 목록 대신 `Assets/**/*.cs`를 직접 글롭할 것 — **새로 만든 `.cs`는 csproj에 아직 없다.** csproj 밖 소스가 `Assets/03_Prefabs/UI/UIStyle/Runtime/`에도 있다.
+       - ⚠️ **글롭한 다음 `Assets/Plugins/`와 경로에 `/Editor/`가 든 것을 빼야 한다.** 전자는 `FMODUnity.asmdef`로 **다른 어셈블리**라 아래 `-r:`과 중복되어 CS0121(모호한 호출)이 무더기로 나고, 후자는 `Assembly-CSharp-Editor` 소속이라 CS0579(중복 특성)가 난다. 둘 다 **내 코드와 무관한 가짜 오류**이니 여기서 시간을 쓰지 말 것. 제대로 걸러내면 소스가 **74개**로 줄고 경고만 남는다.
     3. `-r:Library/ScriptAssemblies/FMODUnity.dll`을 **손으로 추가**해야 한다. FMOD만 csproj에 HintPath가 없다.
     4. `dotnet "C:/Program Files/dotnet/sdk/<ver>/Roslyn/bincore/csc.dll" @response.rsp` — 옵션은 `-target:library -langversion:9.0 -nostdlib+ -noconfig`.
     5. ⚠️ rsp 안의 경로는 **Windows 형식(`C:/...`)**이어야 한다. Git Bash의 `/c/...`를 넣으면 CS0006이 난다.
@@ -37,11 +38,12 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - **게임을 진행시키는 입력은 전부 타이핑이고, 지금 언어에 따라 한글 또는 영문으로 친다.**
   - 전투 중 — 손패 단어(`CardInputHandler`)
   - 클리어 보상 — 후보 카드 이름 또는 `넘기기`/`skip` → `RewardInputHandler`. **스테이지 클리어 후 플레이어가 치는 건 여기가 마지막이다** — 보상을 고르면 `rewardAdvanceDelay` 뒤에 다음 스테이지가 저절로 열린다.
-  - 결과 화면 — `다시`/`retry`(패배, 재시작) → `ResultInputHandler`. `다음`/`next`도 살아 있지만 **승리 화면에서는 안내되지 않는다**(자동으로 넘어가므로 칠 필요가 없다. 성급한 플레이어가 쳐서 먼저 넘기는 건 되고, 그때 자동 진행 코루틴은 `LoadStage`가 끊는다).
+  - 결과 화면 — `다시하기`/`retry`(재시작) · `카드`/`cards`(보유 카드 목록) · `타이틀`/`title` → `ResultInputHandler`. **런이 끝났을 때(패배·전체 클리어)만** 세 단어가 손패 자리에 명령 카드로 떠오른다. 일반 스테이지 클리어에는 카드도 칠 단어도 없다(보상 선택과 자동 진행이 대신한다). 옛 `다음`/`next`는 **삭제됐다.**
   - 일시정지 중 — `계속`/`resume` · `카드`/`cards` · `타이틀`/`title` → `PauseManager`
-  - 보유 카드 목록(일시정지에서 `카드`로 연다) — `닫기`/`close` → `CardCollectionPanel`
-  - **다섯 다 `TypingReceiver`를 상속하고 `InputManager`가 우선순위로 딱 하나에게만 넘긴다** — 각자 이벤트를 받아 스스로 비켜서던 옛 구조가 아니다. 자세한 건 아래 입력 파이프라인 절 참조. **새 명령 단어 시스템은 `TypingReceiver`(또는 `CommandWordReceiver`)를 상속하고 `TypingPriority`에 값을 추가하면 되고, 기존 핸들러의 가드를 손댈 필요가 없다.**
-  - 명령 단어의 한/영 두 벌은 `TypedCommand`(단어 + 안내 문구를 한 묶음으로 든 `[Serializable]` 클래스)로 인스펙터에 있고, 고르는 건 `LanguageSettings.Pick`이다.
+  - 보유 카드 목록(**일시정지와 결과 화면** 양쪽에서 `카드`로 연다) — `닫기`/`close` → `CardCollectionPanel`
+  - 카드 삭제(마더 드래곤 보상에서 `지우기`/`erase`로 연다) — 지울 카드 이름 → `CardDeletePanel`. **취소 명령이 없다**(열리면 반드시 한 장을 지운다).
+  - **여섯 다 `TypingReceiver`를 상속하고 `InputManager`가 우선순위로 딱 하나에게만 넘긴다** — 각자 이벤트를 받아 스스로 비켜서던 옛 구조가 아니다. 자세한 건 아래 입력 파이프라인 절 참조. **새 명령 단어 시스템은 `TypingReceiver`(또는 `CommandWordReceiver`)를 상속하고 `TypingPriority`에 값을 추가하면 되고, 기존 핸들러의 가드를 손댈 필요가 없다.**
+  - 명령 단어의 한/영 두 벌은 대부분 **`CommandCardData` 에셋**(`04_Data/Cards/Commands/`)에 있다. 안내 문구까지 한 묶음으로 드는 `TypedCommand`도 남아 있으나 **지금 쓰는 곳은 `CardCollectionPanel.closeCommand` 하나뿐이다.** 고르는 건 둘 다 `LanguageSettings.Pick`이다.
 - **ESC** — 일시정지 토글. `InputManager.OnCancel` 이벤트로 나가고 `PauseManager`가 받는다. **`_inputEnabled` 가드보다 위에서 읽으므로 타이핑이 잠긴 턴 전환 대기 중에도 걸린다.** 보유 카드 목록이 떠 있으면 "한 단계 뒤로"가 되어 **목록만 닫고 일시정지는 유지된다.**
 - **스페이스** — 이벤트 대화 넘기기. `InputManager.OnAdvance` → `EventManager.HandleAdvance`. 이벤트가 열려 있을 때만 의미가 있고, **일시정지 가드가 없다.**
 - C# `LangVersion` 9.0, .NET Standard 2.1 (Mono) — 그 이상 문법은 컴파일 실패한다.
@@ -67,9 +69,12 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - `02_SYSTEM`: 매니저가 **예외 없이 전부 프리팹 인스턴스**다(아래 `03_Prefabs/Managers/` 참조). 예전엔 `FloatingDamageManager`만 씬에 직접 놓인 오브젝트였지만 지금은 그것도 프리팹으로 뽑혀 있다. `CameraShake`만 매니저가 아니라 `01_CAMERA`의 `Main Camera`에 붙은 컴포넌트다.
   - `03_WORLD`: `player`, `enemySpawnPoint`
     - `player`는 자식 없이 `SpriteRenderer` + `Animator` + `CharacterStats` + `PlayerBattleVisuals`를 직접 들고 있다. 예전의 `PlayerVisual`/`PlayerBlink` 두 오브젝트를 겹쳐 깜빡이던 구조는 **없어졌고**, 이제 애니메이터 하나가 대기·펀치를 모두 재생한다.
-  - `04_UI`: 캔버스 **일곱 개** — `Card Canvas`(`Hand`=손패 · `PendingActionList`=쌓인 공격 · `RewardCardList` · `Black`), `Input Canvas`(`InputFieldDisplay`=입력창 · `WordChainText (TMP)` · `Timer Bar`), `Field Canvas`(`Result Text` 등), `Pause Canvas`(`Sort Order 10` — `Pause Panel`과 `Card Collection Panel` 인스턴스가 여기 있다), `RewardCanvas`, `End Canvas`(`Sort Order 14` — `ResultPanel > StatsText`, 통계 결과 창), `Start Canvas`(`StageStartText` 하나만 — 스테이지 등장 문구).
+  - `04_UI`: 캔버스 **일곱 개**. **정렬 순서(Sort Order)가 화면 겹침을 정하므로 같이 적어둔다** — `Card Canvas`(**0** — `Hand`=손패 · `PendingActionList`=쌓인 공격 · `RewardCardList` · `Black`), `Field Canvas`(**0**), `Start Canvas`(**0** — `StageStartText` 하나만), `RewardCanvas`(**3**), `End Canvas`(**13** — `ResultPanel` 인스턴스와 **`PauseHand`**), `Pause Canvas`(**14** — `Pause Panel`과 `Card Collection Panel` 인스턴스), `Input Canvas`(**15** — `InputFieldDisplay`=입력창 · `WordChainText (TMP)` · `Timer Bar`).
+    - ⚠️ **`Pause Canvas`(14) > `End Canvas`(13)이라 보유 카드 목록이 결과 창 위에 제대로 덮인다.** 결과 화면에서 `카드`를 칠 수 있는 게 이 순서 덕분이다 — 뒤집으면 목록이 결과 창에 가려 안 보인다.
+    - ⚠️ **명령 카드용 `PauseHand`는 `Pause Canvas`가 아니라 `End Canvas` 밑에 있고, 일시정지와 결과 화면이 그걸 같이 쓴다**(`PauseManager.commandCardsLayout` = `ResultInputHandler.resultCardsLayout`). 둘이 겹치지 않는 건 **런이 끝나면 일시정지가 아예 안 걸리기** 때문이다(아래 `PauseManager` 참조) — 그 가드를 없애면 두 화면의 카드가 같은 자리에서 서로를 밀어낸다.
     - `Black`은 손패 뒤에 까는 하단 그라데이션 이미지(`01_Arts/Map/gradation`)일 뿐 스크립트가 없다.
-    - `End Canvas`는 `BattleManager.resultPanel`/`statsText`가 가리키는 통계 창이다. `ShowStatisticsUI(showStats: true)`가 `resultPanel`을 켤 때만 보이고, 그 조건은 **패배·전체 클리어뿐**이다(일반 스테이지 클리어는 `Result Text`에 제목만 띄운다).
+    - `End Canvas`는 `BattleManager.resultPanel`/`resultStatsView`가 가리키는 통계 창이다. **`ShowStatisticsUI`가 부르는 조건은 패배·전체 클리어뿐이고, 일반 스테이지 클리어는 결과를 아예 띄우지 않는다**(`ApplyResult`가 `HideResultUI`로 빠진다) — `ResultPanel`이 풀스크린인데 `End Canvas`(14)가 `RewardCanvas`(3)보다 위라, 띄우면 고를 보상 카드를 통째로 덮기 때문이다. ⚠️ 그래서 **`victoryPresentation`을 채워도 화면에 나오지 않는다.**
+    - ⚠️ 옛 `Field Canvas > Result Text`와 `End Canvas > StatsText`는 **씬에서 사라졌다.** 결과 문구는 이제 `ResultPanel.prefab` 안의 `ResultStatsView`가 제목·라벨·값을 각각 그린다(아래 참조).
     - ⚠️ **일곱 캔버스 전부 RectTransform 스케일이 `(0,0,0)`으로 저장되어 있고 그게 정상이다.** Screen Space Overlay 캔버스는 런타임에 Canvas가 트랜스폼을 덮어쓰므로 직렬화된 값이 의미가 없다 — **특정 캔버스가 안 보이는 원인을 여기서 찾지 말 것**(예전엔 `End Canvas`만의 특징인 것처럼 적혀 있었다). 표시 여부를 정하는 건 각 캔버스를 켜고 끄는 코드다.
     - HP·방어도는 씬 오브젝트가 아니라 **`HPBar.prefab` 인스턴스 2개**(`PlayerHPBar`/`EnemyHPBar`)에 뜨고, `WorldAnchoredUI`로 각 캐릭터를 따라다닌다. 상태이상 아이콘(`StatusIconRow`)도 그 프리팹 안에 있다.
     - 말풍선과 적 의도는 **`SpeechBubbleManager`가 런타임에 찍어내는 프리팹**에 뜬다.
@@ -80,7 +85,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - **한글용은 Paperlogy 계열**(`4Regular`/`7Bold`/`8ExtraBold`). 입력창 `Text`, `WordChainText (TMP)`, `Card.prefab > NameText`, `Actions.prefab`, `SpeechBubble.prefab`, 일시정지 안내 라벨, 타이틀 버튼이 여기에 속한다.
   - **라틴 전용 폰트가 여러 벌 들어와 있다** — `SairaExtraCondensed`(Bold/Medium), `Serati-Regular`, `Board of Directors`. 숫자·영문 전용 자리(수치 라벨 등)에 쓰라고 들어온 것이고, **한글이 지나갈 수 있는 라벨에는 절대 붙이지 말 것.** ⚠️ 영어 모드에서는 카드 이름·명령 단어·상태이상 이름이 전부 영문으로 바뀌지만 **그 반대는 성립하지 않는다** — 한국어 모드로 돌아오면 같은 라벨에 한글이 흐른다. 즉 **언어에 따라 폰트를 바꾸는 장치는 없으므로, 두 언어를 다 지나가는 라벨은 Paperlogy로 통일해야 한다.**
   - `Serati-Regular SDF`는 임포트만 되어 있고 **아직 아무 데도 안 쓰인다.**
-  - **여전히 `LiberationSans SDF`인 곳**: 씬의 `Result Text`(`VICTORY!`)와 **`StageStartText`**(`STAGE n START!` / `MOMMY DRAGON`), 그리고 **`CurrentStageText.prefab`**(`STAGE n`). 셋 다 지금은 라틴 문자만 흐르지만, ⚠️ **그 문구들은 `StageManager`가 코드에 박아 넣는 것이라 한글화하는 순간 `□`가 된다** — 문구를 언어별로 만들 거면 폰트도 Paperlogy로 같이 바꿔야 한다.
+  - **여전히 `LiberationSans SDF`인 곳**: **`StageStartText`**(`STAGE n START!` / `MOMMY DRAGON`)와 **`CurrentStageText.prefab`**(`STAGE n`). 둘 다 지금은 라틴 문자만 흐르지만, ⚠️ **그 문구들은 `StageManager`가 코드에 박아 넣는 것이라 한글화하는 순간 `□`가 된다** — 문구를 언어별로 만들 거면 폰트도 Paperlogy로 같이 바꿔야 한다.
     - `HPBar.prefab`은 더 이상 `LiberationSans`가 아니다 — 라벨 5개가 `SairaExtraCondensed-Bold SDF **2**`(`8ee6441a…`), 하나가 Saira Medium이다.
     - ⚠️ **`Card Collection Panel.prefab`의 `Title`/`Hint`는 폰트 에셋이 Paperlogy 4Regular인데 머티리얼(`m_sharedMaterial`)만 `LiberationSans SDF`의 것으로 남아 있다.** 둘이 어긋나면 아틀라스가 맞지 않아 글자가 깨져 나올 수 있는데, 이 창의 제목과 안내는 한국어 모드에서 한글(`보유 카드`, `"닫기"를 입력하면…`)이 흐르는 자리다 — **에디터에서 실제로 어떻게 나오는지 먼저 확인할 것.**
   - ⚠️ **`SairaExtraCondensed-Bold`가 SDF 에셋 세 벌로 중복 임포트되어 있다** — `SDF`(`1f9639e7…`, 씬에서 사용) · `SDF 1`(`6b43f9d8…`, **아무 데도 안 쓰임**) · `SDF 2`(`8ee6441a…`, `HPBar.prefab`에서 사용). 같은 폰트인데 GUID가 달라, 한 벌만 보고 "이 폰트는 여기서만 쓴다"고 결론 내리면 틀린다.
@@ -89,21 +94,23 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - `Assets/01_Arts/UI/` — 말풍선 이미지(`SpeechBubbleBody`, `SpeechBubbleTailx2` 일반 꼬리, `ThinkBubbleTailx2` 생각풍선 꼬리)와 **아이콘 8종**(`fire`/`Electric`/`ice`/`Devil` = 상태이상, `Attack`/`shield`/`Up` = 적 인텐트, `Clock`).
   - ⚠️ **꼬리는 이제 코드가 바꾸지 않는다.** 예전 `SpeechBubble.Setup(message, isPlayer, isNormalTail)`은 꼬리의 앵커·피벗·좌우 반전을 코드에서 뒤집었지만, 지금 `Setup(string)`은 텍스트만 넣고 **꼬리는 프리팹에 배치된 그대로 쓴다.** 그래서 일반 말풍선과 생각 말풍선이 `SpeechBubble.prefab` / `ThinkingBubble.prefab` **두 프리팹으로 갈린다.**
 - `Assets/01_Arts/Shader/` — 직접 작성한 셰이더. `HitImpact`(피격 이펙트 — `_Progress`/`_FadeStart`로 원형 윤곽선이 나타났다 사라지고 `_GrowthPower`로 커지는 이징 조절), `SpriteOutline`(캐릭터 윤곽선 — 유클리드 거리 팽창 + 프리멀티플라이드 알파 `Blend One OneMinusSrcAlpha`라 반투명 가장자리에서도 안 끊긴다), `UnderwaterGodRaySprite`(배경 광선 — 각도 등분 방식 `_LineCount1`/`_LineCount2`/`_LineWidth`/`_LineJitter`/`_LineSharpness`, 발광 닷지 합성용 `_BackgroundTex`를 머티리얼에 **수동으로** 연결해야 한다), `UnderWaterGodRay`, `SpriteEmissionURP`, `UIStyle`.
-  - ⚠️ **`SpriteOutline.shader`/`SpriteOutline.mat`은 아직 `player`의 `SpriteRenderer`에 연결되지 않았다.** 만들어 뒀을 뿐 화면에 안 나온다.
+  - **`SpriteOutline.mat`은 이제 실제로 붙어 있다** — 씬의 `player`와 `enemy.prefab`의 `SpriteRenderer` 둘 다. (예전 문서엔 "아직 연결되지 않았다"고 적혀 있었다.)
+    - ⚠️ **짝인 `SpriteOutlineUVSync.cs`도 같이 붙여야 한다.** 애니메이션 프레임(`Punch1~4`)처럼 한 텍스처에 스프라이트가 패딩 없이 붙어 있으면 윤곽선 팽창 샘플링이 **옆 프레임까지 읽어 이전/다음 프레임의 윤곽선이 같이 그려진다.** 이 컴포넌트가 `LateUpdate`에서 `SpriteRenderer.sprite.textureRect`를 UV로 바꿔 셰이더의 `_SpriteUVRect`에 `MaterialPropertyBlock`으로 흘려주면 그 범위 밖은 아예 샘플링하지 않는다. 안 붙어 있으면 기본값 `(0,0,1,1)`이라 옛 증상 그대로다. 여유폭은 머티리얼의 `_SpriteRectInset`(px).
+    - `sprite`가 바뀔 때만 다시 쓰고, `LateUpdate`인 건 `Animator`의 스프라이트 교체가 그 전에 끝나 있기 때문이다.
 - `Assets/01_Arts/Card/` — 카드 아트 5장. 카드 프레임 2종(`Active` 분홍 = 액션 / `Modifier` 남색 = 그 외)과 효과 배지 3종(`IconActive`/`IconMultiply`/`IconUp`). **전부 `Card.prefab`의 `CardView`가 인스펙터로 들고 있고, 코드가 카드 카테고리를 보고 골라 끼운다**(아래 `CardView` 참조).
   - ⚠️ **다섯 장 모두 Sprite(Single)로 임포트되어 있다.** 예전엔 Multiple이었고 `IconActive`는 6장짜리 시트였다. Multiple로 되돌리면 프리팹의 `fileID: 21300000`(텍스처 단일 스프라이트 ID)이 서브스프라이트를 못 찾아 **경고 없이 조용히 비어버린다.**
-- `Assets/03_Prefabs/` — `Card.prefab`(런타임 생성되는 손패 카드 — 자식 `Frame`·`NameText`·`Badge`·`Stats`·`Description`, 루트에 `CanvasGroup`+`CardView`+`CardSlotView`. **손패와 보상 화면이 같이 쓴다**), `HPBar.prefab`(HP·방어·상태이상 아이콘 UI 한 벌, **플레이어/적이 같은 프리팹을 인스턴스로 공유**), `SpeechBubble.prefab`(말풍선, `ContentSizeFitter`로 문장 길이에 맞춰 늘어난다), `ThinkingBubble.prefab`(생각풍선 꼬리 버전 — `PendingActionView.bubblePrefab`이 이걸 쓴다), `MotherDragon.prefab`, `enemy.prefab`.
-  - 그 외: `FloatingDamageText.prefab`(피해 숫자 한 개), `Effect/HitEffect.prefab`(피격 이펙트, `EffectBase`+`HitImpact` 셰이더), `Map/Map.prefab`·`Map/HomeDustParticle.prefab`(배경), `Volume Slider.prefab`·`VolumeText.prefab`(옵션 창 슬라이더 한 줄), `Pause Panel.prefab`(일시정지 창 — `TextGateRevealAnimation`이 붙은 `PAUSE` 제목과 명령 카드용 `HandFanLayout`), `ResultPanel.prefab`(통계 결과 창), `Card Collection Panel.prefab`(일시정지 중 여는 보유 카드 목록 — `CardCollectionPanel`), `CurrentStageText.prefab`(화면에 상시 뜨는 `STAGE n` 라벨), `IntroSystem.prefab`(`IntroScene` 전용).
+- `Assets/03_Prefabs/` — `Card.prefab`(런타임 생성되는 손패 카드 — 자식 `Frame`·`NameText`·`Badge`·`Stats`·`Description`, 루트에 `CanvasGroup`+`CardView`+`CardSlotView`. **손패 · 보상 · 일시정지 명령 카드 · 결과 화면 명령 카드 · 보유 카드 목록 · 삭제 목록이 전부 이 하나를 쓴다** — 카드가 화면마다 다르게 보이면 안 된다), `HPBar.prefab`(HP·방어·상태이상 아이콘 UI 한 벌, **플레이어/적이 같은 프리팹을 인스턴스로 공유**), `SpeechBubble.prefab`(말풍선, `ContentSizeFitter`로 문장 길이에 맞춰 늘어난다), `ThinkingBubble.prefab`(생각풍선 꼬리 버전 — `PendingActionView.bubblePrefab`이 이걸 쓴다), `MotherDragon.prefab`, `enemy.prefab`.
+  - 그 외: `FloatingDamageText.prefab`(피해 숫자 한 개), `Effect/HitEffect.prefab`(피격 이펙트, `EffectBase`+`HitImpact` 셰이더), `Map/Map.prefab`·`Map/HomeDustParticle.prefab`(배경), `Volume Slider.prefab`·`VolumeText.prefab`(옵션 창 슬라이더 한 줄), `Pause Panel.prefab`(일시정지 창 — `TextGateRevealAnimation`이 붙은 `PAUSE` 제목과 명령 카드용 `HandFanLayout`), `ResultPanel.prefab`(통계 결과 창 — `ResultStatsView` + `TextGateRevealAnimation` 여러 개 + `FloatBob`), `Card Collection Panel.prefab`(일시정지 중 여는 보유 카드 목록 — `CardCollectionPanel`), `CurrentStageText.prefab`(화면에 상시 뜨는 `STAGE n` 라벨), `IntroSystem.prefab`(`IntroScene` 전용).
   - ⚠️ **`Actions.prefab`은 이제 죽은 에셋이다.** `PendingActionView`가 "한 줄에 프리팹 하나"를 찍어내던 구조에서 **말풍선 하나에 줄바꿈으로 이어 붙이는** 구조로 바뀌면서 아무도 참조하지 않게 됐다(`_Recovery`의 백업 씬만 아직 가리킨다). 예전 구조로 되돌리려다 이걸 되살리지 말 것.
   - 구 `PlayerSpeechBubble.prefab`은 **삭제됐다.** `EnemySpeechBubble.prefab`은 GUID가 유지된 채 `SpeechBubble.prefab`으로 이름만 바뀌었다(`ececaf37…`). 예전에 남아 있던 `BattleManager.prefab`의 `playerSpeechBubblePrefab` 깨진 참조는 **정리됐다** — 지금 말풍선 프리팹 필드는 `SpeechBubbleManager.speechBubblePrefab`과 `PendingActionView.bubblePrefab` 둘이다.
   - `strongEnemy.prefab`은 **삭제됐다.** ⚠️ `StageManager.prefab`의 `enemyPrefabs` 기본값에는 아직 **그 깨진 GUID(`f468762e…`)가 3번째 항목으로 남아 있다.** 씬 인스턴스가 `enemyPrefabs.Array.size`를 **1**로 덮어써서 지금은 드러나지 않을 뿐이다(일반 스테이지는 어차피 `enemyPrefabs[0]`만 쓴다 — 아래 `StageManager` 참조).
 - `Assets/03_Prefabs/Managers/` — 매니저 프리팹 **열일곱 개**(`InputManager`/`Deck Manager`/`StageManager`/`BattleManager`/`WordDictionary`/`WordUnlockManager`/`StatusEffectManager`/`SpeechBubbleManager`/`EventManager`/`SoundManager`/`TimerManager`/`ResultInputHandler`/`RewardInputHandler`/`TitleManager`/`FloatingDamageManager`/`HitEffectManager`/`StatisticsManager`). **`TitleManager`만 `TitleScene`용이고 나머지가 `SampleScene`의 `02_SYSTEM`에 들어간다.** 매니저는 전부 프리팹으로 뽑혀 있고 씬에는 인스턴스만 있다. **씬은 이걸 인스턴스로 들고 있고, 매니저끼리와 씬 오브젝트를 향한 인스펙터 연결은 전부 프리팹 인스턴스 오버라이드로 저장된다**(`SampleScene.unity`의 `m_Modifications` 안 `objectReference`). 자세한 주의점은 컨벤션 절 참조.
   - ⚠️ **매니저 프리팹은 반드시 이 폴더 하나에만 둘 것.** 머지 중에 `FloatingDamageManager`/`HitEffectManager`가 `03_Prefabs/` 루트에 **GUID가 다른 똑같은 복제본**으로 한 벌 더 생긴 적이 있다. 복제본은 내용이 같아도 GUID가 달라 씬이 어느 쪽을 가리키느냐에 따라 **싱글턴이 두 개 생기거나(둘 다 씬에 들어간 경우) 인스펙터 연결이 통째로 빈다.** 같은 이름의 프리팹이 두 경로에 보이면 그건 머지 사고다.
 - `Assets/_Recovery/` — Unity 크래시 복구가 남긴 씬 덤프(`0.unity`, `0 (1).unity`)가 커밋되어 있다. **프로젝트와 무관한 잔재**이고 빌드 설정에도 없다. 여기를 실제 씬으로 착각하지 말 것 — 죽은 에셋(`Actions.prefab` 등)의 마지막 참조가 여기 남아 있어서 "아직 쓰이는 것처럼" 보이게 만든다.
-- `Assets/04_Data/Cards/Commands/` — **명령 카드 5장**(`Skip`/`Erase`/`Resume`/`Cards`/`Title`, 전부 `CommandCardData`). 단어 카드와 **폴더를 나눈 게 핵심**이다 — 같은 폴더면 `WordUnlockManager.allWords`에 실수로 끌어다 넣기 쉽고, 그러면 보상 후보로 나와 사전에 섞인다. ⚠️ 이름이 다른 카드의 **접두사가 되면 안 된다**(접두사인 쪽은 영영 완성할 수 없다).
-- `Assets/04_Data/Cards/` — **28개 `CardBase` 에셋**(GDD 4장 단어 사전 24장에서 페인풀 제외 + 턴 스케일링 카드 4장 = 액션 3장(니킥/춉/박치기) + 수식어 1장(퍼펙트)). `Assets > Create > Deck Manager > Cards > ...` 메뉴로 만들 것. `.asset` YAML을 손으로 **새로 작성**하면 스크립트 GUID가 조용히 어긋날 수 있다(스크립트 GUID를 기존 에셋에서 복사하고 `.meta`까지 같이 만들면 가능은 하다 — 실제로 그렇게 추가한 4장이 있다).
+- `Assets/04_Data/Cards/Commands/` — **명령 카드 6장**(`Skip`/`Erase`/`Resume`/`Cards`/`Title`/`Retry`, 전부 `CommandCardData`). `Title`은 **일시정지와 결과 화면이 같은 에셋을 공유한다**(같은 행동이라 단어를 새로 만들 이유가 없다). 단어 카드와 **폴더를 나눈 게 핵심**이다 — 같은 폴더면 `WordUnlockManager.allWords`에 실수로 끌어다 넣기 쉽고, 그러면 보상 후보로 나와 사전에 섞인다. ⚠️ 이름이 다른 카드의 **접두사가 되면 안 된다**(접두사인 쪽은 영영 완성할 수 없다).
+- `Assets/04_Data/Cards/` — **28개 `CardBase` 에셋**(GDD 4장 단어 사전 24장에서 페인풀 제외 + 턴 스케일링 카드 4장 = 액션 3장(니킥/촙/박치기) + 수식어 1장(퍼펙트)). `Assets > Create > Deck Manager > Cards > ...` 메뉴로 만들 것. `.asset` YAML을 손으로 **새로 작성**하면 스크립트 GUID가 조용히 어긋날 수 있다(스크립트 GUID를 기존 에셋에서 복사하고 `.meta`까지 같이 만들면 가능은 하다 — 실제로 그렇게 추가한 4장이 있다).
   - `description`(카드 하단 설명)과 `statsLabel`(카드 위 큰 글씨 요약)은 **28장 전부 채워져 있다.** `icon`은 전부 비어 있고 **현재 읽는 코드가 없다**(프레임·배지는 카테고리로 정해진다).
-  - ⚠️ **`statsLabel`이 포맷 문자열인 카드가 있다.** 어썸은 `"+{0}"`, 퍼펙트/니킥/춉/박치기는 `"{0}"`이며 `{0}` 자리에 런타임 수치가 들어간다(아래 `SkillResolver` 절). 그 칸을 고정 문구로 바꾸면 **숫자가 사라지고 적어둔 글자만 뜬다** — 값이 안 보이는 게 아니라 조용히 옛 방식으로 되돌아가는 것이라 눈치채기 어렵다.
+  - ⚠️ **`statsLabel`이 포맷 문자열인 카드가 있다.** 어썸은 `"+{0}"`, 퍼펙트/니킥/촙/박치기는 `"{0}"`이며 `{0}` 자리에 런타임 수치가 들어간다(아래 `SkillResolver` 절). 그 칸을 고정 문구로 바꾸면 **숫자가 사라지고 적어둔 글자만 뜬다** — 값이 안 보이는 게 아니라 조용히 옛 방식으로 되돌아가는 것이라 눈치채기 어렵다.
   - 이미 있는 에셋의 **필드 값만 고치는 건** YAML 직접 편집도 안전하다(GUID가 관여하지 않는다). 단 한글은 Unity가 `"파워"`처럼 `\uXXXX`로 이스케이프해 저장하므로 같은 형식으로 써야 하고, **에디터를 닫은 상태에서** 할 것.
 - `Assets/04_Data/EnemyTutorial.asset` — 유일한 `EnemyData`.
 - `Assets/05_Sounds/FMOD/StreetTyperFMOD/` — **FMOD Studio 프로젝트 원본이 저장소 안에 있다.** `StreetTyperFMOD.fspro`(에디터로 여는 파일) · `Metadata/`(이벤트·버스·뱅크 정의 XML) · `Build/Desktop/`(빌드된 `.bank` 4개) · `Assets/`(원본 오디오). 사운드 구조를 바꾸려면 Unity가 아니라 여기를 FMOD Studio로 열어야 한다 — 자세한 건 아래 `SoundManager` 절과 "알려진 이슈" 참조.
@@ -132,7 +139,9 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 
 ### 턴 전환 딜레이 — 애니메이션 자리를 미리 잡아둔 값이다
 
-턴이 바뀔 때마다 코루틴이 사이사이 대기를 넣는다. **이 숫자들은 임의로 고른 게 아니라, 앞으로 들어올 적 공격 모션·스테이지 전환 연출의 길이를 어림잡아 미리 자리를 비워둔 것이다.** 지금은 그 시간 동안 화면에 아무 일도 안 일어나므로 "불필요한 대기"처럼 보이지만, 줄이거나 없애면 나중에 애니메이션을 넣을 자리가 사라진다. 연출이 실제로 붙을 때 그 길이에 맞춰 조정할 값들이다.
+턴이 바뀔 때마다 코루틴이 사이사이 대기를 넣는다. **이 숫자들은 임의로 고른 게 아니라, 앞으로 들어올 연출의 길이를 어림잡아 미리 자리를 비워둔 것이다.** 줄이거나 없애면 나중에 애니메이션을 넣을 자리가 사라진다. 연출이 실제로 붙을 때 그 길이에 맞춰 조정할 값들이다.
+
+⚠️ **적 공격 모션이 붙으면서 이 표의 전제가 반쯤 바뀌었다.** 적 턴 자체가 코루틴이 되어 돌진→타격→복귀가 실제로 재생되고, 아래 두 대기는 **그 연출의 앞뒤 여백**이지 "빈 시간"이 아니다.
 
 | 필드 | 코드 기본값 | 씬 현재값 | 비우고 있는 자리 |
 |---|---|---|---|
@@ -149,9 +158,18 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 
 대기 중에는 **입력이 잠기고 타이머도 멈춘다**(`DisableInput` + `StopTimer`). 대기가 끝나는 쪽에서 다시 열어주므로, 새 대기 구간을 추가할 땐 반드시 짝을 맞출 것.
 
-스크립트 폴더는 시스템 단위로 나뉘고, 뷰는 각 시스템 아래 `UI/` 하위 폴더에 둔다(`DeckManager/UI/`, `Timer/UI/`, `WordChainManager/UI/`, `Combat/UI/`). 예외는 특정 시스템에 속하지 않는 화면 단위 UI인 `02_Scripts/UI/`(`TitleMenu`/`OptionsPanel`/`PauseManager`/`CardCollectionPanel`/`CardDeletePanel`/`MenuKeyboardNavigator`/`ResultInputHandler`/`ResultStatsView`/`ScreenPresentation`/`TextGateRevealAnimation`/`WorldAnchoredUI`/`TMPCornerWarp`)와 최상위에 흩어져 있는 것들(`GameScenes.cs`·`LanguageSettings.cs`·`BattleManager`·`StageManager`·`EventManager`·`IntroManager`·`SoundManager`·`StatisticsManager`·`SpeechBubble(Manager)`·`HPBarUI`·`CameraShake`·`FloatingDamage*`)이다.
+스크립트 폴더는 시스템 단위로 나뉘고, 뷰는 각 시스템 아래 `UI/` 하위 폴더에 둔다(`DeckManager/UI/`, `Timer/UI/`, `WordChainManager/UI/`, `Combat/UI/`). 예외는 특정 시스템에 속하지 않는 화면 단위 UI인 `02_Scripts/UI/`(`TitleMenu`/`OptionsPanel`/`PauseManager`/`CardCollectionPanel`/`CardDeletePanel`/`MenuKeyboardNavigator`/`ResultInputHandler`/`ResultStatsView`/`ScreenPresentation`/`TextGateRevealAnimation`/`WorldAnchoredUI`/`TMPCornerWarp`)와 최상위에 흩어져 있는 것들(`GameScenes.cs`·`LanguageSettings.cs`·`BattleManager`·`StageManager`·`EventManager`·`IntroManager`·`SoundManager`·`StatisticsManager`·`SpeechBubble(Manager)`·`HPBarUI`·`CameraShake`·`FloatingDamage*`·`FloatBob`·`SpriteOutlineUVSync`)이다.
 
 - **`TMPCornerWarp`** (`02_Scripts/UI/`) — TMP 텍스트 각 글자의 **위쪽 두 꼭짓점만** `topSkewX`만큼 오른쪽으로 밀어 이탤릭처럼 기울이는 정적 효과(애니메이션 없음). `[ExecuteAlways]`라 Play를 누르지 않아도 씬 뷰에서 바로 보인다. 폰트에 이탤릭 웨이트가 없어도 기울일 수 있게 하는 용도다.
+- **`DisplacedUI` / `UIDisplacement`** (`02_Scripts/UI/DisplacedUI.cs`) — **창이 열려 있는 동안 가리는 UI를 인스펙터에 적은 만큼 밀어냈다 되돌리는 공용 장치.** `CardCollectionPanel`(보유 카드 목록)과 `CardDeletePanel`(지우기)이 같이 쓴다.
+  - 쓰는 쪽은 `[SerializeField] DisplacedUI[] displacedUI` + `displaceDuration` 두 칸을 두고 넷만 부르면 된다 — `Awake`에서 `CaptureOrigins`, 여닫을 때 `MarkDirty`, `LateUpdate`에서 `Tick`, `OnValidate`에서 `MarkDirty`.
+  - **`MonoBehaviour`가 아니라 평범한 클래스다.** 컴포넌트로 뽑으면 창마다 "어느 Displacer를 쓸지" 참조가 하나 더 생기고 씬 인스턴스 오버라이드만 늘어난다 — **인스펙터 배선을 늘리지 않으려는 것**이고 `LanguageSettings`를 static으로 둔 것과 같은 판단이다.
+  - ⚠️ **`Tick`은 반드시 `LateUpdate`에서 부를 것.** `HandFanLayout`이 카드(자식)를 배치한 **뒤에** 줄 전체(부모)를 옮겨야 한다 — `Update`에서 부르면 같은 프레임에 카드 배치가 덮어쓴다.
+  - ⚠️ **`useUnscaledTime`은 "그 창이 멈춘 화면 위에서 열리는가"로 정한다.** `CardCollectionPanel`은 `true`(일시정지 위에서 열린다), `CardDeletePanel`은 `false`(보상 구간이라 `timeScale`이 1이다). 컨벤션 절의 `deltaTime` 규칙과 같은 기준이고, 비슷해 보인다고 따라 쓰지 말 것.
+  - ⚠️ **원래 자리는 `Awake`에서 한 번만 읽는다.** 여닫는 도중에 다시 읽으면 밀려나 있던 좌표가 "원래 자리"로 굳어 UI가 화면 밖에 남는다. 그래서 `Origin`/`Captured`가 `[NonSerialized]`다.
+  - ⚠️ **필드 이름 `target`/`offset`/`displacedUI`를 바꾸지 말 것.** 씬에 저장된 값이 그 이름으로 직렬화되어 있어, 바꾸면 **경고 없이 빈 값**이 되어 아무것도 비켜나지 않는다(중첩 클래스에서 최상위로 옮길 때 이름을 그대로 둔 이유이기도 하다 — 덕분에 기존 배선이 살아남았다).
+  - 목표에 닿으면 **좌표 쓰기를 멈춘다.** 계속 쓰면 다른 스크립트가 그 UI를 못 옮긴다.
+- **`FloatBob`** (`02_Scripts/`) — 붙은 오브젝트를 사인파로 위아래로 흔드는 12줄짜리 컴포넌트(`amplitude`/`speed`/`useUnscaledTime`). `Animator`가 없는 스프라이트·UI에 최소한의 생동감을 주는 용도이고, 지금은 씬 하나 + `Pause Panel.prefab` + `ResultPanel.prefab`에 붙어 있다. ⚠️ **`OnEnable`에서 `localPosition`을 원점으로 기억하므로, 다른 스크립트가 같은 오브젝트의 `localPosition`을 쓰면 서로 덮어쓴다.** 멈춘 화면 위(일시정지·결과)에 놓을 때만 `useUnscaledTime`을 켤 것.
 
 ### 언어 — 한국어 / 영어 (`LanguageSettings.cs`)
 
@@ -170,11 +188,12 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 | 어디 | 필드 |
 |---|---|
 | `CardBase` | `cardName`/`cardNameEn`, `description`/`descriptionEn`, `statsLabel`/`statsLabelEn` — **24장 전부 채워져 있다** |
-| 카드로 뜨는 명령 단어 | **`CommandCardData` 에셋**(`04_Data/Cards/Commands/` 5장). `PauseManager.resumeCard`/`cardsCard`/`titleCard`, `RewardInputHandler.skipCard`/`eraseCard` |
-| 안내 문구가 붙는 명령 단어 | **`TypedCommand`** 한 덩어리(`korean`/`english` + `hintKorean`/`hintEnglish`). 지금은 `ResultInputHandler.retryCommand` **하나뿐**이다 — 결과 화면엔 카드 줄이 없어서다 |
+| 카드로 뜨는 명령 단어 | **`CommandCardData` 에셋**(`04_Data/Cards/Commands/` 6장). `PauseManager.resumeCard`/`cardsCard`/`titleCard`, `RewardInputHandler.skipCard`/`eraseCard`, **`ResultInputHandler.retryCard`/`titleCard`** |
+| 안내 문구가 붙는 명령 단어 | **`TypedCommand`** 한 덩어리(`korean`/`english` + `hintKorean`/`hintEnglish`). 지금은 **`CardCollectionPanel.closeCommand` 하나뿐**이다 — 결과 화면도 카드 줄로 바뀌면서 `ResultInputHandler`가 이 방식을 떠났다 |
 | `CommandWordReceiver` | `hintSuffix`/`hintSuffixEn` — 안내 꼬리말(`을 입력해주세요!`) |
 | 결과·보상 화면 제목 | **`ScreenPresentation`**(`titleKorean`/`titleEnglish` + 이미지 + 글자색). `BattleManager.victory/defeat/gameClearPresentation`, `RewardCardView.presentation` |
-| `BattleManager` | `statsFormat`/`statsFormatEn`(통계 문구), `motherDragonLines`/`motherDragonLinesEn`(마더 드래곤 대사 — **인스펙터 배열로 나왔다**) |
+| 결과 통계 라벨 | **`ResultStatsView`**의 라벨 5쌍(`highestStageLabelText`/`…En` 등) — `LanguageSettings.OnChanged`를 직접 구독해 갱신한다 |
+| `BattleManager` | `motherDragonLines`/`motherDragonLinesEn`(마더 드래곤 대사 — **인스펙터 배열로 나왔다**). ⚠️ 옛 `statsFormat`/`statsFormatEn`(통계 문구 한 덩어리)은 **삭제됐다** — `ResultStatsView`가 라벨과 숫자를 따로 그린다 |
 | `OptionsPanel` | `closeKorean`/`closeEnglish` |
 | `TitleMenu` | 버튼 라벨 3개 |
 | `StatusEffectManager` | `GetDisplayName`(`화상`/`BURN` 등)과 `DevilDisplayName` — 코드에 직접 박혀 있다 |
@@ -193,16 +212,33 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 
 #### 우선순위 기반 단일 디스패치 — `TypingReceiver` / `TypingPriority`
 
-**타이핑을 노리는 화면이 다섯이고(손패 · 보상 · 결과 · 일시정지 · 보유 카드 목록), `InputManager`는 그중 딱 하나에게만 입력을 넘긴다.**
+**타이핑을 노리는 화면이 여섯이고(손패 · 보상 · 카드 삭제 · 결과 · 일시정지 · 보유 카드 목록), `InputManager`는 그중 딱 하나에게만 입력을 넘긴다.**
 
 - **`TypingReceiver`** (추상 `MonoBehaviour`) — 하위 클래스가 채우는 건 넷뿐이다: `Priority`(가져가는 순서) · `WantsInput()`(지금 내 차례인가) · `Targets`(지금 노릴 단어들) · `OnCommandMatched(index, wasComposing)`. 선택으로 `HandleTypo()`.
   - `OnEnable`에서 인스펙터로 주입받은 `inputManager`에 **스스로 등록**하고 `OnDisable`에서 해제한다. **스스로 `OnCharacterEntered`/`OnCompositionChanged`를 구독하지 않는다.**
   - **매칭 파이프라인이 전부 여기 하나에 있다** — 커밋+조합 문자열 이어붙이기, 정확 일치 판정, `IsValidProgress` 진행 판정, IME 메아리 필터(`_pendingEcho`), 오타 1회 발화(`_notProgressing`). 하위 클래스는 "무엇을 노리는가"와 "맞혔을 때 무엇을 하는가"만 안다.
 - **`TypingPriority`** (enum, 클수록 먼저) — `Battle = 0` · `Result = 10` · `Reward = 15` · **`RewardDelete = 18`** · `Pause = 20` · `CardCollection = 30`. **인스펙터에 노출하지 않는 코드 레벨 불변식이다.** `Reward > Result`인 게 곧 "보상을 정하기 전에는 `다음`이 먹지 않는다"는 게이트이고, `RewardDelete > Reward`가 "지우기 목록이 떠 있는 동안 후보 카드·`넘기기`가 먹지 않는다", `CardCollection > Pause`가 "목록이 떠 있는 동안 `계속`/`타이틀`이 먹지 않는다"는 게이트다 — 전부 별도 상태 플래그 없이 이 순서 하나로 성립한다. `RewardDelete < Pause`인 것도 의도다(지우기 중에도 ESC로 멈출 수 있어야 한다).
   - ⚠️ **타이핑 디스패치만 우선순위로 갈린다. `OnCancel`(ESC)은 구독자 전부에게 간다** — 그래서 `PauseManager.HandleCancel`이 "목록이 열려 있으면 목록만 닫고 리턴"을 손으로 갈라준다. ESC를 받는 화면을 더 만들면 같은 조정이 필요하다.
-- **`InputManager.DispatchToReceiver`** — 우선순위 내림차순으로 훑다가 처음으로 `isActiveAndEnabled && WantsInput()`인 곳에서 멈추고 거기서 끝낸다.
+- **`InputManager.ActiveReceiver`** — 우선순위 내림차순으로 훑다가 처음으로 `isActiveAndEnabled && WantsInput()`인 곳에서 멈춘다. **`DispatchToReceiver`가 이걸 그대로 쓰므로 "누가 입력을 받는가"의 판정이 하나뿐이다.**
+  - ⚠️ **캐시하지 않고 부를 때마다 훑는다.** 이 프로젝트엔 스크립트 실행 순서 설정이 없어서, 프레임 앞머리에 캐시해두면 "그 프레임에 일시정지가 걸렸는가"를 읽는 쪽마다 다르게 본다. 수신자는 여섯을 넘지 않고 `WantsInput()`은 전부 필드 검사 수준이라 값이 싸다.
   - ⚠️ **예전 구조로 되돌리지 말 것.** 넷이 전부 이벤트를 받아놓고 각자 `timeScale`·`IsGameOver`를 보며 비켜서던 시절에는, 일시정지 중 `계`의 첫 글자가 손패 쪽에서 오타 처리되어 `ClearInput()`이 불리는 바람에 **명령 단어를 끝까지 칠 수 없었다.** 하나만 고르면 그 종류의 사고가 구조적으로 일어나지 않는다.
   - `CardInputHandler.WantsInput()`에 아직 `timeScale == 0` 검사가 남아 있는데, 이건 **`PauseManager`가 씬에서 빠졌을 때의 보험**이다(그 경우 멈춘 화면에서 손패가 계속 먹는 것보다 아무도 안 먹는 쪽이 안전하다). 결과 화면 가드(`IsGameOver`)는 우선순위가 대신하므로 없앴다.
+
+#### ⭐ 입력을 못 가져간 화면은 **연출도 멈춰야 한다**
+
+우선순위 디스패치는 "**누가 글자를 받는가**"만 가른다. 문제는 **입력창(`CurrentInput`/`Composition`)이 전역이라 아무나 읽을 수 있다는 것**이다 — 그래서 일시정지 중 `계속`을 치면, 글자는 `PauseManager`만 받는데도 손패의 `가드`가 같이 떠오르고 보상 후보 카드가 덩달아 밝아졌다. 매칭은 안 되는데 화면만 반응하는 상태다.
+
+**입력을 폴링해 연출을 그리는 코드는 예외 없이 "지금 내 차례인가"를 먼저 물어야 한다.** 묻는 방법이 둘이고, 부르는 쪽의 성격에 따라 갈린다.
+
+| 누가 | 무엇을 쓰나 | 왜 |
+|---|---|---|
+| 수신자 자신(`RewardInputHandler`·`CardDeletePanel`) | **`TypingReceiver.HasTypingFocus`** | 자기가 `ActiveReceiver`인지만 알면 된다. `WantsInput()`이 true여도 더 높은 우선순위가 가져갔으면 false다 |
+| 카드 한 장(`CardSlotView`) | **`InputManager.IsTypingTarget(word)`** | 이 카드는 **자기 주인을 모른다** — 손패로도, 일시정지 명령 카드로도, 결과 화면 명령 카드로도 쓰이기 때문이다. 그래서 "내 단어가 지금 대상 목록에 있는가"를 묻는다 |
+
+- **`IsTypingTarget`이 `CardSlotView`에 특히 잘 맞는 이유**: 주인을 배선으로 들고 다니면 `HandFanLayout`·`PauseManager`·`ResultInputHandler`가 전부 `CardInputHandler` 참조를 넘겨야 하고 씬 인스턴스 오버라이드만 늘어난다. 단어로 물으면 **일시정지가 열리는 순간 손패 단어가 대상 목록에서 빠지므로 카드가 알아서 가라앉고, 같은 프레임에 명령 카드는 자기 단어가 들어와 평소처럼 떠오른다.** 배선이 하나도 안 늘어난다.
+- ⚠️ **차례가 아닐 때는 "얼어붙는" 게 아니라 평상 상태로 되돌려야 한다.** 들림 목표를 0으로 두고(`CardSlotView`), 후보 없음 + 입력 없음으로 되돌린다(`RewardInputHandler` → `SetTypingCandidate(-1, false)`, `CardDeletePanel` → `_highlight = -1` + `_hasInput = false`). 중간 높이에서 멈춰 있으면 고장난 것처럼 보이고, `hasInput`을 남기면 카드가 흐려진 채로 굳는다.
+- ⚠️ **`_active`/`_isOpen` 같은 자기 상태 플래그만으로는 부족하다.** 보상은 카드를 고를 때까지 계속 `_active`이고 삭제 창도 계속 `_isOpen`인데, 그 **위로** 일시정지가 열릴 수 있다(`Pause = 20 > RewardDelete = 18 > Reward = 15`). 플래그는 "내 창이 떠 있는가"이고 focus는 "내가 글자를 받는가"라 서로 다른 질문이다.
+- `TypingReceiver.ActiveTargets`(internal)가 `Targets`를 `InputManager`에 열어주는 통로다. `Dispatch`와 같은 이유로 internal이며 **바깥에 공개하지 말 것** — 대상 목록을 밖에서 읽기 시작하면 "누가 무엇을 노리는가"가 다시 여러 곳으로 흩어진다.
 - **`CommandWordReceiver` : `TypingReceiver`** — 명령 단어(고정 단어 + 화면 안내 문구)를 받는 수신자의 중간 계층. `hintSeparator`/`hintSuffix`/`hintSuffixEn`/`hintLabel`과 `JoinHints(...)`, `BuildHint()`, `RefreshHint()`를 더한다. `LanguageSettings.OnChanged`를 구독해 언어가 바뀌면 안내를 다시 쓴다.
   - **손패에는 안내 문구가 없어서 이 계층이 `TypingReceiver`보다 한 단계 아래에 있다** — 위로 올리면 `CardInputHandler` 인스펙터에 쓰지도 않는 안내 칸이 붙는다.
   - `hintLabel`을 비워두면 부르는 쪽이 `BuildHint()`를 문자열로 가져간다(결과 화면이 그렇게 쓴다 — `BattleManager.ApplyResult`가 제목 뒤에 붙인다).
@@ -257,7 +293,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - `AttributeCardData.Category`는 `effectType`에서 계산된다: `RepeatAction`→`Time`, `StatusChance*`/`Bleed`→`Type`, 나머지(`LifeDrain`/`DamageReduction`/`CritMultiplier`)→`Modifier`. 즉 GDD의 "속성 및 특수효과" 한 덩어리가 세 분류로 쪼개진다.
   - **`StatsLabel`은 `virtual`이다.** 값이 런 도중 변하는 카드가 재정의해 지금 수치를 끼워 넣는다 — `ModifierCardData`(어썸)와 `ActionCardData`(턴 스케일링) 둘이 그렇게 한다. 둘 다 인스펙터의 `statsLabel`을 **포맷 문자열**로 쓰고, `{0}`이 없으면 적힌 그대로 돌려주는 폴백이 있다(포맷을 안 넣은 카드에서 `string.Format`이 예외를 내거나 글자가 통째로 사라지지 않게).
   - **턴 스케일링** — `TurnScalingSource`(`None`/`SecondsSpentThisTurn`/`ActionsThisTurn`/`ModifiersThisTurn`)는 **`CardBase.cs`에 있다. 액션 카드와 수식어 카드가 같이 쓰기 때문**이지 액션 전용이 아니다(예전 이름 `ActionScalingSource`).
-    - **액션 쪽**(`ActionCardData`): `scalingSource` + `scalingPerUnit`. 위력은 `strengthBonus + ScalingBonus(...)` = **`CurrentStrengthBonus`** 하나로 모인다. **니킥**(위력 +10, 액션당 -1) · **춉**(액션당 +2) · **박치기**(수식어당 +2)가 여기다. 힘(power)이 기본으로 깔리고(펀치 = 힘+3과 같은 규칙) **파워 보정은 안 받는다**(액션 카드 자신의 값이라서).
+    - **액션 쪽**(`ActionCardData`): `scalingSource` + `scalingPerUnit`. 위력은 `strengthBonus + ScalingBonus(...)` = **`CurrentStrengthBonus`** 하나로 모인다. **니킥**(위력 +10, 액션당 -1) · **촙**(액션당 +2) · **박치기**(수식어당 +2)가 여기다. 힘(power)이 기본으로 깔리고(펀치 = 힘+3과 같은 규칙) **파워 보정은 안 받는다**(액션 카드 자신의 값이라서).
     - **수식어 쪽**(`ModifierCardData`): `effectType = TurnScalingStatBonus` + `scalingSource`, 1단위당 값은 기존 `value`를 쓴다. **퍼펙트**(줄어든 초당 +2, 늘어난 초당 -2)가 여기다. 수치 상승 단어이므로 어썸·슈퍼처럼 **파워 보정(+1/장)을 받는다.**
     - 두 경로 다 계산과 표시가 **`SkillResolver.ScalingBonus(source, perUnit)`** 하나를 거친다 — 카드에 뜬 숫자와 실제 피해가 어긋나지 않게 하려는 것이다.
     - ⚠️ **퍼펙트가 세는 초는 `TimerChange`(단어 효과)뿐이고 자연 감소는 포함하지 않는다.** 자연 감소까지 세면 "늘어난 초"가 나올 수 없어 규칙의 절반이 죽는다.
@@ -273,7 +309,13 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - `GrantStartingWords()` — 런 시작. 사전을 비우고 `grantedAtStart` 전부 지급. 럭키 라운드 누적도 여기서 비운다(지난 런이 이월되지 않게).
   - ⚠️ **뽑기와 확정이 두 메서드로 갈려 있다.** `RollRewardCandidates()`가 미보유 중 랜덤 `wordsPerReward`개(기본 3)를 **뽑기만 하고 사전에는 넣지 않으며**, 플레이어가 고른 한 장을 `ConfirmReward(card)`가 넣는다. 옛 `GrantStageClearReward()`는 둘을 한 메서드에서 같이 해서 "뽑았지만 아직 확정 안 함"이라는 상태가 없었고, 그래서 선택제가 성립하지 않았다. **다시 합치지 말 것.**
   - 후보 목록(`_offered`)은 시작 단어용 재사용 리스트(`_granted`)와 **따로 둔다** — 선택제에서는 플레이어가 고를 때까지 여러 프레임에 걸쳐 들고 있어야 한다.
-  - **럭키**는 `AddLuckyBonus()`로 `luckyBonusRounds`(기본 1)만큼 **보상 라운드를 더 연다**(장수를 늘리는 게 아니다 — 선택제에서 후보만 늘리면 고를 수 있는 건 여전히 하나라 오히려 보상이 줄어 보인다). `StageManager`가 라운드가 끝날 때마다 `TryConsumeBonusRound()`로 물어본다. 부르는 쪽은 `DeckManager.PlayPendingActions`로, **적을 쓰러뜨린 그 공격에 `LootBonusOnKill`이 있었을 때만**이다 — 화상 같은 지속 피해로 죽으면 그 경로를 타지 않는다(GDD가 "공격으로 처치 시"라 명시).
+  - **럭키는 이제 확률로 걸린다** — 기본 `chancePercent`(10%)에서 시작해 **쓸 때마다** `chanceGainPerUse`(10%p)씩 올라 `maxChancePercent`(50%)에서 멈춘다. 셋 다 `ModifierCardData` 인스펙터에 있다.
+    - 누적은 `SkillResolver.LuckyUses`(static, **런 단위** — `ResetRun`이 되돌린다. 어썸과 같은 결)이고, 확률 계산과 카드 표시가 **`SkillResolver.LuckyChance(base, gain, max)` 하나를 같이 쓴다** — 카드에 뜬 숫자와 실제 확률이 어긋나면 그게 곧 버그로 보인다(`ScalingBonus`와 같은 규칙).
+    - ⚠️ **성공했는지가 아니라 "썼는지"로 센다.** 실패해도 다음 확률은 올라가야 한다 — 안 그러면 운이 나쁠수록 계속 나빠진다. 증가 시점은 `Resolve` 맨 끝이라 **첫 사용은 기본 확률로 굴린다**(어썸이 "이전에 성공한 횟수"만 세는 것과 같다).
+    - ⚠️ 굴리기는 카드를 다 훑은 **뒤에 한 번만** 한다. 손패 중복으로 럭키가 두 장 들어와도 체인당 보상 라운드는 하나다.
+  - **판정에 성공하면 그 조합이 적용되는 순간 곧바로** `AddLuckyBonus()`가 `luckyBonusRounds`(기본 1)만큼 보상 라운드를 쌓는다(장수를 늘리는 게 아니다 — 선택제에서 후보만 늘리면 고를 수 있는 건 여전히 하나라 오히려 보상이 줄어 보인다). 쌓인 라운드는 스테이지를 클리어할 때 `StageManager`가 `TryConsumeBonusRound()`로 하나씩 꺼내 쓴다. 부르는 쪽은 `DeckManager.PlayPendingActions`다.
+    - ⚠️ **"그 공격이 처치했는지"는 보지 않는다.** 럭키는 *쓰면 확률이 오르고, 성공하면 그 스테이지를 클리어할 때 보상이 한 번 더 열리는* 카드다. 예전엔 여기서 처치 여부를 같이 봐서 **판정에 성공해도 그 콤보가 마지막 일격이 아니면 아무 일도 일어나지 않았다**(옛 필드 이름 `LootBonusOnKill`이 규칙을 잘못 말하고 있었고, 지금은 `GrantsLootBonus`다). "이후 적을 처치했을 때 보상이 추가된다"는 규칙은 **클리어해야 보상 창이 열린다**는 사실만으로 이미 성립한다.
+    - 수치 칸이 `보상` → `보상됨`으로 바뀌는 건 **이 쌓인 상태를 보여주려고** 있는 것이다. 처치 시점에 쌓으면 그 표시가 보일 틈이 거의 없다.
   - `OnValidate`가 `allWords`의 **`CardName` 중복을 경고한다.** 이름이 곧 매칭 키라 중복되면 하나는 영영 입력할 수 없다.
 - **`RewardInputHandler` : `CommandWordReceiver`** (`DeckManager/`) — 클리어 보상 줄에서 **카드 하나를 타이핑으로 고르는** 수신자. `TypingPriority.Reward`.
 
@@ -291,12 +333,16 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - `Update`에서 `IsValidProgress`로 지금 치고 있는 카드를 골라 `rewardCardView.SetTypingCandidate(...)`에 넘긴다 — **판단은 여기서, 표시는 뷰에서**.
 - **`UI/CardDeletePanel` : `CommandWordReceiver`** (`02_Scripts/UI/`) — `지우기`로 열리는 **사전 카드 삭제 창**. 지금 사전에 든 카드를 격자로 펼치고, 이름을 친 한 장을 `WordDictionary.RemoveWord`로 지운 뒤 `OnDeleteFinished`를 쏜다. `TypingPriority.RewardDelete`.
   - **취소가 없다** — 지우기를 고른 순간 반드시 한 장을 지운다. 그래서 명령 단어가 하나도 없고 타이핑 대상은 보유 카드 이름뿐이다. 사전이 비어 있으면 창을 열지 않고 곧바로 `OnDeleteFinished`로 빠진다(취소가 없는 창이라 열리면 갇힌다).
-  - `CardCollectionPanel`과 격자 배치가 겹치지만 **일시정지 경로를 건드리지 않으려고 따로 뒀다.** 둘이 또 갈라지면 공용 뷰로 뽑는 게 맞다.
-  - ⚠️ **`Time.deltaTime`을 쓴다** — 이 창은 `timeScale`이 1인 보상 구간에서만 뜬다. `CardCollectionPanel`이 `unscaledDeltaTime`인 건 그쪽이 일시정지 **위에서** 열리기 때문이고 성격이 다르다.
+  - **가리는 UI를 비켜나게 하는 `displacedUI`/`displaceDuration`이 여기에도 있다** — 이 창은 보상 카드 줄 **위에** 겹쳐 뜨므로 그대로 두면 뒤에 비친다. 로직은 `CardCollectionPanel`과 같은 공용 `UIDisplacement`를 쓴다(위 참조).
+  - `CardCollectionPanel`과 격자 배치가 겹치지만 **일시정지 경로를 건드리지 않으려고 따로 뒀다.** 비켜나기는 두 번째 중복이 되면서 실제로 공용(`UIDisplacement`)으로 뽑았고, **격자 배치도 또 갈라지면 같이 뽑는 게 맞다.**
+  - ⚠️ **`Time.deltaTime`을 쓴다**(비켜나기에도 `useUnscaledTime: false`를 넘긴다) — 이 창은 `timeScale`이 1인 보상 구간에서만 뜬다. `CardCollectionPanel`이 `unscaledDeltaTime`인 건 그쪽이 일시정지 **위에서** 열리기 때문이고 성격이 다르다.
   - ⚠️ `PauseManager`·`CardCollectionPanel`과 같은 이유로 **항상 켜져 있는 오브젝트에 붙일 것.** 여닫는 건 인스펙터로 받은 `panel`이다.
   - **`UI/RewardCardView`** (`DeckManager/UI/`) — 후보 카드를 화면 가운데에 펼치는 **순수 뷰**. 카드 중심 간격은 **프리팹 폭 + `spacing`**이라, `Card.prefab`(100px)에 `spacing 100`이면 사이가 실제로 100 벌어진다. `Awake`에서 프리팹 폭을 읽어두므로 카드 크기를 바꿔도 여백은 유지된다.
     - **게임 판단을 하지 않는다.** "어느 카드를 치고 있는가"는 `RewardInputHandler`가 `SetTypingCandidate(index, hasInput)`로 알려주고, 여기는 그걸 들림(`typingLiftHeight`)과 흐림(`dimAlpha`)으로 비추기만 한다. `hasInput`을 따로 받는 이유는 **"아직 안 쳤다"(전부 선명)와 "쳤는데 아무것도 안 맞는다"(전부 흐림)를 갈라야** 하기 때문이다.
     - 제목과 이미지는 `ScreenPresentation presentation` 필드에서 나온다(결과 화면과 같은 구조).
+    - **`PlayExit(keepIndex, onComplete)`가 선택이 끝났을 때의 퇴장 연출이다** — `keepIndex` 카드(고른 카드)만 그 자리에 `exitKeepLinger`만큼 남고, 나머지는 패배 시 손패가 무너지는 것과 같은 방식으로 시차(`exitFallStagger`)를 두고 회전하며 떨어진다(`exitFall*` 인스펙터 값들). `reveals`(제목·배경 게이트)는 **`PlayReverse()`로 열릴 때와 반대로 닫힌다.** 다 끝나면 `onComplete`가 다음 스테이지 진행을 잇는다.
+      - `keepIndex`는 `RewardInputHandler.LastPickedRowIndex`에서 오고, **넘기기·지우기처럼 남길 카드가 없으면 -1**이라 전부 떨어진다. 표시된 카드가 아예 없던 라운드면 연출 없이 곧바로 `onComplete`.
+      - ⚠️ **`Clear()`는 `StopAllCoroutines()`부터 한다.** 퇴장 연출 도중 플레이어가 앞질러 넘어가면(`StageManager.LoadStage`) 낙하 코루틴이 살아남아 이미 `Destroy`된 카드를 건드리거나, **`onComplete`가 한 번 더 불려 스테이지를 건너뛴다.**
     - **카드 내용은 `CardView.SetCard` 하나로 그린다.** 예전엔 `GetComponentInChildren<TMP_Text>()`/`<Image>()`로 계층 **첫 번째** 컴포넌트를 집어 이름과 아이콘을 직접 넣었는데, 자식 순서에 의존하는 구조라 `Badge`를 추가하는 순간 깨질 참이었다. 그 방식으로 되돌리지 말 것.
     - `CardSlotView`는 꺼서 손패 이벤트에 반응하지 않게 한다. 그리기는 `CardView`가 따로 하므로 꺼도 카드 내용은 정상적으로 나온다.
     - `localRotation`을 초기화하는 줄이 있는데 **지금은 사실상 방어용이다.** `Card.prefab` 루트 회전은 항등이고, 기울기는 `NameText` 자식에 7도가 따로 박혀 있다(아트 의도라 그대로 둔다). 손패에서 카드가 기우는 건 `HandFanLayout`이 매 프레임 루트를 돌리기 때문이다.
@@ -330,13 +376,27 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
     - 프레임 자체를 끄지는 않는다 — 카드 자리가 통째로 사라지면 부채꼴 배치가 흔들린다.
     - 프리팹 원본은 **`Awake`에서 한 번만** 읽는다. 나중에 읽으면 이미 갈아끼운 카테고리 프레임이 "원본"으로 굳는다.
   - 배선 검증 경고는 **`Awake` 1회**에서만 낸다. `SetCard`에서 내면 매 턴 5슬롯 × 스왑마다 불려 콘솔이 폭주한다.
-  - **그린 카드를 `_card`에 들고 있다가 `SkillResolver.OnCardValuesChanged`에 반응해 수치 칸만 다시 쓴다.** 어썸·춉·박치기처럼 값이 도중에 변하는 카드가 **손패에 남은 채로** 다른 조합이 완성되면 그 자리에서 같이 갱신되어야 하기 때문이다(슬롯 간 중복이 허용돼 어썸이 두 장 뜰 수도 있다). static 이벤트라 "매니저를 모른다"는 성질은 그대로다(`LanguageSettings.OnChanged`와 같은 결).
+  - **그린 카드를 `_card`에 들고 있다가 `SkillResolver.OnCardValuesChanged`에 반응해 수치 칸만 다시 쓴다.** 어썸·촙·박치기처럼 값이 도중에 변하는 카드가 **손패에 남은 채로** 다른 조합이 완성되면 그 자리에서 같이 갱신되어야 하기 때문이다(슬롯 간 중복이 허용돼 어썸이 두 장 뜰 수도 있다). static 이벤트라 "매니저를 모른다"는 성질은 그대로다(`LanguageSettings.OnChanged`와 같은 결).
     - **럭키도 이 이벤트로 갱신된다** — 럭키 보너스가 쌓이면 그 자리에서 수치 칸이 `보상` → `보상됨`으로 바뀐다(아래 `WordUnlockManager` 참조).
 - **`UI/CardSlotView`** — 한 슬롯의 **동작**(슬롯 구독 + 타이핑 들림/교체 애니메이션). 그리기는 같은 오브젝트의 `CardView`에 위임한다. 런타임 생성이라 `OnEnable`이 `Bind`보다 먼저 돌므로 구독이 null 관용적이고 멱등하다(`Subscribe`/`Unsubscribe`/`_subscribed`).
   - **`cardSlotManager`/`inputManager`는 여기 남아야 한다.** 전자는 `OnSlotChanged` 구독과 `Refresh()`의 초기 읽기에, 후자는 `Update`의 타이핑 들림 판정 폴링에 쓰인다 — **둘 다 손패 전용**이라 `CardView`에는 없다.
-  - ⚠️ **`Refresh()`는 슬롯을 못 읽어도 조용히 리턴하지 않고 `SetCard(null)`로 비운다.** 그냥 두면 `Card.prefab`에 저장된 예시 문구(`파워` / `테스트테스트…` / `+1`)가 그대로 화면에 나온다. **이 프로젝트엔 스크립트 실행 순서 설정이 없어서** `HandFanLayout`이 카드를 스폰·`Bind`할 때 `CardSlotManager.Awake`가 아직 안 돌았을 수 있고, 그러면 `_currentCards`가 `null`이라 이 경로로 온다.
+  - ⚠️ **들림 판정의 첫 조건은 `inputManager.IsTypingTarget(_liftTargetWord)`다** — 입력을 다른 화면이 가져갔으면 이 카드는 반응하지 않는다(위 "입력을 못 가져간 화면은 연출도 멈춰야 한다" 참조). 이 줄을 빼면 일시정지 중 `계속`의 첫 글자에 손패의 `가드`가 같이 떠오른다.
+  - ⚠️ **`Refresh()`의 갈래가 둘이고 순서가 중요하다.**
+    - **`cardSlotManager == null`이면 곧바로 리턴한다** — 슬롯에 묶이지 않은 카드(일시정지·결과 화면의 명령 카드)는 `BindStatic`이 이미 내용을 채워놨는데, 여기서 비우면 그걸 지운다. 명령 카드는 `Instantiate → BindStatic → Start` 순서라 `Start()`의 `Refresh`가 항상 나중에 오고, **실제로 카드가 통째로 비어 보이는 회귀가 났던 자리다.**
+    - **슬롯에 묶여 있는데 못 읽는 경우엔** 조용히 리턴하지 말고 `SetCard(null)`로 비운다. 그냥 두면 `Card.prefab`에 저장된 예시 문구(`파워` / `테스트테스트…` / `+1`)가 그대로 화면에 나온다. **이 프로젝트엔 스크립트 실행 순서 설정이 없어서** `HandFanLayout`이 카드를 스폰·`Bind`할 때 `CardSlotManager.Awake`가 아직 안 돌았을 수 있고, 그러면 `_currentCards`가 `null`이라 이 경로로 온다.
   - ⚠️ **페이드는 루트 `CanvasGroup` 하나로 한다**(`CardView.SetAlpha`). 예전엔 이름과 아이콘의 알파만 따로 만져서, 나중에 붙은 `Description`이 교체 애니메이션 중 혼자 안 사라졌다. 표시 요소가 늘어도 코드를 고칠 필요가 없는 쪽이 의도다 — **이 프리팹에 알파를 만지는 컴포넌트를 더 붙이지 말 것**(`PendingActionView`의 알파 소유권 충돌 사례 참조).
-  - **`PlayExit(offset, onComplete)` / `PlayEnter(fromOffset, setContent)`는 슬롯 교체와 무관한 범용 API다.** 밖에서 직접 불러 카드 자리를 통째로 다른 용도로 바꿀 수 있다(지금은 `PauseManager`가 손패 5장을 가라앉히고 명령 카드 2장을 띄우는 데 쓴다). `offset` 양수면 위로, 음수면 아래로.
+  - **손패를 치우는 연출이 셋이고 성격이 다르다.** 되살아나는 방식이 갈리는 게 핵심이다.
+
+    | 메서드 | 언제 | 끝난 뒤 | 어떻게 되살아나나 |
+    |---|---|---|---|
+    | `PlayCollapse(delay)` | 패배 | 회전한 채 떨어져 남음. **`_isSwapping`을 켜둔 채 둔다** | 다음 `PlaySwap`(`RefillAll`) |
+    | `PlaySink()` | 전체 클리어 | 내려간 자리에 남음. **`_isSwapping`을 켜둔 채 둔다** | 다음 `PlaySwap`(`RefillAll`) |
+    | `PlayExit(offset, onComplete)` | 일시정지 | **원래 자리로 튀어오른다**(`_isSwapping`을 내린다) | 부르는 쪽이 `onComplete`에서 끄고 나중에 `PlayEnter`로 켠다 |
+
+    - ⚠️ **`PlaySink`을 `PlayExit`으로 대신하지 말 것.** `PlayExit`은 끝나면서 `_isSwapping`을 내려 카드가 원래 부채꼴 자리로 도로 튀어오르므로, 부르는 쪽이 오브젝트를 꺼야 한다. 그런데 여기서 끄면 **`OnSlotChanged` 구독이 끊겨 재시작 후 `RefillAll`이 그 카드를 못 되살린다** — 결과 화면에서 `다시하기`로 돌아온 판에 손패가 영영 안 보인다. 일시정지가 `PlayExit`을 쓸 수 있는 건 `HideCommandCards`가 `PlayEnter`로 **직접** 되돌리기 때문이다.
+    - 가라앉기는 무너짐과 이징이 반대다 — 무너짐은 EaseIn(가속해 떨어진다), 가라앉기는 EaseOut(부드럽게 멎는다). 회전도 시차도 없다: "졌다"가 아니라 "다 끝냈다"라 요란할 이유가 없다.
+  - **`IsLeaving`은 이 카드가 자리에서 물러나는 중인지** 알려준다 — **무너짐(stagger 대기 포함)과 가라앉기 둘 다** 해당한다. 기다리는 쪽은 어느 연출인지 알 필요 없이 "치워졌는가"만 보면 된다. ⚠️ **`_isSwapping`으로는 알 수 없다** — 그건 위 표대로 끝나도 켜둔 채 남고 평범한 슬롯 교체에도 켜진다. `HandFanLayout.IsLeaving`이 손패 전체를 묶어서 답하고, `ResultInputHandler`가 그걸 기다렸다가 명령 카드를 띄운다.
+  - **`PlayExit(offset, onComplete)` / `PlayEnter(fromOffset, setContent, duration?)`는 슬롯 교체와 무관한 범용 API다.** 밖에서 직접 불러 카드 자리를 통째로 다른 용도로 바꿀 수 있다(`PauseManager`가 손패 5장을 가라앉히고 명령 카드 3장을 띄우는 데, `ResultInputHandler`가 패배 화면에 카드 2장을 띄우는 데 쓴다). `offset` 양수면 위로, 음수면 아래로. `duration`을 비우면 인스펙터의 `enterDuration`을 쓰고, 넘기면 그 화면만 느리게/빠르게 뜬다(결과 화면이 0.6초로 늘려 쓴다).
   - **`BindStatic(CardBase, input)`** — `CardSlotManager` 슬롯 없이 명령 카드 하나를 보여준다(옛 시그니처는 `string`이었다). 슬롯 구독을 끊으므로 `CurrentCards`가 바뀌어도 영향받지 않는다. ⚠️ **`_currentCard`는 일부러 `null`로 둔다** — 그건 "이 슬롯이 대표하는 손패 카드"라서, 빌려 쓰는 명령 카드를 넣으면 슬롯 로직이 진짜 손패 카드로 오인한다. 들림 판정이 실제로 비교하는 건 `_liftTargetWord` 쪽이다. ⚠️ **`slotIndex`는 건드리지 않고 남겨둔다** — 나중에 원래 슬롯으로 되돌릴 때 `SlotIndex`로 읽어 쓴다(`centerOnTop`이 형제 순서를 바꾸므로 리스트 순서로 복원하면 어긋난다).
   - ⚠️ **들림·교체 애니메이션은 `unscaledDeltaTime`을 쓴다.** 이 카드가 일시정지 중 명령 카드로도 재사용되는데 그때는 `timeScale == 0`이라 보통의 `deltaTime`이면 애니메이션이 아예 안 움직인다. 평소엔 값이 같으므로 손패 동작은 그대로다(컨벤션 절의 의도된 예외 목록 참조).
 - **`DeckManager`** — 파사드 + **전투 배선**. `HandleChainCompleted`, `HandleTimeExpired`(코루틴으로 딜레이를 두고 턴 전환), `HandleBattleEnded`를 소유한다. `turnChangeDelay`/`postAttackDelay`가 인스펙터에 노출된다.
@@ -346,8 +406,9 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - **카메라 흔들림 세기가 인스펙터로 나와 있다** — `hitShakeDuration`(0.1) / `hitShakeMagnitude`(0.2). 예전의 하드코딩 `Shake(0.1f, 0.8f)`는 없어졌다.
     - ⚠️ **흔들림은 시퀀스당 첫 펀치 한 번만 준다.** `CameraShake.Shake`가 매번 `StopAllCoroutines`로 이전 흔들림을 끊고 다시 시작하기 때문에, 펀치마다 부르면 **쉴 새 없이 떨리기만 하고 감쇠가 안 보인다.** 펀치마다 흔드는 쪽으로 되돌리지 말 것.
   - `HandleChainCompleted`의 순서가 중요하다: 적용(`CombatManager`) → UI/말풍선 → 체인 비우기 → **마지막에** `timerManager.AddTime`. 마지막인 이유는 이 호출이 타이머를 0으로 만들면 그 자리에서 `OnTimeExpired` → 턴 전환 코루틴이 시작되기 때문이다. 앞으로 옮기면 턴 전환 도중에 나머지 처리가 끼어든다.
-  - `battleManager.OnBattleEnded`를 구독해 승패가 갈리는 즉시 `StopTimer`한다. 이게 없으면 적이 죽은 뒤에도 타이머가 0까지 흐르는 동안 턴 전환이 걸린다. **입력은 반대로 `EnableInput()` + `ClearInput()`으로 다시 연다** — 결과 화면에서 `다시`를, 보상 화면에서 카드 이름을 쳐야 하기 때문이다(어느 쪽이 받을지는 `TypingPriority`가 가른다). 치다 만 글자가 명령 단어에 섞이지 않도록 `ClearInput`을 따로 부르는 것도 필수다.
-  - **패배(`player.currentHP <= 0`)일 때만 추가로 하는 일이 셋 있다** — `SoundManager.StopBGM()` · 손패를 `PlayCollapse(i * collapseStagger)`로 **시차를 두고 무너뜨리기** · `timerManager.ResetToFull()`. 승리는 보상·다음 스테이지로 이어지므로 BGM도 손패도 그대로 둔다.
+  - `battleManager.OnBattleEnded`를 구독해 승패가 갈리는 즉시 `StopTimer`한다. 이게 없으면 적이 죽은 뒤에도 타이머가 0까지 흐르는 동안 턴 전환이 걸린다. **입력은 반대로 `EnableInput()` + `ClearInput()`으로 다시 연다** — 결과 화면에서 `다시하기`를, 보상 화면에서 카드 이름을 쳐야 하기 때문이다(어느 쪽이 받을지는 `TypingPriority`가 가른다). 치다 만 글자가 명령 단어에 섞이지 않도록 `ClearInput`을 따로 부르는 것도 필수다.
+  - **패배(`player.currentHP <= 0`)일 때만 추가로 하는 일이 셋 있다** — `SoundManager.StopBGM()` · 손패를 `PlayCollapse(i * collapseStagger)`로 **시차를 두고 무너뜨리기** · `timerManager.ResetToFull()`.
+  - **전체 클리어(`battleManager.IsFinalResult`)에는 손패를 `PlaySink()`으로 그냥 아래로 가라앉힌다.** 진 게 아니니 무너뜨리지 않지만, 결과 화면 명령 카드가 같은 아래쪽 자리로 떠오르므로 치워두지 않으면 겹친다. ⚠️ **`IsGameOver`가 아니라 `IsFinalResult`인 게 중요하다** — 일반 스테이지 클리어(보상 선택 중)까지 걸리면 다음 스테이지로 이어지는 판에서 손패가 사라진다. 그 경우 BGM도 손패도 그대로 둔다.
     - ⚠️ **여기서 슬롯 데이터를 비우지 않는다.** `OnSlotChanged(null)`가 나가면 `CardSlotView.PlaySwap`이 다시 불려 **방금 시작한 무너짐 코루틴을 그 자리에서 끊는다.** 데이터는 재시작 시 `LoadStage`가 알아서 비우고 `RefillAll`이 다시 채운다.
   - **`IsEnemyDefeated()`가 "적이 죽었나"의 단일 판정이다** — `currentEnemy == null || !activeInHierarchy || currentHP <= 0` 셋을 함께 본다. `IsGameOver`만으로는 부족한데, **이벤트 스테이지(마더 드래곤)는 대사가 끝날 때까지 `IsGameOver`가 false로 남고** `CheckGameState`가 죽은 적을 `Destroy`가 아니라 `SetActive(false)`로만 끄기 때문이다. `RunTurnTransition`(가짜 적 턴 방지)과 `PlayPendingActions`(죽은 적에게 남은 콤보가 들어가는 것 방지) 양쪽에서 쓴다.
   - **`DeckManager.TurnPhase`** — `RunTurnTransition`이 어느 구간을 지나는 중인지 다른 시스템이 알 수 있게 노출한 enum이다: `PlayerInput`(입력 열려있고 타이머 도는 중) → `ResolvingPlayerActions`(`PlayPendingActions` — 내가 쌓은 펀치 재생 중) → `TurnChangeRest`(`turnChangeDelay` 대기) → `EnemyTurn`(`ExecuteEnemyTurn` + `OnEnemyTurnEnded` 화상 틱) → `PostAttackRest`(`postAttackDelay` 대기) → 다시 `PlayerInput`. `CurrentPhase` 프로퍼티로 즉시 읽거나 `OnTurnPhaseChanged` 이벤트로 구독할 수 있다. **적 인텐트 말풍선을 내 공격 애니메이션 재생 중(`ResolvingPlayerActions`)엔 숨기고 싶다는 요청으로 추가됐다** — 이런 "지금 연출 중이라 이 UI는 꺼야 한다"류 판단이 필요하면 여기부터 확인할 것.
@@ -374,8 +435,8 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - **`ScalingBonus`를 계산과 표시가 같이 쓴다** — 카드에 뜬 숫자와 실제로 들어가는 피해가 어긋나면 그게 곧 버그로 보이기 때문이다. 새 스케일링을 넣을 때도 이 한 함수를 거치게 할 것.
   - **누적 시점** — `Resolve` 맨 끝에서 `ActionsThisTurn++` / `ModifiersThisTurn +=` / 시간 증감을 더한다. ⚠️ **지금 완성하는 조합 자신은 세지 않는다**(어썸이 "이전에 성공한 횟수"만 세는 것과 같은 규칙). 계산 앞으로 옮기면 카드 설명의 "이번 턴에 한" 의미가 바뀐다.
   - **비우는 곳이 둘이다** — `DeckManager.RunTurnTransition`(턴 끝, `IsGameOver` 검사보다 **위**여야 게임오버로 빠질 때도 비워진다)과 `StageManager.LoadStage`(스테이지 전환). 어썸의 런 누적은 `ResetRun()`(`StageManager.Start`)만 건드린다.
-- **`ResolvedAction`** — `Damage`/`Defense`/`Heal`/`IgnoresDefense`/`BreaksEnemyDefense`/`StatusEffect`/`DamageReduction`/`TimerChange`/`LootBonusOnKill`. **소비할 시스템이 없어도 계산해서 싣는다**는 원칙이다 — 아직 안 읽히는 값이 있을 뿐 계산이 빠진 게 아니다.
-- **`CombatManager.ExecutePlayerAction`** — 상대가 있어야 알 수 있는 것만 처리(방어도 파괴, 피해 적용, 방어/회복) 후 `StatusEffectManager`에 상태이상 부여를 넘긴다. **여기서 읽지 않는 값이 둘 있다** — `TimerChange`는 `DeckManager`가 체인 완성 시점에 쓰고(여기에 추가하면 이중 적용), `LootBonusOnKill`은 "처치했는지"를 알아야 해서 `DeckManager.PlayPendingActions`가 쓴다.
+- **`ResolvedAction`** — `Damage`/`Defense`/`Heal`/`IgnoresDefense`/`BreaksEnemyDefense`/`StatusEffect`/`DamageReduction`/`TimerChange`/`GrantsLootBonus`. **소비할 시스템이 없어도 계산해서 싣는다**는 원칙이다 — 아직 안 읽히는 값이 있을 뿐 계산이 빠진 게 아니다.
+- **`CombatManager.ExecutePlayerAction`** — 상대가 있어야 알 수 있는 것만 처리(방어도 파괴, 피해 적용, 방어/회복) 후 `StatusEffectManager`에 상태이상 부여를 넘긴다. **여기서 읽지 않는 값이 둘 있다** — `TimerChange`는 `DeckManager`가 체인 완성 시점에 쓰고(여기에 추가하면 이중 적용), `GrantsLootBonus`는 보상 라운드를 쌓는 게 `WordUnlockManager`의 일이라 `DeckManager.PlayPendingActions`가 쓴다.
 - **`StatusEffectManager`** (`Combat/`) — 상태이상의 부여·지속·해제를 전부 소유한다. **화상/얼음/데빌은 3턴, 마비는 1회성**(GDD가 "다음 턴"으로 명시). 재부여는 지속 턴만 갱신하고 효과를 중첩하지 않는다.
   - `OnEnemyTurnEnded()`는 **코루틴**이다 — 화상 피해를 적 공격과 겹치지 않게 잠깐 띄우고 말풍선까지 보여주므로 `DeckManager`가 `yield return`으로 기다린다.
   - ⚠️ **화상 피해는 `TakeDamage`가 아니라 `currentHP`를 직접 깎는다.** `CharacterStats.Die()`가 `Destroy`를 부르는데 `BattleManager.CheckGameState`의 승리 판정은 `currentEnemy != null`을 요구해서, 화상으로 적을 파괴하면 **승리 처리가 통째로 건너뛰어진다.** 직접 깎고 `UpdateUI()`를 부르면 정상적인 `SetActive(false)` 경로를 탄다.
@@ -410,15 +471,23 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - **스탯이 정해지는 곳이 둘이고 `isScaled` 플래그로 갈린다.** `StageManager`가 스폰 직후 부르는 **`ApplyScaling(stageIndex)`**(스테이지당 +20%로 `maxHP`/`power`를 정하고 `currentHP`·`defense`를 초기화한 뒤 `isScaled = true`)와, 그게 안 걸렸을 때만 도는 **`Start()`**(에셋값 그대로)다. `Start()`는 `ApplyScaling`보다 **나중에** 돌기 때문에 이 순서가 성립한다.
   - ⚠️ **`enemyData`가 비어 있으면 두 분기가 <b>모두</b> 건너뛰어져 프리팹에 박힌 인스펙터 값이 그대로 남는다.** (예전 문서엔 "`base.Start()`로 폴백한다"고 적혀 있었지만 **`base.Start()`를 부르지 않는다** — `CharacterStats.Start()`의 `currentHP = maxHP`조차 안 돈다.) 마더 드래곤이 9999를 유지하는 게 이 경로다. 적이 엉뚱한 체력으로 나오면 프리팹의 `enemyData` 연결부터 확인할 것 — 조용히 넘어간다.
   - ⚠️ **`Start()`가 `animator = GetComponent<Animator>()`로 인스펙터 연결을 덮어쓴다.** 같은 오브젝트에 `Animator`가 없거나 자식에 있으면 인스펙터에 넣어둔 참조가 날아간다.
-- **`EnemyManager`** — 가중치로 다음 의도를 굴리고(`ActionType { Attack, Defend, Buff }`) `ExecuteEnemyTurn(player)`에서 실행. **액션 enum이 두 개 있다**: 카드의 `ActionKind { Attack, Defense }`와 이것.
+  - **적도 이제 돌진한다** — `MoveToPlayerCoroutine(player)` / `MoveToOriginCoroutine()`이 `PlayerBattleVisuals`와 짝을 이루는 대칭 구현이다(`dashOffset` 1.5 / `moveDuration` 0.2 / 이동 커브 2개). 복귀 지점은 `Start()`에서 읽은 스폰 위치라 **런타임에 적을 옮기면 어긋난다**(플레이어 쪽과 같은 함정).
+  - **돌진 중 정렬 순서를 상대보다 +1로 올렸다가 복귀할 때 되돌린다.** 양쪽 다 그렇게 하므로 "앞으로 나간 쪽이 항상 위"가 된다. `spriteRenderer`를 비워두면 같은 오브젝트에서 찾는다.
+- **`EnemyManager`** — 가중치로 다음 의도를 굴리고(`ActionType { Attack, Defend, Buff }`) **`ExecuteEnemyTurnCoroutine(player)`**에서 실행. **액션 enum이 두 개 있다**: 카드의 `ActionKind { Attack, Defense }`와 이것.
+  - ⚠️ **적 턴은 이제 코루틴이다.** `DeckManager.RunTurnTransition` → `BattleManager.ExecuteEnemyTurnCoroutine()` → `EnemyManager.ExecuteEnemyTurnCoroutine(player)`가 전부 `yield return`으로 이어져, 돌진→타격→복귀가 끝날 때까지 턴 전환이 기다린다. 옛 `void ExecuteEnemyTurn(...)` 시그니처로 되돌리면 연출이 잘린다.
+  - 순서는 플레이어 쪽과 같다 — **공격 자세를 먼저 잡고 그 자세인 채로 돌진**(`PlayAttackAnimation()` → `MoveToPlayerCoroutine`) → `attackHitDelay`(0.15초, 주먹이 뻗는 시점) → `TakeDamage` → 복귀. **공격일 때만** 이동하고 방어·버프는 제자리에서 한다.
   - **적 인텐트는 아이콘 + 색 입힌 숫자로 보여준다.** 인스펙터에 `attackIcon`/`defendIcon`/`buffIcon`(`01_Arts/UI/Attack`·`shield`·`Up`)과 `attackColor`/`defendColor`/`buffColor`가 있고, `GetIntentIcon()`/`GetIntentColor()`로 꺼낸다.
   - ⚠️ **`GetIntentString()`은 이제 숫자만 돌려준다.** 예전의 `"Intent: Attack (10)"` 같은 라벨 문구가 아니다 — 무슨 행동인지는 아이콘이 말하므로 텍스트에서 뺐다. 이 문자열을 파싱하거나 라벨로 그대로 쓰는 코드를 만들지 말 것.
-- **`BattleManager`** — 승패 판정과 턴 진행의 UI 측 창구. HP/방어도 표시는 `HealthBarUI`로, 말풍선은 `SpeechBubbleManager`로 **위임한다**(직접 슬라이더를 만지지 않는다). `OnPlayerActionResolved(bubbleText)`는 **턴을 끝내지 않는다**(쌓인 공격을 재생하는 동안 여러 번 호출됨). 적 턴은 `ExecuteEnemyTurn()`으로 분리되어 있고 `DeckManager`가 부른다. 말풍선엔 스킬 이름이 아니라 적용된 수치가 뜬다.
-  - `Update`는 `eventManager.IsEventActive`인 동안 **아무 입력도 받지 않는다**(디버그 키 포함). 이벤트 대화가 전투 입력을 가로막는 구조다.
+- **`BattleManager`** — 승패 판정과 턴 진행의 UI 측 창구. HP/방어도 표시는 `HealthBarUI`로, 말풍선은 `SpeechBubbleManager`로 **위임한다**(직접 슬라이더를 만지지 않는다). `OnPlayerActionResolved(bubbleText)`는 **턴을 끝내지 않는다**(쌓인 공격을 재생하는 동안 여러 번 호출됨). 적 턴은 **`ExecuteEnemyTurnCoroutine()`**(코루틴)으로 분리되어 있고 `DeckManager`가 `yield return`으로 기다린다. 말풍선엔 스킬 이름이 아니라 적용된 수치가 뜬다.
+  - **`IsEventActive`가 "지금 대사 중인가"의 창구다** — `EventManager.isEventActive`를 그대로 중계한다. `DeckManager`가 대사 중에 타이머를 다시 돌리지 않으려고 보고, `DeckManager`에 `EventManager` 참조를 새로 꽂지 않으려고 여기를 거친다. ⚠️ **`IsGameOver`로는 구분되지 않는다** — 이벤트 스테이지는 대사가 끝날 때까지 false다.
   - **결과 화면은 `ShowResult(ResultKind)`다** — `enum ResultKind { Victory, Defeat, GameClear }`. 예전의 `ShowResult(bool showStats)`가 아니다.
+    - ⭐ **`IsFinalResult`(= `isGameOver && lastResultKind != Victory`)가 "런이 끝났는가"의 단일 판정이다.** `IsGameOver`만 보면 **보상을 고르는 중인 일반 클리어까지 걸린다** — 그때는 게임이 이어지므로 일시정지도 걸려야 하고 결과 명령 카드가 떠서도 안 된다. `PauseManager`(멈출 수 있나)와 `ResultInputHandler`(카드를 띄우나)가 **둘 다 이걸** 본다. 같은 판단이 또 필요하면 여기를 쓸 것 — `player.currentHP`로 승패를 되짚는 방식으로 돌아가지 말 것(전체 클리어를 승리로 오인한다).
     - 제목·이미지·글자색은 인스펙터의 **`ScreenPresentation`** 세 벌(`victory`/`defeat`/`gameClearPresentation`)에서 나온다. 예전엔 `"VICTORY!"`/`"DEFEAT..."`가 코드 리터럴이라 영어 모드에서도 그대로였고 문구 하나 바꾸려면 코드를 고쳐야 했다. **화면에 나가는 글자와 이미지는 예외 없이 인스펙터에서 바꿀 수 있어야 한다**는 게 이 프로젝트의 기본 사양이고 `ScreenPresentation`이 그 단위다(보상 화면도 같은 걸 쓴다).
     - ⚠️ **이미지가 없을 때 `sprite = null`로 두지 말 것** — 사라지는 게 아니라 흰 사각형이 그려진다. `resultImage.gameObject.SetActive(false)`로 오브젝트째 끈다(`CardView`의 배지 처리와 같다).
-    - 무엇을 입력해야 하는지(`다음`/`다시`)는 `resultInputHandler.BuildHint()`가 붙인다 — **명령 단어를 소유한 쪽이 안내도 만들어야** 단어를 바꿨을 때 안내가 따라간다.
+    - ⚠️ **일반 스테이지 승리(`ResultKind.Victory`)는 결과를 아예 띄우지 않는다** — `ApplyResult`가 곧바로 `HideResultUI()`로 빠진다(이유는 위 `04_UI` 절). `ShowStatisticsUI`가 도는 건 **패배·전체 클리어뿐**이다.
+    - **통계는 `ResultStatsView`가 그린다** — `resultPanel`(`ResultPanel.prefab` 인스턴스) 안의 제목 1개 + 라벨 5개 + 값 5개를 각각의 `TMP_Text`로 받는다. 라벨 문구는 한/영 두 벌이 이 뷰의 인스펙터에 있고 언어가 바뀔 때만, 값은 결과가 뜰 때마다 갱신된다. **라벨과 숫자를 따로 디자인·배치해도 스크립트를 안 고쳐도 된다는 게 요점**이고, 그래서 옛 `statsText`(한 줄) + `statsFormat`(문자열 한 덩어리) 구조는 삭제됐다. ⚠️ `resultPanel`이나 `resultStatsView`가 비면 **폴백 없이 경고만 남기고 리턴한다**(엉뚱한 화면이 뜬 채 넘어가는 것보다 낫다).
+    - **`resultReveals`(`TextGateRevealAnimation[]`)를 `resultPanel`을 켤 때 전부 `Play()`한다.** 이 컴포넌트는 아무도 `Play()`를 부르지 않으면 마스크가 **닫힌 채(폭 0)** 남으므로, 결과 창에 게이트 연출을 새로 붙였다면 이 배열에 넣어야 보인다(마스크마다 컴포넌트가 하나씩 따로 필요하다).
+    - 무엇을 입력해야 하는지는 `resultInputHandler.BuildHint()`를 제목 뒤에 붙이는 경로가 남아 있으나, **지금 그 값은 빈 문자열이다**(명령이 카드로 뜬다). 안내 문구를 되살리려면 `ResultInputHandler.BuildHint()`부터 고칠 것 — **명령 단어를 소유한 쪽이 안내도 만든다**는 규칙은 그대로다.
     - ⚠️ **`ShowResult` 안에서 `OnBattleEnded`가 `StageManager`의 보상 라운드를 열고 돌아온다.** 그래서 첫 그리기는 "보상을 고르는 중" 상태이고(`rewardInputHandler.IsSelecting`이면 `다음` 안내를 숨긴다), 선택이 끝나면 `StageManager`가 **`RefreshResult()`**를 불러 같은 화면을 다시 그린다. 그제서야 안내가 뜬다.
 - **`HealthBarUI`** (`02_Scripts/HPBarUI.cs`) — HP 슬라이더·텍스트·방어 아이콘을 한 묶음으로 갱신하는 뷰. `UpdateUI(currentHP, maxHP, defense)` / `Hide()`. 방어도가 있으면 Fill이 회색, 없으면 `normalColor`로 돌아간다.
   - ⚠️ **파일명(`HPBarUI.cs`)과 클래스명(`HealthBarUI`)이 다르다.** Unity는 MonoBehaviour의 둘이 일치해야 컴포넌트로 붙일 수 있어서, **지금 이 스크립트는 `Add Component`로 추가할 수 없다.** 아래 "알려진 이슈" 참조.
@@ -464,22 +533,24 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - ⚠️ 셋 다 나머지 프로젝트의 인스펙터 배선 컨벤션과 어긋나는 `public` 필드 + 싱글턴 스타일이다(컨벤션 절 참조). **새 코드를 이 패턴으로 확장하지 말 것.**
 - **`StatisticsManager`** (`02_Scripts/`) — 런 통계 수집기. **싱글턴**이고 `Awake`에서 중복 인스턴스를 스스로 `Destroy`한다. `totalPlayTime`(`StartTracking`/`StopTracking` 사이 `Time.deltaTime` 누적) · `totalTypedCharacters` · `validWordsUsed` · `totalDamageDealt` · `totalDamageTaken` · `highestStageReached`, 그리고 `GetCPM()`(분당 타수).
   - 수집 지점이 시스템 곳곳에 흩어져 있다: `CardInputHandler`(매칭 성공 → `AddValidWord`) · `CombatManager`(`AddDamageDealt`) · `EnemyManager`(`AddDamageTaken`) · `StageManager`(`StartTracking`/`UpdateHighestStage`) · `BattleManager`(`StopTracking` + 결과 표시). 전부 `Instance != null` 가드가 있다.
-  - 결과는 `BattleManager.ShowStatisticsUI(showStats: true)`가 `resultPanel`(`End Canvas > ResultPanel`)과 `statsText`에 뿌린다. 문구는 코드 리터럴이 아니라 인스펙터의 `statsFormat`/`statsFormatEn`이고, 스테이지 분모는 `stageManager.totalStages`에서 읽는다.
+  - 결과는 `BattleManager.ShowStatisticsUI(...)`가 `resultPanel`(`End Canvas > ResultPanel`) 안의 **`ResultStatsView.SetStats(...)`**에 넘긴다. 라벨 문구는 코드 리터럴이 아니라 그 뷰의 인스펙터에 한/영 두 벌로 있고, 스테이지 분모는 `stageManager.totalStages`에서 읽는다.
   - ⚠️ **저장되지 않는다.** 씬을 넘어가면 사라지고(`DontDestroyOnLoad` 없음) `PlayerPrefs`에도 안 들어간다 — 한 판짜리 통계다.
 - **`EventManager`** — 스테이지 클리어 시 끼어드는 대화 이벤트(마더 드래곤). `StartEvent(isMotherDragon, healAmount)` → 대사를 순서대로 보여주고, **스페이스키**로 넘긴다. 대사는 인스펙터 배열(`normalEventLines`/`dragonEventLines`)이고 `string.Format`으로 `healAmount`가 들어간다.
   - 종료 시 회복을 적용한 뒤 `battleManager.ShowResult(...)`를 직접 호출해 승리 화면을 띄운다. 회복은 `CharacterStats.Heal`이 아니라 `currentHP`를 직접 더하고 `maxHP`로 클램프한다.
   - 마더 드래곤 여부는 `EnemyBase.isMotherDragon`(public 필드)로 판별한다.
   - ⚠️ `HandleAdvance`에 일시정지 가드가 없어 **`timeScale = 0`에서도 스페이스가 먹힌다.**(`InputManager`가 `OnAdvance`를 `_inputEnabled` 가드보다 위에서 쏘므로 더욱 그렇다.)
-  - `OnBattleEnded` 이벤트는 `isGameOver`가 **false→true로 바뀌는 순간에만** 발생한다. `CheckGameState`가 `UpdateUI`마다 불려 `ShowResult`도 반복 호출되므로, 가드 없이 쏘면 매 프레임 발생한다.
+  - ⭐ **`OnBattleEnded`는 `isGameOver`가 false→true로 바뀔 때 <b>또는 `lastResultKind`가 바뀔 때</b> 발생한다.** `CheckGameState`가 `UpdateUI`마다 `ShowResult`를 다시 부르므로 걸러야 하는 건 맞지만, 그 반복은 **언제나 같은 kind**다. kind가 바뀌는 건 새로운 사건이다.
+    - ⚠️ **"처음 끝났을 때만"으로 되돌리지 말 것.** 마지막 스테이지는 `Victory`로 결과가 이미 떠 있는 상태에서 보상을 고른 뒤 `LoadStage`가 `GameClear`를 띄우는데, `wasOver`만 보면 그 전환에서 이벤트가 통째로 묻힌다. 그러면 `DeckManager`가 타이머를 멈추지도 손패를 치우지도 않고 `ResultInputHandler`의 명령 카드도 안 떠서 **화면이 잠긴다**(실제로 났던 버그다).
   - 방어도 UI는 **아이콘 오브젝트가 텍스트를 자식으로 품는 구조**다(`PlayerDefIcon > PlayerDef`). 방어도가 0이면 아이콘째 꺼서 둘 다 사라진다. 아이콘 Image엔 아직 스프라이트가 없어 흰 사각형으로 보이는 게 현재 정상이다. 이 켜고 끄는 판단은 이제 `HealthBarUI.UpdateUI`가 한다.
 - **`StageManager`** — `Start()`에서 시작 단어 지급 + `skillResolver.ResetRun()`(어썸 카운터 초기화) 후 `LoadStage(0)`. `RestartStage()`(사망 재시작)는 사전을 건드리지 않아 얻은 단어가 유지된다.
   - ⚠️ **`enemyPrefabs`를 인덱스로 참조하지 않는다.** 일반 스테이지는 **무조건 `enemyPrefabs[0]`**을 스폰하고, `currentBattleIndex`가 4 또는 9면 보스전으로 보고 `motherDragonPrefab`을 스폰한다. 스테이지별로 다른 적을 넣으려고 `enemyPrefabs`에 프리팹을 추가해도 **아무 일도 일어나지 않는다** — 스폰 로직을 같이 고쳐야 한다.
   - 난이도는 프리팹이 아니라 **`EnemyBase.ApplyScaling(displayStage - 1)`**로 준다(스폰 직후 호출). 보스전은 표시 스테이지 번호에서 제외되므로(`displayStage` 보정) 보스를 지나도 스케일링 단계가 밀리지 않는다.
   - **스테이지 표시 라벨이 둘이다** — `currentStageText`(상시 표시, `STAGE n` / 보스면 `MOMMY`)와 `stageStartText`(등장 연출, `STAGE n\nSTART!` / 보스면 `MOMMY DRAGON`). 후자는 `LoadStage`에서 켜고 `BeginStageAfterDelay`가 `stageStartDelay` 뒤에 끈다 — **`stageStartDelay`가 비워두던 자리를 실제로 채운 첫 연출이다.** ⚠️ 두 문자열 모두 **코드에 영문으로 박혀 있어 `LanguageSettings`를 타지 않는다**(다른 화면 문구는 전부 인스펙터에서 나오는 것과 어긋난다).
   - **BGM도 여기서 고른다** — `LoadStage`가 `isBossBattle`이면 `PlayBossBGM()`, 아니면 `PlayBattleBGM()`을 부른다. ⚠️ 코드 주석은 "이미 재생 중이면 알아서 무시됨"이라고 하지만 **실제로는 매 스테이지 처음부터 다시 재생된다**(아래 "알려진 이슈"의 `PlayBGM` 항목).
-  - **게임 클리어 판정은 `currentBattleIndex >= totalBattles`(10) 하나뿐이다.** 예전엔 보스 판정 뒤에 `>= totalStages`(8) 검사가 하나 더 있어서 인덱스 8에서 게임이 끝나고 인덱스 9의 두 번째 보스전이 죽은 코드였는데, 그 검사는 없어졌다. **`totalStages`(8)는 이제 스폰 로직이 아니라 `BattleManager`의 통계 문구 분모로만 쓰인다** — 전투 수를 바꾸면 두 값을 같이 봐야 한다.
+  - **게임 클리어 판정은 `currentBattleIndex >= totalBattles`(private, 10) 하나뿐이다.** 예전엔 보스 판정 뒤에 `>= totalStages` 검사가 하나 더 있어서 인덱스 8에서 게임이 끝나고 인덱스 9의 두 번째 보스전이 죽은 코드였는데, 그 검사는 없어졌다. **`totalStages`(public, 현재 12)는 이제 스폰 로직이 아니라 결과 화면의 "최고 도달 스테이지" 분모로만 쓰인다** — ⚠️ **두 값이 서로 맞을 의무가 없어 지금도 어긋나 있다**(전투 10회 = 일반 8 + 보스 2인데 분모는 12). 전투 수를 바꾸면 두 값을 같이 볼 것.
   - **보상은 `NextStage()`가 아니라 `battleManager.OnBattleEnded`를 구독해 연다.** 적 HP가 0이 되는 순간(= 결과 화면이 뜨는 순간) `BeginRewardRound()`가 돌아 후보를 뽑고 `RewardCardView`로 펼치며 `RewardInputHandler.BeginSelection`을 연다. 패배(`player.currentHP <= 0`)에는 보상이 없다.
-    - **한 라운드가 끝나면**(`OnSelectionFinished`) `TryConsumeBonusRound()`로 럭키 라운드가 남았는지 보고, 남았으면 `BeginRewardRound()`로 한 번 더 연다. 다 끝나면 `FinishReward()`가 카드를 치우고 **`rewardAdvanceDelay`(기본 0.6초) 뒤 `NextStage()`를 부르는 코루틴을 건다.**
+    - **한 라운드가 끝나면**(`OnSelectionFinished`) `TryConsumeBonusRound()`로 럭키 라운드가 남았는지 보고, 남았으면 `BeginRewardRound()`로 한 번 더 연다. 다 끝나면 `FinishReward()`가 **퇴장 연출**(`rewardCardView.PlayExit(keepIndex, …)`)을 걸고, 그게 끝난 뒤 `BeginAdvanceAfterReward()`가 **`rewardAdvanceDelay`(기본 0.6초) 뒤 `NextStage()`를 부르는 코루틴을 건다.** 연출 뒤에도 대기를 한 번 더 두는 건 "방금 얻은 카드를 볼 짧은 여유"라는 원래 의도를 유지하기 위해서다.
+    - ⚠️ **`IsAdvancingAutomatically`는 `advanceRoutine != null`이 아니라 별도 플래그 `_advancingAfterReward`다.** 코루틴만 보면 **퇴장 연출이 도는 동안**(코루틴이 아직 안 걸린 구간) false가 되어 그 사이에 `다음` 안내가 잘못 깜빡인다. 플래그는 `FinishReward`에서 서고 `LoadStage`에서 내려간다.
     - ⚠️ **`FinishReward`에서 `NextStage()`를 곧바로 부르면 안 된다.** 이 경로는 `BattleManager.ShowResult` 안의 `OnBattleEnded`에서 시작되는데, 그 호출은 우리가 돌아간 **뒤에** 이어서 결과 화면을 그린다 — 스테이지를 먼저 갈아끼우면 **새 스테이지 위에 VICTORY 화면이 덮인다.** 코루틴으로 최소 한 프레임 미뤄 그 호출을 빠져나온 뒤에 넘긴다.
     - ⚠️ **`LoadStage`가 이 코루틴을 반드시 끊어야 한다.** 대기 중에 플레이어가 `다음`을 쳐서 먼저 넘어오면, 남은 코루틴이 뒤늦게 `NextStage()`를 한 번 더 불러 **스테이지를 하나 건너뛴다.**
     - **자동 진행 여부는 `IsAdvancingAutomatically`로 노출된다.** `BattleManager.ApplyResult`가 이걸 보고 `다음` 안내를 숨긴다 — 보상 선택 중(`IsSelecting`)과 같은 이유다. ⚠️ 반대로 **둘 다 아니면 안내를 반드시 띄워야 한다** — 배선이 빠져 자동 진행이 안 걸렸는데 안내까지 숨기면 칠 것도 없고 넘어가지도 않는 화면에 갇힌다.
@@ -521,11 +592,17 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - ⚠️ **`OnEnable`에서 저장값을 슬라이더에 되비출 때 `SetValueWithoutNotify`를 쓴다.** 평범한 `value =` 대입은 `onValueChanged`를 되쏘아 **방금 읽어온 값을 그대로 덮어쓴다.**
   - 구독/해제가 `OnEnable`/`OnDisable`이라 창을 여닫을 때마다 도는데, `OnDisable`에서 `SaveVolumes()`를 부른다 — **드래그 중엔 적용만, 닫을 때 한 번만 디스크에 쓴다.**
   - **언어 버튼은 `LanguageSettings.Toggle()`만 부른다.** 라벨은 "지금 언어"가 아니라 **"누르면 바뀔 언어"**를 보여준다(영어일 때 `한국어`, 한국어일 때 `English`). `languageButtonText`를 비워두면 버튼의 첫 `TMP_Text`를 알아서 찾는다. 닫기 버튼 라벨은 `closeKorean`/`closeEnglish`를 `Pick`으로 고른다.
-- **`ResultInputHandler` : `CommandWordReceiver`** — 결과 화면에서 `다음`/`next`(승리) / `다시`/`retry`(패배)를 받아 `StageManager.NextStage()` / `RestartStage()`를 부른다. `TypingPriority.Result`, `WantsInput() => battleManager.IsGameOver`.
-  - 승패 판별은 `player.currentHP > 0`으로 하고 **그때 유효한 명령 하나만 `Targets`에 담는다** — 이긴 판에서 `다시`가, 진 판에서 `다음`이 먹으면 안 되기 때문이다.
-  - 안내 문구는 `hintLabel` 없이 `BuildHint()`를 `BattleManager`가 문자열로 가져다 제목 뒤에 붙인다.
-  - ⚠️ **실질적으로 패배 전용이 됐다.** 승리는 보상이 끝나면 `StageManager`가 자동으로 넘기므로 `다음` 안내가 뜨지 않는다. **`다음` 자체를 지우지는 말 것** — 전체 클리어 화면과, 자동 진행이 걸리지 않은 경우의 탈출구로 남아 있다.
-- **`PauseManager` : `CommandWordReceiver`** — ESC 토글(`InputManager.OnCancel`). **버튼이 아니라 명령 단어 타이핑으로 조작한다** — 멈춘 동안 `계속`/`카드`/`타이틀`(영어 모드면 `resume`/`cards`/`title`)을 친다(인스펙터의 `resumeCard`/`cardsCard`/`titleCard`, 각각 **`CommandCardData` 에셋**). `TypingPriority.Pause`, `WantsInput() => _isPaused`.
+- **`ResultInputHandler` : `CommandWordReceiver`** — **런이 끝난 결과 화면 전용**이다. `다시하기`/`retry`(→ `StageManager.RestartStage()`) · `카드`/`cards`(→ `CardCollectionPanel.Open()`) · `타이틀`/`title`(→ `ReturnToTitle()`) 세 장을 **손패 자리에 명령 카드로 띄우고** 타이핑으로 받는다. `TypingPriority.Result`, `WantsInput() => battleManager.IsGameOver`.
+  - **`PauseManager`의 명령 카드 연출과 같은 구조다** — `resultCardsLayout`(**실제로 `PauseManager`와 같은 `PauseHand`를 가리킨다**, `Card Slot Manager`는 비워둘 것) + `commandCardPrefab`(보통 `Card.prefab`)에 `PlayEnter` + `BindStatic(CommandCardData, input)`. 자리가 비어 있는 건 `DeckManager`가 패배 시 손패를 `PlayCollapse`로 이미 무너뜨렸기 때문이다.
+  - **`카드`는 카드를 치우지 않고 목록만 연다** — 닫으면 이 화면으로 돌아와야 하기 때문이다. 목록이 떠 있는 동안은 우선순위(`CardCollection = 30`)가 그쪽으로 넘어가 여기로 입력이 오지 않으므로 **상태를 따로 들 필요가 없다**(`PauseManager`와 같다). `cardCollectionPanel`/`cardsCard`를 비워두면 그 명령이 통째로 사라진다.
+  - `battleManager.OnBattleEnded`를 구독해 카드를 띄운다. **⚠️ 손패가 다 치워질 때까지 먼저 기다린다**(`handFanLayout.IsLeaving`) — 명령 카드가 같은 아래쪽 자리로 떠오르므로, 안 기다리면 사라지는 카드와 올라오는 카드가 한 화면에서 엇갈린다. **패배는 무너짐(`PlayCollapse`), 전체 클리어는 가라앉기(`PlaySink`)**인데 기다리는 쪽은 둘을 구분하지 않는다. **고정 지연으로 어림잡지 말 것**: 무너짐 길이는 `collapseDuration + (장수-1) × collapseStagger`라 카드 수와 두 인스펙터 값에 따라 변하고, 하나만 바뀌어도 적어둔 숫자가 조용히 어긋난다. 그 뒤 `cardsAppearDelay`(0.8초)를 더 기다리고, `cardsAppearDuration`(0.6초)을 `PlayEnter`에 넘겨 손패보다 **천천히** 떠오르게 한다.
+  - **뜨는 조건은 `battleManager.IsFinalResult`다**(패배·전체 클리어). 일반 스테이지 클리어에서는 `Targets` 세 칸이 전부 빈 문자열이지만(베이스가 빈 항목을 건너뛴다), **`WantsInput()`은 결과 화면 내내 true를 유지한다** — 그래야 우선순위상 이 수신자가 입력을 붙들어 **그 구간에 친 글자가 손패로 새어 조합이 쌓이지 않는다.**
+    - ⚠️ 예전엔 `player.currentHP > 0`으로 판별해서 **전체 클리어에도 카드가 안 떴다.** `player` 필드는 그래서 삭제됐다.
+    - ⚠️ `BattleManager.ShowResult`가 `lastResultKind`를 세운 **뒤에** `OnBattleEnded`를 쏘므로 핸들러 안에서 읽어도 값이 최신이다. 그 순서를 뒤집으면 카드가 아예 안 뜬다.
+  - `BuildHint()`는 **빈 문자열**이다(단어가 카드로 뜨므로 안내가 중복). `PauseManager`와 같다.
+  - 옛 구조로 되돌리지 말 것 — 예전엔 `TypedCommand retryCommand`/`다음`(`next`) 두 명령을 들고 안내 문구를 `BattleManager`가 제목 뒤에 붙였다. **`다음`은 삭제됐다**(승리는 자동 진행이라 쓰이지 않았다).
+  - `ReturnToTitle()`은 `PauseManager`와 마찬가지로 `ClearInput()` + `Time.timeScale = 1f` + `StopBGM()`을 하고 씬을 부른다.
+- **`PauseManager` : `CommandWordReceiver`** — ESC 토글(`InputManager.OnCancel`). ⚠️ **런이 끝나면(`battleManager.IsFinalResult` = 패배·전체 클리어) 멈출 수 없다** — 결과 화면이 이미 같은 `PauseHand`에 명령 카드를 띄우고 있어서 겹치면 두 화면의 카드가 서로를 밀어낸다(애초에 멈출 게임도 안 남았다). **`IsGameOver`가 아니라 `IsFinalResult`를 보는 게 핵심**으로, 보상을 고르는 중인 일반 클리어는 게임이 이어지므로 그대로 멈출 수 있어야 한다. `HandleCancel`의 검사 순서도 정해져 있다 — **① 목록 열려 있으면 닫기 → ② 이미 멈춰 있으면 풀기 → ③ 런이 끝났으면 리턴 → ④ 멈추기.** ②가 ③보다 먼저여야 "멈춘 채로 갇히는" 경우가 없다. **버튼이 아니라 명령 단어 타이핑으로 조작한다** — 멈춘 동안 `계속`/`카드`/`타이틀`(영어 모드면 `resume`/`cards`/`title`)을 친다(인스펙터의 `resumeCard`/`cardsCard`/`titleCard`, 각각 **`CommandCardData` 에셋**). `TypingPriority.Pause`, `WantsInput() => _isPaused`.
   - **에셋 참조라 프리팹에 그대로 저장된다** — 이 프로젝트에서 드문 경우다(대부분의 매니저 참조는 씬 오브젝트라 인스턴스 오버라이드로만 존재한다).
   - **`BuildHint()`는 빈 문자열을 돌려준다** — 단어가 카드로 화면에 그대로 뜨므로 안내 문구가 중복이다. `hintLabel`은 씬에서 떼어내도 된다.
   - **`_targets` 배열 순서가 곧 `OnCommandMatched`의 index이자 화면에 놓이는 명령 카드 순서다**(`ResumeIndex`/`CardsIndex`/`TitleIndex` 상수로 묶어두었다). 명령을 더할 땐 세 곳(배열 크기 · `Targets` · `ShowCommandCards`)을 같이 봐야 한다.
@@ -536,13 +613,13 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - **일시정지 중 손패 자리가 명령 카드로 바뀐다.** 기존 5장은 `PlayExit(-height)`로 가라앉히며 끄고, `Pause Canvas` 쪽의 별도 `commandCardsLayout`(`HandFanLayout`, **`Card Slot Manager`를 비워둘 것** — 자동 스폰 없이 이 스크립트가 명령 카드만 채운다)에 `계속`/`카드`/`타이틀` 카드를 `PlayEnter` + `BindStatic(CardBase, input)`으로 띄운다. 연결이 빠진 명령은 **카드 자체를 만들지 않는다**(빈 카드가 자리만 차지하면 부채꼴 배치가 어긋난다).
     - ⚠️ 끄기 전에 5장을 **스냅샷으로 저장해야 한다.** `HandFanLayout.Cards`는 매 프레임 활성 자식만 다시 모으는 리스트라 끄는 순간 목록에서 빠져 참조를 잃는다. 복원은 리스트 순서가 아니라 **카드 자신의 `SlotIndex`**로 한다(`centerOnTop`이 형제 순서를 바꾼다).
     - ⚠️ **`Resume()`은 `HideCommandCards()`를 `pausePanel.SetActive(false)`보다 먼저 부른다.** 패널을 먼저 끄면 그 아래 카드도 `activeInHierarchy == false`가 되어 코루틴이 "game object is inactive"로 실패한다. 같은 이유로 명령 카드는 퇴장 애니메이션 없이 바로 `Destroy`한다(걸어봤자 부모가 꺼지며 잘려 `Destroy`가 끝내 안 불리고 비활성 상태로 쌓이기만 한다).
-  - `titleReveal`(**`TextGateRevealAnimation`**)이 `PAUSE` 제목을 가운데서부터 열어 보여준다 — `RectMask2D`의 폭을 키우고 양 끝 막대(`|`)가 따라가다 바깥으로 밀려나며 사라지는 2단계 연출. 셰이더가 아니다.
+  - `titleReveal`(**`TextGateRevealAnimation`**)이 `PAUSE` 제목을 가운데서부터 열어 보여준다 — `RectMask2D`의 폭을 키우고 양 끝 막대(`|`)가 따라가다 바깥으로 밀려나며 사라지는 2단계 연출. 셰이더가 아니다. **`PlayReverse()`는 같은 경로를 `t=1→0`으로 훑어 막대가 다시 모이며 덮는다**(`RewardCardView`의 퇴장 연출이 쓴다). ⚠️ 이 컴포넌트는 **아무도 `Play()`를 부르지 않으면 마스크가 닫힌 채(폭 0) 남는다** — 다른 화면에 붙였다면 그 화면을 켜는 쪽에서 반드시 불러줄 것(`BattleManager.resultReveals`가 그 예다).
   - `PauseManager`는 **항상 켜져 있는 오브젝트**에 붙여야 한다. 일시정지 창 루트에 붙이면 그게 평소 비활성이라 ESC를 못 받는다.
   - `timeScale`은 씬을 넘어가도 유지되므로 `ReturnToTitle`이 1로 되돌리고 `StopBGM()`까지 한 뒤 씬을 불러온다.
 - **`CardCollectionPanel` : `CommandWordReceiver`** (`02_Scripts/UI/`) — 일시정지 중 `카드`를 쳐서 여는 **보유 카드 목록**. `WordDictionary.Words`(= 이번 런에서 해금해 실제로 손패에 뜰 수 있는 카드)를 격자로 전부 펼치고, `닫기`/`close`를 치면 닫는다. `TypingPriority.CardCollection`(가장 먼저), `WantsInput() => _isOpen`.
   - **카드를 그리는 건 `CardView.SetCard` 하나뿐이다** — 손패·보상 화면과 같은 `Card.prefab`을 쓰고 `CardSlotView`는 꺼서 슬롯·타이핑 로직을 떼어낸다(`RewardCardView`와 같은 패턴). **세 화면에서 카드가 다르게 보이면 안 된다.**
   - **`PauseManager`와 같은 이유로 항상 켜져 있는 오브젝트(보통 `Pause Canvas`)에 붙여야 한다.** 여닫는 대상은 이 컴포넌트가 아니라 인스펙터로 받은 `panel`이다.
-  - **`displacedUI`가 목록을 가리는 UI를 잠시 비켜나게 한다**(보통 명령 카드 줄과 입력창). 원래 자리는 `Awake`에서 **한 번만** 읽어두고 `NonSerialized`로 든다 — 여닫는 도중에 다시 읽으면 밀려나 있던 좌표가 "원래 자리"로 굳어 UI가 화면 밖에 남는다. 이동은 `LateUpdate`에서 `unscaledDeltaTime`으로 하고(`timeScale == 0` 위에서 열린다), 목표에 닿으면 **좌표 쓰기를 멈춘다**(계속 쓰면 다른 스크립트가 그 UI를 못 옮긴다).
+  - **`displacedUI`가 목록을 가리는 UI를 잠시 비켜나게 한다**(보통 명령 카드 줄과 입력창). 실제 로직은 공용 `UIDisplacement`가 갖고 있고(위 참조) 여기는 `useUnscaledTime: true`로 넘긴다 — 일시정지 위에서 열리기 때문이다. **결과 화면에서 열 때는 `timeScale`이 1이라 두 값이 같아 그대로 동작한다.**
   - `Close()`는 **`_isOpen = false`를 `ClearInput()`보다 먼저** 세운다. `ClearInput`은 "비었다"를 수신자에게도 디스패치하는데, 아직 열린 상태면 이쪽이 그 신호를 가로채 일시정지 메뉴의 오타 상태가 안 풀린다.
   - 열 때마다 `Rebuild()`로 새로 그린다(보상으로 카드가 늘어난다). 해금 단어가 늘어 화면을 넘치면 `columns`/`cellSize`/`cardScale`을 같이 줄일 것.
 
@@ -557,9 +634,9 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 
 ### 아직 없는 것
 
-단어 강화/합성, 단어별 사용 횟수 제한, 저장/불러오기, `StageData` SO, **팡파르 연출**, **결과 창 버튼**(지금은 `다시` 타이핑뿐), **힘(Power) HUD 표시**.
+단어 강화/합성, 단어별 사용 횟수 제한, 저장/불러오기, `StageData` SO, **팡파르 연출**, **결과 창 버튼**(지금은 `다시하기`/`타이틀` 명령 카드 타이핑뿐), **힘(Power) HUD 표시**.
 
-**단어 선택은 이제 있다.** 클리어 시 후보 3장 + `넘기기` 카드가 한 줄로 펼쳐지고 플레이어가 이름을 타이핑해 하나를 고른다(`RewardInputHandler` + `WordUnlockManager.RollRewardCandidates`/`ConfirmReward`). **마더 드래곤 스테이지에서는 왼쪽 끝에 `지우기` 카드가 붙어** 사전에서 한 장을 지울 수 있다(`CardDeletePanel`). 럭키는 라운드를 한 번 더 열고, 그동안 럭키 카드의 수치 칸이 `보상됨`으로 바뀐다.
+**단어 선택은 이제 있다.** 클리어 시 후보 3장 + `넘기기` 카드가 한 줄로 펼쳐지고 플레이어가 이름을 타이핑해 하나를 고른다(`RewardInputHandler` + `WordUnlockManager.RollRewardCandidates`/`ConfirmReward`). **마더 드래곤 스테이지에서는 왼쪽 끝에 `지우기` 카드가 붙어** 사전에서 한 장을 지울 수 있다(`CardDeletePanel`). 럭키는 판정에 성공한 순간 라운드를 쌓아두고(그때부터 수치 칸이 `보상됨`으로 바뀐다) 클리어할 때 창을 한 번 더 연다.
 
 ⚠️ **`minWordsToKeep`(기본 4)은 장수만 본다.** 사전에 5장이 있어도 그중 액션 카드가 하나뿐이면 그걸 지워 **런이 잠길 수 있다**(액션 단어로만 체인이 완성된다). 완전히 막으려면 "액션 카드가 1장이면 그 카드만 목록에서 제외"를 더해야 하는데 아직 없다. 지운 카드는 사전에 없으므로 **다시 보상 후보로 나올 수 있다**(의도).
 
@@ -575,7 +652,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 
 **저장되는 건 볼륨과 언어뿐이다.** `PlayerPrefs`의 `option.volume.*` 3개와 `option.language` 하나가 전부이고, **런 저장이 없어서 타이틀로 돌아가면 진행이 초기화된다.** 해금한 단어와 스테이지 진행이 전부 사라지고 시작 단어 3장부터 다시 시작한다. 의도된 현재 상태다(`StageManager.RestartStage`만 사전을 유지한다). `StatisticsManager`의 통계도 씬을 넘어가면 사라진다.
 
-**연출은 플레이어 공격 쪽이 대부분이다.** `PlayerBattleVisuals`가 돌진 → 펀치(`Punch1~4`) → 복귀를 재생하고, 그 사이 쌓인 공격이 하나씩 적용되며 HP가 계단식으로 줄어든다. 여기에 **피해 숫자(`FloatingDamageManager`)·피격 이펙트(`HitEffectManager`)·카메라 흔들림(`CameraShake`, 시퀀스당 한 번)** 이 붙는다. 적이 때릴 때도 플레이어 쪽에 피격 이펙트가 뜬다. **적 공격 모션은 여전히 없어** `turnChangeDelay`/`postAttackDelay`가 그 자리를 비워두고 있다. **스테이지 전환 쪽은 `stageStartText`(`STAGE n START!`)가 `stageStartDelay`를 채우기 시작했다.**
+**연출은 양쪽 다 붙었다.** `PlayerBattleVisuals`가 돌진 → 펀치(`Punch1~4`) → 복귀를 재생하고, 그 사이 쌓인 공격이 하나씩 적용되며 HP가 계단식으로 줄어든다. 여기에 **피해 숫자(`FloatingDamageManager`)·피격 이펙트(`HitEffectManager`)·카메라 흔들림(`CameraShake`, 시퀀스당 한 번)** 이 붙는다. **적 공격도 이제 같은 모양의 돌진→타격→복귀를 한다**(`EnemyBase.MoveToPlayerCoroutine`/`MoveToOriginCoroutine`) — 예전엔 이게 없어 `turnChangeDelay`/`postAttackDelay`가 빈 자리로 남아 있었다. 캐릭터 윤곽선(`SpriteOutline.mat` + `SpriteOutlineUVSync`)도 플레이어와 적 양쪽에 붙어 있다. **스테이지 전환 쪽은 `stageStartText`(`STAGE n START!`)가 `stageStartDelay`를 채운다.** **보상 화면에는 퇴장 연출**(고른 카드만 남고 나머지는 떨어짐)이, **패배 화면에는 명령 카드 등장 연출**이 있다.
 
 **보유 카드를 확인할 수 있다.** 일시정지 중 `카드`를 치면 `CardCollectionPanel`이 사전에 든 카드를 전부 펼친다. **런 밖에서 보는 도감(전체 28장 중 해금 현황)은 없다** — 이건 지금 손에 든 것만 보여준다.
 
@@ -602,7 +679,8 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   |---|---|
   | 제목 + 이미지 + 글자색 한 덩어리 | **`ScreenPresentation`** (`titleKorean`/`titleEnglish`/`image`/`titleColor`) — 결과·보상·보유 카드·삭제 창이 전부 이걸 쓴다 |
   | 타이핑하는 명령 단어 | **`CommandCardData` 에셋** (이름·설명·수치 한/영 6칸). 화면엔 카드로 뜬다 |
-  | 안내 문구가 붙는 명령 단어 | **`TypedCommand`** (단어 + 안내를 한 묶음으로 — 단어를 바꿔도 안내가 옛 상태로 안 남는다). 지금은 `ResultInputHandler.retryCommand` 하나뿐 |
+  | 안내 문구가 붙는 명령 단어 | **`TypedCommand`** (단어 + 안내를 한 묶음으로 — 단어를 바꿔도 안내가 옛 상태로 안 남는다). 지금은 `CardCollectionPanel.closeCommand` 하나뿐 |
+  | 결과 통계의 라벨·숫자 | **`ResultStatsView`** — 라벨과 값을 각각 다른 `TMP_Text`로 받으므로 배치·폰트를 따로 디자인해도 코드를 안 고친다 |
   | 카드 프레임·배지 스프라이트 | `Card.prefab`의 `CardView` 인스펙터(`actionFrame`/`defaultFrame`/`commandFrame`/배지 3종) — **한 곳만 고치면 손패·보상·일시정지·목록에 동시에 적용된다** |
   | 카드 설명·수치의 숫자 | `.asset`의 `description`/`statsLabel`을 **포맷 문자열**로 쓰고 런타임 값을 끼운다(아래) |
   | 그 외 라벨 | `[SerializeField]` 한/영 두 벌 + `LanguageSettings.Pick(...)` |
@@ -614,7 +692,8 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - **표시 문자열에 한글을 직접 박지 말 것.** 두 언어를 다 지나가는 문자열이면 `[SerializeField]` 두 개(`xxx`/`xxxEn`)를 두고 `LanguageSettings.Pick(...)`으로 고르거나, 코드에 박아야 하면 `LanguageSettings.IsEnglish` 삼항으로 갈라 쓴다(`StatusEffectManager.GetDisplayName` 참조). **`Pick`에 `owner`/`fieldName`을 넘겨야 누락 경고가 어느 필드인지 알려준다.**
 - **수치가 들어가는 문구는 포맷 문자열로 쓴다.** 글자만 고쳐두면 인스펙터에서 값을 바꿨을 때 문구가 옛 숫자로 남고, **카드에 적힌 숫자와 실제 동작이 어긋나는 건 곧 버그로 보인다.**
   - `CardBase.Fill(text, args)`이 공용 헬퍼다 — 포맷 자리(`{`)가 없으면 **원문을 그대로** 돌려주고, 자리 번호가 인자 수를 넘어도 원문으로 떨어진다(카드가 통째로 비어 보이는 것보다 낫다).
-  - `AttributeCardData.Description` → `{0}`=`chancePercent`, `{1}`=`value` · `ActionCardData.Description` → `{0}`=`comboMinHits`, `{1}`=`comboMaxHits`, `{2}`=`comboChancePercent` · `StatsLabel` 쪽은 어썸 `"+{0}"`, 퍼펙트/니킥/춉/박치기 `"{0}"`.
+  - `AttributeCardData.Description` → `{0}`=`chancePercent`, `{1}`=`value` · `ActionCardData.Description` → `{0}`=`comboMinHits`, `{1}`=`comboMaxHits`, `{2}`=`comboChancePercent` · **`ModifierCardData.Description` → `{0}`=`value`, `{1}`=`CurrentTurnBonus`(퍼펙트)** · `StatsLabel` 쪽은 어썸 `"+{0}"`, 퍼펙트/니킥/촙/박치기 `"{0}"`.
+  - ⚠️ **`ModifierCardData`에는 오래도록 `Description` 재정의가 없었다.** 그래서 그 계열(슈퍼/울트라/하이퍼/메가톤/파워/퀵/럭키/어썸/퍼펙트)만 설명에 `{0}`을 적으면 값이 채워지는 게 아니라 **중괄호가 그대로 화면에 나왔고**, 수치를 글자로 박아둘 수밖에 없었다. 지금은 채워진다 — **카드 계열을 새로 만들면 `Description` 재정의를 빠뜨리지 말 것.**
   - **상태가 이분법이면 포맷 대신 완성된 문구를 두 벌 둔다** — 럭키의 `statsLabel`(`보상`)과 `lootPendingStatsLabel`(`보상됨`)이 그 예다. `{0}`에 `"됨"`을 끼우는 방식이면 그 조각이 코드에 박혀 인스펙터에서 못 바꾼다.
 - 이벤트는 평범한 C# `event Action`/`event Action<T>`, `OnEnable`에서 구독하고 `OnDisable`에서 해제.
 - 새 스크립트는 `[SerializeField] private` + `[Header]`/`[Tooltip]`, 식 본문 읽기 전용 프로퍼티, 한글 주석. 편집 중인 파일의 스타일에 맞출 것. (`BattleManager`/`StageManager`/`EnemyManager`는 이 컨벤션보다 먼저 작성된 코드라 스타일 참고 대상이 아니다.)
@@ -622,8 +701,9 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - 이름이 의도적인 경우가 있다(씬의 `Deck Manager` GameObject는 공백 포함). 과거 진짜 오타(`InputManger`, `DeckManger.cs`)는 이미 수정됐으니 추가로 이름을 바꾸지 말 것.
 - **"일시정지 중인가"는 `PauseManager` 참조 대신 `Mathf.Approximately(Time.timeScale, 0f)`로 판단한다**(`CardInputHandler.WantsInput`, `BattleManager`의 디버그 킬스위치). `PauseManager`는 씬 오브젝트고 `CardInputHandler`는 프리팹 안이라, 참조로 엮으면 씬 인스턴스 오버라이드가 늘어나기만 한다. 새로 같은 판단이 필요하면 이 방식을 따를 것.
 - **타이핑을 받는 새 화면은 `TypingReceiver`(안내 문구가 있으면 `CommandWordReceiver`)를 상속할 것.** `InputManager.OnCharacterEntered`/`OnCompositionChanged`를 직접 구독해 자기 차례를 스스로 판별하지 말 것 — 그 구조에서 실제로 입력이 서로 새는 버그가 났고, 그래서 우선순위 단일 디스패치로 바꿨다. 그 두 이벤트는 이제 **뷰 전용**이다.
+- **`InputManager.CurrentInput`/`Composition`을 폴링해 연출을 그린다면 "지금 내 차례인가"를 먼저 볼 것** — 수신자는 `HasTypingFocus`, 카드처럼 주인을 모르는 뷰는 `InputManager.IsTypingTarget(word)`다. 우선순위는 글자만 가르고 입력창은 전역이라, 이 검사가 없으면 **입력을 못 가져간 화면의 카드가 같이 움직인다**(위 입력 파이프라인 절의 ⭐ 항목).
 - **시간에 의존하는 새 코드는 `Time.deltaTime`/`WaitForSeconds`를 쓸 것.** 일시정지가 `timeScale = 0` 하나로 성립하는 게 그 덕분이다. `unscaledDeltaTime`/`WaitForSecondsRealtime`을 쓰면 일시정지 중에도 계속 돌아 그 전제가 깨진다.
-  - **의도된 예외는 다섯이고 전부 "멈춘 화면 위에서 돌아야 하는 것"이다** — `InputManager.ApplyImeMode`의 IME 쿨다운, `CardSlotView`의 들림·교체·무너짐 애니메이션(일시정지 명령 카드로 재사용된다), `TextGateRevealAnimation`(`PAUSE` 제목이 `timeScale`이 0이 되는 순간에도 끝까지 재생돼야 한다), `CardCollectionPanel`의 비켜나기 애니메이션(목록 자체가 일시정지 위에서만 열린다), `MenuKeyboardNavigator`의 키 반복·포인터 이동(일시정지 메뉴에도 붙일 수 있어야 한다). 새로 예외를 만들려면 같은 이유가 있어야 한다.
+  - **의도된 예외는 다섯이고 전부 "멈춘 화면 위에서 돌아야 하는 것"이다** — `InputManager.ApplyImeMode`의 IME 쿨다운, `CardSlotView`의 들림·교체·무너짐·가라앉기 애니메이션(일시정지 명령 카드로 재사용된다), `TextGateRevealAnimation`(`PAUSE` 제목이 `timeScale`이 0이 되는 순간에도 끝까지 재생돼야 한다), `CardCollectionPanel`의 비켜나기 애니메이션(목록이 일시정지 위에서 열린다 — 같은 `UIDisplacement`를 쓰는 `CardDeletePanel`은 `useUnscaledTime: false`다), `MenuKeyboardNavigator`의 키 반복·포인터 이동(일시정지 메뉴에도 붙일 수 있어야 한다). 새로 예외를 만들려면 같은 이유가 있어야 한다.
     - 반대 사례가 **`CardDeletePanel`**이다 — 겉보기엔 `CardCollectionPanel`과 같은 격자 창이지만 `timeScale`이 1인 보상 구간에서만 뜨므로 **`Time.deltaTime`을 쓴다.** 비슷해 보인다고 따라 쓰지 말고 "그 화면이 멈춘 위에서 도는가"로 판단할 것.
 
 ## 알려진 이슈
@@ -637,7 +717,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - `EventManager`의 `normalEventLinesEn`/`dragonEventLinesEn`이 비어 있어 **영어 모드에서도 이벤트 대사만 한국어로 나온다.** `normalEventLines`의 2·3번째 항목도 `placeholder1`/`placeholder2` 그대로다.
   - 저장소 루트에 `MERGE_NOTES.md`와 `SYLEE_머지시_변경사항.md`가 커밋되어 있다. 특정 머지 시점의 메모라 **지금 코드 상태와는 어긋날 수 있다** — 판단 근거로 삼지 말 것.
   - `Assets/01_Arts/Material/UIStyle.mat`과 `UnderwaterGodray.mat`(+ 짝인 `UnderWaterGodRay.shader`)은 참조가 없다. 현역인 `UnderwaterGodRaySprite` 쪽과 이름이 헷갈리니 주의.
-- **인덱스 9 보스전 도달 불가 — 해결됨.** `LoadStage`의 `currentBattleIndex >= totalStages` 검사가 빠지고 `>= totalBattles`(10) 하나만 남아, 두 번째 보스전(인덱스 9)이 실제로 실행된다. ⚠️ 다만 **`totalStages = 8`은 필드로 남아 통계 문구의 분모로 쓰인다** — 전투가 10회(보스 2회 제외 8스테이지)라는 전제라 전투 수를 바꾸면 여기도 같이 봐야 한다.
+- **인덱스 9 보스전 도달 불가 — 해결됨.** `LoadStage`의 `currentBattleIndex >= totalStages` 검사가 빠지고 `>= totalBattles`(10) 하나만 남아, 두 번째 보스전(인덱스 9)이 실제로 실행된다. ⚠️ 다만 **`totalStages`는 필드로 남아 결과 화면의 "최고 도달 스테이지" 분모로 쓰이고, 지금 값이 12라 전투 수(10)와 어긋나 있다** — 둘을 맞출 의무가 코드에 없으니 전투 수를 바꾸면 여기도 같이 볼 것.
 - **적이 죽는 경로가 두 개로 갈려 있던 문제 — 해결됨.** `CharacterStats.Die()`는 `Destroy(gameObject)`지만 `BattleManager.CheckGameState`는 `SetActive(false)`로 비활성화만 하고, 이벤트 스테이지에서는 대사가 끝날 때까지 `IsGameOver`가 false로 남는다. **`DeckManager.IsEnemyDefeated()`가 `null` · `!activeInHierarchy` · `currentHP <= 0` 셋을 함께 보는 단일 판정**이 되어 `RunTurnTransition`과 `PlayPendingActions` 양쪽에 걸려 있다. ⚠️ 적 상태를 새로 판단해야 하면 `currentEnemy == null`만 보지 말고 이 메서드를 쓸 것 — **두 소멸 경로 자체는 그대로 남아 있다.**
 - ⚠️ **`HPBarUI.cs`의 클래스명이 `HealthBarUI`다.** Unity는 MonoBehaviour의 파일명과 클래스명이 같아야 하므로 **`Add Component`로는 새로 붙일 수 없다.** 다만 `HPBar.prefab`에 이미 직렬화되어 있어 프리팹을 인스턴스화하면 정상 동작한다 — 새로 붙일 일이 생기면 파일명을 `HealthBarUI.cs`로 바꾸는 쪽이 호출부를 안 건드려 간단하다.
 - **`BattleManager.prefab`의 `playerHealthBar`가 `{fileID: 0}`이다.** 씬 오브젝트 참조라 프리팹에 저장될 수 없어서 정상이며, 실제 연결은 **씬 인스턴스 오버라이드**에 있다. 프리팹에서 `Apply`를 누르면 이 null이 확정되어 배선이 날아간다.
@@ -660,7 +740,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - 한 턴 안에서 `AddDefense`를 누적하는 데는 여전히 상한이 없다. GDD에 규칙이 없어 그대로 두었다.
 - **공격 말풍선이 꺼져 있다.** `DeckManager.PlayPendingActions`에서 `battleManager.OnPlayerActionResolved(BuildBubbleText(...))` 호출이 **빠졌다**(그 자리에 주석으로 경위만 남아 있다). 타격 수치는 이제 말풍선이 아니라 `FloatingDamageManager`가 띄운다. `BattleManager.OnPlayerActionResolved`와 `DeckManager.BuildBubbleText`는 살아 있지만 **아무도 부르지 않는 죽은 코드**다.
   - ⚠️ **그 자리에는 대신 `battleManager.UpdateUI()`가 있다. 같이 지우지 말 것.** `OnPlayerActionResolved`는 말풍선과 **UI 갱신 두 가지**를 했는데, 말풍선을 없애려고 호출을 통째로 주석 처리했다가 갱신까지 사라진 적이 있다. 그때 증상은 "**쌓인 공격이 한 번에 적용된다**"였다 — 수치는 한 대씩 정상적으로 깎이는데 HP 바만 그대로 있다가 턴 끝에 한 번에 뚝 떨어진 것이다.
-  - ⚠️ **이 `UpdateUI()`는 반드시 럭키(`LootBonusOnKill`) 처리보다 뒤에 있어야 한다.** `UpdateUI` → `CheckGameState` → `ShowResult` → `OnBattleEnded`가 한 호출 안에서 이어지고 그 안에서 `StageManager`가 클리어 보상을 지급하므로, 앞으로 옮기면 럭키 보너스가 다음 스테이지 보상에 얹혀 **로그만 찍히고 카드는 3장 그대로**가 된다.
+  - ⚠️ **이 `UpdateUI()`는 반드시 럭키(`GrantsLootBonus`) 처리보다 뒤에 있어야 한다.** `UpdateUI` → `CheckGameState` → `ShowResult` → `OnBattleEnded`가 한 호출 안에서 이어지고 그 안에서 `StageManager`가 클리어 보상을 지급하므로, 앞으로 옮기면 럭키 보너스가 다음 스테이지 보상에 얹혀 **로그만 찍히고 카드는 3장 그대로**가 된다.
 
 - **한/영 IME — 해결됨.** 증상은 두 갈래였는데 원인이 하나였다.
   - "Play 직후엔 입력창을 클릭하거나 Alt를 눌러야 조합이 시작된다" → `imeCompositionMode`가 기본값 `Auto`였던 탓이다. **`EnableInput()`에서 `On`으로 고정**하고, 그 값을 되돌리는 주범이던 `TMP_InputField`를 라벨로 교체해 해결했다.
@@ -670,6 +750,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - 이미 시도했다 되돌린 것: P/Invoke `ImmSimulateHotKey`(한/영 핫키 시뮬레이션) — 효과 없었으니 다시 시도하지 말 것. 지금 쓰는 `ImmSetConversionStatus`는 핫키를 흉내내지 않고 변환 상태를 직접 쓰는 다른 API다.
   - **앞으로 IME 쪽을 건드리면 반드시 빌드에서 재검증할 것.** 이 문제는 과거에 **에디터 전용이 아니라 스탠드얼론에서도 재현된 이력**이 있다. `HangulImeMode`가 실패하면 `Player.log`에 경고 한 줄이 남는다(첫 실패만). 실패 시의 폴백은 비한글 입력 감지 시 "한/영 키를 눌러주세요" 힌트를 띄우는 것 — 클릭 단계는 이미 없어졌으므로 그때도 남는 건 한/영 한 번뿐이다.
 - **한 음절 단어 미매칭** — 조합 중에도 `CurrentInput + Composition`으로 평가하게 바꿔 **해결됨**(지금은 `InputManager.HandleCompositionChange` → `TypingReceiver.Dispatch` 경로다). 커밋만 기다리는 구조로 되돌리면 퀵/잽/훅뿐 아니라 `계속`의 `속`, `다음`의 `음`까지 완성 불가가 된다.
+- **입력을 못 가져간 화면의 카드가 같이 움직이던 문제 — 해결됨.** 우선순위 디스패치는 글자를 하나에게만 넘기지만 **입력창 자체는 전역이라 아무나 읽을 수 있었다.** 그래서 일시정지 중 `계속`을 치면 손패의 `가드`가 같이 떠오르고, 보상 화면 위에 일시정지가 열리면 후보 카드가 덩달아 밝아졌다(매칭은 안 되는데 화면만 반응). `InputManager.ActiveReceiver`를 단일 판정으로 세우고, 카드는 `IsTypingTarget(word)`·수신자는 `HasTypingFocus`를 먼저 보게 해서 막았다. **입력을 폴링하는 연출 코드를 새로 쓸 때 이 검사를 빠뜨리면 같은 증상이 그대로 돌아온다.**
 - **일시정지 명령 단어를 끝까지 칠 수 없던 문제 — 해결됨.** 원인은 손패 핸들러가 같은 입력을 같이 받아 첫 글자를 오타로 처리하며 `ClearInput()`을 부른 것이었다. 우선순위 단일 디스패치(`TypingPriority`)로 구조적으로 막았다 — 개별 가드를 덧붙이는 방식으로 되돌리지 말 것.
 - **손패 들림 판정의 절충** — 조합 중 글자는 초성만 비교한다. 모음을 잘못 짚어도 초성이 같으면 카드가 계속 떠 있다. 정밀 검증은 유니코드 분해가 훨씬 깊어져 의도적으로 하지 않았다.
 - **`Colorful`(컬러풀)의 단순화** — GDD는 "화상 > 마비 > 얼음 순으로 전부 부여"지만 `StatusEffectType`이 단일 값이라 셋을 동시에 담을 수 없다. 지금은 우선순위가 가장 높은 화상 하나만 나오게 단순화되어 있다. 상태이상 다중 적용이 필요해지면 `ResolvedAction.StatusEffect`를 리스트로 바꿔야 한다.

@@ -59,6 +59,19 @@ public abstract class TypingReceiver : MonoBehaviour
     /// 빈 항목은 매칭과 진행 판정 양쪽에서 건너뛰므로 null 대신 빈 문자열을 넣으면 안전하다.</summary>
     protected abstract IReadOnlyList<string> Targets { get; }
 
+    /// <summary>InputManager가 "이 단어가 지금 노려지고 있는가"를 묻기 위한 통로
+    /// (<see cref="InputManager.IsTypingTarget"/>). 바깥에 여는 게 아니라 파이프라인 안에서만
+    /// 쓰라고 internal이다 - Dispatch와 같은 결.</summary>
+    internal IReadOnlyList<string> ActiveTargets => Targets;
+
+    /// <summary>지금 내가 입력을 가져가는 수신자인가. <see cref="WantsInput"/>이 true여도 더 높은
+    /// 우선순위가 가져갔으면 false다.
+    ///
+    /// ⚠️ <b>입력을 폴링해 연출을 그리는 수신자는 이걸 먼저 봐야 한다.</b> 예를 들어 보상 화면은
+    /// 카드를 고르는 동안 계속 활성(_active)인데, 그 위로 일시정지가 열리면 플레이어가 치는
+    /// "계속"이 보상 후보와 접두사가 겹치는 순간 엉뚱한 보상 카드가 떠오른다.</summary>
+    public bool HasTypingFocus => inputManager != null && inputManager.HasTypingFocus(this);
+
     /// <summary>단어가 정확히 맞았을 때. 입력창은 이미 비워진 뒤에 불린다.</summary>
     protected abstract void OnCommandMatched(int index, bool wasComposing);
 

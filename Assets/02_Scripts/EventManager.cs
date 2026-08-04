@@ -39,6 +39,11 @@ public class EventManager : MonoBehaviour
 
     private bool isEventActive = false;
 
+    /// <summary>대화가 열려 있는가. 이벤트 스테이지는 대사가 끝날 때까지
+    /// <c>BattleManager.IsGameOver</c>가 false로 남으므로, "지금 대사 중이라 전투를 진행시키면
+    /// 안 된다"는 판단은 이 값으로 해야 한다(BattleManager.IsEventActive가 중계한다).</summary>
+    public bool IsEventActive => isEventActive;
+
     private int pendingHealAmount = 0;
     private bool wasMotherDragon = false;
 

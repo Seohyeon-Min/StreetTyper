@@ -19,27 +19,6 @@ using UnityEngine.UI;
 /// </summary>
 public class CardCollectionPanel : CommandWordReceiver
 {
-    /// <summary>목록이 열려 있는 동안 잠시 비켜나 있어야 하는 UI 한 개. 얼마나 어디로 비킬지는
-    /// 전부 인스펙터에서 정한다 - 화면 밖으로 완전히 내보낼지, 살짝만 내릴지는 배치를 보면서
-    /// 맞출 값이라 코드에 둘 수 없다.</summary>
-    [Serializable]
-    public class DisplacedUI
-    {
-        [Tooltip("비켜날 UI. 일시정지 명령 카드 줄(PauseHand)이나 입력창(InputFieldDisplay)처럼 " +
-                 "목록을 가리는 것들을 넣는다. 다른 캔버스의 오브젝트도 된다 - 두 캔버스가 같은 " +
-                 "기준 해상도(1920x1080)를 쓰므로 px 값이 같은 의미를 갖는다.")]
-        public RectTransform target;
-
-        [Tooltip("원래 자리에서 밀려날 거리(px). 아래로 내리려면 y에 음수를, 화면 밖으로 " +
-                 "완전히 내보내려면 화면 절반(1080 기준 540)보다 큰 값을 준다.")]
-        public Vector2 offset;
-
-        // 원래 자리. 씬에 배치된 값을 Awake에서 한 번만 읽어둔다 - 직렬화하면 밀려난 좌표가
-        // 씬에 굳어버릴 수 있어서 런타임 전용으로 둔다.
-        [NonSerialized] public Vector2 Origin;
-        [NonSerialized] public bool Captured;
-    }
-
     [Header("UI")]
     [Tooltip("카드 목록 창 루트. 평소엔 비활성이어야 한다. 일시정지 메뉴 위에 겹쳐 떠야 하므로 " +
              "Pause Panel보다 뒤 형제(= 위에 그려지는 쪽)에 두고, 뒤가 비치지 않도록 화면을 " +
@@ -101,9 +80,8 @@ public class CardCollectionPanel : CommandWordReceiver
 
     private readonly List<GameObject> _spawned = new List<GameObject>();
 
-    // 0 = 제자리, 1 = offset만큼 밀려난 상태. 목표까지 도달하면 더 이상 좌표를 쓰지 않는다.
-    private float _displaceProgress;
-    private bool _displaceSettled = true;
+    // 비켜나기 진행 상태 + 로직. CardDeletePanel과 같은 것을 쓴다(UIDisplacement 참조).
+    private readonly UIDisplacement _displacement = new UIDisplacement();
 
     /// <summary>목록이 지금 떠 있는가. PauseManager가 ESC를 "목록만 닫기"로 돌리는 데 쓴다.</summary>
     public bool IsOpen => _isOpen;
@@ -140,76 +118,21 @@ public class CardCollectionPanel : CommandWordReceiver
         else
             Debug.LogWarning("CardCollectionPanel: panel이 연결되지 않아 카드 목록 창을 여닫을 수 없습니다.", this);
 
-        CaptureOrigins();
+        _displacement.CaptureOrigins(displacedUI, this, nameof(displacedUI));
     }
 
-    // 씬에 배치된 자리를 기억해둔다. 여기 한 번만 읽는 게 중요하다 - 열고 닫는 도중에 다시 읽으면
-    // 밀려나 있던 좌표가 "원래 자리"로 굳어서 UI가 화면 밖에 남는다.
-    private void CaptureOrigins()
-    {
-        if (displacedUI == null)
-            return;
-
-        for (var i = 0; i < displacedUI.Length; i++)
-        {
-            var entry = displacedUI[i];
-            if (entry == null)
-                continue;
-
-            if (entry.target == null)
-            {
-                Debug.LogWarning($"CardCollectionPanel: displacedUI[{i}]에 오브젝트가 비어 있어 " +
-                                 "이 칸은 아무것도 밀어내지 않습니다.", this);
-                continue;
-            }
-
-            entry.Origin = entry.target.anchoredPosition;
-            entry.Captured = true;
-        }
-    }
-
-    // ⚠️ unscaledDeltaTime을 쓴다 - 목록은 Time.timeScale == 0인 일시정지 위에서만 열리므로
-    // 보통의 deltaTime이면 아예 움직이지 않는다(CardSlotView·HandFanLayout과 같은 이유).
-    // 위치를 쓰는 건 LateUpdate다 - HandFanLayout이 카드(자식)를 배치한 뒤에 줄 전체(부모)를 옮긴다.
+    // ⚠️ unscaledDeltaTime을 쓴다(useUnscaledTime: true) - 목록은 Time.timeScale == 0인 일시정지
+    // 위에서 열릴 수 있으므로 보통의 deltaTime이면 아예 움직이지 않는다(CardSlotView·HandFanLayout과
+    // 같은 이유). 결과 화면에서 열 때는 timeScale이 1이라 두 값이 같으므로 그대로 동작한다.
+    // 반대로 CardDeletePanel은 멈춘 화면 위에서 열리지 않아 false를 넘긴다.
     private void LateUpdate()
     {
-        if (_displaceSettled)
-            return;
-
-        var goal = _isOpen ? 1f : 0f;
-
-        if (displaceDuration <= 0f)
-            _displaceProgress = goal;
-        else
-            _displaceProgress = Mathf.MoveTowards(_displaceProgress, goal, Time.unscaledDeltaTime / displaceDuration);
-
-        ApplyDisplacement();
-
-        // 도착했으면 좌표 쓰기를 멈춘다. 계속 쓰면 다른 스크립트가 이 UI를 옮길 수 없다.
-        if (Mathf.Approximately(_displaceProgress, goal))
-            _displaceSettled = true;
+        _displacement.Tick(displacedUI, _isOpen, displaceDuration, useUnscaledTime: true);
     }
 
-    // offset은 배치를 눈으로 보며 맞추는 값이라 보통 Play 중에 조정하게 된다. 도착했다고 좌표
-    // 쓰기를 멈춘 상태에서는 다음 여닫이까지 반영이 안 보이므로, 인스펙터를 만진 순간 다시 움직이게 한다.
     private void OnValidate()
     {
-        _displaceSettled = false;
-    }
-
-    private void ApplyDisplacement()
-    {
-        if (displacedUI == null)
-            return;
-
-        for (var i = 0; i < displacedUI.Length; i++)
-        {
-            var entry = displacedUI[i];
-            if (entry == null || !entry.Captured || entry.target == null)
-                continue;
-
-            entry.target.anchoredPosition = entry.Origin + entry.offset * _displaceProgress;
-        }
+        _displacement.MarkDirty();
     }
 
     /// <summary>보유 카드를 펼친다. PauseManager가 "카드"를 받았을 때 부른다.</summary>
@@ -221,7 +144,7 @@ public class CardCollectionPanel : CommandWordReceiver
         _isOpen = true;
 
         // 가리는 UI를 비켜나게 한다(실제 이동은 LateUpdate가 이어서 한다).
-        _displaceSettled = false;
+        _displacement.MarkDirty();
 
         if (panel != null)
             panel.SetActive(true);
@@ -247,7 +170,7 @@ public class CardCollectionPanel : CommandWordReceiver
 
         // 비켜났던 UI를 제자리로 돌린다. 일시정지가 그대로 풀려 이 창이 꺼져도 이 컴포넌트는
         // Pause Canvas에 붙어 계속 살아 있으므로 복귀는 끝까지 재생된다.
-        _displaceSettled = false;
+        _displacement.MarkDirty();
 
         ClearCards();
 

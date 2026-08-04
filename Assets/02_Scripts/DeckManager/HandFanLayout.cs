@@ -43,6 +43,28 @@ public class HandFanLayout : MonoBehaviour
     /// (centerOnTop이 켜져 있으면 그리기 순서로 형제 인덱스가 바뀌므로, 스폰 순서로 고정해두면 어긋납니다).</summary>
     public IReadOnlyList<CardSlotView> Cards => _cards;
 
+    /// <summary>손패 중 한 장이라도 자리에서 물러나는 중인가 - 패배 무너짐(stagger 대기 포함)과
+    /// 전체 클리어 가라앉기 둘 다 해당한다(<see cref="CardSlotView.IsLeaving"/>).
+    /// 손패가 다 치워진 다음에 무언가를 이어 붙이려는 쪽이 본다 - 결과 화면 명령 카드가
+    /// 손패가 전부 사라진 뒤에 떠오르는 게 그것이다(ResultInputHandler).
+    ///
+    /// ⚠️ <see cref="Cards"/>는 "활성 자식만" 매 프레임 다시 모으는 리스트라, 카드가 꺼지면
+    /// 목록에서 빠져 이 값도 false가 된다. 가라앉기는 끝나면서 카드를 끄지만 <b>그 시점이
+    /// 곧 "치워졌다"</b>라 결과가 같다 - 기다리는 쪽에서 보면 어느 경로든 제때 풀린다.</summary>
+    public bool IsLeaving
+    {
+        get
+        {
+            for (var i = 0; i < _cards.Count; i++)
+            {
+                if (_cards[i] != null && _cards[i].IsLeaving)
+                    return true;
+            }
+
+            return false;
+        }
+    }
+
     private void Start()
     {
         SpawnCards();

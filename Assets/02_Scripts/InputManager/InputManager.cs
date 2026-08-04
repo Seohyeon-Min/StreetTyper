@@ -72,8 +72,68 @@ public class InputManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 지금 입력을 가져갈 수신자 <b>하나</b>에게만 넘긴다. 우선순위가 높은 쪽부터 훑다가
-    /// 처음으로 자기 차례라고 답한 곳에서 멈춘다.
+    /// 지금 입력을 가져가는 수신자. 없으면 null.
+    ///
+    /// 우선순위가 높은 쪽부터 훑다가 처음으로 자기 차례라고 답한 곳에서 멈춘다 - 실제 디스패치와
+    /// <b>똑같은 판정</b>이라, "누가 입력을 받는가"를 화면 연출 쪽에서 다시 추측할 필요가 없다.
+    ///
+    /// ⚠️ 캐시하지 않고 부를 때마다 훑는다. 이 프로젝트엔 스크립트 실행 순서 설정이 없어서
+    /// 프레임 앞머리에 캐시해두면 "그 프레임에 일시정지가 걸렸는가"를 읽는 쪽마다 다르게 볼 수
+    /// 있다. 수신자는 여섯을 넘지 않고 WantsInput()은 전부 필드 검사 수준이라 값이 싸다.
+    /// </summary>
+    public TypingReceiver ActiveReceiver
+    {
+        get
+        {
+            for (var i = 0; i < _receivers.Count; i++)
+            {
+                var receiver = _receivers[i];
+                if (receiver == null || !receiver.isActiveAndEnabled || !receiver.WantsInput())
+                    continue;
+
+                return receiver;
+            }
+
+            return null;
+        }
+    }
+
+    /// <summary>이 수신자가 지금 입력을 가져가는 쪽인가. 수신자 자신이 연출을 멈출지 판단할 때 쓴다
+    /// (<see cref="TypingReceiver.HasTypingFocus"/>).</summary>
+    public bool HasTypingFocus(TypingReceiver receiver) => receiver != null && ActiveReceiver == receiver;
+
+    /// <summary>
+    /// 이 단어가 <b>지금 입력을 받는 화면</b>이 노리는 대상인가.
+    ///
+    /// 카드 한 장(CardSlotView)은 자기가 어느 수신자에 속하는지 모른다 - 손패로도, 일시정지
+    /// 명령 카드로도, 결과 화면 명령 카드로도 쓰이기 때문이다. 그래서 "누구의 카드인가"를
+    /// 배선으로 들고 다니는 대신 "내 단어가 지금 대상 목록에 있는가"를 묻는다. 일시정지가
+    /// 입력을 가져가면 손패 단어는 대상 목록에서 빠지므로, 카드가 알아서 반응을 멈춘다.
+    /// </summary>
+    public bool IsTypingTarget(string word)
+    {
+        if (string.IsNullOrEmpty(word))
+            return false;
+
+        var receiver = ActiveReceiver;
+        if (receiver == null)
+            return false;
+
+        var targets = receiver.ActiveTargets;
+        if (targets == null)
+            return false;
+
+        for (var i = 0; i < targets.Count; i++)
+        {
+            if (!string.IsNullOrEmpty(targets[i]) && string.Equals(targets[i], word, StringComparison.Ordinal))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// 지금 입력을 가져갈 수신자 <b>하나</b>에게만 넘긴다.
     ///
     /// 예전에는 세 핸들러가 전부 이벤트를 받아놓고 각자 timeScale·IsGameOver를 보며 스스로
     /// 비켜섰다. 그 구조에서는 일시정지 중에 명령 단어의 첫 글자가 손패 쪽에서 오타로 처리되어
@@ -82,15 +142,7 @@ public class InputManager : MonoBehaviour
     /// </summary>
     private void DispatchToReceiver(string committed, string composing)
     {
-        for (var i = 0; i < _receivers.Count; i++)
-        {
-            var receiver = _receivers[i];
-            if (receiver == null || !receiver.isActiveAndEnabled || !receiver.WantsInput())
-                continue;
-
-            receiver.Dispatch(committed, composing);
-            return;
-        }
+        ActiveReceiver?.Dispatch(committed, composing);
     }
 
     private void Start()

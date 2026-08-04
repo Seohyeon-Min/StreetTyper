@@ -2058,6 +2058,12 @@ MonoBehaviour:
   columns: 7
   cellSize: {x: 150, y: 220}
   cardScale: 0.6
+  displacedUI:
+  - target: {fileID: 1259881542}
+    offset: {x: 0, y: -600}
+  - target: {fileID: 749679487}
+    offset: {x: 0, y: -300}
+  displaceDuration: 0.15
   typingLiftHeight: 40
   liftSmoothTime: 0.08
   dimAlpha: 0.4
@@ -4769,6 +4775,7 @@ MonoBehaviour:
   commandCardPrefab: {fileID: 7534683157795553136, guid: 01a72023d39fa9c47aa3a6b8ae82e92d, type: 3}
   commandCardTransitionHeight: 80
   cardCollectionPanel: {fileID: 1861501382}
+  battleManager: {fileID: 1457634980}
   resumeCard: {fileID: 11400000, guid: 3c58e271bd049a54e9317ac6d0b85f42, type: 2}
   cardsCard: {fileID: 11400000, guid: 9f14a6c85e2b71d4c8360be79a4d2f13, type: 2}
   titleCard: {fileID: 11400000, guid: 5d92b8f0c473ea24d8175f9ec3a06b71, type: 2}
@@ -7369,6 +7376,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 108802000}
     - target: {fileID: 7217245384885635992, guid: 647c8c5bc8e6f574ba1dc06e3989673f, type: 3}
+      propertyPath: cardsCard
+      value: 
+      objectReference: {fileID: 11400000, guid: 9f14a6c85e2b71d4c8360be79a4d2f13, type: 2}
+    - target: {fileID: 7217245384885635992, guid: 647c8c5bc8e6f574ba1dc06e3989673f, type: 3}
       propertyPath: retryCard
       value: 
       objectReference: {fileID: 11400000, guid: 63287ea83e14c384cbe1dcc2247727a4, type: 2}
@@ -7389,6 +7400,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1457634980}
     - target: {fileID: 7217245384885635992, guid: 647c8c5bc8e6f574ba1dc06e3989673f, type: 3}
+      propertyPath: handFanLayout
+      value: 
+      objectReference: {fileID: 1259881543}
+    - target: {fileID: 7217245384885635992, guid: 647c8c5bc8e6f574ba1dc06e3989673f, type: 3}
       propertyPath: nextHintFormat
       value: "\n\"{0}\"\uC744 \uC785\uB825\uD558\uC138\uC694"
       objectReference: {fileID: 0}
@@ -7404,6 +7419,10 @@ PrefabInstance:
       propertyPath: resultCardsLayout
       value: 
       objectReference: {fileID: 597764963}
+    - target: {fileID: 7217245384885635992, guid: 647c8c5bc8e6f574ba1dc06e3989673f, type: 3}
+      propertyPath: cardCollectionPanel
+      value: 
+      objectReference: {fileID: 1861501382}
     - target: {fileID: 7919009441836186334, guid: 647c8c5bc8e6f574ba1dc06e3989673f, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

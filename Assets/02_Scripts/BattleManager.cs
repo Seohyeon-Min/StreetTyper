@@ -281,6 +281,26 @@ public class BattleManager : MonoBehaviour
 
     public bool IsGameOver => isGameOver;
 
+    /// <summary>지금 이벤트 대화(마더 드래곤 등)가 열려 있는가. `DeckManager`가 대사 중에
+    /// 타이머를 다시 돌리지 않으려고 본다 - 이벤트 스테이지는 대사가 끝날 때까지
+    /// <see cref="IsGameOver"/>가 false로 남아서 그것만으로는 구분할 수 없다.
+    ///
+    /// `DeckManager`에 `EventManager` 참조를 새로 꽂지 않으려고 여기로 한 번 중계한다
+    /// (매니저 인스펙터 배선을 늘리지 않는 쪽이 이 프로젝트의 기본이다).</summary>
+    public bool IsEventActive => eventManager != null && eventManager.IsEventActive;
+
+    /// <summary>
+    /// 런이 끝나 <b>결과 창이 떠 있는</b> 상태인가. 패배와 전체 클리어 둘뿐이고, 일반 스테이지
+    /// 클리어(<see cref="ResultKind.Victory"/>)는 보상 선택으로 이어지므로 포함하지 않는다
+    /// (ShowStatisticsUI가 불리는 조건과 같다 - ApplyResult 참조).
+    ///
+    /// "여기서 더 진행할 수 있는가"의 단일 판정이다. <see cref="IsGameOver"/>만 보면 보상을
+    /// 고르는 중인 일반 클리어까지 걸리는데, 그때는 아직 게임이 이어지므로 일시정지도 걸려야
+    /// 하고 결과 화면 명령 카드가 떠서도 안 된다. <see cref="PauseManager"/>가 일시정지를
+    /// 막을지, <see cref="ResultInputHandler"/>가 명령 카드를 띄울지를 둘 다 이걸로 정한다.
+    /// </summary>
+    public bool IsFinalResult => isGameOver && lastResultKind != ResultKind.Victory;
+
     public void ResetBattle()
     {
         isGameOver = false;
@@ -400,13 +420,22 @@ public class BattleManager : MonoBehaviour
     public void ShowResult(ResultKind kind)
     {
         bool wasOver = isGameOver;
+        var previousKind = lastResultKind;
         isGameOver = true;
 
         // ⚠️ OnBattleEnded가 여기서 StageManager의 보상 라운드를 열고 돌아온다.
         // 그래서 아래 ApplyResult는 "보상을 고르는 중"인 상태에서 그려지고, 선택이 끝나면
         // StageManager가 RefreshResult()를 불러 다시 그린다.
         lastResultKind = kind;
-        if (!wasOver) OnBattleEnded?.Invoke();
+
+        // ⚠️ "처음 끝났을 때만"으로 막으면 안 된다. CheckGameState가 UpdateUI마다 ShowResult를
+        // 다시 부르므로 걸러야 하는 건 맞지만, 그건 언제나 <b>같은 kind</b>다. kind가 바뀌는 건
+        // 새로운 사건이라 반드시 알려야 한다 - 특히 마지막 스테이지는 승리(Victory)로 결과가
+        // 이미 떠 있는 상태에서 보상을 고른 뒤 전체 클리어(GameClear)로 넘어가는데, wasOver만
+        // 보면 그 전환에서 이벤트가 통째로 묻힌다. 그러면 DeckManager가 타이머를 멈추지도
+        // 손패를 치우지도 않고, ResultInputHandler의 명령 카드 3장도 뜨지 않아 화면이 잠긴다.
+        if (!wasOver || previousKind != kind)
+            OnBattleEnded?.Invoke();
 
         ApplyResult(kind);
     }

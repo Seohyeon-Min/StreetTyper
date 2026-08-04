@@ -13,13 +13,17 @@ MonoBehaviour:
   m_Name: Lucky
   m_EditorClassIdentifier: Assembly-CSharp::ModifierCardData
   cardName: "\uB7ED\uD0A4"
-  icon: {fileID: 0}
-  description: "\uCC98\uCE58 \uC2DC \uBCF4\uC0C1 +1"
+  description: "{0}% \uD655\uB960\uB85C \uD074\uB9AC\uC5B4 \uBCF4\uC0C1 +1\uD68C"
   statsLabel: "\uBCF4\uC0C1"
-  cardNameEn: "lucky"
-  descriptionEn: "One extra reward card on kill"
-  statsLabelEn: "LOOT"
-  lootPendingStatsLabel: "\uBCF4\uC0C1\uB428"
-  lootPendingStatsLabelEn: "LOOTED"
+  cardNameEn: lucky
+  descriptionEn: '{0}% chance: +1 reward'
+  statsLabelEn: LOOT
+  icon: {fileID: 0}
   effectType: 4
   value: 0
+  scalingSource: 0
+  chancePercent: 10
+  chanceGainPerUse: 10
+  maxChancePercent: 50
+  lootPendingStatsLabel: "\uBCF4\uC0C1\uB428"
+  lootPendingStatsLabelEn: LOOTED

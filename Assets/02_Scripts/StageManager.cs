@@ -107,6 +107,41 @@ public class StageManager : MonoBehaviour
         // 총 10번의 전투(인덱스 0~9)를 모두 마치고 인덱스 10에 도달하면 게임 클리어
         if (currentBattleIndex >= totalBattles)
         {
+            // ⚠️ 여기서 곧바로 return하면 아래의 정리(코루틴 정지·체인/보상 카드 지우기)가
+            // 통째로 건너뛰어진다. 새 스테이지를 여는 게 아니라 런이 끝나는 것이지만, 직전
+            // 스테이지가 남긴 것들은 똑같이 치워야 한다 - 실제로 전체 클리어 화면 위에 보상
+            // 카드가 남고 자동 진행 코루틴이 살아 있던 적이 있다.
+            //
+            // 타이머 정지·손패 치우기·입력 열기는 여기서 하지 않는다. ShowGameClear가 부르는
+            // ShowResult가 OnBattleEnded를 쏘고, DeckManager.HandleBattleEnded가 그 셋을 전부
+            // 맡는다(패배와 같은 경로다). ⚠️ 그 이벤트는 결과 종류가 바뀔 때도 나가야 하며,
+            // 예전엔 "처음 끝났을 때만" 나가서 여기서 묻혔다 - BattleManager.ShowResult 참조.
+            if (startRoutine != null)
+            {
+                StopCoroutine(startRoutine);
+                startRoutine = null;
+            }
+
+            if (advanceRoutine != null)
+            {
+                StopCoroutine(advanceRoutine);
+                advanceRoutine = null;
+            }
+
+            _advancingAfterReward = false;
+
+            if (wordChainManager != null)
+                wordChainManager.ClearChain();
+
+            if (pendingActionManager != null)
+                pendingActionManager.Clear();
+
+            if (rewardCardView != null)
+                rewardCardView.Clear();
+
+            if (stageStartText != null)
+                stageStartText.gameObject.SetActive(false);
+
             battleManager.ShowGameClear();
             return;
         }

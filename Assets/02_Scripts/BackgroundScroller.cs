@@ -20,54 +20,48 @@ public class BackgroundScroller : MonoBehaviour
     [Tooltip("속도가 올라가는 느낌을 조절하는 커브")]
     public AnimationCurve accelerationCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-    // 이제 인스펙터에서 숨기고, 공식에 의해 자동으로 계산됩니다.
     [HideInInspector] public float maxSpeed;
 
     private float _currentSpeed = 0f;
+    private float _totalMoved = 0f; // ★ 누적 이동 거리 추적
     private Coroutine _speedCoroutine;
 
-    void Update()
-    {
-        if (_currentSpeed > 0f)
-        {
-            transform.position += Vector3.left * _currentSpeed * Time.deltaTime;
+    // ⚠️ Update 함수는 오차의 주범이므로 완전히 삭제합니다!
 
-            if (transform.position.x <= leftBound)
-            {
-                transform.position += new Vector3(loopJumpDistance, 0f, 0f);
-            }
-        }
-    }
-
-    /// <summary>
-    /// StageManager로부터 시간 정보를 받아, 목표 거리(17.75)에 딱 맞는 최대 속도를 계산하고 가속합니다.
-    /// </summary>
     public void StartScroll(float runDuration, float stopDuration)
     {
         float actualAccel = Mathf.Min(accelerationDuration, runDuration);
-
-        // 잘라낸 가속 시간을 바탕으로 완벽한 거리를 위한 최대 속도를 자동 계산합니다.
         float constantTime = Mathf.Max(0f, runDuration - actualAccel);
         float totalAreaTime = (actualAccel * 0.5f) + constantTime + (stopDuration * 0.5f);
+
         maxSpeed = targetDistance / totalAreaTime;
+        _totalMoved = 0f; // 전환 시작 시 이동 거리 초기화
 
         if (_speedCoroutine != null) StopCoroutine(_speedCoroutine);
-
-        // 코루틴에도 실제 적용된 가속 시간을 넘겨줍니다.
-        _speedCoroutine = StartCoroutine(AccelerateRoutine(actualAccel));
+        _speedCoroutine = StartCoroutine(RunRoutine(actualAccel));
     }
 
-    private IEnumerator AccelerateRoutine(float actualAccel) // 파라미터 추가됨
+    private IEnumerator RunRoutine(float actualAccel)
     {
         float elapsed = 0f;
+
+        // 1. 가속 구간
         while (elapsed < actualAccel)
         {
             elapsed += Time.deltaTime;
             _currentSpeed = Mathf.Lerp(0f, maxSpeed, accelerationCurve.Evaluate(elapsed / actualAccel));
+            ApplyMovement(_currentSpeed * Time.deltaTime);
             yield return null;
         }
+
         _currentSpeed = maxSpeed;
-        _speedCoroutine = null;
+
+        // 2. 등속 구간 (StageManager가 StopScroll을 부를 때까지 무한 반복)
+        while (true)
+        {
+            ApplyMovement(_currentSpeed * Time.deltaTime);
+            yield return null;
+        }
     }
 
     public void StopScroll(float duration)
@@ -78,18 +72,50 @@ public class BackgroundScroller : MonoBehaviour
 
     private IEnumerator DecelerateRoutine(float duration)
     {
-        float startSpeed = _currentSpeed;
+        // ★ 오차 교정 핵심: 지금까지 진짜로 이동한 거리를 빼서, 정확히 남은 거리만 이동시킵니다!
+        float remainingDistance = targetDistance - _totalMoved;
+
+        // 아주 심한 렉으로 이미 목표치를 넘겼다면 역주행하지 않도록 방어
+        if (remainingDistance < 0f) remainingDistance = 0f;
+
+        float movedInDecel = 0f;
         float elapsed = 0f;
 
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            // 감속은 기본 Lerp(선형)를 사용해 부드럽게 줄입니다.
-            _currentSpeed = Mathf.Lerp(startSpeed, 0f, elapsed / duration);
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            // 감속 곡선 공식: t * (2 - t) -> 자연스럽게 속도가 줄어드는 EaseOut 형태
+            float targetDistAtT = remainingDistance * (t * (2f - t));
+            float step = targetDistAtT - movedInDecel;
+            movedInDecel = targetDistAtT;
+
+            ApplyMovement(step);
             yield return null;
+        }
+
+        // 도착 후 소수점 이하의 미세한 오차까지 완벽하게 강제 스냅
+        float error = remainingDistance - movedInDecel;
+        if (Mathf.Abs(error) > 0.0001f)
+        {
+            ApplyMovement(error);
         }
 
         _currentSpeed = 0f;
         _speedCoroutine = null;
+    }
+
+    // 좌표 이동 및 텔레포트를 담당하는 통합 함수
+    private void ApplyMovement(float amount)
+    {
+        _totalMoved += amount;
+        transform.position += Vector3.left * amount;
+
+        // 경계선을 넘으면 오른쪽으로 텔레포트 (기존 오프셋을 완벽하게 유지하며 점프)
+        if (transform.position.x <= leftBound)
+        {
+            transform.position += new Vector3(loopJumpDistance, 0f, 0f);
+        }
     }
 }

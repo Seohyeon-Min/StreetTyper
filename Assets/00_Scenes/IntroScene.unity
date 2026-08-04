@@ -375,6 +375,18 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -255.1
       objectReference: {fileID: 0}
+    - target: {fileID: 3401648919478757586, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: m_fontSize
+      value: 18
+      objectReference: {fileID: 0}
+    - target: {fileID: 3401648919478757586, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 18
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134216062047745073, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: m_text
+      value: "ESC \uD0A4\uB97C \uAFB9 \uB20C\uB7EC\uC11C \uC2A4\uD0B5"
+      objectReference: {fileID: 0}
     - target: {fileID: 4134216062047745073, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: m_margin.y
       value: -13.912239
@@ -401,19 +413,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: slides.Array.data[0].text
-      value: "1\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4\t"
+      value: "1\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4 0\n1\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4
+        1\n1\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4 2\t"
       objectReference: {fileID: 0}
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: slides.Array.data[1].text
-      value: "2\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4"
+      value: "2\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4 0\n2\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4
+        1\n2\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4 2"
       objectReference: {fileID: 0}
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: slides.Array.data[2].text
-      value: "3\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4"
+      value: "3\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4 0\n3\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4
+        1\n3\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4 2"
       objectReference: {fileID: 0}
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: slides.Array.data[3].text
-      value: "4\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4"
+      value: "4\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4 0\n4\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4
+        1\n4\uBC88\uC9F8 \uC7A5\uC785\uB2C8\uB2E4 2"
       objectReference: {fileID: 0}
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: slides.Array.data[0].image

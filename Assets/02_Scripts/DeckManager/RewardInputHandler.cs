@@ -67,6 +67,11 @@ public class RewardInputHandler : CommandWordReceiver
     /// 띄우지 않으려고 본다.</summary>
     public bool IsSelecting => _active;
 
+    /// <summary>방금 라운드에서 실제로 카드를 골랐다면 그 카드가 화면 줄(RewardCardView가 그리는
+    /// 순서와 같다)의 몇 번째였는지. 넘겼거나 지웠다면(고른 카드가 없다면) -1. StageManager가
+    /// 퇴장 연출에서 "이 카드만 남기고 나머지를 떨어뜨리는" 대상을 정하는 데 쓴다.</summary>
+    public int LastPickedRowIndex { get; private set; } = -1;
+
     private readonly List<CardBase> _candidates = new List<CardBase>();
 
     // 화면에 놓이는 순서 그대로의 줄. 그리기(RewardCardView)와 매칭(Targets)이 같은 목록을 본다.
@@ -95,6 +100,10 @@ public class RewardInputHandler : CommandWordReceiver
     /// 배선과 남은 카드 수까지 함께 보고 정한다.</param>
     public void BeginSelection(IReadOnlyList<CardBase> candidates, bool allowErase)
     {
+        // 라운드마다 새로 정해진다 - 이전 라운드에서 골랐던 자리가 이번 라운드까지 남아
+        // 엉뚱한 카드가 퇴장 연출에서 남겨지지 않게 한다.
+        LastPickedRowIndex = -1;
+
         _candidates.Clear();
 
         if (candidates != null)
@@ -219,6 +228,8 @@ public class RewardInputHandler : CommandWordReceiver
         if (logDebugEvents)
             Debug.Log($"RewardInput: 보상 획득 - {picked.CardName}", this);
 
+        // 실제로 카드를 고른 경우에만 세운다 - 퇴장 연출에서 이 카드만 남기고 나머지를 떨어뜨린다.
+        LastPickedRowIndex = index;
         EndSelection();
     }
 

@@ -60,6 +60,16 @@ public class TextGateRevealAnimation : MonoBehaviour
         _routine = StartCoroutine(PlayRoutine());
     }
 
+    /// <summary>열릴 때와 정확히 반대 경로로 닫는다(같은 Apply(t)를 t=1→0으로 훑는다) -
+    /// |PAUSE| -> |AUS| -> |U| -> || 처럼 막대가 다시 모이며 텍스트를 가운데서부터 덮는다.</summary>
+    public void PlayReverse()
+    {
+        if (_routine != null)
+            StopCoroutine(_routine);
+
+        _routine = StartCoroutine(PlayReverseRoutine());
+    }
+
     private IEnumerator PlayRoutine()
     {
         SetBarAlpha(1f);
@@ -75,6 +85,20 @@ public class TextGateRevealAnimation : MonoBehaviour
         }
 
         Apply(1f);
+        _routine = null;
+    }
+
+    private IEnumerator PlayReverseRoutine()
+    {
+        var elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            Apply(1f - Mathf.Clamp01(elapsed / duration));
+            yield return null;
+        }
+
+        Apply(0f);
         _routine = null;
     }
 

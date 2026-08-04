@@ -60,10 +60,15 @@ public class StageManager : MonoBehaviour
     private Coroutine startRoutine;
     private Coroutine advanceRoutine;
 
-    /// <summary>보상이 끝나 다음 스테이지로 자동으로 넘어가는 중인가. `BattleManager`가
-    /// 결과 화면에 "다음" 안내를 띄울지 정하는 데 쓴다 - 칠 필요가 없는 단어를 안내하면
-    /// 플레이어만 헷갈린다.</summary>
-    public bool IsAdvancingAutomatically => advanceRoutine != null;
+    // FinishReward()가 불린 순간부터 다음 스테이지가 실제로 열리기(LoadStage)까지 true.
+    // advanceRoutine만 보면 퇴장 연출(RewardCardView.PlayExit)이 도는 동안(코루틴이 아직 안
+    // 걸린 구간)엔 false가 되어, 그 짧은 사이에 "다음" 안내가 잘못 깜빡인다.
+    private bool _advancingAfterReward;
+
+    /// <summary>보상이 끝나 다음 스테이지로 자동으로 넘어가는 중인가(퇴장 연출까지 포함).
+    /// `BattleManager`가 결과 화면에 "다음" 안내를 띄울지 정하는 데 쓴다 - 칠 필요가 없는
+    /// 단어를 안내하면 플레이어만 헷갈린다.</summary>
+    public bool IsAdvancingAutomatically => _advancingAfterReward;
 
     private void OnEnable()
     {
@@ -242,6 +247,9 @@ public class StageManager : MonoBehaviour
             advanceRoutine = null;
         }
 
+        // 새 스테이지를 로드하는 시점이므로 "보상 뒤 자동 진행 중" 상태는 끝난다.
+        _advancingAfterReward = false;
+
         if (stageStartText != null)
         {
             if (isBossBattle)
@@ -393,18 +401,45 @@ public class StageManager : MonoBehaviour
     //    한 프레임 미뤄 그 호출을 완전히 빠져나온 뒤에 넘긴다.
     private void FinishReward()
     {
-        if (rewardCardView != null)
-            rewardCardView.Clear();
+        // 퇴장 연출 도중(advanceRoutine이 아직 안 걸린 구간)에도 "자동 진행 중"으로 보이게 한다.
+        _advancingAfterReward = true;
 
+        // 자동 진행 대기가 이미 걸려 있었다면 새로 거는 쪽(퇴장 연출이 끝난 뒤)이 대신하므로 끊는다.
         if (advanceRoutine != null)
+        {
             StopCoroutine(advanceRoutine);
+            advanceRoutine = null;
+        }
 
-        advanceRoutine = StartCoroutine(AdvanceAfterReward());
+        if (rewardCardView != null)
+        {
+            // 고른 카드가 있으면(RewardInputHandler.LastPickedRowIndex) 그 카드만 잠시 남기고
+            // 나머지는 떨어뜨리며 닫는다. 넘겼거나(스킵) rewardInputHandler가 없으면 -1이라
+            // 전부 떨어진다. 다음 스테이지로의 진행은 이 연출이 끝난 뒤(BeginAdvanceAfterReward)로 미룬다.
+            var keepIndex = rewardInputHandler != null ? rewardInputHandler.LastPickedRowIndex : -1;
+            rewardCardView.PlayExit(keepIndex, BeginAdvanceAfterReward);
+        }
+        else
+        {
+            BeginAdvanceAfterReward();
+        }
 
         // 자동 진행이 걸린 상태로 결과 화면을 다시 그린다 - 그래야 "다음" 안내가 뜨지 않는다.
         // (보상 후보가 아예 없어 선택 창을 건너뛴 경우, 이게 없으면 안내가 잠깐 깜빡인다.)
         if (battleManager != null)
             battleManager.RefreshResult();
+    }
+
+    // 퇴장 연출(또는 rewardCardView가 없어 연출 없이 곧바로)이 끝난 뒤에 부른다.
+    // ⚠️ NextStage()를 여기서 바로 부르지 않고 한 번 더 코루틴으로 감싼다 - AdvanceAfterReward의
+    //    대기(rewardAdvanceDelay)가 "방금 얻은 카드와 VICTORY를 볼 짧은 여유"라는 원래 의도를
+    //    유지하기 위해서다(퇴장 연출 직후 바로 다음 스테이지로 넘어가면 그 여유가 없어진다).
+    private void BeginAdvanceAfterReward()
+    {
+        if (advanceRoutine != null)
+            StopCoroutine(advanceRoutine);
+
+        advanceRoutine = StartCoroutine(AdvanceAfterReward());
     }
 
     private IEnumerator AdvanceAfterReward()

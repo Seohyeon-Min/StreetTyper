@@ -29,7 +29,15 @@ public class CombatManager : MonoBehaviour
         }
 
         if (action.Defense > 0)
+        {
             player.AddDefense(action.Defense);
+
+            PlayerBattleVisuals visuals = player.GetComponent<PlayerBattleVisuals>();
+            if (visuals != null)
+            {
+                visuals.PlayGuardAnimation();
+            }
+        }
 
         if (action.Heal > 0)
             player.Heal(action.Heal);

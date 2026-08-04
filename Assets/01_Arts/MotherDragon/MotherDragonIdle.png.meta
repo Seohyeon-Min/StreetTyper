@@ -1,79 +1,79 @@
 fileFormatVersion: 2
-guid: 157f7444dcfc8f344bccd7dcb0e8ad05
+guid: 6721e749ba8321c4096edbbe098b0678
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2731840977594561250
-    second: MamiIdlelow_0
+      213: 569508346018715118
+    second: MotherDragonIdle_0
   - first:
-      213: -9047895951793730185
-    second: MamiIdlelow_1
+      213: -7055452155290067323
+    second: MotherDragonIdle_1
   - first:
-      213: -8148290418010778679
-    second: MamiIdlelow_2
+      213: 2561554212541135538
+    second: MotherDragonIdle_2
   - first:
-      213: -1359424680414076205
-    second: MamiIdlelow_3
+      213: -3734718655422814015
+    second: MotherDragonIdle_3
   - first:
-      213: 8162094544785785438
-    second: MamiIdlelow_4
+      213: -3536607052274006264
+    second: MotherDragonIdle_4
   - first:
-      213: -4945061473928667781
-    second: MamiIdlelow_5
+      213: 8357717265363824715
+    second: MotherDragonIdle_5
   - first:
-      213: 3431149067032866905
-    second: MamiIdlelow_6
+      213: -3906262917351105045
+    second: MotherDragonIdle_6
   - first:
-      213: 3202345893406686192
-    second: MamiIdlelow_7
+      213: 8908869173716846680
+    second: MotherDragonIdle_7
   - first:
-      213: 4152210148519183753
-    second: MamiIdlelow_8
+      213: 5300008772000024147
+    second: MotherDragonIdle_8
   - first:
-      213: 2417217147490635644
-    second: MamiIdlelow_9
+      213: -2789452585666175653
+    second: MotherDragonIdle_9
   - first:
-      213: 7422209930337708861
-    second: MamiIdlelow_10
+      213: -630022815760569596
+    second: MotherDragonIdle_10
   - first:
-      213: 3512494166394270571
-    second: MamiIdlelow_11
+      213: -6484392621839624359
+    second: MotherDragonIdle_11
   - first:
-      213: 1089206143216051985
-    second: MamiIdlelow_12
+      213: -554213340053795662
+    second: MotherDragonIdle_12
   - first:
-      213: -8822514419677738252
-    second: MamiIdlelow_13
+      213: 1241354879523376898
+    second: MotherDragonIdle_13
   - first:
-      213: -4405383690295776326
-    second: MamiIdlelow_14
+      213: -5961052480863692285
+    second: MotherDragonIdle_14
   - first:
-      213: -8577714947749532757
-    second: MamiIdlelow_15
+      213: 5522643150307881537
+    second: MotherDragonIdle_15
   - first:
-      213: -4124799991639132070
-    second: MamiIdlelow_16
+      213: 547571864839413450
+    second: MotherDragonIdle_16
   - first:
-      213: -6862106556387918589
-    second: MamiIdlelow_17
+      213: -8139083628955816135
+    second: MotherDragonIdle_17
   - first:
-      213: -3797173793381090964
-    second: MamiIdlelow_18
+      213: -7672811013097548758
+    second: MotherDragonIdle_18
   - first:
-      213: 3000221763974185226
-    second: MamiIdlelow_19
+      213: -4282668773198911658
+    second: MotherDragonIdle_19
   - first:
-      213: -8792838644035518837
-    second: MamiIdlelow_20
+      213: -2549639641509674448
+    second: MotherDragonIdle_20
   - first:
-      213: -4117269319611171635
-    second: MamiIdlelow_21
+      213: -1580325102730121387
+    second: MotherDragonIdle_21
   - first:
-      213: -2584080993401314361
-    second: MamiIdlelow_22
+      213: 5544941197428817113
+    second: MotherDragonIdle_22
   - first:
-      213: 2784010129887336737
-    second: MamiIdlelow_23
+      213: -4311093223675715116
+    second: MotherDragonIdle_23
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -169,7 +169,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: MamiIdlelow_0
+      name: MotherDragonIdle_0
       rect:
         serializedVersion: 2
         x: 0
@@ -184,14 +184,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2e2316c25e279e520800000000000000
-      internalID: 2731840977594561250
+      spriteID: ee5d015c2dc47e700800000000000000
+      internalID: 569508346018715118
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_1
+      name: MotherDragonIdle_1
       rect:
         serializedVersion: 2
         x: 1507
@@ -206,14 +206,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 77dc3a4d19a6f6280800000000000000
-      internalID: -9047895951793730185
+      spriteID: 58edb2a65aff51e90800000000000000
+      internalID: -7055452155290067323
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_2
+      name: MotherDragonIdle_2
       rect:
         serializedVersion: 2
         x: 3014
@@ -228,14 +228,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 9c39fbb49057bee80800000000000000
-      internalID: -8148290418010778679
+      spriteID: 2ba7b6f0cf77c8320800000000000000
+      internalID: 2561554212541135538
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_3
+      name: MotherDragonIdle_3
       rect:
         serializedVersion: 2
         x: 4521
@@ -250,14 +250,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3d22509a47a522de0800000000000000
-      internalID: -1359424680414076205
+      spriteID: 1c8af779b2d9b2cc0800000000000000
+      internalID: -3734718655422814015
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_4
+      name: MotherDragonIdle_4
       rect:
         serializedVersion: 2
         x: 6028
@@ -272,14 +272,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: e524c1d6eb5954170800000000000000
-      internalID: 8162094544785785438
+      spriteID: 807011baf927beec0800000000000000
+      internalID: -3536607052274006264
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_5
+      name: MotherDragonIdle_5
       rect:
         serializedVersion: 2
         x: 7535
@@ -294,14 +294,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b7d130e1acc9f5bb0800000000000000
-      internalID: -4945061473928667781
+      spriteID: b40f82f52939cf370800000000000000
+      internalID: 8357717265363824715
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_6
+      name: MotherDragonIdle_6
       rect:
         serializedVersion: 2
         x: 0
@@ -316,14 +316,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 95038efb5e3ed9f20800000000000000
-      internalID: 3431149067032866905
+      spriteID: bed910ca29a2ac9c0800000000000000
+      internalID: -3906262917351105045
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_7
+      name: MotherDragonIdle_7
       rect:
         serializedVersion: 2
         x: 1507
@@ -338,14 +338,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0fbbf609f94017c20800000000000000
-      internalID: 3202345893406686192
+      spriteID: 85802d1ff49a2ab70800000000000000
+      internalID: 8908869173716846680
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_8
+      name: MotherDragonIdle_8
       rect:
         serializedVersion: 2
         x: 3014
@@ -360,14 +360,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 9850247712d9f9930800000000000000
-      internalID: 4152210148519183753
+      spriteID: 3560481c5e96d8940800000000000000
+      internalID: 5300008772000024147
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_9
+      name: MotherDragonIdle_9
       rect:
         serializedVersion: 2
         x: 4521
@@ -382,14 +382,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: c7f892d403eab8120800000000000000
-      internalID: 2417217147490635644
+      spriteID: b5d929907afd949d0800000000000000
+      internalID: -2789452585666175653
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_10
+      name: MotherDragonIdle_10
       rect:
         serializedVersion: 2
         x: 6028
@@ -404,14 +404,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d3be72a6b9cf00760800000000000000
-      internalID: 7422209930337708861
+      spriteID: 40b233a4695b147f0800000000000000
+      internalID: -630022815760569596
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_11
+      name: MotherDragonIdle_11
       rect:
         serializedVersion: 2
         x: 7535
@@ -426,14 +426,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b63ff8795d2eeb030800000000000000
-      internalID: 3512494166394270571
+      spriteID: 957d517244fc206a0800000000000000
+      internalID: -6484392621839624359
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_12
+      name: MotherDragonIdle_12
       rect:
         serializedVersion: 2
         x: 0
@@ -448,14 +448,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 117e0956733ad1f00800000000000000
-      internalID: 1089206143216051985
+      spriteID: 2bc8f4057e90f48f0800000000000000
+      internalID: -554213340053795662
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_13
+      name: MotherDragonIdle_13
       rect:
         serializedVersion: 2
         x: 1507
@@ -470,14 +470,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 4fac85501e1209580800000000000000
-      internalID: -8822514419677738252
+      spriteID: 20f403a9fad2a3110800000000000000
+      internalID: 1241354879523376898
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_14
+      name: MotherDragonIdle_14
       rect:
         serializedVersion: 2
         x: 3014
@@ -492,14 +492,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: abbee98dfdeecd2c0800000000000000
-      internalID: -4405383690295776326
+      spriteID: 30a98a60a56164da0800000000000000
+      internalID: -5961052480863692285
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_15
+      name: MotherDragonIdle_15
       rect:
         serializedVersion: 2
         x: 4521
@@ -514,14 +514,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: baba4d2a3b5d5f880800000000000000
-      internalID: -8577714947749532757
+      spriteID: 142785b5fae54ac40800000000000000
+      internalID: 5522643150307881537
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_16
+      name: MotherDragonIdle_16
       rect:
         serializedVersion: 2
         x: 6028
@@ -536,14 +536,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a58b0d00344c1c6c0800000000000000
-      internalID: -4124799991639132070
+      spriteID: ace50ccb5bd599700800000000000000
+      internalID: 547571864839413450
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_17
+      name: MotherDragonIdle_17
       rect:
         serializedVersion: 2
         x: 7535
@@ -558,14 +558,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 30d7e97a176e4c0a0800000000000000
-      internalID: -6862106556387918589
+      spriteID: 93f24eaef8a2c0f80800000000000000
+      internalID: -8139083628955816135
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_18
+      name: MotherDragonIdle_18
       rect:
         serializedVersion: 2
         x: 0
@@ -580,14 +580,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: c69f81f9d8abd4bc0800000000000000
-      internalID: -3797173793381090964
+      spriteID: a249d9f2903b48590800000000000000
+      internalID: -7672811013097548758
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_19
+      name: MotherDragonIdle_19
       rect:
         serializedVersion: 2
         x: 1507
@@ -602,14 +602,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a01c3196ccde2a920800000000000000
-      internalID: 3000221763974185226
+      spriteID: 65722daf077e094c0800000000000000
+      internalID: -4282668773198911658
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_20
+      name: MotherDragonIdle_20
       rect:
         serializedVersion: 2
         x: 3014
@@ -624,14 +624,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b8e7fe6f6df89f580800000000000000
-      internalID: -8792838644035518837
+      spriteID: 032cf8e214cdd9cd0800000000000000
+      internalID: -2549639641509674448
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_21
+      name: MotherDragonIdle_21
       rect:
         serializedVersion: 2
         x: 4521
@@ -646,14 +646,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: dcc36f73e558cd6c0800000000000000
-      internalID: -4117269319611171635
+      spriteID: 55f632621be811ae0800000000000000
+      internalID: -1580325102730121387
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_22
+      name: MotherDragonIdle_22
       rect:
         serializedVersion: 2
         x: 6028
@@ -668,14 +668,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7c3e97d0700832cd0800000000000000
-      internalID: -2584080993401314361
+      spriteID: 9dc7c2504a693fc40800000000000000
+      internalID: 5544941197428817113
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MamiIdlelow_23
+      name: MotherDragonIdle_23
       rect:
         serializedVersion: 2
         x: 7535
@@ -690,8 +690,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 129160b767ac2a620800000000000000
-      internalID: 2784010129887336737
+      spriteID: 4d12731ed8beb24c0800000000000000
+      internalID: -4311093223675715116
       vertices: []
       indices: 
       edges: []
@@ -700,7 +700,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 60f2c73dd8f392c42a46eaf50bc872fe
+    spriteID: 993e6d78923414e41a9a01e54413bd71
     internalID: 0
     vertices: []
     indices: 
@@ -712,30 +712,30 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":6.0,"y":4.0},"gridSpriteSize":{"x":1507.0,"y":830.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":7,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      MamiIdlelow_0: 2731840977594561250
-      MamiIdlelow_1: -9047895951793730185
-      MamiIdlelow_10: 7422209930337708861
-      MamiIdlelow_11: 3512494166394270571
-      MamiIdlelow_12: 1089206143216051985
-      MamiIdlelow_13: -8822514419677738252
-      MamiIdlelow_14: -4405383690295776326
-      MamiIdlelow_15: -8577714947749532757
-      MamiIdlelow_16: -4124799991639132070
-      MamiIdlelow_17: -6862106556387918589
-      MamiIdlelow_18: -3797173793381090964
-      MamiIdlelow_19: 3000221763974185226
-      MamiIdlelow_2: -8148290418010778679
-      MamiIdlelow_20: -8792838644035518837
-      MamiIdlelow_21: -4117269319611171635
-      MamiIdlelow_22: -2584080993401314361
-      MamiIdlelow_23: 2784010129887336737
-      MamiIdlelow_3: -1359424680414076205
-      MamiIdlelow_4: 8162094544785785438
-      MamiIdlelow_5: -4945061473928667781
-      MamiIdlelow_6: 3431149067032866905
-      MamiIdlelow_7: 3202345893406686192
-      MamiIdlelow_8: 4152210148519183753
-      MamiIdlelow_9: 2417217147490635644
+      MotherDragonIdle_0: 569508346018715118
+      MotherDragonIdle_1: -7055452155290067323
+      MotherDragonIdle_10: -630022815760569596
+      MotherDragonIdle_11: -6484392621839624359
+      MotherDragonIdle_12: -554213340053795662
+      MotherDragonIdle_13: 1241354879523376898
+      MotherDragonIdle_14: -5961052480863692285
+      MotherDragonIdle_15: 5522643150307881537
+      MotherDragonIdle_16: 547571864839413450
+      MotherDragonIdle_17: -8139083628955816135
+      MotherDragonIdle_18: -7672811013097548758
+      MotherDragonIdle_19: -4282668773198911658
+      MotherDragonIdle_2: 2561554212541135538
+      MotherDragonIdle_20: -2549639641509674448
+      MotherDragonIdle_21: -1580325102730121387
+      MotherDragonIdle_22: 5544941197428817113
+      MotherDragonIdle_23: -4311093223675715116
+      MotherDragonIdle_3: -3734718655422814015
+      MotherDragonIdle_4: -3536607052274006264
+      MotherDragonIdle_5: 8357717265363824715
+      MotherDragonIdle_6: -3906262917351105045
+      MotherDragonIdle_7: 8908869173716846680
+      MotherDragonIdle_8: 5300008772000024147
+      MotherDragonIdle_9: -2789452585666175653
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

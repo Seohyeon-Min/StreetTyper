@@ -10,8 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 5668495308382887881}
   - component: {fileID: 5655733950824333936}
-  - component: {fileID: 3112181798886881397}
   - component: {fileID: 5569702550753916972}
+  - component: {fileID: -6801878886124321097}
   m_Layer: 0
   m_Name: MotherDragon
   m_TagString: Untagged
@@ -83,37 +83,16 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 2731840977594561250, guid: 157f7444dcfc8f344bccd7dcb0e8ad05, type: 3}
+  m_Sprite: {fileID: 569508346018715118, guid: 6721e749ba8321c4096edbbe098b0678, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 15.070001, y: 8.303027}
+  m_Size: {x: 13.86, y: 8.28302}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!114 &3112181798886881397
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8981707868698957726}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3adc206b66b361b48985d5cd5b3df2a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyBase
-  maxHP: 9999
-  currentHP: 9999
-  power: 10
-  defense: 9999
-  damageTakenMultiplier: 1
-  enemyData: {fileID: 11400000, guid: f6b198d5953ad4142b7711a89ab1783e, type: 2}
-  isMotherDragon: 1
-  animator: {fileID: 0}
-  bubbleAnchor: {fileID: 0}
 --- !u!95 &5569702550753916972
 Animator:
   serializedVersion: 7
@@ -136,3 +115,98 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &-6801878886124321097
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8981707868698957726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c377a2a9bb70ef1468f1d0e713814ca4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MotherDragon
+  maxHP: 100
+  currentHP: 100
+  power: 10
+  defense: 0
+  damageTakenMultiplier: 1
+  enemyData: {fileID: 11400000, guid: f6b198d5953ad4142b7711a89ab1783e, type: 2}
+  animator: {fileID: 0}
+  bubbleAnchor: {fileID: 0}
+  spriteRenderer: {fileID: 0}
+  dashOffset: 1.5
+  moveDuration: 0.2
+  moveToPlayerCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  moveToOriginCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  slideInCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4

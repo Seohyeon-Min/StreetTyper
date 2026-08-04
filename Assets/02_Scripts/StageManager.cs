@@ -58,6 +58,12 @@ public class StageManager : MonoBehaviour
 
     public TMPro.TextMeshProUGUI currentStageText;
 
+    [Tooltip("currentStageText에 쓸 포맷 문자열. {0} 자리에 표시 스테이지 번호(displayStage)가 들어간다.")]
+    [SerializeField] private string stageLabelFormat = "STAGE {0}";
+
+    [Tooltip("보스전(마더 드래곤)일 때 currentStageText에 쓸 문구. 번호가 없어 포맷이 필요 없다.")]
+    [SerializeField] private string bossStageLabel = "MOMMY";
+
     private int currentBattleIndex = 0;
 
     // 지금 스테이지에 스폰된 적이 마더 드래곤인가. 보상에 "지우기" 카드를 놓을지 판단하는 데 쓴다.
@@ -145,10 +151,7 @@ public class StageManager : MonoBehaviour
 
         if (currentStageText != null)
         {
-            if (isBossBattle)
-                currentStageText.text = "MOMMY";
-            else
-                currentStageText.text = $"STAGE {displayStage}";
+            currentStageText.text = isBossBattle ? bossStageLabel : string.Format(stageLabelFormat, displayStage);
         }
 
         if (currentEnemyObject != null)

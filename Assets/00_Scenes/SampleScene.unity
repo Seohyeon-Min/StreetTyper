@@ -7368,7 +7368,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2110187022865713068, guid: dee19731e7faf4142a7991b032171633, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 200
+      value: 128.8
       objectReference: {fileID: 0}
     - target: {fileID: 2110187022865713068, guid: dee19731e7faf4142a7991b032171633, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -7384,6 +7384,22 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2110187022865713068, guid: dee19731e7faf4142a7991b032171633, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3661981993488738665, guid: dee19731e7faf4142a7991b032171633, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: d5e68595a573ad34c9e705e48f7e4c46, type: 2}
+    - target: {fileID: 3661981993488738665, guid: dee19731e7faf4142a7991b032171633, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: 7085447205275614874, guid: d5e68595a573ad34c9e705e48f7e4c46, type: 2}
+    - target: {fileID: 3661981993488738665, guid: dee19731e7faf4142a7991b032171633, type: 3}
+      propertyPath: m_HorizontalAlignment
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3661981993488738665, guid: dee19731e7faf4142a7991b032171633, type: 3}
+      propertyPath: m_hasFontAssetChanged
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3848857292163211492, guid: dee19731e7faf4142a7991b032171633, type: 3}

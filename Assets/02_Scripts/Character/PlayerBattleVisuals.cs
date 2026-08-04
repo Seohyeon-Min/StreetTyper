@@ -110,4 +110,12 @@ public class PlayerBattleVisuals : MonoBehaviour
             animator.speed = 1.0f;
         }
     }
+
+    public void PlayGuardAnimation()
+    {
+        if (animator == null) return;
+
+        animator.SetTrigger("Guard");
+    }
+
 }

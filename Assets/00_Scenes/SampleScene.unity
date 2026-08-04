@@ -6353,6 +6353,10 @@ PrefabInstance:
       value: event:/MommyDragon
       objectReference: {fileID: 0}
     - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+      propertyPath: introBGM.Path
+      value: event:/Intro
+      objectReference: {fileID: 0}
+    - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
       propertyPath: bossBGM.Guid.Data1
       value: 37277291
       objectReference: {fileID: 0}
@@ -6367,6 +6371,22 @@ PrefabInstance:
     - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
       propertyPath: bossBGM.Guid.Data4
       value: -938468500
+      objectReference: {fileID: 0}
+    - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+      propertyPath: introBGM.Guid.Data1
+      value: 1258648635
+      objectReference: {fileID: 0}
+    - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+      propertyPath: introBGM.Guid.Data2
+      value: 1175181953
+      objectReference: {fileID: 0}
+    - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+      propertyPath: introBGM.Guid.Data3
+      value: 956958341
+      objectReference: {fileID: 0}
+    - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
+      propertyPath: introBGM.Guid.Data4
+      value: 1715764157
       objectReference: {fileID: 0}
     - target: {fileID: 7643864326645245994, guid: 7b851811e7c4069478c43d8fe13bdcee, type: 3}
       propertyPath: battleBGM.Guid.Data1

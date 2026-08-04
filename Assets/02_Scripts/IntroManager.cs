@@ -37,6 +37,12 @@ public class IntroManager : MonoBehaviour
     void Start()
     {
         if (skipGaugeFill != null) skipGaugeFill.fillAmount = 0f;
+
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayIntroBGM();
+        }
+
         StartCoroutine(PlayStoryRoutine());
     }
 

@@ -560,7 +560,7 @@ public class StageManager : MonoBehaviour
         {
             foreach (var scroller in backgroundScrollers)
             {
-                if (scroller != null) scroller.StartScroll();
+                if (scroller != null) scroller.StartScroll(transitionDuration, enemySlideInDuration);
             }
         }
 

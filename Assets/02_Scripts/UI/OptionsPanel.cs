@@ -49,6 +49,11 @@ public class OptionsPanel : MonoBehaviour
              "OnEnable에서 자동 재생되지 않는 컴포넌트라 여기서 직접 Play()를 불러야 한다.")]
     [SerializeField] private TextGateRevealAnimation[] titleReveals;
 
+    [Tooltip("옵션 창 전체에 거는 확대/축소+페이드 연출(선택, StageStartEffect 재사용). OnEnable에서 " +
+             "자기가 알아서 재생하므로 여기서 따로 부르지 않는다 - Close()에서 titleReveals와 함께 " +
+             "\"둘 다 끝난 뒤에만\" 패널을 끄는 데만 쓴다.")]
+    [SerializeField] private StageStartEffect openCloseEffect;
+
     private void OnEnable()
     {
         if (titleReveals != null)
@@ -186,10 +191,13 @@ public class OptionsPanel : MonoBehaviour
         UpdateValueText(sfxValueText, value);
     }
 
-    // 열릴 때(OnEnable)와 반대로 titleReveals가 전부 닫히는 연출을 마친 뒤에야 패널을 끈다 -
-    // 곧바로 SetActive(false)하면 재생 중이던 리빌 코루틴이 그 자리에서 끊겨 마스크가
-    // 열린 채로 멈춘 잔상이 남는다. 마스크마다 duration이 다를 수 있어 "가장 늦게 끝나는 것"을
-    // 기준으로 잡아야 해서, 개수를 세어뒀다가 마지막 콜백에서만 실제로 끈다.
+    // 열릴 때(OnEnable)와 반대로 titleReveals + openCloseEffect가 전부 닫히는 연출을 마친
+    // 뒤에야 패널을 끈다 - 곧바로 SetActive(false)하면 재생 중이던 코루틴이 그 자리에서
+    // 끊겨(같은 오브젝트라 전부 같이 죽는다) 마스크나 확대/축소가 멈춘 잔상으로 남는다.
+    // 연출마다 duration이 다를 수 있어 "가장 늦게 끝나는 것"을 기준으로 잡아야 해서, 개수를
+    // 세어뒀다가 마지막 콜백에서만 실제로 끈다. openCloseEffect.PlayExit엔 반드시
+    // deactivateOnComplete: false를 넘긴다 - 그게 없으면 이 연출이 titleReveals보다 먼저
+    // 끝났을 때 자기가 먼저 SetActive(false)를 불러 아직 도는 리빌 코루틴을 끊어버린다.
     public void Close()
     {
         var pending = 0;
@@ -202,23 +210,32 @@ public class OptionsPanel : MonoBehaviour
             }
         }
 
+        if (openCloseEffect != null)
+            pending++;
+
         if (pending == 0)
         {
             gameObject.SetActive(false);
             return;
         }
 
-        foreach (var reveal in titleReveals)
+        void HandleOneFinished()
         {
-            if (reveal == null)
-                continue;
-
-            reveal.PlayReverse(() =>
-            {
-                pending--;
-                if (pending <= 0)
-                    gameObject.SetActive(false);
-            });
+            pending--;
+            if (pending <= 0)
+                gameObject.SetActive(false);
         }
+
+        if (titleReveals != null)
+        {
+            foreach (var reveal in titleReveals)
+            {
+                if (reveal != null)
+                    reveal.PlayReverse(HandleOneFinished);
+            }
+        }
+
+        if (openCloseEffect != null)
+            openCloseEffect.PlayExit(HandleOneFinished, deactivateOnComplete: false);
     }
 }

@@ -152,7 +152,7 @@ public class StageManager : MonoBehaviour
         if (currentStageText != null)
         {
             if (isBossBattle)
-                currentStageText.text = "MOMMY";
+                currentStageText.text = "MOTHER";
             else
                 currentStageText.text = $"STAGE {displayStage}";
         }
@@ -189,7 +189,7 @@ public class StageManager : MonoBehaviour
         EnemyBase newEnemyBase = currentEnemyObject.GetComponent<EnemyBase>();
 
         // [유지] 이 줄은 절대 지우지 마세요! 보상(지우기 카드) 처리에 꼭 필요합니다.
-        stageWasMotherDragon = newEnemyBase != null && newEnemyBase.isMotherDragon;
+        stageWasMotherDragon = newEnemyBase is MotherDragon;
 
         // [추가] 생성 직후 스탯 스케일링 적용
         newEnemyBase.ApplyScaling(displayStage - 1);
@@ -285,7 +285,7 @@ public class StageManager : MonoBehaviour
         if (stageStartText != null)
         {
             if (isBossBattle)
-                stageStartText.text = "MOMMY DRAGON";
+                stageStartText.text = "MOTHER DRAGON";
             else
                 stageStartText.text = $"STAGE {displayStage}\nSTART!";
 

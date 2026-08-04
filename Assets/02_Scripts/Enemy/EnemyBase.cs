@@ -5,7 +5,6 @@ public class EnemyBase : CharacterStats
 {
     [Header("Enemy Data Reference")]
     public EnemyData enemyData;
-    public bool isMotherDragon = false;
     private bool isScaled = false;
 
     [Header("Visuals")]

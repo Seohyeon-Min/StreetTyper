@@ -230,7 +230,7 @@ public class BattleManager : MonoBehaviour
 
         if (player != null && enemyManager != null && enemyManager.currentEnemy != null)
         {
-            if (enemyManager.currentEnemy.isMotherDragon)
+            if (enemyManager.currentEnemy is MotherDragon)
             {
                 mdTurnCount++;
                 if (mdTurnCount == 1) mdIntentString = MotherDragonLine(1);
@@ -332,7 +332,7 @@ public class BattleManager : MonoBehaviour
 
                 // 마더 드래곤은 대사(텍스트)를 그대로 쓰고, 일반 적은 아이콘 + ActionType별 색이
                 // 입혀진 텍스트를 같이 보여준다.
-                if (enemy.isMotherDragon)
+                if (enemy is MotherDragon)
                     enemyIntentBubble.Setup(mdIntentString);
                 else
                     enemyIntentBubble.SetupIntent(enemyManager.GetIntentIcon(), enemyManager.GetIntentString(), enemyManager.GetIntentColor());
@@ -369,7 +369,7 @@ public class BattleManager : MonoBehaviour
             {
                 isEventTriggered = true;
 
-                bool isMD = enemyManager.currentEnemy.isMotherDragon;
+                bool isMD = enemyManager.currentEnemy is MotherDragon;
                 int healAmount = 0;
 
                 if (isMD)

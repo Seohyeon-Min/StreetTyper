@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -66,13 +67,15 @@ public class TextGateRevealAnimation : MonoBehaviour
     }
 
     /// <summary>열릴 때와 정확히 반대 경로로 닫는다(같은 Apply(t)를 t=1→0으로 훑는다) -
-    /// |PAUSE| -> |AUS| -> |U| -> || 처럼 막대가 다시 모이며 텍스트를 가운데서부터 덮는다.</summary>
-    public void PlayReverse()
+    /// |PAUSE| -> |AUS| -> |U| -> || 처럼 막대가 다시 모이며 텍스트를 가운데서부터 덮는다.
+    /// onComplete는 다 닫히고 페이드아웃까지 끝난 뒤 불린다(비워도 된다) - 닫힘 연출이 끝나야
+    /// 패널을 꺼도 되는 호출부(OptionsPanel.Close 등)가 이걸로 타이밍을 맞춘다.</summary>
+    public void PlayReverse(Action onComplete = null)
     {
         if (_routine != null)
             StopCoroutine(_routine);
 
-        _routine = StartCoroutine(PlayReverseRoutine());
+        _routine = StartCoroutine(PlayReverseRoutine(onComplete));
     }
 
     private IEnumerator PlayRoutine()
@@ -93,7 +96,7 @@ public class TextGateRevealAnimation : MonoBehaviour
         _routine = null;
     }
 
-    private IEnumerator PlayReverseRoutine()
+    private IEnumerator PlayReverseRoutine(Action onComplete)
     {
         var elapsed = 0f;
         while (elapsed < duration)
@@ -122,6 +125,7 @@ public class TextGateRevealAnimation : MonoBehaviour
 
         SetBarAlpha(0f);
         _routine = null;
+        onComplete?.Invoke();
     }
 
     private void Apply(float t)

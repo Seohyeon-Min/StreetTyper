@@ -43,8 +43,18 @@ public class OptionsPanel : MonoBehaviour
     [SerializeField] private string closeKorean = "닫기";
     [SerializeField] private string closeEnglish = "CLOSE";
 
+    [Header("열림 연출")]
+    [Tooltip("옵션 창이 열릴 때(OnEnable) 재생할 마스크 리빌 연출. PauseManager.titleReveal과 같은 패턴 - " +
+             "OnEnable에서 자동 재생되지 않는 컴포넌트라 여기서 직접 Play()를 불러야 한다.")]
+    [SerializeField] private TextGateRevealAnimation titleReveal;
+
     private void OnEnable()
     {
+        if (titleReveal != null)
+            titleReveal.Play();
+        else
+            Debug.LogWarning("OptionsPanel: titleReveal이 연결되지 않아 옵션 창 열림 연출이 재생되지 않습니다.", this);
+
         var sound = SoundManager.Instance;
         if (sound == null)
         {
@@ -171,8 +181,14 @@ public class OptionsPanel : MonoBehaviour
         UpdateValueText(sfxValueText, value);
     }
 
+    // 열릴 때(OnEnable)와 반대로 titleReveal이 닫히는 연출을 다 마친 뒤에야 패널을 끈다 -
+    // 곧바로 SetActive(false)하면 재생 중이던 리빌 코루틴이 그 자리에서 끊겨 마스크가
+    // 열린 채로 멈춘 잔상이 남는다.
     public void Close()
     {
-        gameObject.SetActive(false);
+        if (titleReveal != null)
+            titleReveal.PlayReverse(() => gameObject.SetActive(false));
+        else
+            gameObject.SetActive(false);
     }
 }

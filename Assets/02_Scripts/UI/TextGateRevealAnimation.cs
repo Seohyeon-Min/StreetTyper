@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -39,6 +40,11 @@ public class TextGateRevealAnimation : MonoBehaviour
     [Tooltip("진행도(0~1)에 따른 벌어짐 비율. 기본은 EaseInOut.")]
     [SerializeField] private AnimationCurve curve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+    [Tooltip("PlayReverse(닫기)가 다 닫힌(막대가 가운데서 맞닿은) 뒤, 막대까지 마저 " +
+             "페이드아웃하는 데 걸리는 시간(초). 열릴 때의 경로를 그대로 거꾸로 훑기만 하면 " +
+             "다 닫힌 자리에 막대(||)가 불투명하게 남는데, 이 시간 동안 그것마저 지운다.")]
+    [SerializeField] private float closeFadeOutDuration = 0.15f;
+
     private RectTransform _leftBarRect;
     private RectTransform _rightBarRect;
     private Coroutine _routine;
@@ -61,13 +67,15 @@ public class TextGateRevealAnimation : MonoBehaviour
     }
 
     /// <summary>열릴 때와 정확히 반대 경로로 닫는다(같은 Apply(t)를 t=1→0으로 훑는다) -
-    /// |PAUSE| -> |AUS| -> |U| -> || 처럼 막대가 다시 모이며 텍스트를 가운데서부터 덮는다.</summary>
-    public void PlayReverse()
+    /// |PAUSE| -> |AUS| -> |U| -> || 처럼 막대가 다시 모이며 텍스트를 가운데서부터 덮는다.
+    /// onComplete는 다 닫히고 페이드아웃까지 끝난 뒤 불린다(비워도 된다) - 닫힘 연출이 끝나야
+    /// 패널을 꺼도 되는 호출부(OptionsPanel.Close 등)가 이걸로 타이밍을 맞춘다.</summary>
+    public void PlayReverse(Action onComplete = null)
     {
         if (_routine != null)
             StopCoroutine(_routine);
 
-        _routine = StartCoroutine(PlayReverseRoutine());
+        _routine = StartCoroutine(PlayReverseRoutine(onComplete));
     }
 
     private IEnumerator PlayRoutine()
@@ -88,7 +96,7 @@ public class TextGateRevealAnimation : MonoBehaviour
         _routine = null;
     }
 
-    private IEnumerator PlayReverseRoutine()
+    private IEnumerator PlayReverseRoutine(Action onComplete)
     {
         var elapsed = 0f;
         while (elapsed < duration)
@@ -99,7 +107,25 @@ public class TextGateRevealAnimation : MonoBehaviour
         }
 
         Apply(0f);
+
+        // Apply(0f)은 "다 닫힌" 상태라 막대가 가운데서 맞닿은 채 불투명하다(Apply(t)가
+        // 알파를 overshootT로만 계산하고, t=0 부근은 overshootT=0이라 항상 1이기 때문) -
+        // 열 때는 그 상태에서 시작해 밖으로 벌어지므로 자연스럽지만, 닫을 때는 그 자리에
+        // 막대가 남아 있으면 안 지워진 자국처럼 보인다. 여기서 마저 페이드아웃한다.
+        if (closeFadeOutDuration > 0f)
+        {
+            var fadeElapsed = 0f;
+            while (fadeElapsed < closeFadeOutDuration)
+            {
+                fadeElapsed += Time.unscaledDeltaTime;
+                SetBarAlpha(1f - Mathf.Clamp01(fadeElapsed / closeFadeOutDuration));
+                yield return null;
+            }
+        }
+
+        SetBarAlpha(0f);
         _routine = null;
+        onComplete?.Invoke();
     }
 
     private void Apply(float t)

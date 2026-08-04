@@ -123,6 +123,13 @@ public class EnemyManager : MonoBehaviour
                 if (StatisticsManager.Instance != null)
                     StatisticsManager.Instance.AddDamageTaken(currentEnemy.power);
 
+                // 인텐트 숫자(공격 전 예고)와는 별개다 - 이건 실제로 때린 뒤 뜨는 피해 숫자로,
+                // 플레이어가 적을 때릴 때(DeckManager.PlayPendingActions)와 같은 방식이다.
+                if (FloatingDamageManager.Instance != null)
+                {
+                    FloatingDamageManager.Instance.ShowDamage(currentEnemy.power, player.transform.position);
+                }
+
                 if (HitEffectManager.Instance != null)
                 {
                     HitEffectManager.Instance.PlayHitEffect(player.GetComponent<SpriteRenderer>());

@@ -226,13 +226,11 @@ public class BattleManager : MonoBehaviour
             }
             else
             {
+                // 공격 자체는 FloatingDamageManager가 피해 숫자로 보여준다. 여기서 말풍선까지
+                // 띄우면 공격 전 인텐트 말풍선(UpdateUI)과 같은 숫자를 한 번 더 보여주는 셈이라
+                // (게다가 EnemyManager.ExecuteEnemyTurnCoroutine이 끝에서 GenerateNextAction을
+                // 불러 이미 다음 턴 인텐트로 바뀐 값이라 오히려 틀린 값이었다) 뺀다.
                 yield return enemyManager.ExecuteEnemyTurnCoroutine(player);
-
-                if (SpeechBubbleManager.Instance != null)
-                {
-                    SpeechBubbleManager.Instance.ShowBubble(enemyManager.GetIntentString(), enemyManager.currentEnemy.BubblePosition, false, actionBubbleDuration);
-
-                }
             }
 
             UpdateUI();

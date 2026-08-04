@@ -48,8 +48,21 @@ public class StageManager : MonoBehaviour
     public float rewardAdvanceDelay = 0.6f;
 
     [Header("UI")]
-    public TMPro.TextMeshProUGUI stageStartText;
+    [Tooltip("스테이지 등장 연출로 켜고 끌 오브젝트. 문구는 코드가 써 넣지 않으므로, 필요하면 " +
+             "오브젝트 자체(프리팹/애니메이션)에 미리 담아둘 것.")]
+    public GameObject stageStartObject;
+
+    [Tooltip("stageStartObject에 붙은 등장/퇴장 연출(확대→축소 페이드인으로 등장, 축소 " +
+             "페이드아웃으로 퇴장). 비워두면 퇴장 시 그냥 SetActive(false)로 즉시 끈다.")]
+    public StageStartEffect stageStartEffect;
+
     public TMPro.TextMeshProUGUI currentStageText;
+
+    [Tooltip("currentStageText에 쓸 포맷 문자열. {0} 자리에 표시 스테이지 번호(displayStage)가 들어간다.")]
+    [SerializeField] private string stageLabelFormat = "STAGE {0}";
+
+    [Tooltip("보스전(마더 드래곤)일 때 currentStageText에 쓸 문구. 번호가 없어 포맷이 필요 없다.")]
+    [SerializeField] private string bossStageLabel = "MOMMY";
 
     [Header("Transition Settings")]
     [Tooltip("씬에 배치된 배경 스크롤러들을 모두 연결해 줍니다.")]
@@ -152,8 +165,11 @@ public class StageManager : MonoBehaviour
             if (rewardCardView != null)
                 rewardCardView.Clear();
 
-            if (stageStartText != null)
-                stageStartText.gameObject.SetActive(false);
+            // 스테이지 등장 배너가 떠 있는 채로 클리어 화면이 겹치지 않게 끈다. 여기선 퇴장
+            // 연출(PlayExit)을 쓰지 않고 즉시 끈다 - 런이 끝나는 순간이라 배너가 축소되며
+            // 사라지는 걸 볼 이유가 없고, 결과 창이 곧바로 덮는다.
+            if (stageStartObject != null)
+                stageStartObject.SetActive(false);
 
             battleManager.ShowGameClear();
             return;
@@ -186,10 +202,8 @@ public class StageManager : MonoBehaviour
 
         if (currentStageText != null)
         {
-            if (isBossBattle)
-                currentStageText.text = "MOTHER";
-            else
-                currentStageText.text = $"STAGE {displayStage}";
+            // 문구를 코드에 박지 않고 인스펙터에서 받는다 - 이 프로젝트의 기본 사양이다.
+            currentStageText.text = isBossBattle ? bossStageLabel : string.Format(stageLabelFormat, displayStage);
         }
 
         if (currentEnemyObject != null)
@@ -317,15 +331,10 @@ public class StageManager : MonoBehaviour
         // 새 스테이지를 로드하는 시점이므로 "보상 뒤 자동 진행 중" 상태는 끝난다.
         _advancingAfterReward = false;
 
-        if (stageStartText != null)
-        {
-            if (isBossBattle)
-                stageStartText.text = "MOTHER DRAGON";
-            else
-                stageStartText.text = $"STAGE {displayStage}\nSTART!";
-
-            stageStartText.gameObject.SetActive(true);
-        }
+        // 문구는 코드가 써 넣지 않는다 - 등장 배너의 내용은 stageStartObject(프리팹/애니메이션)가
+        // 통째로 갖는다. 켜는 순간 StageStartEffect.OnEnable이 등장 연출을 알아서 재생한다.
+        if (stageStartObject != null)
+            stageStartObject.SetActive(true);
 
         startRoutine = StartCoroutine(BeginStageAfterDelay());
     }
@@ -350,10 +359,12 @@ public class StageManager : MonoBehaviour
     {
         yield return new WaitForSeconds(stageStartDelay);
 
-        if (stageStartText != null)
-        {
-            stageStartText.gameObject.SetActive(false);
-        }
+        // stageStartEffect가 있으면 축소하며 페이드아웃하는 연출을 맡기고(백그라운드로 흘러가며,
+        // 턴 시작을 더 늦추지는 않는다), 없으면 예전처럼 바로 끈다.
+        if (stageStartEffect != null)
+            stageStartEffect.PlayExit(null);
+        else if (stageStartObject != null)
+            stageStartObject.SetActive(false);
 
         // [추가된 부분] 대기하는 동안 게임 오버가 되었다면 (예: 킬스위치 즉사) 더 이상 진행하지 않음
         if (battleManager != null && battleManager.IsGameOver)

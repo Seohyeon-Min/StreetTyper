@@ -1295,6 +1295,7 @@ GameObject:
   - component: {fileID: 2667399987066116425}
   - component: {fileID: 1416634181684043029}
   - component: {fileID: 2635456060886403802}
+  - component: {fileID: 2369097817281888723}
   m_Layer: 5
   m_Name: ResultPanel
   m_TagString: Untagged
@@ -1438,6 +1439,20 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  closeFadeOutDuration: 0.15
+--- !u!114 &2369097817281888723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4807335482821139485}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5b1b372e96a3ee746637156cb0c5eab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FadeInBackground
+  duration: 0.25
 --- !u!1 &5242750414234059967
 GameObject:
   m_ObjectHideFlags: 0

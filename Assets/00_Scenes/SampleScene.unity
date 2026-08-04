@@ -146,7 +146,7 @@ Transform:
   m_GameObject: {fileID: 37885857}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 31.07, y: 0.38, z: 0}
+  m_LocalPosition: {x: 10.42, y: 0.38, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -164,9 +164,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
-  maxSpeed: 15
-  leftBound: -45.73
-  loopJumpDistance: 76.8
+  maxSpeed: 14.2
+  leftBound: -26.53
+  loopJumpDistance: 35.5
 --- !u!212 &37885860
 SpriteRenderer:
   serializedVersion: 2
@@ -532,9 +532,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
-  maxSpeed: 15
-  leftBound: -38.4
-  loopJumpDistance: 76.8
+  maxSpeed: 14.2
+  leftBound: -17.75
+  loopJumpDistance: 35.5
 --- !u!4 &240152056 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6823948633361360438, guid: 901dbc30fed772744b05a85b656746eb, type: 3}
@@ -568,9 +568,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
-  maxSpeed: 15
-  leftBound: -38.4
-  loopJumpDistance: 76.8
+  maxSpeed: 14.2
+  leftBound: -17.75
+  loopJumpDistance: 35.5
 --- !u!114 &390248573 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4723246511239789477, guid: 2d7343729b834104ca598352751aa5e8, type: 3}
@@ -2029,9 +2029,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
-  maxSpeed: 15
-  leftBound: -45.73
-  loopJumpDistance: 76.8
+  maxSpeed: 14.2
+  leftBound: -26.53
+  loopJumpDistance: 35.5
 --- !u!4 &891639024 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3729363492170284162, guid: 360643be5c203054f8284efa092a099e, type: 3}
@@ -2257,7 +2257,7 @@ Transform:
   m_GameObject: {fileID: 967039296}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 38.4, y: 0.14, z: 0}
+  m_LocalPosition: {x: 17.75, y: 0.14, z: 0}
   m_LocalScale: {x: 0.46232143, y: 0.46232143, z: 0.46232143}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2275,9 +2275,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
-  maxSpeed: 15
-  leftBound: -38.4
-  loopJumpDistance: 76.8
+  maxSpeed: 14.2
+  leftBound: -17.75
+  loopJumpDistance: 35.5
 --- !u!212 &967039299
 SpriteRenderer:
   serializedVersion: 2
@@ -3049,7 +3049,7 @@ Transform:
   m_GameObject: {fileID: 1102626330}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 38.4, y: 2.5039, z: 0}
+  m_LocalPosition: {x: 17.75, y: 2.5039, z: 0}
   m_LocalScale: {x: 0.463731, y: 0.463731, z: 0.463731}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3067,9 +3067,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
-  maxSpeed: 15
-  leftBound: -38.4
-  loopJumpDistance: 76.8
+  maxSpeed: 14.2
+  leftBound: -17.75
+  loopJumpDistance: 35.5
 --- !u!212 &1102626333
 SpriteRenderer:
   serializedVersion: 2
@@ -4060,9 +4060,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
-  maxSpeed: 15
-  leftBound: -38.4
-  loopJumpDistance: 76.8
+  maxSpeed: 14.2
+  leftBound: -17.75
+  loopJumpDistance: 35.5
 --- !u!1 &1345488953
 GameObject:
   m_ObjectHideFlags: 0
@@ -4857,7 +4857,7 @@ Transform:
   m_GameObject: {fileID: 1714691083}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 38.4, y: -1.72, z: 0}
+  m_LocalPosition: {x: 17.75, y: -1.72, z: 0}
   m_LocalScale: {x: 0.46357483, y: 0.46357483, z: 0.92714965}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4875,9 +4875,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
-  maxSpeed: 15
-  leftBound: -38.4
-  loopJumpDistance: 76.8
+  maxSpeed: 14.2
+  leftBound: -17.75
+  loopJumpDistance: 35.5
 --- !u!212 &1714691086
 SpriteRenderer:
   serializedVersion: 2
@@ -5406,9 +5406,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
-  maxSpeed: 15
-  leftBound: -31.05
-  loopJumpDistance: 76.8
+  maxSpeed: 14.2
+  leftBound: -10.4
+  loopJumpDistance: 35.5
 --- !u!1 &1887359342
 GameObject:
   m_ObjectHideFlags: 0
@@ -5436,7 +5436,7 @@ Transform:
   m_GameObject: {fileID: 1887359342}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 45.75, y: 0.38, z: 0}
+  m_LocalPosition: {x: 25.1, y: 0.38, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5454,9 +5454,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
-  maxSpeed: 15
-  leftBound: -31.05
-  loopJumpDistance: 76.8
+  maxSpeed: 14.2
+  leftBound: -10.4
+  loopJumpDistance: 35.5
 --- !u!212 &1887359345
 SpriteRenderer:
   serializedVersion: 2
@@ -6505,6 +6505,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1105107305}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: transitionDuration
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: statusEffectManager
       value: 
       objectReference: {fileID: 970951418202211458}
@@ -6522,7 +6526,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: backgroundScrollers.Array.size
-      value: 5
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[0]'
@@ -6531,19 +6535,39 @@ PrefabInstance:
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[1]'
       value: 
-      objectReference: {fileID: 1880727952}
+      objectReference: {fileID: 37885859}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[2]'
       value: 
-      objectReference: {fileID: 217928250}
+      objectReference: {fileID: 1880727952}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[3]'
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1887359344}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[4]'
       value: 
+      objectReference: {fileID: 217928250}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: 'backgroundScrollers.Array.data[5]'
+      value: 
+      objectReference: {fileID: 1102626332}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: 'backgroundScrollers.Array.data[6]'
+      value: 
+      objectReference: {fileID: 378749226}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: 'backgroundScrollers.Array.data[7]'
+      value: 
+      objectReference: {fileID: 1714691085}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: 'backgroundScrollers.Array.data[8]'
+      value: 
       objectReference: {fileID: 1344373954}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: 'backgroundScrollers.Array.data[9]'
+      value: 
+      objectReference: {fileID: 967039298}
     - target: {fileID: 8685668920505966016, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

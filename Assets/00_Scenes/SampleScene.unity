@@ -167,6 +167,31 @@ MonoBehaviour:
   maxSpeed: 14.2
   leftBound: -26.53
   loopJumpDistance: 35.5
+  accelerationDuration: 0.5
+  accelerationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!212 &37885860
 SpriteRenderer:
   serializedVersion: 2
@@ -347,7 +372,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 9
   m_MaskInteraction: 0
   m_Sprite: {fileID: -2213826294249829870, guid: 57f4e2687f0e5974c8d589a4d8c311a5, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -503,6 +528,31 @@ MonoBehaviour:
   maxSpeed: 14.2
   leftBound: -17.75
   loopJumpDistance: 35.5
+  accelerationDuration: 0.5
+  accelerationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!4 &240152056 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6823948633361360438, guid: 901dbc30fed772744b05a85b656746eb, type: 3}
@@ -594,6 +644,31 @@ MonoBehaviour:
   maxSpeed: 14.2
   leftBound: -17.75
   loopJumpDistance: 35.5
+  accelerationDuration: 0.5
+  accelerationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!114 &390248573 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4723246511239789477, guid: 2d7343729b834104ca598352751aa5e8, type: 3}
@@ -2194,6 +2269,31 @@ MonoBehaviour:
   maxSpeed: 14.2
   leftBound: -26.53
   loopJumpDistance: 35.5
+  accelerationDuration: 0.5
+  accelerationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!4 &891639024 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3729363492170284162, guid: 360643be5c203054f8284efa092a099e, type: 3}
@@ -2445,6 +2545,31 @@ MonoBehaviour:
   maxSpeed: 14.2
   leftBound: -17.75
   loopJumpDistance: 35.5
+  accelerationDuration: 0.5
+  accelerationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!212 &967039299
 SpriteRenderer:
   serializedVersion: 2
@@ -3506,6 +3631,31 @@ MonoBehaviour:
   maxSpeed: 14.2
   leftBound: -17.75
   loopJumpDistance: 35.5
+  accelerationDuration: 0.5
+  accelerationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!212 &1102626333
 SpriteRenderer:
   serializedVersion: 2
@@ -4648,6 +4798,31 @@ MonoBehaviour:
   maxSpeed: 14.2
   leftBound: -17.75
   loopJumpDistance: 35.5
+  accelerationDuration: 0.5
+  accelerationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &1345488953
 GameObject:
   m_ObjectHideFlags: 0
@@ -5561,6 +5736,31 @@ MonoBehaviour:
   maxSpeed: 14.2
   leftBound: -17.75
   loopJumpDistance: 35.5
+  accelerationDuration: 0.5
+  accelerationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!212 &1714691086
 SpriteRenderer:
   serializedVersion: 2
@@ -6220,6 +6420,31 @@ MonoBehaviour:
   maxSpeed: 14.2
   leftBound: -10.4
   loopJumpDistance: 35.5
+  accelerationDuration: 0.5
+  accelerationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &1887359342
 GameObject:
   m_ObjectHideFlags: 0
@@ -6268,6 +6493,31 @@ MonoBehaviour:
   maxSpeed: 14.2
   leftBound: -10.4
   loopJumpDistance: 35.5
+  accelerationDuration: 0.5
+  accelerationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!212 &1887359345
 SpriteRenderer:
   serializedVersion: 2
@@ -7582,8 +7832,28 @@ PrefabInstance:
       objectReference: {fileID: 4504949275694822397}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: enemyPrefabs.Array.size
-      value: 1
+      value: 6
       objectReference: {fileID: 0}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: 'enemyPrefabs.Array.data[1]'
+      value: 
+      objectReference: {fileID: 6201447247898099441, guid: 96554279896527c458e912b5c6e5f8cb, type: 3}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: 'enemyPrefabs.Array.data[2]'
+      value: 
+      objectReference: {fileID: 6201447247898099441, guid: ffcb343613e45d142b335ed855ae6864, type: 3}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: 'enemyPrefabs.Array.data[3]'
+      value: 
+      objectReference: {fileID: 6201447247898099441, guid: de3f9062f50b9044fb252c04cca70db0, type: 3}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: 'enemyPrefabs.Array.data[4]'
+      value: 
+      objectReference: {fileID: 6201447247898099441, guid: 2883c243152434245a49d4b952a5080f, type: 3}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: 'enemyPrefabs.Array.data[5]'
+      value: 
+      objectReference: {fileID: 6201447247898099441, guid: 3d033f8c090bc07439f8c264ef24b4b5, type: 3}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: backgroundScrollers.Array.size
       value: 10

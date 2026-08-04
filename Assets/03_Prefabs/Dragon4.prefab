@@ -45,7 +45,7 @@ GameObject:
   - component: {fileID: 4886114836177707104}
   - component: {fileID: -7997551308745510604}
   m_Layer: 0
-  m_Name: enemy
+  m_Name: Dragon4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -114,9 +114,9 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 10
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -5339835568244962750, guid: 177ef44859a61884b9bc7791c2d51943, type: 3}
+  m_Sprite: {fileID: -8867330766209704147, guid: 435a4149b5f4ce84bb9b8037c20b9a9a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -144,7 +144,6 @@ MonoBehaviour:
   defense: 0
   damageTakenMultiplier: 1
   enemyData: {fileID: 11400000, guid: f6b198d5953ad4142b7711a89ab1783e, type: 2}
-  isMotherDragon: 0
   animator: {fileID: 4886114836177707104}
   bubbleAnchor: {fileID: 2821788920288663838}
   spriteRenderer: {fileID: 0}
@@ -198,6 +197,30 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  slideInCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!95 &4886114836177707104
 Animator:
   serializedVersion: 7
@@ -208,7 +231,7 @@ Animator:
   m_GameObject: {fileID: 6201447247898099441}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 472699c05506ff740aded388048ce312, type: 2}
+  m_Controller: {fileID: 9100000, guid: 5b9fbdc9950644f4b88fc65d6fdd7848, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

@@ -13,6 +13,14 @@ public class BackgroundScroller : MonoBehaviour
     [Tooltip("왼쪽 끝에 도달했을 때 오른쪽으로 점프할 총 거리 (10 × (1920 ÷ 1080); 17.777) * 2")]
     public float loopJumpDistance = 35.5f;
 
+    [Header("Acceleration Settings")]
+    [Tooltip("트랜지션 시작 시 최고 속도에 도달하기까지 걸리는 시간(초)")]
+    public float accelerationDuration = 0.5f;
+
+    [Tooltip("속도가 올라가는 느낌을 조절하는 커브")]
+    public AnimationCurve accelerationCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
+
     private float _currentSpeed = 0f;
     private Coroutine _speedCoroutine;
 
@@ -38,7 +46,21 @@ public class BackgroundScroller : MonoBehaviour
     public void StartScroll()
     {
         if (_speedCoroutine != null) StopCoroutine(_speedCoroutine);
-        _currentSpeed = maxSpeed; // 즉시 최대 속도로 이동
+        _speedCoroutine = StartCoroutine(AccelerateRoutine());
+    }
+
+    private IEnumerator AccelerateRoutine()
+    {
+        float elapsed = 0f;
+        while (elapsed < accelerationDuration)
+        {
+            elapsed += Time.deltaTime;
+            // 커브에 맞춰 0에서 maxSpeed까지 부드럽게 가속합니다.
+            _currentSpeed = Mathf.Lerp(0f, maxSpeed, accelerationCurve.Evaluate(elapsed / accelerationDuration));
+            yield return null;
+        }
+        _currentSpeed = maxSpeed;
+        _speedCoroutine = null;
     }
 
     /// <summary>

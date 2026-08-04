@@ -51,6 +51,19 @@ public class StageManager : MonoBehaviour
     public TMPro.TextMeshProUGUI stageStartText;
     public TMPro.TextMeshProUGUI currentStageText;
 
+    [Header("Transition Settings")]
+    [Tooltip("씬에 배치된 배경 스크롤러들을 모두 연결해 줍니다.")]
+    public BackgroundScroller[] backgroundScrollers;
+
+    [Tooltip("보상 획득 후 배경이 스크롤되며 달려가는 연출 시간")]
+    public float transitionDuration = 1.5f;
+
+    [Tooltip("새로운 적이 화면 밖에서 미끄러져 들어오는 시간")]
+    public float enemySlideInDuration = 0.5f;
+
+    [Tooltip("적이 처음 생성될 화면 오른쪽 밖의 X 오프셋 거리")]
+    public float spawnOffScreenX = 15f;
+
     private int currentBattleIndex = 0;
 
     // 지금 스테이지에 스폰된 적이 마더 드래곤인가. 보상에 "지우기" 카드를 놓을지 판단하는 데 쓴다.
@@ -168,20 +181,39 @@ public class StageManager : MonoBehaviour
             }
         }
 
-        // [핵심] 기존 enemyPrefabs[currentBattleIndex] 대신 prefabToSpawn 변수로 생성!
-        currentEnemyObject = Instantiate(prefabToSpawn, enemySpawnPoint.position, Quaternion.identity);
+        // =========================================================
+        // [수정] 화면 오른쪽 밖에서 생성
+        Vector3 offScreenPos = enemySpawnPoint.position + new Vector3(spawnOffScreenX, 0f, 0f);
+        currentEnemyObject = Instantiate(prefabToSpawn, offScreenPos, Quaternion.identity);
 
         EnemyBase newEnemyBase = currentEnemyObject.GetComponent<EnemyBase>();
 
-        // 이번 스테이지가 마더 드래곤이었는지 기억한다. 클리어 보상에 "지우기" 카드를 놓을지
-        // 정하는 데 쓰고, 그때는 적이 이미 비활성이라 다시 물어볼 수 없다.
-        //
-        // isBossBattle(인덱스 4/9)이 아니라 실제로 스폰된 적을 보는 게 맞다 - motherDragonPrefab이
-        // 비어 있으면 보스전 인덱스여도 일반 적이 나오기 때문이다.
+        // [유지] 이 줄은 절대 지우지 마세요! 보상(지우기 카드) 처리에 꼭 필요합니다.
         stageWasMotherDragon = newEnemyBase != null && newEnemyBase.isMotherDragon;
 
         // [추가] 생성 직후 스탯 스케일링 적용
         newEnemyBase.ApplyScaling(displayStage - 1);
+
+        // [트랜지션 마무리 연출]
+        // 1. 배경 스크롤 서서히 정지
+        if (backgroundScrollers != null)
+        {
+            foreach (var scroller in backgroundScrollers)
+            {
+                if (scroller != null) scroller.StopScroll(enemySlideInDuration);
+            }
+        }
+
+        // 2. 데미 애니메이션 배속 원상 복구
+        if (player != null)
+        {
+            PlayerBattleVisuals visuals = player.GetComponent<PlayerBattleVisuals>();
+            if (visuals != null) visuals.ResetAnimationSpeed();
+        }
+
+        // 3. 새로운 적이 화면 밖에서 제자리로 슬라이드 인
+        StartCoroutine(newEnemyBase.SlideInCoroutine(offScreenPos, enemySpawnPoint.position, enemySlideInDuration));
+        // =========================================================
 
         enemyManager.currentEnemy = newEnemyBase;
         enemyManager.GenerateNextAction();
@@ -447,6 +479,28 @@ public class StageManager : MonoBehaviour
         // Time.deltaTime 기반이라 일시정지(timeScale = 0) 중에는 멈춰 있는다 - 프로젝트의
         // 다른 대기와 같은 규칙이다.
         yield return new WaitForSeconds(rewardAdvanceDelay);
+
+        // =========================================================
+        // [트랜지션 연출 시작]
+        // 2. 배경 스크롤 시작
+        if (backgroundScrollers != null)
+        {
+            foreach (var scroller in backgroundScrollers)
+            {
+                if (scroller != null) scroller.StartScroll();
+            }
+        }
+
+        // 3. 데미 달리기(돌진) 애니메이션 재생
+        if (player != null)
+        {
+            PlayerBattleVisuals visuals = player.GetComponent<PlayerBattleVisuals>();
+            if (visuals != null) visuals.PlayDashAnimation(1.5f); // 살짝 배속을 주어 다급하게 달리는 느낌
+        }
+
+        // 4. 달려가는 연출 시간 동안 대기
+        yield return new WaitForSeconds(transitionDuration);
+        // =========================================================
 
         // NextStage -> LoadStage가 이 코루틴을 멈추려 들기 전에 먼저 비운다.
         advanceRoutine = null;

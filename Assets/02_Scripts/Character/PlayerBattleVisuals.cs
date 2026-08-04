@@ -118,4 +118,14 @@ public class PlayerBattleVisuals : MonoBehaviour
         animator.SetTrigger("Guard");
     }
 
+    public void PlayDashAnimation(float speedMultiplier = 1.0f)
+    {
+        if (animator != null)
+        {
+            animator.speed = speedMultiplier;
+            // 요청하신 대로 트랜지션 동안 Punch1 모션을 취하게 합니다.
+            animator.SetTrigger("Punch1");
+        }
+    }
+
 }

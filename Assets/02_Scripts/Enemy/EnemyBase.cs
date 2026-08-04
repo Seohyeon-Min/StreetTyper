@@ -22,6 +22,31 @@ public class EnemyBase : CharacterStats
     [SerializeField] private AnimationCurve moveToPlayerCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
     [SerializeField] private AnimationCurve moveToOriginCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+    [Header("트랜지션 등장 애니메이션")]
+    [Tooltip("화면 밖에서 등장할 때의 이동 비율 커브")]
+    public AnimationCurve slideInCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
+    // ==========================================================
+    // [추가] 화면 밖에서 원래 위치로 미끄러지듯 등장하는 코루틴
+    public IEnumerator SlideInCoroutine(Vector3 startPos, Vector3 targetPos, float duration)
+    {
+        // 등장 시에도 스프라이트가 올바르게 보이도록 정렬 순서 보정 (선택 사항)
+        if (spriteRenderer != null)
+            spriteRenderer.sortingOrder = originalSortingOrder;
+
+        float time = 0f;
+        while (time < duration)
+        {
+            var t = slideInCurve.Evaluate(time / duration);
+            transform.position = Vector3.LerpUnclamped(startPos, targetPos, t);
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = targetPos;
+    }
+    // ==========================================================
+
     // 스폰 위치. Start()에서 한 번만 읽는다 - 적은 스테이지마다 새로 Instantiate되므로
     // 이 시점이 곧 "복귀할 자리"다(PlayerBattleVisuals.originalPosition과 같은 패턴).
     private Vector3 originalPosition;

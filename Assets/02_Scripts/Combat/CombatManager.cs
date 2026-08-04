@@ -29,7 +29,15 @@ public class CombatManager : MonoBehaviour
         }
 
         if (action.Defense > 0)
+        {
             player.AddDefense(action.Defense);
+
+            PlayerBattleVisuals visuals = player.GetComponent<PlayerBattleVisuals>();
+            if (visuals != null)
+            {
+                visuals.PlayGuardAnimation();
+            }
+        }
 
         if (action.Heal > 0)
             player.Heal(action.Heal);
@@ -66,6 +74,6 @@ public class CombatManager : MonoBehaviour
 
     // 여기서 소비하지 않는 값이 둘 있다.
     // - TimerChange: DeckManager가 체인 완성 시점에 TimerManager.AddTime으로 직접 쓴다.
-    // - LootBonusOnKill: "처치했는지"를 알아야 하는데 그 판정은 DeckManager.PlayPendingActions가
+    // - GrantsLootBonus: 보상 라운드를 쌓는 건 WordUnlockManager의 일이라 DeckManager.PlayPendingActions가
     //   하므로 거기서 WordUnlockManager.AddLuckyBonus를 부른다.
 }

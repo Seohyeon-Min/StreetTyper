@@ -53,11 +53,25 @@ MonoBehaviour:
     Path: event:/Main
   battleBGM:
     Guid:
-      Data1: 1675660136
-      Data2: 1166344121
-      Data3: -1615066971
-      Data4: 71728400
+      Data1: -1072704160
+      Data2: 1243963518
+      Data3: -1939707999
+      Data4: 1254286650
     Path: event:/BGM
+  bossBGM:
+    Guid:
+      Data1: 37277291
+      Data2: 1080051325
+      Data3: 1466131864
+      Data4: -938468500
+    Path: event:/MommyDragon
+  introBGM:
+    Guid:
+      Data1: 528323665
+      Data2: 1336916585
+      Data3: -1084144506
+      Data4: 460505559
+    Path: event:/Input
   punchSounds:
   - Guid:
       Data1: 1865360393

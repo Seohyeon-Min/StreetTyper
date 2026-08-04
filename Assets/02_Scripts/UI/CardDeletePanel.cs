@@ -58,6 +58,15 @@ public class CardDeletePanel : CommandWordReceiver
              "다 들어가지 않는다. 해금 단어가 늘면 이 값과 cellSize를 같이 줄일 것.")]
     [SerializeField] private float cardScale = 0.6f;
 
+    [Header("열려 있는 동안 비켜날 UI")]
+    [Tooltip("창이 열리면 여기 넣은 UI들이 offset만큼 밀려났다가 닫으면 제자리로 돌아온다. " +
+             "보통 보상 카드 줄과 입력창(InputFieldDisplay)을 넣는다 - 이 창은 보상 줄 위에 " +
+             "겹쳐 뜨므로 그대로 두면 뒤에 비친다. CardCollectionPanel과 같은 구조다.")]
+    [SerializeField] private DisplacedUI[] displacedUI = new DisplacedUI[0];
+
+    [Tooltip("비켜나고 돌아오는 데 걸리는 시간(초). 0이면 즉시 이동한다.")]
+    [SerializeField] private float displaceDuration = 0.15f;
+
     [Header("타이핑 피드백")]
     [Tooltip("타이핑 중인 카드가 떠오르는 높이(px). 손패·보상 화면과 같은 값을 기본으로 둔다.")]
     [SerializeField] private float typingLiftHeight = 40f;
@@ -81,6 +90,9 @@ public class CardDeletePanel : CommandWordReceiver
     private readonly List<CardBase> _cards = new List<CardBase>();
 
     private readonly List<GameObject> _spawned = new List<GameObject>();
+
+    // 비켜나기 진행 상태 + 로직. CardCollectionPanel과 같은 것을 쓴다(UIDisplacement 참조).
+    private readonly UIDisplacement _displacement = new UIDisplacement();
 
     // 매 프레임 GetComponent를 부르지 않도록 스폰할 때 같이 모아둔다. _spawned와 인덱스가 같다.
     private readonly List<RectTransform> _rects = new List<RectTransform>();
@@ -146,6 +158,25 @@ public class CardDeletePanel : CommandWordReceiver
 
         if (wordDictionary == null)
             Debug.LogWarning("CardDeletePanel: wordDictionary가 연결되지 않아 지울 카드를 알 수 없습니다.", this);
+
+        _displacement.CaptureOrigins(displacedUI, this, nameof(displacedUI));
+    }
+
+    // ⚠️ useUnscaledTime: false - 이 창은 timeScale이 1인 보상 구간에서만 뜬다. 일시정지가
+    // timeScale = 0 하나로 성립하는 프로젝트 전제를 따르는 쪽이 맞다(CardCollectionPanel이
+    // true인 건 그쪽이 일시정지 "위에서" 열리기 때문이고, 여기는 다르다).
+    //
+    // 위치를 쓰는 건 LateUpdate다 - 레이아웃이 자식을 배치한 뒤에 줄 전체(부모)를 옮긴다.
+    private void LateUpdate()
+    {
+        _displacement.Tick(displacedUI, _isOpen, displaceDuration, useUnscaledTime: false);
+    }
+
+    // offset은 배치를 눈으로 보며 맞추는 값이라 보통 Play 중에 조정하게 된다. 도착해서 좌표
+    // 쓰기를 멈춘 상태에서는 다음 여닫이까지 반영이 안 보이므로 여기서 다시 움직이게 한다.
+    private void OnValidate()
+    {
+        _displacement.MarkDirty();
     }
 
     /// <summary>지울 카드를 고르는 창을 연다. RewardInputHandler가 "지우기"를 받았을 때 부른다.</summary>
@@ -169,6 +200,9 @@ public class CardDeletePanel : CommandWordReceiver
         _highlight = -1;
         _hasInput = false;
 
+        // 가리는 UI를 비켜나게 한다(실제 이동은 LateUpdate가 이어서 한다).
+        _displacement.MarkDirty();
+
         if (panel != null)
             panel.SetActive(true);
 
@@ -187,6 +221,10 @@ public class CardDeletePanel : CommandWordReceiver
         // ⚠️ ClearInput보다 먼저 내려야 한다. ClearInput은 "비었다"를 수신자에게도 디스패치하는데,
         // 그때 아직 열린 상태면 이쪽이 그 신호를 가로챈다.
         _isOpen = false;
+
+        // 비켜났던 UI를 제자리로 돌린다. 이 컴포넌트는 창(panel)이 아니라 항상 켜져 있는
+        // 오브젝트에 붙어 있으므로 복귀 이동은 끝까지 재생된다.
+        _displacement.MarkDirty();
 
         ClearCards();
 
@@ -233,7 +271,15 @@ public class CardDeletePanel : CommandWordReceiver
         if (!_isOpen || _spawned.Count == 0)
             return;
 
-        if (inputManager != null)
+        // ⚠️ 열려 있다고 해서 입력이 이쪽이라는 보장은 없다 - 일시정지(Pause = 20)가 이 창
+        // (RewardDelete = 18)보다 먼저 가져간다. 그때는 읽기를 멈추고 평상 상태로 되돌려,
+        // 플레이어가 치는 "계속"에 지울 카드가 덩달아 떠오르지 않게 한다.
+        if (!HasTypingFocus)
+        {
+            _hasInput = false;
+            _highlight = -1;
+        }
+        else if (inputManager != null)
         {
             var committed = inputManager.CurrentInput;
             var composing = inputManager.Composition;

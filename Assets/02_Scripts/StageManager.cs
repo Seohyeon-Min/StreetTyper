@@ -64,6 +64,19 @@ public class StageManager : MonoBehaviour
     [Tooltip("보스전(마더 드래곤)일 때 currentStageText에 쓸 문구. 번호가 없어 포맷이 필요 없다.")]
     [SerializeField] private string bossStageLabel = "MOMMY";
 
+    [Header("Transition Settings")]
+    [Tooltip("씬에 배치된 배경 스크롤러들을 모두 연결해 줍니다.")]
+    public BackgroundScroller[] backgroundScrollers;
+
+    [Tooltip("보상 획득 후 배경이 스크롤되며 달려가는 연출 시간")]
+    public float transitionDuration = 1.5f;
+
+    [Tooltip("새로운 적이 화면 밖에서 미끄러져 들어오는 시간")]
+    public float enemySlideInDuration = 0.5f;
+
+    [Tooltip("적이 처음 생성될 화면 오른쪽 밖의 X 오프셋 거리")]
+    public float spawnOffScreenX = 15f;
+
     private int currentBattleIndex = 0;
 
     // 지금 스테이지에 스폰된 적이 마더 드래곤인가. 보상에 "지우기" 카드를 놓을지 판단하는 데 쓴다.
@@ -120,6 +133,44 @@ public class StageManager : MonoBehaviour
         // 총 10번의 전투(인덱스 0~9)를 모두 마치고 인덱스 10에 도달하면 게임 클리어
         if (currentBattleIndex >= totalBattles)
         {
+            // ⚠️ 여기서 곧바로 return하면 아래의 정리(코루틴 정지·체인/보상 카드 지우기)가
+            // 통째로 건너뛰어진다. 새 스테이지를 여는 게 아니라 런이 끝나는 것이지만, 직전
+            // 스테이지가 남긴 것들은 똑같이 치워야 한다 - 실제로 전체 클리어 화면 위에 보상
+            // 카드가 남고 자동 진행 코루틴이 살아 있던 적이 있다.
+            //
+            // 타이머 정지·손패 치우기·입력 열기는 여기서 하지 않는다. ShowGameClear가 부르는
+            // ShowResult가 OnBattleEnded를 쏘고, DeckManager.HandleBattleEnded가 그 셋을 전부
+            // 맡는다(패배와 같은 경로다). ⚠️ 그 이벤트는 결과 종류가 바뀔 때도 나가야 하며,
+            // 예전엔 "처음 끝났을 때만" 나가서 여기서 묻혔다 - BattleManager.ShowResult 참조.
+            if (startRoutine != null)
+            {
+                StopCoroutine(startRoutine);
+                startRoutine = null;
+            }
+
+            if (advanceRoutine != null)
+            {
+                StopCoroutine(advanceRoutine);
+                advanceRoutine = null;
+            }
+
+            _advancingAfterReward = false;
+
+            if (wordChainManager != null)
+                wordChainManager.ClearChain();
+
+            if (pendingActionManager != null)
+                pendingActionManager.Clear();
+
+            if (rewardCardView != null)
+                rewardCardView.Clear();
+
+            // 스테이지 등장 배너가 떠 있는 채로 클리어 화면이 겹치지 않게 끈다. 여기선 퇴장
+            // 연출(PlayExit)을 쓰지 않고 즉시 끈다 - 런이 끝나는 순간이라 배너가 축소되며
+            // 사라지는 걸 볼 이유가 없고, 결과 창이 곧바로 덮는다.
+            if (stageStartObject != null)
+                stageStartObject.SetActive(false);
+
             battleManager.ShowGameClear();
             return;
         }
@@ -151,6 +202,7 @@ public class StageManager : MonoBehaviour
 
         if (currentStageText != null)
         {
+            // 문구를 코드에 박지 않고 인스펙터에서 받는다 - 이 프로젝트의 기본 사양이다.
             currentStageText.text = isBossBattle ? bossStageLabel : string.Format(stageLabelFormat, displayStage);
         }
 
@@ -178,20 +230,39 @@ public class StageManager : MonoBehaviour
             }
         }
 
-        // [핵심] 기존 enemyPrefabs[currentBattleIndex] 대신 prefabToSpawn 변수로 생성!
-        currentEnemyObject = Instantiate(prefabToSpawn, enemySpawnPoint.position, Quaternion.identity);
+        // =========================================================
+        // [수정] 화면 오른쪽 밖에서 생성
+        Vector3 offScreenPos = enemySpawnPoint.position + new Vector3(spawnOffScreenX, 0f, 0f);
+        currentEnemyObject = Instantiate(prefabToSpawn, offScreenPos, Quaternion.identity);
 
         EnemyBase newEnemyBase = currentEnemyObject.GetComponent<EnemyBase>();
 
-        // 이번 스테이지가 마더 드래곤이었는지 기억한다. 클리어 보상에 "지우기" 카드를 놓을지
-        // 정하는 데 쓰고, 그때는 적이 이미 비활성이라 다시 물어볼 수 없다.
-        //
-        // isBossBattle(인덱스 4/9)이 아니라 실제로 스폰된 적을 보는 게 맞다 - motherDragonPrefab이
-        // 비어 있으면 보스전 인덱스여도 일반 적이 나오기 때문이다.
-        stageWasMotherDragon = newEnemyBase != null && newEnemyBase.isMotherDragon;
+        // [유지] 이 줄은 절대 지우지 마세요! 보상(지우기 카드) 처리에 꼭 필요합니다.
+        stageWasMotherDragon = newEnemyBase is MotherDragon;
 
         // [추가] 생성 직후 스탯 스케일링 적용
         newEnemyBase.ApplyScaling(displayStage - 1);
+
+        // [트랜지션 마무리 연출]
+        // 1. 배경 스크롤 서서히 정지
+        if (backgroundScrollers != null)
+        {
+            foreach (var scroller in backgroundScrollers)
+            {
+                if (scroller != null) scroller.StopScroll(enemySlideInDuration);
+            }
+        }
+
+        // 2. 데미 애니메이션 배속 원상 복구
+        if (player != null)
+        {
+            PlayerBattleVisuals visuals = player.GetComponent<PlayerBattleVisuals>();
+            if (visuals != null) visuals.ResetAnimationSpeed();
+        }
+
+        // 3. 새로운 적이 화면 밖에서 제자리로 슬라이드 인
+        StartCoroutine(newEnemyBase.SlideInCoroutine(offScreenPos, enemySpawnPoint.position, enemySlideInDuration));
+        // =========================================================
 
         enemyManager.currentEnemy = newEnemyBase;
         enemyManager.GenerateNextAction();
@@ -235,10 +306,11 @@ public class StageManager : MonoBehaviour
         if (pendingActionManager != null)
             pendingActionManager.Clear();
 
-        // 이전 스테이지에서 세다 만 턴 누적이 새 스테이지 첫 턴으로 넘어가지 않게 한다
-        // (퍼펙트/니킥/춉/박치기가 읽는 값이다). 어썸의 런 누적은 여기서 건드리지 않는다.
+        // 스테이지 단위 누적을 되돌린다 - 럭키 확률(LuckyUses)이 여기서 기본값으로 돌아가고,
+        // 세다 만 턴 누적(퍼펙트/니킥/촙/박치기)도 새 스테이지 첫 턴으로 넘어가지 않게 같이 비운다.
+        // 어썸의 런 누적은 여기서 건드리지 않는다.
         if (skillResolver != null)
-            skillResolver.ResetTurn();
+            skillResolver.ResetStage();
 
         if (statusEffectManager != null)
             statusEffectManager.ClearAll();
@@ -260,10 +332,10 @@ public class StageManager : MonoBehaviour
         // 새 스테이지를 로드하는 시점이므로 "보상 뒤 자동 진행 중" 상태는 끝난다.
         _advancingAfterReward = false;
 
+        // 문구는 코드가 써 넣지 않는다 - 등장 배너의 내용은 stageStartObject(프리팹/애니메이션)가
+        // 통째로 갖는다. 켜는 순간 StageStartEffect.OnEnable이 등장 연출을 알아서 재생한다.
         if (stageStartObject != null)
-        {
             stageStartObject.SetActive(true);
-        }
 
         startRoutine = StartCoroutine(BeginStageAfterDelay());
     }
@@ -333,8 +405,17 @@ public class StageManager : MonoBehaviour
     // (RewardInputHandler가 결과 화면보다 높은 우선순위로 입력을 가져가기 때문이다).
     private void HandleBattleEnded()
     {
-        // 패배에는 보상도 자동 진행도 없다 - 플레이어가 "다시"를 쳐서 재도전한다.
+        // 패배에는 보상도 자동 진행도 없다 - 플레이어가 "다시하기"를 쳐서 재도전한다.
         if (player == null || player.currentHP <= 0)
+            return;
+
+        // ⚠️ 런이 끝났으면(패배·전체 클리어) 보상 라운드를 열지 않는다. 전체 클리어는 플레이어가
+        // 살아 있어서 위 HP 검사에 걸리지 않는데, 그대로 두면 결과 화면이 뜬 <b>뒤에</b> 보상 창이
+        // 한 번 더 올라온다 - 더 갈 스테이지가 없으니 거기서 카드를 골라봐야 쓸 곳도 없다.
+        //
+        // 마지막 스테이지의 보상은 이 시점이 아니라 그 직전 Victory에서 이미 받았다.
+        // (OnBattleEnded가 kind가 바뀔 때도 나가게 되면서 이 경로가 생겼다 - ShowResult 참조.)
+        if (battleManager != null && battleManager.IsFinalResult)
             return;
 
         // ⚠️ wordUnlockManager가 없다고 여기서 리턴하면 안 된다. 그 경우에도 BeginRewardRound가
@@ -454,6 +535,28 @@ public class StageManager : MonoBehaviour
         // Time.deltaTime 기반이라 일시정지(timeScale = 0) 중에는 멈춰 있는다 - 프로젝트의
         // 다른 대기와 같은 규칙이다.
         yield return new WaitForSeconds(rewardAdvanceDelay);
+
+        // =========================================================
+        // [트랜지션 연출 시작]
+        // 2. 배경 스크롤 시작
+        if (backgroundScrollers != null)
+        {
+            foreach (var scroller in backgroundScrollers)
+            {
+                if (scroller != null) scroller.StartScroll();
+            }
+        }
+
+        // 3. 데미 달리기(돌진) 애니메이션 재생
+        if (player != null)
+        {
+            PlayerBattleVisuals visuals = player.GetComponent<PlayerBattleVisuals>();
+            if (visuals != null) visuals.PlayDashAnimation(1.5f); // 살짝 배속을 주어 다급하게 달리는 느낌
+        }
+
+        // 4. 달려가는 연출 시간 동안 대기
+        yield return new WaitForSeconds(transitionDuration);
+        // =========================================================
 
         // NextStage -> LoadStage가 이 코루틴을 멈추려 들기 전에 먼저 비운다.
         advanceRoutine = null;

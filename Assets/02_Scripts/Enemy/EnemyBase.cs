@@ -5,7 +5,6 @@ public class EnemyBase : CharacterStats
 {
     [Header("Enemy Data Reference")]
     public EnemyData enemyData;
-    public bool isMotherDragon = false;
     private bool isScaled = false;
 
     [Header("Visuals")]
@@ -22,9 +21,46 @@ public class EnemyBase : CharacterStats
     [SerializeField] private AnimationCurve moveToPlayerCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
     [SerializeField] private AnimationCurve moveToOriginCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-    // 스폰 위치. Start()에서 한 번만 읽는다 - 적은 스테이지마다 새로 Instantiate되므로
-    // 이 시점이 곧 "복귀할 자리"다(PlayerBattleVisuals.originalPosition과 같은 패턴).
+    [Header("트랜지션 등장 애니메이션")]
+    [Tooltip("화면 밖에서 등장할 때의 이동 비율 커브")]
+    public AnimationCurve slideInCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
+    // ==========================================================
+    // [추가] 화면 밖에서 원래 위치로 미끄러지듯 등장하는 코루틴
+    public IEnumerator SlideInCoroutine(Vector3 startPos, Vector3 targetPos, float duration)
+    {
+        // ⚠️ 복귀 지점을 <b>여기서</b> 확정한다. StageManager가 적을 화면 밖(spawnOffScreenX)에서
+        // Instantiate하므로, Start()가 읽는 transform.position은 그 시점에 아직 화면 밖이다 -
+        // 그대로 두면 공격을 마치고 "원래 자리"로 돌아갈 때 화면 밖으로 날아간다.
+        // 슬라이드가 끝나서 실제로 서 있을 자리는 인자로 받은 targetPos다.
+        originalPosition = targetPos;
+        originPinned = true;
+
+        // 등장 시에도 스프라이트가 올바르게 보이도록 정렬 순서 보정 (선택 사항)
+        if (spriteRenderer != null)
+            spriteRenderer.sortingOrder = originalSortingOrder;
+
+        float time = 0f;
+        while (time < duration)
+        {
+            var t = slideInCurve.Evaluate(time / duration);
+            transform.position = Vector3.LerpUnclamped(startPos, targetPos, t);
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = targetPos;
+    }
+    // ==========================================================
+
+    // 공격을 마치고 돌아갈 자리. 슬라이드 인을 쓰면 SlideInCoroutine이 확정하고,
+    // 안 쓰면 Start()가 스폰 위치를 읽는다(PlayerBattleVisuals.originalPosition과 같은 패턴).
     private Vector3 originalPosition;
+
+    // SlideInCoroutine이 복귀 지점을 확정했는가. ⚠️ Start()가 덮어쓰지 못하게 막는 표시다 -
+    // Instantiate 직후 StartCoroutine으로 슬라이드를 걸면 그 첫 구간이 Start()보다 <b>먼저</b>
+    // 실행되므로, 이 가드가 없으면 Start()가 슬라이드 도중의 좌표를 "원래 자리"로 굳혀버린다.
+    private bool originPinned;
 
     // 돌진 전 정렬 순서. 플레이어 앞에 서 있는 동안만 이보다 위로 올렸다가 복귀하면 되돌린다.
     private int originalSortingOrder;
@@ -57,9 +93,15 @@ public class EnemyBase : CharacterStats
             yield return null;
         }
         transform.position = targetPos;
+
+        // ⚠️ 여기서 originalPosition을 targetPos로 덮어쓰지 말 것. 그러면 "원래 자리"가
+        // 플레이어 앞으로 갱신되어, 뒤이은 MoveToOriginCoroutine이 이미 그 자리에 서 있는 채로
+        // 끝나 <b>적이 복귀하지 않는다</b>. 실제로 그렇게 커밋된 적이 있다(f88aabd).
+        // 화면 밖으로 날아가는 증상 때문에 넣은 것이었다면 원인은 이쪽이 아니라
+        // SlideInCoroutine이 복귀 지점을 확정하지 않았던 것이다.
     }
 
-    // 원래 스폰 위치로 복귀한다.
+    // 원래 자리로 복귀한다.
     public IEnumerator MoveToOriginCoroutine()
     {
         float time = 0f;
@@ -117,7 +159,11 @@ public class EnemyBase : CharacterStats
     protected override void Start()
     {
         animator = GetComponent<Animator>();
-        originalPosition = transform.position;
+
+        // 슬라이드 인이 이미 복귀 지점을 확정했으면 건드리지 않는다 - 이 시점의
+        // transform.position은 아직 화면 밖(또는 슬라이드 도중)이라 믿을 수 없다.
+        if (!originPinned)
+            originalPosition = transform.position;
 
         if (spriteRenderer == null)
             spriteRenderer = GetComponent<SpriteRenderer>();

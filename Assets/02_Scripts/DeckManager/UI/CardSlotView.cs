@@ -44,6 +44,19 @@ public class CardSlotView : MonoBehaviour
         new Keyframe(0f, 0f, 0f, 0f),
         new Keyframe(1f, 1f, 2f, 2f));
 
+    [Header("전체 클리어 연출 - 가라앉기")]
+    [Tooltip("전체 클리어 시 손패가 아래로 내려가는 거리(px). 무너짐과 달리 회전도 시차도 없다.")]
+    [SerializeField] private float sinkDistance = 300f;
+
+    [Tooltip("가라앉는 데 걸리는 시간(초). 무너짐보다 느긋하게 두면 \"끝났다\"는 느낌이 난다.")]
+    [SerializeField] private float sinkDuration = 0.6f;
+
+    [Tooltip("가라앉는 이징. 기본은 EaseOut(처음 빠르고 끝에서 부드럽게 멎는다) - 무너짐의 " +
+             "EaseIn(가속해서 떨어진다)과 반대라 두 연출이 확실히 다르게 보인다.")]
+    [SerializeField] private AnimationCurve sinkCurve = new AnimationCurve(
+        new Keyframe(0f, 0f, 2f, 2f),
+        new Keyframe(1f, 1f, 0f, 0f));
+
     private bool _subscribed;
     private CardBase _currentCard;
 
@@ -55,9 +68,23 @@ public class CardSlotView : MonoBehaviour
     private float _swapOffset;
     private float _collapseRotation;
     private bool _isSwapping;
+    private bool _isLeaving;
     private Coroutine _swapCoroutine;
 
     public int SlotIndex => slotIndex;
+
+    /// <summary>이 카드가 자리에서 <b>물러나는 중</b>인가 - 패배 무너짐(<see cref="PlayCollapse"/>,
+    /// 자기 차례를 기다리는 stagger 구간 포함)과 가라앉기(<see cref="PlayExit"/>) 둘 다 해당한다.
+    /// 손패가 다 치워진 뒤에 무언가를 이어 붙이려는 쪽이 본다 - 결과 화면 명령 카드가 손패가
+    /// 전부 사라진 다음에 떠오르는 게 그것이다(<see cref="HandFanLayout.IsLeaving"/>).
+    ///
+    /// 두 연출을 한 값으로 묶은 이유: 패배는 무너뜨리고 전체 클리어는 가라앉히는데, 기다리는
+    /// 쪽(ResultInputHandler)은 <b>어느 쪽인지 알 필요가 없다</b> - "치워졌는가"만 알면 된다.
+    ///
+    /// ⚠️ <see cref="_isSwapping"/>과 다르다. 그쪽은 무너짐이 끝나도 <b>일부러 켜둔 채</b> 남고
+    /// (Update의 들림 로직이 이미 떨어진 카드를 다시 들어올리지 않게) 평범한 슬롯 교체에도 켜진다.
+    /// 그 값으로는 "물러나는 중인가"도 "끝났는가"도 알 수 없어서 플래그를 따로 둔다.</summary>
+    public bool IsLeaving => _isLeaving;
 
     /// <summary>카드가 지금 이 프레임에 떠 있어야 할 높이. HandFanLayout이 부채꼴 목표 위치에 더해서 쓴다.</summary>
     public float VerticalOffset => _isSwapping ? _swapOffset : _liftAmount;
@@ -129,9 +156,19 @@ public class CardSlotView : MonoBehaviour
         var composing = inputManager.Composition;
         var hasInput = committed.Length > 0 || composing.Length > 0;
 
+        // ⚠️ 입력을 다른 화면이 가져갔으면 이 카드는 반응하지 않는다. 일시정지·결과 화면이
+        // 열리면 손패 단어는 대상 목록에서 빠지므로 여기가 false가 되고, 반대로 그 화면의
+        // 명령 카드는 자기 단어가 목록에 들어와 평소처럼 떠오른다 - 카드가 자기 주인을 알
+        // 필요 없이 "지금 내 단어가 노려지고 있는가"만 물으면 된다.
+        //
+        // 이게 없으면 일시정지 중 "계속"의 "ㄱ"에 손패의 "가드"가 같이 떠오르고, 보상 화면에서
+        // 후보 카드 이름을 칠 때 뒤에 남아 있는 손패까지 덩달아 움직인다.
+        var isMine = inputManager.IsTypingTarget(_liftTargetWord);
+
         // CardInputHandler의 매칭 판정과 같은 기준(InputManager.IsValidProgress)을 써야
         // 화면 연출과 실제 매칭이 서로 다른 카드를 가리키는 일이 없다.
-        var isCandidate = hasInput && InputManager.IsValidProgress(committed, composing, _liftTargetWord);
+        var isCandidate = isMine && hasInput &&
+                          InputManager.IsValidProgress(committed, composing, _liftTargetWord);
 
         var target = isCandidate ? typingLiftHeight : 0f;
 
@@ -193,9 +230,51 @@ public class CardSlotView : MonoBehaviour
         RestartSwapCoroutine(CollapseRoutine(delay));
     }
 
+    /// <summary>전체 클리어 시 손패를 아래로 가라앉힌다. 무너짐(<see cref="PlayCollapse"/>)과 달리
+    /// 회전도 시차도 없이 그냥 내려간다 - "졌다"가 아니라 "다 끝냈다"라 요란할 이유가 없다.
+    ///
+    /// ⚠️ <see cref="PlayExit"/>가 아니라 <see cref="PlayCollapse"/> 쪽 방식이다. PlayExit은 끝나면
+    /// <c>_isSwapping</c>을 내려서 카드가 원래 부채꼴 자리로 <b>도로 튀어오르고</b>, 그래서 부르는
+    /// 쪽이 onComplete에서 오브젝트를 꺼야 한다(일시정지가 그렇게 쓴다). 그런데 여기서 끄면
+    /// OnSlotChanged 구독이 끊겨 <b>재시작 후 RefillAll이 이 카드를 되살리지 못한다</b> - 결과
+    /// 화면에서 "다시하기"로 돌아온 판에 손패가 영영 안 보이게 된다. 내려간 자리에 그대로 두면
+    /// 다음 PlaySwap(RefillAll)이 알아서 정상 상태로 되돌린다.</summary>
+    public void PlaySink()
+    {
+        RestartSwapCoroutine(SinkRoutine());
+    }
+
+    private IEnumerator SinkRoutine()
+    {
+        _isSwapping = true;
+        _isLeaving = true;
+
+        var elapsed = 0f;
+        while (elapsed < sinkDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            var t = sinkCurve.Evaluate(Mathf.Clamp01(elapsed / sinkDuration));
+            _swapOffset = Mathf.Lerp(0f, -sinkDistance, t);
+            SetAlpha(Mathf.Lerp(1f, 0f, t));
+            yield return null;
+        }
+
+        _swapOffset = -sinkDistance;
+        SetAlpha(0f);
+        _swapCoroutine = null;
+        _isLeaving = false;
+
+        // _isSwapping은 켜 둔 채로 남긴다 - 끄면 VerticalOffset이 _liftAmount(0)로 돌아가
+        // 이미 내려가 안 보이는 카드가 원래 자리로 튀어오른다(PlayCollapse와 같은 이유).
+    }
+
     private IEnumerator CollapseRoutine(float delay)
     {
         _isSwapping = true;
+
+        // stagger로 자기 차례를 기다리는 동안도 "무너지는 중"이다 - 여기서 켜지 않으면
+        // 마지막 카드가 아직 시작도 안 했는데 IsLeaving이 false로 보인다.
+        _isLeaving = true;
 
         if (delay > 0f)
             yield return new WaitForSeconds(delay);
@@ -218,6 +297,7 @@ public class CardSlotView : MonoBehaviour
         _collapseRotation = rotationTarget;
         SetAlpha(0f);
         _swapCoroutine = null;
+        _isLeaving = false;
         // _isSwapping은 켜 둔 채로 남긴다 - 꺼버리면 Update()의 타이핑 들림 로직이 다시 돌아
         // 이미 떨어져 안 보이는 카드를 다시 위로 들어올리려 든다. 다음 PlaySwap(RefillAll)이
         // _isSwapping을 다시 관리하며 정상 상태로 되돌린다.
@@ -228,15 +308,23 @@ public class CardSlotView : MonoBehaviour
         if (_swapCoroutine != null)
             StopCoroutine(_swapCoroutine);
 
+        // 무너지던 중에 다른 연출이 끼어들면(재시작 후 RefillAll의 PlaySwap 등) 그 코루틴은
+        // 여기서 끊긴다 - 끝을 못 봤으니 플래그를 여기서 내려야 영영 true로 남지 않는다.
+        // CollapseRoutine이 곧바로 다시 켜므로(StartCoroutine은 첫 구간을 그 자리에서 실행한다)
+        // 무너짐을 새로 거는 경우에는 값이 그대로 유지된다.
+        _isLeaving = false;
+
         _swapCoroutine = StartCoroutine(routine);
     }
 
     private IEnumerator ExitRoutine(float offset, System.Action onComplete)
     {
         _isSwapping = true;
+        _isLeaving = true;
         yield return AnimateSwap(0f, offset, 1f, 0f, exitDuration);
         onComplete?.Invoke();
         _isSwapping = false;
+        _isLeaving = false;
         _swapCoroutine = null;
     }
 

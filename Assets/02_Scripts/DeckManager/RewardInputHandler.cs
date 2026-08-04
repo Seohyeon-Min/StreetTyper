@@ -277,6 +277,16 @@ public class RewardInputHandler : CommandWordReceiver
         if (!_active || rewardCardView == null || inputManager == null)
             return;
 
+        // ⚠️ _active만으로는 부족하다. 보상은 카드를 고를 때까지 계속 활성인데 그 위로 일시정지나
+        // 지우기 목록이 열리면 입력은 그쪽이 가져간다 - 그때도 계속 읽으면 플레이어가 치는
+        // "계속"이 후보 이름과 접두사가 겹치는 순간 엉뚱한 보상 카드가 떠오른다.
+        // 후보 없음(-1) + 입력 없음(false)으로 되돌려 카드를 평상 상태로 가라앉힌다.
+        if (!HasTypingFocus)
+        {
+            rewardCardView.SetTypingCandidate(-1, false);
+            return;
+        }
+
         var committed = inputManager.CurrentInput;
         var composing = inputManager.Composition;
         var hasInput = committed.Length > 0 || composing.Length > 0;

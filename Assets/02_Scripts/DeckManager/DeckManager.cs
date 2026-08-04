@@ -159,7 +159,7 @@ public class DeckManager : MonoBehaviour
             Debug.Log($"Resolved [{skillName}]: Damage={action.Damage} Defense={action.Defense} Heal={action.Heal} " +
                       $"IgnoresDefense={action.IgnoresDefense} BreaksEnemyDefense={action.BreaksEnemyDefense} " +
                       $"Status=[{string.Join(", ", action.StatusEffects)}] DamageReduction={action.DamageReduction} " +
-                      $"TimerChange={action.TimerChange} LootBonusOnKill={action.LootBonusOnKill}");
+                      $"TimerChange={action.TimerChange} GrantsLootBonus={action.GrantsLootBonus}");
         }
 
         // 지금 적용하지 않고 쌓아둔다. 턴이 끝나면 PlayPendingActions가 쌓인 순서대로 터뜨린다.
@@ -217,6 +217,21 @@ public class DeckManager : MonoBehaviour
             if (timerManager != null)
             {
                 timerManager.ResetToFull();
+            }
+        }
+        // 전체 클리어. 진 게 아니니 무너뜨리지 않고 그냥 아래로 가라앉힌다 - 결과 화면 명령 카드
+        // ("다시하기"/"카드"/"타이틀")가 같은 아래쪽 자리로 떠오르므로, 치워두지 않으면 손패와
+        // 겹친다. ResultInputHandler가 HandFanLayout.IsLeaving으로 이 연출이 끝나기를 기다린다.
+        //
+        // ⚠️ IsGameOver가 아니라 IsFinalResult다 - 일반 스테이지 클리어(보상 선택 중)까지 걸리면
+        // 다음 스테이지로 이어지는 판에서 손패가 사라진다.
+        else if (battleManager != null && battleManager.IsFinalResult && handFanLayout != null)
+        {
+            var cards = handFanLayout.Cards;
+            for (var i = 0; i < cards.Count; i++)
+            {
+                if (cards[i] != null)
+                    cards[i].PlaySink();
             }
         }
 
@@ -296,6 +311,17 @@ public class DeckManager : MonoBehaviour
         // 공격당한 여운을 두고 나서 플레이어 턴을 다시 연다.
         SetPhase(TurnPhase.PostAttackRest);
         yield return new WaitForSeconds(postAttackDelay);
+
+        // ⚠️ 대기 중에 이벤트 대화가 열렸을 수 있다. 마더 드래곤이 그렇다 - 3턴째 적 턴이
+        // Invoke로 1.5초 뒤 FinishMotherDragonBattle을 걸고, 그게 위 postAttackDelay(2초)
+        // 도중에 터지며 대사창을 연다. 여기서 막지 않으면 대사를 읽는 동안 타이머가 다시 돌아
+        // 만료되고, 가짜 턴 전환이 겹치면서 대사가 끝난 뒤에도 타이머가 계속 흐른다.
+        //
+        // IsGameOver로는 걸러지지 않는다 - 이벤트 스테이지는 대사가 끝날 때까지 false다.
+        // 여기서 끊어도 갇히지 않는다: 대사가 끝나면 EndEvent -> ShowResult -> OnBattleEnded ->
+        // HandleBattleEnded가 입력을 다시 열어준다.
+        if (battleManager.IsEventActive)
+            yield break;
 
         // 이번 턴에 쌓은 방어도는 적 공격을 막는 데까지만 쓰인다. 여기서 비우지 않으면
         // 가드를 반복하는 것만으로 영구히 무적이 된다.
@@ -440,21 +466,25 @@ public class DeckManager : MonoBehaviour
             // 데미지 및 UI 텍스트 처리
             combatManager.ExecutePlayerAction(actionEntry.Action, player, enemyManager.currentEnemy);
 
-            // 처치 판정을 UI 갱신보다 "먼저" 한다. 아래 UpdateUI는 CheckGameState -> ShowResult
-            // -> OnBattleEnded까지 한 호출 안에서 이어지고, 그 안에서 StageManager가 보상 라운드를
-            // 열어버린다. 럭키가 그 뒤에 얹히면 이번 판이 아니라 다음 스테이지에서 창이 한 번 더
-            // 뜨게 된다(럭키는 카드를 늘리는 게 아니라 보상 창을 한 번 더 여는 것이다).
+            // 럭키 판정에 성공한 조합이면 그 자리에서 보상 라운드를 쌓아둔다.
             //
-            // 지금 구조에서는 라운드 소비가 첫 라운드가 "끝난" 뒤라 실제로는 여유가 좀 있지만,
-            // 순서를 지켜두면 그 여유에 기대지 않아도 된다.
-            if (actionEntry.Action.LootBonusOnKill && wordUnlockManager != null)
-            {
-                var killed = enemyManager.currentEnemy;
-
-                // Die()가 Destroy를 부르면 Unity의 == null이 즉시 true가 되므로 둘 다 본다.
-                if (killed == null || killed.currentHP <= 0)
-                    wordUnlockManager.AddLuckyBonus();
-            }
+            // ⚠️ **이 공격이 처치했는지는 보지 않는다.** 럭키는 "쓰면 확률이 오르고, 성공하면
+            // 그 스테이지를 클리어할 때 보상이 한 번 더 열린다"는 카드다 - 킬을 낸 조합에
+            // 럭키가 들어 있어야 한다는 규칙이 아니다. 예전엔 여기서 처치 여부를 같이 봐서,
+            // 판정에 성공해도 그 콤보가 마지막 일격이 아니면 아무 일도 일어나지 않았다.
+            // 수치 칸이 "보상" -> "보상됨"으로 바뀌는 것도 이 쌓인 상태를 보여주려고 있는 것이라,
+            // 처치 시점에 쌓으면 그 표시가 보일 틈이 거의 없다.
+            //
+            // 쌓아둔 라운드는 스테이지를 클리어할 때 StageManager가 TryConsumeBonusRound로
+            // 하나씩 꺼내 쓴다 - 즉 "이후 적을 처치했을 때 보상이 추가된다"는 규칙은 그쪽에서
+            // 자연히 성립한다(클리어하지 못하면 보상 창 자체가 열리지 않는다).
+            //
+            // 그래도 UI 갱신보다는 "먼저" 해야 한다. 아래 UpdateUI는 CheckGameState -> ShowResult
+            // -> OnBattleEnded까지 한 호출 안에서 이어지고, 그 안에서 StageManager가 보상 라운드를
+            // 열어버린다. 이 공격이 마침 처치 일격이었다면, 뒤에 쌓으면 이번 판이 아니라 다음
+            // 스테이지에서 창이 한 번 더 뜬다.
+            if (actionEntry.Action.GrantsLootBonus && wordUnlockManager != null)
+                wordUnlockManager.AddLuckyBonus();
 
             // 타격 하나가 적용될 때마다 HP/방어도 표시를 갱신한다. 이게 없으면 수치는
             // 한 대씩 제대로 깎이는데 화면만 그대로 있다가 턴이 끝날 때 한 번에 뚝 떨어져서,

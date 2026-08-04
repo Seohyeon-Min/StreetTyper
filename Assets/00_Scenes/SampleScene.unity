@@ -1569,6 +1569,7 @@ GameObject:
   - component: {fileID: 753238821}
   - component: {fileID: 753238820}
   - component: {fileID: 753238823}
+  - component: {fileID: 6284281306520950136}
   m_Layer: 0
   m_Name: Panel
   m_TagString: Untagged
@@ -1680,6 +1681,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  closeFadeOutDuration: 0.15
 --- !u!1 &769049983
 GameObject:
   m_ObjectHideFlags: 0
@@ -5073,7 +5075,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: StageStartText
+  m_text: StageStart
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -5440,6 +5442,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  closeFadeOutDuration: 0.15
 --- !u!1001 &26145625866616889
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6715,6 +6718,19 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3214811214748362040, guid: b6f47acbe21fd2043a04cb8c8041526e, type: 3}
   m_PrefabInstance: {fileID: 4504949275694822396}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &6284281306520950136
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 753238819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5b1b372e96a3ee746637156cb0c5eab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FadeInBackground
+  duration: 0.25
 --- !u!1001 &6310013652510112042
 PrefabInstance:
   m_ObjectHideFlags: 0

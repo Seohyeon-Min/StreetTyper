@@ -59,7 +59,11 @@ namespace UIStyle.Editor
         private SerializedProperty _edgeLineIntensity;
         private SerializedProperty _edgeLineColor;
         private SerializedProperty _edgeLineSharpness;
-        
+
+        private SerializedProperty _enableOutline;
+        private SerializedProperty _outlineWidth;
+        private SerializedProperty _outlineColor;
+
         private SerializedProperty _preset;
         
         // Image properties
@@ -129,7 +133,11 @@ namespace UIStyle.Editor
             _edgeLineIntensity = serializedObject.FindProperty("edgeLineIntensity");
             _edgeLineColor = serializedObject.FindProperty("edgeLineColor");
             _edgeLineSharpness = serializedObject.FindProperty("edgeLineSharpness");
-            
+
+            _enableOutline = serializedObject.FindProperty("enableOutline");
+            _outlineWidth = serializedObject.FindProperty("outlineWidth");
+            _outlineColor = serializedObject.FindProperty("outlineColor");
+
             _preset = serializedObject.FindProperty("preset");
             
             // Image 컴포넌트 속성 가져오기
@@ -384,9 +392,27 @@ namespace UIStyle.Editor
                 }
                 EditorGUI.indentLevel--;
             }
-            
+
+            EditorGUILayout.Space(5);
+
+            // Outline
+            bool showOutline = EditorGUILayout.Foldout(true, "🖊 Outline", true);
+            if (showOutline)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(_enableOutline, new GUIContent("Enable", "윤곽선 활성화"));
+
+                if (_enableOutline.boolValue)
+                {
+                    EditorGUILayout.PropertyField(_outlineWidth, new GUIContent("Outline Width", "윤곽선 두께 (도형 안쪽으로 파고드는 정도)"));
+                    EditorGUILayout.PropertyField(_outlineColor, new GUIContent("Outline Color", "윤곽선 색상"));
+                    EditorGUILayout.HelpBox("윤곽선: 도형 가장자리를 따라 안쪽으로 테두리를 그립니다.", MessageType.Info);
+                }
+                EditorGUI.indentLevel--;
+            }
+
             EditorGUILayout.Space(10);
-            
+
             // Preset
             _showPreset = EditorGUILayout.Foldout(_showPreset, "💾 Preset", true);
             if (_showPreset)
@@ -479,7 +505,11 @@ namespace UIStyle.Editor
             preset.edgeLineIntensity = uiStyle.edgeLineIntensity;
             preset.edgeLineColor = uiStyle.edgeLineColor;
             preset.edgeLineSharpness = uiStyle.edgeLineSharpness;
-            
+
+            preset.enableOutline = uiStyle.enableOutline;
+            preset.outlineWidth = uiStyle.outlineWidth;
+            preset.outlineColor = uiStyle.outlineColor;
+
             AssetDatabase.CreateAsset(preset, path);
             AssetDatabase.SaveAssets();
             

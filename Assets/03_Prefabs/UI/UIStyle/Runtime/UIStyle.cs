@@ -186,7 +186,18 @@ namespace UIStyle
         [Range(0, 10)]
         [Tooltip("경계 뚜렷함 (0 = 매우 부드럽게, 10 = 매우 뚜렷하게)")]
         public float edgeLineSharpness = 5f;
-        
+
+        [Header("Outline")]
+        [Tooltip("윤곽선 활성화 (도형 안쪽 가장자리를 따라 테두리를 그린다)")]
+        public bool enableOutline = false;
+
+        [Range(0, 50)]
+        [Tooltip("윤곽선 두께 (도형 안쪽으로 파고드는 정도, Corner Radius와 같은 단위)")]
+        public float outlineWidth = 5f;
+
+        [Tooltip("윤곽선 색상")]
+        public Color outlineColor = Color.black;
+
         public enum MaterialType
         {
             Plastic = 0,
@@ -389,6 +400,11 @@ namespace UIStyle
             _material.SetFloat("_EdgeLineIntensity", edgeLineIntensity / 10f);
             _material.SetColor("_EdgeLineColor", edgeLineColor);
             _material.SetFloat("_EdgeLineSharpness", edgeLineSharpness / 10f);
+
+            // Outline
+            _material.SetFloat("_EnableOutline", enableOutline ? 1f : 0f);
+            _material.SetFloat("_OutlineWidth", outlineWidth / 100f);
+            _material.SetColor("_OutlineColor", outlineColor);
         }
         
         /// <summary>게이지처럼 매 프레임 값이 바뀌는 경우를 위한 가벼운 갱신. ApplyStyle() 전체를 다시 돌리지 않고

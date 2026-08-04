@@ -70,7 +70,13 @@ namespace UIStyle
         public Color edgeLineColor = new Color(0, 0, 0, 1f);
         [Range(0, 10)]
         public float edgeLineSharpness = 5f;
-        
+
+        [Header("Outline")]
+        public bool enableOutline = false;
+        [Range(0, 50)]
+        public float outlineWidth = 5f;
+        public Color outlineColor = Color.black;
+
         public void ApplyTo(UIStyle uiStyle)
         {
             if (!uiStyle) return;
@@ -110,6 +116,10 @@ namespace UIStyle
             uiStyle.edgeLineIntensity = edgeLineIntensity;
             uiStyle.edgeLineColor = edgeLineColor;
             uiStyle.edgeLineSharpness = edgeLineSharpness;
+
+            uiStyle.enableOutline = enableOutline;
+            uiStyle.outlineWidth = outlineWidth;
+            uiStyle.outlineColor = outlineColor;
         }
     }
 }

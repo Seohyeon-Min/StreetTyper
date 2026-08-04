@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using FMODUnity;
@@ -221,9 +222,11 @@ public class BattleManager : MonoBehaviour
         UpdateUI();
     }
 
-    public void ExecuteEnemyTurn()
+    // ⚠️ 코루틴이다 - 공격일 때 EnemyManager가 플레이어 앞까지 돌진했다 복귀하는 동안
+    // 호출자(DeckManager.RunTurnTransition)가 그 연출이 끝날 때까지 기다려야 하기 때문이다.
+    public IEnumerator ExecuteEnemyTurnCoroutine()
     {
-        if (isGameOver) return;
+        if (isGameOver) yield break;
 
         if (player != null && enemyManager != null && enemyManager.currentEnemy != null)
         {
@@ -250,7 +253,7 @@ public class BattleManager : MonoBehaviour
             }
             else
             {
-                enemyManager.ExecuteEnemyTurn(player);
+                yield return enemyManager.ExecuteEnemyTurnCoroutine(player);
 
                 if (SpeechBubbleManager.Instance != null)
                 {

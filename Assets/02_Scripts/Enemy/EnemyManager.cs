@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class EnemyManager : MonoBehaviour
@@ -18,6 +19,10 @@ public class EnemyManager : MonoBehaviour
     [SerializeField] private Color attackColor = Color.red;
     [SerializeField] private Color defendColor = Color.blue;
     [SerializeField] private Color buffColor = Color.yellow;
+
+    [Tooltip("돌진 도착 후 애니메이션의 '주먹이 뻗어 나가는' 타격 시점까지 대기하는 시간. " +
+             "플레이어 쪽(DeckManager의 0.15f)과 같은 역할.")]
+    [SerializeField] private float attackHitDelay = 0.15f;
 
     // Determine the next action beforehand
     public void GenerateNextAction()
@@ -91,10 +96,12 @@ public class EnemyManager : MonoBehaviour
         }
     }
 
-    // Execute the action that was already decided
-    public void ExecuteEnemyTurn(CharacterStats player)
+    // Execute the action that was already decided.
+    // 공격일 때만 플레이어 쪽(PlayerBattleVisuals)과 짝을 이루는 돌진 연출이 들어간다 -
+    // 방어/버프는 제자리에서 하는 행동이라 이동할 이유가 없다.
+    public IEnumerator ExecuteEnemyTurnCoroutine(CharacterStats player)
     {
-        if (currentEnemy == null || currentEnemy.enemyData == null || player == null) return;
+        if (currentEnemy == null || currentEnemy.enemyData == null || player == null) yield break;
 
         EnemyData data = currentEnemy.enemyData;
 
@@ -102,7 +109,15 @@ public class EnemyManager : MonoBehaviour
         {
             case ActionType.Attack:
                 Debug.Log(data.enemyName + " Action: ATTACK!");
+
+                // 플레이어 쪽(PlayerBattleVisuals)과 같은 순서 - 공격 자세를 먼저 잡고
+                // 그 자세인 채로 돌진한다(다 이동한 뒤에 자세를 잡는 게 아니다).
                 currentEnemy.PlayAttackAnimation();
+                yield return currentEnemy.MoveToPlayerCoroutine(player.transform);
+
+                // 주먹이 뻗어 나가는 타격 시점까지 대기(플레이어 쪽 hitDelay와 같은 역할).
+                yield return new WaitForSeconds(attackHitDelay);
+
                 player.TakeDamage(currentEnemy.power);
 
                 if (StatisticsManager.Instance != null)
@@ -115,6 +130,9 @@ public class EnemyManager : MonoBehaviour
 
                 if (SoundManager.Instance != null)
                     SoundManager.Instance.PlayRandomPunch();
+
+                // 원래 자리로 복귀.
+                yield return currentEnemy.MoveToOriginCoroutine();
                 break;
             case ActionType.Defend:
                 Debug.Log(data.enemyName + " Action: DEFEND!");

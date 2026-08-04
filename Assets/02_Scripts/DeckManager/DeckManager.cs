@@ -282,7 +282,7 @@ public class DeckManager : MonoBehaviour
         yield return new WaitForSeconds(turnChangeDelay);
 
         SetPhase(TurnPhase.EnemyTurn);
-        battleManager.ExecuteEnemyTurn();
+        yield return battleManager.ExecuteEnemyTurnCoroutine();
 
         // 적 턴이 끝난 직후 화상 피해를 넣고 상태이상 지속을 1턴 줄인다.
         // 화상 피해를 적 공격과 겹치지 않게 띄워 보여주므로 코루틴으로 기다린다.

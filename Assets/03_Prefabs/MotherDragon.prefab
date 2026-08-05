@@ -127,8 +127,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c377a2a9bb70ef1468f1d0e713814ca4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MotherDragon
-  maxHP: 100
-  currentHP: 100
+  maxHP: 9999
+  currentHP: 9999
   power: 10
   defense: 0
   damageTakenMultiplier: 1

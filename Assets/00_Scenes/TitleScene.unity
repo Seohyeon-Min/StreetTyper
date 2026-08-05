@@ -1350,14 +1350,16 @@ MonoBehaviour:
   closeButton: {fileID: 608462855}
   languageButton: {fileID: 601645195}
   languageButtonText: {fileID: 158209437}
-  toKoreanLabel: "\uD55C\uAD6D\uC5B4"
-  toEnglishLabel: English
-  toFrenchLabel: "Fran\xE7ais"
-  toSpanishLabel: "Espa\xF1ol"
+  labelKorean: "< \uD55C\uAD6D\uC5B4 >"
+  labelEnglish: < English >
+  labelFrench: "< Fran\xE7ais >"
+  labelSpanish: "< Espa\xF1ol >"
+  labelJapanese: "< \u65E5\u672C\u8A9E >"
   closeKorean: "\uB2EB\uAE30"
   closeEnglish: CLOSE
   closeFrench: FERMER
   closeSpanish: CERRAR
+  closeJapanese: "\u9589\u3058\u308B"
   titleReveal: {fileID: 331904776}
 --- !u!1 &341034574
 GameObject:

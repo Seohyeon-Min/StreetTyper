@@ -8034,7 +8034,7 @@ MonoBehaviour:
   presentation:
     titleKorean: "\uB9C8\uADF8\uB098 \uB9C8\uD14C\uB974"
     titleEnglish: Magna Mater
-    image: {fileID: 0}
+    image: {fileID: -1213004952689408219, guid: 772e3f24ecf8b31409c551c07e5c5366, type: 3}
     titleColor: {r: 0, g: 0, b: 0, a: 1}
   subtitleKorean: "~\uB108\uAC00 \uD560 \uC218 \uC788\uB294 \uBAA8\uB4E0\uAC78 \uBCF4\uC5EC\uC918!~"
   subtitleEnglish: ~Show me everything you've got!~

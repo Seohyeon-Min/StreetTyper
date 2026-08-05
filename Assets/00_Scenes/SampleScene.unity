@@ -984,17 +984,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b9a8a08fb209a14fae690459d8e799a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WorldAnchoredUI
---- !u!114 &495607842 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 754892186313342764, guid: 0995d3239a6b59242933df530292adc3, type: 3}
-  m_PrefabInstance: {fileID: 2280472881631232213}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -2390,52 +2379,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 786726007}
   m_CullTransparentMesh: 1
---- !u!1 &886175012 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5026100741603747655, guid: 0995d3239a6b59242933df530292adc3, type: 3}
-  m_PrefabInstance: {fileID: 2280472881631232213}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &886175014
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 886175012}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
-  targetDistance: 17.77
-  leftBound: -26.53
-  loopJumpDistance: 35.46
-  accelerationDuration: 0.5
-  accelerationCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  maxSpeed: 14.2
 --- !u!4 &891639024 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3729363492170284162, guid: 360643be5c203054f8284efa092a099e, type: 3}
@@ -4677,17 +4620,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1259881541}
   m_CullTransparentMesh: 1
---- !u!114 &1263342476 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2826787561154983472, guid: 0995d3239a6b59242933df530292adc3, type: 3}
-  m_PrefabInstance: {fileID: 2280472881631232213}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
 --- !u!114 &1263402526 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5835354787147090565, guid: 0995d3239a6b59242933df530292adc3, type: 3}
@@ -6969,52 +6901,6 @@ MonoBehaviour:
     hintKorean: "\"{0}\"\uB97C \uC785\uB825\uD558\uBA74 \uBAA9\uB85D\uC774 \uB2EB\uD799\uB2C8\uB2E4."
     hintEnglish: Type "{0}" to close the list.
   logDebugEvents: 0
---- !u!1 &1880727950 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3005350112848500450, guid: 0995d3239a6b59242933df530292adc3, type: 3}
-  m_PrefabInstance: {fileID: 2280472881631232213}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1880727952
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1880727950}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
-  targetDistance: 17.77
-  leftBound: -10.4
-  loopJumpDistance: 35.46
-  accelerationDuration: 0.5
-  accelerationCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  maxSpeed: 14.2
 --- !u!1 &1891759485
 GameObject:
   m_ObjectHideFlags: 0
@@ -8796,28 +8682,28 @@ PrefabInstance:
       objectReference: {fileID: 6201447247898099441, guid: 3d033f8c090bc07439f8c264ef24b4b5, type: 3}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: backgroundScrollers.Array.size
-      value: 10
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[0]'
       value: 
-      objectReference: {fileID: 886175014}
+      objectReference: {fileID: 2280472881631232219}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[1]'
       value: 
-      objectReference: {fileID: 1263342476}
+      objectReference: {fileID: 1263402526}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[2]'
       value: 
-      objectReference: {fileID: 1880727952}
+      objectReference: {fileID: 2280472881631232218}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[3]'
       value: 
-      objectReference: {fileID: 495607842}
+      objectReference: {fileID: 268987178}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[4]'
       value: 
-      objectReference: {fileID: 217928250}
+      objectReference: {fileID: 2280472881631232217}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[5]'
       value: 
@@ -8825,15 +8711,15 @@ PrefabInstance:
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[6]'
       value: 
-      objectReference: {fileID: 378749226}
+      objectReference: {fileID: 2280472881631232216}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[7]'
       value: 
-      objectReference: {fileID: 1263402526}
+      objectReference: {fileID: 2280472881631232215}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[8]'
       value: 
-      objectReference: {fileID: 1344373954}
+      objectReference: {fileID: 2280472881631232214}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: 'backgroundScrollers.Array.data[9]'
       value: 
@@ -8992,17 +8878,15 @@ PrefabInstance:
     - {fileID: 4580239513196078222, guid: 0995d3239a6b59242933df530292adc3, type: 3}
     - {fileID: 7008131231569241800, guid: 0995d3239a6b59242933df530292adc3, type: 3}
     - {fileID: 5772151677271464028, guid: 0995d3239a6b59242933df530292adc3, type: 3}
+    - {fileID: 7136839569631863636, guid: 0995d3239a6b59242933df530292adc3, type: 3}
+    - {fileID: 472994991026821893, guid: 0995d3239a6b59242933df530292adc3, type: 3}
+    - {fileID: 5026100741603747655, guid: 0995d3239a6b59242933df530292adc3, type: 3}
+    - {fileID: 3005350112848500450, guid: 0995d3239a6b59242933df530292adc3, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 2429013598713369030, guid: 0995d3239a6b59242933df530292adc3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 378749226}
-    - targetCorrespondingSourceObject: {fileID: 3005350112848500450, guid: 0995d3239a6b59242933df530292adc3, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1880727952}
-    - targetCorrespondingSourceObject: {fileID: 5026100741603747655, guid: 0995d3239a6b59242933df530292adc3, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 886175014}
     - targetCorrespondingSourceObject: {fileID: 7873897006922982756, guid: 0995d3239a6b59242933df530292adc3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1344373954}
@@ -9010,6 +8894,72 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 217928250}
   m_SourcePrefab: {fileID: 100100000, guid: 0995d3239a6b59242933df530292adc3, type: 3}
+--- !u!114 &2280472881631232214 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2868723696114925568, guid: 0995d3239a6b59242933df530292adc3, type: 3}
+  m_PrefabInstance: {fileID: 2280472881631232213}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
+--- !u!114 &2280472881631232215 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5480082344247389395, guid: 0995d3239a6b59242933df530292adc3, type: 3}
+  m_PrefabInstance: {fileID: 2280472881631232213}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
+--- !u!114 &2280472881631232216 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8574460990200218215, guid: 0995d3239a6b59242933df530292adc3, type: 3}
+  m_PrefabInstance: {fileID: 2280472881631232213}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
+--- !u!114 &2280472881631232217 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4516450042448863681, guid: 0995d3239a6b59242933df530292adc3, type: 3}
+  m_PrefabInstance: {fileID: 2280472881631232213}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 217928248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
+--- !u!114 &2280472881631232218 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7257665522040669267, guid: 0995d3239a6b59242933df530292adc3, type: 3}
+  m_PrefabInstance: {fileID: 2280472881631232213}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1344373952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
+--- !u!114 &2280472881631232219 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7237396771573124961, guid: 0995d3239a6b59242933df530292adc3, type: 3}
+  m_PrefabInstance: {fileID: 2280472881631232213}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 378749223}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb005efe71b5c4a4c85ed60cb2b8ad74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BackgroundScroller
 --- !u!1001 &2415247443556779927
 PrefabInstance:
   m_ObjectHideFlags: 0

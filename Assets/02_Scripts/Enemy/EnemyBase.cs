@@ -121,21 +121,37 @@ public class EnemyBase : CharacterStats
             spriteRenderer.sortingOrder = originalSortingOrder;
     }
 
-    public void ApplyScaling(int stageIndex)
+    /// <summary>스폰 직후 스테이지에 맞는 스탯을 입힌다(<see cref="StageManager.LoadStage"/>).
+    ///
+    /// <para><b>수치는 전부 부르는 쪽(StageManager)이 정한다.</b> 스테이지 진행을 아는 쪽이
+    /// 계산해야 하고, 인스펙터에서 조절할 값도 거기 한곳에 모여 있어야 하기 때문이다. 여기서는
+    /// 넘어온 값을 <see cref="enemyData"/> 기준으로 적용하기만 한다 - 체력은 절대값,
+    /// 공격력은 <see cref="EnemyData.power"/>에 곱할 배율이다.</para>
+    ///
+    /// <para>⚠️ 두 인자 모두 0 이하면 그 스탯을 건드리지 않는다 - 마더 드래곤처럼 스케일링에서
+    /// 빠져야 하는 적을 위한 통로다(3턴을 버텨야 스파링이 성립하는데 일반 공식을 태우면 그 전에
+    /// 죽어 아웃로 이벤트가 통째로 깨진다).</para></summary>
+    public void ApplyScaling(int scaledMaxHP, float powerMultiplier)
     {
-        if (enemyData != null)
+        if (enemyData == null)
+            return;
+
+        if (scaledMaxHP > 0)
         {
-            float multiplier = 1f + (stageIndex * 0.2f); // 스테이지당 20% 증가
-            maxHP = Mathf.RoundToInt(enemyData.maxHP * multiplier);
+            maxHP = scaledMaxHP;
             currentHP = maxHP;
-            power = Mathf.RoundToInt(enemyData.power * multiplier);
-
-            // 새로 등장한 적은 방어도가 없는 상태에서 시작해야 한다. 적 방어도는 턴마다 비워주는
-            // 곳이 없어서(플레이어 쪽만 DeckManager가 비운다) 한 번 남으면 계속 쌓인 채로 간다.
-            defense = 0;
-
-            isScaled = true;
         }
+
+        if (powerMultiplier > 0f)
+            power = Mathf.RoundToInt(enemyData.power * powerMultiplier);
+
+        // 새로 등장한 적은 방어도가 없는 상태에서 시작해야 한다. 적 방어도는 턴마다 비워주는
+        // 곳이 없어서(플레이어 쪽만 DeckManager가 비운다) 한 번 남으면 계속 쌓인 채로 간다.
+        defense = 0;
+
+        // ⚠️ 체력을 안 건드린 경우에도 세운다. 이게 false면 Start()가 enemyData 값으로
+        // maxHP를 덮어써서, 체력 스케일링에서 빼둔 의미가 사라진다.
+        isScaled = true;
     }
 
     // 공격 애니메이션 트리거 (Idle -> Attack 전이는 Animator Controller의 Exit Time으로 자동 복귀)

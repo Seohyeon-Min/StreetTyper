@@ -190,7 +190,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterStats
   maxHP: 100
   currentHP: 100
-  power: 10
+  power: 1
   defense: 0
   damageTakenMultiplier: 1
 --- !u!212 &108802001

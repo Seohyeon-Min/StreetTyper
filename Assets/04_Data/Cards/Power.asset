@@ -13,11 +13,18 @@ MonoBehaviour:
   m_Name: Power
   m_EditorClassIdentifier: Assembly-CSharp::ModifierCardData
   cardName: "\uD30C\uC6CC"
-  icon: {fileID: 0}
-  description: "\uC0C1\uC2B9 \uD6A8\uACFC +1"
+  description: "\uB2E4\uB978 \uC2DC\uB108\uC9C0 \uCE74\uB4DC\uB4E4\uC774 \uC81C\uACF5\uD558\uB294
+    \uC704\uB825 \uC99D\uAC00\uB7C9\uC744 \uAC01\uAC01 1\uC529 \uB192\uC785\uB2C8\uB2E4."
   statsLabel: "\uAC15\uD654"
-  cardNameEn: "power"
-  descriptionEn: "Adds 1 to each value-up word"
-  statsLabelEn: "BOOST"
+  cardNameEn: power
+  descriptionEn: Increases the power boost provided by other synergy cards by 1.
+  statsLabelEn: BOOST
+  icon: {fileID: 0}
   effectType: 1
   value: 1
+  scalingSource: 0
+  chancePercent: 10
+  chanceGainPerUse: 10
+  maxChancePercent: 50
+  lootPendingStatsLabel: 
+  lootPendingStatsLabelEn: 

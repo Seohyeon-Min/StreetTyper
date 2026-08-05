@@ -347,11 +347,8 @@ public class BattleManager : MonoBehaviour
                     else
                         enemyIntentBubble.SetupIntent(enemyManager.GetIntentIcon(), enemyManager.GetIntentString(), enemyManager.GetIntentColor());
 
-                    if (SpeechBubbleManager.Instance != null)
-                    {
-                        enemyIntentBubbleObj.GetComponent<RectTransform>().position =
-                            SpeechBubbleManager.Instance.GetBubbleScreenPosition(enemy.BubblePosition, false);
-                    }
+                    // 위치는 여기서 한 번 잡지 않고 LateUpdate가 매 프레임 갱신한다 - 적이
+                    // 돌진했다 복귀하는 동안에도 말풍선이 따라가야 하기 때문이다.
                 }
             }
             else if (enemyIntentBubbleObj != null && !isPlayerInputPhase)
@@ -366,6 +363,22 @@ public class BattleManager : MonoBehaviour
         }
 
         CheckGameState();
+    }
+
+    private void LateUpdate()
+    {
+        // 인텐트 말풍선이 활성화되어 있고, 적이 화면에 존재할 때 매 프레임 위치를 갱신
+        if (enemyIntentBubbleObj != null && enemyIntentBubbleObj.activeSelf)
+        {
+            if (enemyManager != null && enemyManager.currentEnemy != null)
+            {
+                if (SpeechBubbleManager.Instance != null)
+                {
+                    enemyIntentBubbleObj.GetComponent<RectTransform>().position =
+                        SpeechBubbleManager.Instance.GetBubbleScreenPosition(enemyManager.currentEnemy.BubblePosition, false);
+                }
+            }
+        }
     }
 
     void CheckGameState()

@@ -13,12 +13,18 @@ MonoBehaviour:
   m_Name: Perfect
   m_EditorClassIdentifier: Assembly-CSharp::ModifierCardData
   cardName: "\uD37C\uD399\uD2B8"
-  description: "\uC774\uBC88 \uD134 \uC904\uC5B4\uB4E0 \uCD08\uB2F9 \uC704\uB825 +2"
-  statsLabel: "{0}"
-  cardNameEn: "perfect"
-  descriptionEn: "+2 per second lost"
-  statsLabelEn: "{0}"
+  description: "\uC774\uBC88 \uD134\uC5D0 \uC18C\uBAA8\uB41C \uC2DC\uAC04(\uCD08)
+    1\uB2F9 \uB2E4\uC74C \uC561\uC158\uC758 \uC704\uB825\uC774 2 \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  statsLabel: '{0}'
+  cardNameEn: perfect
+  descriptionEn: Next action gains +2 power for each second lost this turn.
+  statsLabelEn: '{0}'
   icon: {fileID: 0}
   effectType: 5
   value: 2
   scalingSource: 1
+  chancePercent: 10
+  chanceGainPerUse: 10
+  maxChancePercent: 50
+  lootPendingStatsLabel: 
+  lootPendingStatsLabelEn: 

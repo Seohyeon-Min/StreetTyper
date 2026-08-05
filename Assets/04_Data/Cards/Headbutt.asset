@@ -13,11 +13,14 @@ MonoBehaviour:
   m_Name: Headbutt
   m_EditorClassIdentifier: Assembly-CSharp::ActionCardData
   cardName: "\uBC15\uCE58\uAE30"
-  description: "\uC774\uBC88 \uD134 \uC218\uC2DD\uC5B4\uB2F9 \uC704\uB825 +2"
-  statsLabel: "{0}"
-  cardNameEn: "headbutt"
-  descriptionEn: "+2 power per modifier"
-  statsLabelEn: "{0}"
+  description: "\uC801\uC5D0\uAC8C 10\uC758 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4.
+    \uC774\uBC88 \uD134\uC5D0 \uC0AC\uC6A9\uD55C \uC2DC\uB108\uC9C0 \uCE74\uB4DC
+    \uD55C \uC7A5\uB2F9 \uD53C\uD574\uB7C9\uC774 2 \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  statsLabel: '{0}'
+  cardNameEn: headbutt
+  descriptionEn: Deal 10 damage. Damage increases by 2 for each synergy card used
+    this turn.
+  statsLabelEn: '{0}'
   icon: {fileID: 0}
   actionKind: 0
   strengthBonus: 0

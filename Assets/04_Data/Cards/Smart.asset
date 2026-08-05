@@ -13,12 +13,14 @@ MonoBehaviour:
   m_Name: Smart
   m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
   cardName: "\uC2A4\uB9C8\uD2B8"
-  icon: {fileID: 0}
-  description: "{0}% \uD655\uB960 \uD53C\uD574 {1}\uBC30"
+  description: "\uB2E4\uC74C \uC561\uC158 \uC2DC {0}% \uD655\uB960\uB85C \uB300\uC131\uACF5\uD558\uC5EC
+    \uC704\uB825\uC774 {1}\uBC30\uAC00 \uB429\uB2C8\uB2E4."
   statsLabel: "\uCE58\uBA85"
-  cardNameEn: "smart"
-  descriptionEn: "{0}% chance for {1}x damage"
-  statsLabelEn: "CRIT"
+  cardNameEn: smart
+  descriptionEn: '{0}% chance for your next action to trigger a critical success,
+    multiplying its power by {1}.'
+  statsLabelEn: CRIT
+  icon: {fileID: 0}
   effectType: 5
   statusEffect: 0
   chancePercent: 50

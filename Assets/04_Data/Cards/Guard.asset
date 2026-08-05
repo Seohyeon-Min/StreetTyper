@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Guard
   m_EditorClassIdentifier: Assembly-CSharp::ActionCardData
   cardName: "\uAC00\uB4DC"
-  icon: {fileID: 0}
-  description: "\uACF5\uACA9 \uB300\uC2E0 \uBC29\uC5B4"
+  description: "\uBC29\uC5B4\uB3C4\uB97C 10 \uC5BB\uC2B5\uB2C8\uB2E4."
   statsLabel: "\uBC29\uC5B4"
-  cardNameEn: "guard"
-  descriptionEn: "Gain defense instead of attacking"
-  statsLabelEn: "BLOCK"
+  cardNameEn: guard
+  descriptionEn: Gain 10 block.
+  statsLabelEn: BLOCK
+  icon: {fileID: 0}
   actionKind: 1
   strengthBonus: 0
   timerDelta: 0
@@ -28,3 +28,5 @@ MonoBehaviour:
   comboChancePercent: 0
   comboMinHits: 0
   comboMaxHits: 0
+  scalingSource: 0
+  scalingPerUnit: 0

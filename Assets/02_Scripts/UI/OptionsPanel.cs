@@ -24,24 +24,34 @@ public class OptionsPanel : MonoBehaviour
     [SerializeField] private Button closeButton;
 
     [Header("언어")]
-    [Tooltip("누를 때마다 한국어 ↔ 영어를 오간다. 전투 중에는 바꿀 수 없고 타이틀에만 둔다 - " +
-             "CardName이 곧 타이핑 매칭 키라서 런 도중에 바꾸면 사전과 손패가 어긋난다.")]
+    [Tooltip("누를 때마다 한국어 -> 영어 -> 프랑스어 -> 스페인어 순으로 오갑니다.")]
     [SerializeField] private Button languageButton;
 
-    [Tooltip("언어 버튼에 표시할 글자. 지금 언어가 아니라 '누르면 바뀔 언어'를 보여준다. " +
-             "비워두면 버튼 안의 TMP 라벨을 자동으로 찾는다.")]
+    [Tooltip("언어 버튼에 표시할 글자. 비워두면 버튼 안의 TMP 라벨을 자동으로 찾는다.")]
     [SerializeField] private TMP_Text languageButtonText;
 
-    [Tooltip("지금 영어일 때 언어 버튼에 띄울 글자. 라벨은 '지금 언어'가 아니라 " +
-             "'누르면 바뀔 언어'를 보여주므로, 영어일 때 한국어를 적는 게 맞다.")]
-    [SerializeField] private string toKoreanLabel = "한국어";
+    [Header("언어 표시 텍스트")]
+    [Tooltip("현재 한국어일 때 띄울 글자")]
+    [SerializeField] private string labelKorean = "< 한국어 >";
 
-    [Tooltip("지금 한국어일 때 언어 버튼에 띄울 글자. 위와 같은 이유로 영어를 적는다.")]
-    [SerializeField] private string toEnglishLabel = "English";
+    [Tooltip("현재 영어일 때 띄울 글자")]
+    [SerializeField] private string labelEnglish = "< English >";
+
+    [Tooltip("현재 프랑스어일 때 띄울 글자")]
+    [SerializeField] private string labelFrench = "< Français >";
+
+    [Tooltip("현재 스페인어일 때 띄울 글자")]
+    [SerializeField] private string labelSpanish = "< Español >";
+
+    [Tooltip("현재 일본어일 때 띄울 글자")]
+    [SerializeField] private string labelJapanese = "< 日本語 >";
 
     [Header("닫기 버튼 글자")]
     [SerializeField] private string closeKorean = "닫기";
     [SerializeField] private string closeEnglish = "CLOSE";
+    [SerializeField] private string closeFrench = "FERMER";
+    [SerializeField] private string closeSpanish = "CERRAR";
+    [SerializeField] private string closeJapanese = "閉じる";
 
     [Header("열림 연출")]
     [Tooltip("옵션 창이 열릴 때(OnEnable) 같이 재생할 마스크 리빌 연출들(제목, 배경 윈도우 등 - 마스크마다 " +
@@ -96,6 +106,33 @@ public class OptionsPanel : MonoBehaviour
         RefreshLanguageButton();
     }
 
+    // 2. Update 메서드 추가 (방향키 감지)
+    private void Update()
+    {
+        // 언어 버튼이 선택(포커스)된 상태일 때만 방향키 입력을 받습니다.
+        if (UnityEngine.EventSystems.EventSystem.current != null &&
+            UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject == languageButton.gameObject)
+        {
+            if (UnityEngine.InputSystem.Keyboard.current != null)
+            {
+                // 왼쪽 화살표나 A 키: 이전 언어
+                if (UnityEngine.InputSystem.Keyboard.current.leftArrowKey.wasPressedThisFrame ||
+                    UnityEngine.InputSystem.Keyboard.current.aKey.wasPressedThisFrame)
+                {
+                    LanguageSettings.ChangeLanguage(-1);
+                    RefreshLanguageButton();
+                }
+                // 오른쪽 화살표나 D 키: 다음 언어
+                else if (UnityEngine.InputSystem.Keyboard.current.rightArrowKey.wasPressedThisFrame ||
+                         UnityEngine.InputSystem.Keyboard.current.dKey.wasPressedThisFrame)
+                {
+                    LanguageSettings.ChangeLanguage(1);
+                    RefreshLanguageButton();
+                }
+            }
+        }
+    }
+
     private void OnDisable()
     {
         if (masterSlider != null) masterSlider.onValueChanged.RemoveListener(HandleMasterChanged);
@@ -116,7 +153,7 @@ public class OptionsPanel : MonoBehaviour
     // 값의 소유자는 LanguageSettings다. 여기선 누르고 비추기만 한다(볼륨이 SoundManager를 대하는 방식과 같다).
     private void HandleLanguageClicked()
     {
-        LanguageSettings.Toggle();
+        LanguageSettings.ChangeLanguage(1);
         RefreshLanguageButton();
     }
 
@@ -128,20 +165,35 @@ public class OptionsPanel : MonoBehaviour
         if (label == null && languageButton != null)
             label = languageButton.GetComponentInChildren<TMP_Text>(true);
 
-        // ⚠️ LanguageSettings.Pick을 쓰지 않는다. Pick은 "지금 언어에 맞는 값"을 고르는데
-        // 여기는 일부러 반대를 고르기 때문이다 - 지금 영어면 "한국어"를 띄워야 한다.
         if (label != null)
-            label.text = LanguageSettings.IsEnglish ? toKoreanLabel : toEnglishLabel;
+        {
+            // [수정] '다음' 언어가 아닌 '현재' 언어를 표시합니다.
+            switch (LanguageSettings.Current)
+            {
+                case GameLanguage.Korean: label.text = labelKorean; break;
+                case GameLanguage.English: label.text = labelEnglish; break;
+                case GameLanguage.French: label.text = labelFrench; break;
+                case GameLanguage.Spanish: label.text = labelSpanish; break;
+                case GameLanguage.Japanese: label.text = labelJapanese; break;
+            }
+        }
 
-        // 닫기 버튼도 같이 갱신한다. 라벨을 따로 배선하지 않아도 되게 버튼에서 자식을 찾는다.
         if (closeButton != null)
         {
             var closeLabel = closeButton.GetComponentInChildren<TMP_Text>(true);
             if (closeLabel != null)
-                closeLabel.text = LanguageSettings.Pick(closeKorean, closeEnglish, closeButton, "closeEnglish");
+            {
+                switch (LanguageSettings.Current)
+                {
+                    case GameLanguage.Korean: closeLabel.text = closeKorean; break;
+                    case GameLanguage.English: closeLabel.text = closeEnglish; break;
+                    case GameLanguage.French: closeLabel.text = closeFrench; break;
+                    case GameLanguage.Spanish: closeLabel.text = closeSpanish; break;
+                    case GameLanguage.Japanese: closeLabel.text = closeJapanese; break;
+                }
+            }
         }
     }
-
     private void Subscribe(Slider slider, UnityEngine.Events.UnityAction<float> handler, string fieldName)
     {
         if (slider == null)

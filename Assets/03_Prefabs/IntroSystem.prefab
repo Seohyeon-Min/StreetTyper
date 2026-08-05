@@ -186,6 +186,7 @@ MonoBehaviour:
   skipGaugeFill: {fileID: 6085535749935712191}
   slides: []
   skipHoldTime: 3
+  whiteFadeDuration: 0.45
 --- !u!1 &2859699072017830452
 GameObject:
   m_ObjectHideFlags: 0

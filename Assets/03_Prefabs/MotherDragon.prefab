@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 5862847378521951482}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.62, y: 2.27, z: 0}
+  m_LocalPosition: {x: 3.54, y: -0.87, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -164,9 +164,9 @@ MonoBehaviour:
   power: 10
   defense: 0
   damageTakenMultiplier: 1
+  bubbleAnchor: {fileID: 1242744479245318607}
   enemyData: {fileID: 11400000, guid: f6b198d5953ad4142b7711a89ab1783e, type: 2}
   animator: {fileID: 0}
-  bubbleAnchor: {fileID: 0}
   spriteRenderer: {fileID: 0}
   dashOffset: 1.5
   moveDuration: 0.2

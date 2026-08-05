@@ -82,6 +82,12 @@ public class EventManager : MonoBehaviour
     // 대사에 맞춰 말하는 모션을 재생할 적. 위와 같은 이유로 런타임에 잡는다.
     private EnemyBase speakingEnemy;
 
+    // 지금 화자의 CharacterStats. bubbleAnchor(Transform)만으로는 "그 캐릭터의 어느 지점"인지
+    // 알 수 없어서(넓은 스프라이트는 원점과 머리 위 지점이 다르다) 대신 CharacterStats.BubblePosition을
+    // 쓴다 - 각 캐릭터가 자기 자식 "Pos" Transform으로 정확한 지점을 직접 들고 있다.
+    // null이면(motherDragonTransform 같은 옛 배선) bubbleAnchor.position으로 그냥 폴백한다.
+    private CharacterStats speakerCharacter;
+
     // 지금 말하는 쪽이 플레이어인가. 말풍선을 누구 머리 위에 띄울지와 어느 오프셋을 쓸지가 갈린다.
     private bool speakingIsPlayer;
 
@@ -165,9 +171,13 @@ public class EventManager : MonoBehaviour
             : null;
 
         bubbleAnchor = motherDragonTransform;
+        speakerCharacter = null;
 
         if (bubbleAnchor == null && speakingEnemy != null)
+        {
             bubbleAnchor = speakingEnemy.transform;
+            speakerCharacter = speakingEnemy;
+        }
 
         if (bubbleAnchor == null)
             Debug.LogWarning("EventManager: 말풍선을 붙일 대상을 찾지 못했습니다 - 대사가 화면 " +
@@ -209,7 +219,11 @@ public class EventManager : MonoBehaviour
         if (_dialogueBubbleRect == null || SpeechBubbleManager.Instance == null)
             return;
 
-        Vector3 screenPos = SpeechBubbleManager.Instance.GetBubbleScreenPosition(bubbleAnchor.position, speakingIsPlayer);
+        // speakerCharacter가 있으면(플레이어·씬에 스폰된 적) BubblePosition을 쓴다 - 그 캐릭터의
+        // 자식 "Pos" Transform으로 정확한 지점을 잡는다. motherDragonTransform 같은 옛 Transform
+        // 배선만 있으면 그 위치를 그대로 쓴다.
+        Vector3 anchorPosition = speakerCharacter != null ? speakerCharacter.BubblePosition : bubbleAnchor.position;
+        Vector3 screenPos = SpeechBubbleManager.Instance.GetBubbleScreenPosition(anchorPosition, speakingIsPlayer);
 
         // 그 위에 이 화면만의 미세 조정을 얹는다. 참조 해상도 기준 값이라 실제 픽셀로 바꿀 때
         // 캔버스 scaleFactor를 곱한다(SpeechBubbleManager가 자기 오프셋에 하는 것과 같다).
@@ -262,7 +276,10 @@ public class EventManager : MonoBehaviour
 
         // 말풍선이 따라갈 대상을 화자에 맞춰 바꾼다. 플레이어 참조가 없으면 원래 대상에 그대로 둔다.
         if (fromPlayer && player != null)
+        {
             bubbleAnchor = player.transform;
+            speakerCharacter = player;
+        }
 
         if (dialogueBubbleScript != null)
         {

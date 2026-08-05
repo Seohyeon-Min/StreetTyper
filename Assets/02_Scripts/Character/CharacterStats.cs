@@ -11,6 +11,15 @@ public class CharacterStats : MonoBehaviour
     [Tooltip("받는 피해 배율. 데빌 같은 감소 효과가 1 미만으로 낮춘다(25% 감소면 0.75).")]
     public float damageTakenMultiplier = 1f;
 
+    [Header("말풍선")]
+    [Tooltip("말풍선(대사·의도·화상 등)이 뜰 위치. 비워두면 오브젝트 자신의 위치를 쓴다. " +
+             "캐릭터마다 스프라이트 크기가 달라 프리팹/오브젝트별로 자식 Transform(보통 \"Pos\")을 " +
+             "만들어 눈으로 보며 배치하는 쪽이 화면 좌표 오프셋 숫자를 맞추는 것보다 쉽다. " +
+             "EnemyBase와 플레이어가 같은 개념을 쓰도록 여기(공통 베이스)에 있다.")]
+    [SerializeField] private Transform bubbleAnchor;
+
+    public Vector3 BubblePosition => bubbleAnchor != null ? bubbleAnchor.position : transform.position;
+
     protected virtual void Start()
     {
         currentHP = maxHP;

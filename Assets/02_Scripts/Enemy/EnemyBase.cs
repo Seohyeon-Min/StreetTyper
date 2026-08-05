@@ -9,8 +9,6 @@ public class EnemyBase : CharacterStats
 
     [Header("Visuals")]
     [SerializeField] private Animator animator;
-    [Tooltip("말풍선(의도/화상 등)이 뜰 위치. 비워두면 오브젝트 자신의 위치를 쓴다. 캐릭터마다 크기가 달라 프리팹별로 지정할 수 있게 뺐다.")]
-    [SerializeField] private Transform bubbleAnchor;
     [Tooltip("돌진 중 정렬 순서를 조절할 스프라이트. 비워두면 같은 오브젝트에서 찾는다.")]
     [SerializeField] private SpriteRenderer spriteRenderer;
 
@@ -65,7 +63,8 @@ public class EnemyBase : CharacterStats
     // 돌진 전 정렬 순서. 플레이어 앞에 서 있는 동안만 이보다 위로 올렸다가 복귀하면 되돌린다.
     private int originalSortingOrder;
 
-    public Vector3 BubblePosition => bubbleAnchor != null ? bubbleAnchor.position : transform.position;
+    // BubblePosition은 이제 CharacterStats(공통 베이스)에 있다 - 플레이어도 같은 개념을
+    // 쓰게 되면서 옮겼다. bubbleAnchor 필드/씬 배선은 그대로 유지된다(상속으로 이어받는다).
 
     // 플레이어 앞(dashOffset만큼 떨어진 자리)까지 돌진한다.
     public IEnumerator MoveToPlayerCoroutine(Transform playerTransform)

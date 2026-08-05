@@ -417,6 +417,17 @@ public class StageManager : MonoBehaviour
 
         yield return new WaitForSeconds(bossTitleCardHoldDuration);
 
+        if (bossTitleCardObject != null)
+        {
+            var titleView = bossTitleCardObject.GetComponent<BossTitleCardView>();
+            if (titleView != null)
+            {
+                bool gateClosed = false;
+                titleView.PlayGateClose(() => gateClosed = true);
+                yield return new WaitUntil(() => gateClosed);
+            }
+        }
+
         if (bossTitleCardEffect != null)
         {
             bool exited = false;

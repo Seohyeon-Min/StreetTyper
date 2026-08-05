@@ -28,4 +28,6 @@ public class ResolvedAction
     /// 이름대로 처치 여부를 같이 보는 코드가 있어서, 판정에 성공해도 그 콤보가 마지막 일격이
     /// 아니면 아무 일도 일어나지 않았다.</summary>
     public bool GrantsLootBonus;
+
+    public int HitCount = 1;
 }

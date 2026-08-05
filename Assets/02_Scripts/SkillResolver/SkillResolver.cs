@@ -65,6 +65,10 @@ public class SkillResolver : MonoBehaviour
     /// ⚠️ 어썸(<see cref="AwesomeBonus"/>)과 범위가 다르다. 그쪽은 런 내내 누적된다.</summary>
     public static int LuckyUses { get; private set; }
 
+    public static bool LuckyUsedThisStage { get; private set; }
+
+
+
     /// <summary>
     /// 럭키가 지금 성공할 확률(%). <paramref name="basePercent"/>에서 시작해 쓴 횟수만큼
     /// <paramref name="gainPerUse"/>씩 오르고 <paramref name="maxPercent"/>에서 멈춘다.
@@ -75,13 +79,9 @@ public class SkillResolver : MonoBehaviour
     /// </summary>
     public static float LuckyChance(float basePercent, float gainPerUse, float maxPercent)
     {
-        // ⚠️ 상한이 기본 확률보다 작으면 상한을 무시한다. 안 그러면 "기본 100%"로 두고 시험할 때
-        // 상한(기본 50%)이 조용히 잘라내서 "확률을 100으로 했는데 안 걸린다"가 된다 - 실제로
-        // 그렇게 헛다리를 짚은 적이 있다. 상한은 "쓸수록 오르는 걸 어디서 멈출지"지
-        // "기본값을 깎는 값"이 아니다.
         var ceiling = Mathf.Max(maxPercent, basePercent);
 
-        return Mathf.Min(basePercent + gainPerUse * LuckyUses, ceiling);
+        return Mathf.Min(basePercent + gainPerUse * LuckyUses, Mathf.Min(ceiling, 100f));
     }
 
     /// <summary>럭키 누적이 바뀌었을 때 <see cref="WordUnlockManager"/>가 부른다.
@@ -116,6 +116,7 @@ public class SkillResolver : MonoBehaviour
         _timerChangeThisTurn = 0f;
         LootBonusRounds = 0;
         LuckyUses = 0;
+        LuckyUsedThisStage = false;
         OnCardValuesChanged = null;
     }
 
@@ -123,6 +124,7 @@ public class SkillResolver : MonoBehaviour
     public void ResetRun()
     {
         AwesomeBonus = 0;
+        LuckyUses = 0;
         ResetStage();
     }
 
@@ -133,9 +135,7 @@ public class SkillResolver : MonoBehaviour
     /// 새 누적을 추가할 때 어느 단계에 속하는지부터 정하고 그 메서드에 넣을 것.</summary>
     public void ResetStage()
     {
-        // 럭키 확률은 스테이지 단위다 - 새 스테이지는 다시 기본 확률에서 시작한다.
-        LuckyUses = 0;
-
+        LuckyUsedThisStage = false;
         ResetTurn();
     }
 
@@ -292,7 +292,7 @@ public class SkillResolver : MonoBehaviour
         totalValue = Mathf.Max(0, totalValue);
 
         var hitCount = hitMultiplier * RollComboHits(actionCard);
-        totalValue *= hitCount;
+        //totalValue *= hitCount;
 
         // ⚠️ UnityEngine.Random으로 명시한다 - 이 파일은 using System을 쓰므로 그냥 Random이라고
         // 적으면 System.Random과 모호해져 컴파일이 깨진다(WordUnlockManager도 같은 이유로 명시한다).
@@ -329,6 +329,8 @@ public class SkillResolver : MonoBehaviour
         else
             result.Defense = totalValue;
 
+        result.HitCount = hitCount;
+
         var baseForHeal = actionCard.ActionKind == ActionKind.Attack ? result.Damage : result.Defense;
         result.Heal = Mathf.RoundToInt(lifeStealRate / 100f * baseForHeal);
 
@@ -343,7 +345,10 @@ public class SkillResolver : MonoBehaviour
         // 다음 확률은 올라가야 한다(안 그러면 운이 나쁠수록 계속 나빠진다).
         // ⚠️ 이 누적은 <b>스테이지 단위</b>다(ResetStage). 어썸의 런 단위 누적과 헷갈리지 말 것.
         if (luckyCard != null)
+        {
             LuckyUses++;
+            LuckyUsedThisStage = true;
+        }
 
         ActionsThisTurn++;
         ModifiersThisTurn += modifierCount;

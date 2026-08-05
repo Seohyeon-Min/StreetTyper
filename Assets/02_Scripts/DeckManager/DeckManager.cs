@@ -345,40 +345,50 @@ public class DeckManager : MonoBehaviour
     // 그 뒤의 공격은 대상이 없어 어차피 헛돌고, 결과 화면이 뜬 뒤에도 타격이 이어지면 어색하다.
     private IEnumerator PlayPendingActions()
     {
-        // 1. 큐에 쌓인 액션을 모두 꺼내서 리스트로 옮깁니다. (총 개수를 미리 알기 위해)
-        List<PendingActionManager.Entry> actions = new List<PendingActionManager.Entry>();
+        // 1. 큐에 쌓인 액션을 모두 꺼내서 리스트로 옮깁니다.
+        List<PendingActionManager.Entry> rawActions = new List<PendingActionManager.Entry>();
         while (pendingActionManager.TryDequeue(out var entry))
         {
-            actions.Add(entry);
+            rawActions.Add(entry);
+        }
+
+        // 공격(데미지가 있는 액션)을 먼저, 가드(데미지가 없는 액션)를 나중에 실행하도록 재배치합니다.
+        List<PendingActionManager.Entry> actions = new List<PendingActionManager.Entry>();
+        foreach (var act in rawActions)
+        {
+            if (act.Action.Damage > 0) actions.Add(act);
+        }
+        foreach (var act in rawActions)
+        {
+            if (act.Action.Damage <= 0) actions.Add(act);
         }
 
         int totalActions = actions.Count;
         if (totalActions == 0) yield break;
 
-        // 2. 다이나믹 배속 계산 (최대 4초 룰)
-        float availableAttackTime = maxTotalPlayTime - (moveDuration * 2); // 순수하게 때릴 수 있는 시간
-
-        float baseInterval = pendingActionInterval; // 인스펙터에 설정된 기본값 (0.3초)
-        float currentInterval = baseInterval;
-
-        // 공격 개수가 너무 많아서 기본 간격으로 4초를 넘어가면, 간격을 강제로 압축합니다.
-        if (totalActions * baseInterval > availableAttackTime)
+        // [추가] 총 타격 수(연타 포함)를 계산하여 애니메이션 압축 배속에 사용합니다.
+        int totalHits = 0;
+        for (int j = 0; j < totalActions; j++)
         {
-            currentInterval = availableAttackTime / totalActions;
+            totalHits += Mathf.Max(1, actions[j].Action.HitCount);
         }
 
-        // 애니메이션 배속 (간격이 짧아질수록 애니메이션은 그만큼 배속으로 빨라짐)
+        // 2. 다이나믹 배속 계산 (최대 4초 룰)
+        float availableAttackTime = maxTotalPlayTime - (moveDuration * 2);
+        float baseInterval = pendingActionInterval;
+        float currentInterval = baseInterval;
+
+        // [수정] totalActions 대신 totalHits를 기준으로 압축하여, 연타가 많아도 4초 안에 끝납니다.
+        if (totalHits * baseInterval > availableAttackTime)
+        {
+            currentInterval = availableAttackTime / totalHits;
+        }
+
         float animSpeedMultiplier = baseInterval / currentInterval;
 
-        // 펀치 애니메이션/카메라 쉐이크/히트 이펙트는 전부 "데미지가 있는 액션"에서만 재생한다
-        // (가드처럼 데미지 0인 조합은 펀치가 안 나감). Punch1 여부와 쉐이크 1회 제한을 루프
-        // 인덱스 i가 아니라 "실제로 몇 번째로 재생된 펀치인가"로 따로 세야 한다 - 안 그러면
-        // 가드가 맨 앞에 쌓였을 때 진짜 첫 펀치가 Punch1로 안 나가거나 쉐이크가 아예 안 걸린다.
         bool hasPlayedPunchAnim = false;
         bool hasShaken = false;
 
-        // 이번 턴에 데미지가 있는 액션이 하나도 없으면(전부 가드 등) 돌진할 때도 펀치 자세를
-        // 취하면 안 된다 - 아래에서 돌진과 Punch1을 같이 트리거할지 판단하는 데 쓴다.
         bool anyDamageThisTurn = false;
         for (int j = 0; j < totalActions; j++)
         {
@@ -389,9 +399,7 @@ public class DeckManager : MonoBehaviour
             }
         }
 
-        // 3. 적 앞으로 돌진 - Punch1은 즉시 재생하고, 이동은 dashStartDelay만큼 늦게 시작한다
-        // (때리는 자세를 먼저 잡고 나서 날아가는 느낌). 가만히 날아갔다가 도착한 뒤에야
-        // 펀치하는 게 아니라, 날아가기 직전부터 이미 펀치 자세를 취하고 있게 한다.
+        // 3. 적 앞으로 돌진
         if (playerVisuals != null)
         {
             if (anyDamageThisTurn)
@@ -407,119 +415,87 @@ public class DeckManager : MonoBehaviour
         }
 
         // 4. 공격 스택 하나씩 실행
-
         for (int i = 0; i < totalActions; i++)
         {
             var actionEntry = actions[i];
             var hasDamage = actionEntry.Action.Damage > 0;
+            int hitCount = Mathf.Max(1, actionEntry.Action.HitCount);
 
-            // 아래 루프 끝에서 "이번 인터벌 중 이미 기다린 시간"을 빼는 데 쓴다 - 데미지 없는
-            // 액션은 펀치 딜레이를 안 기다리므로 0으로 둔다(= 인터벌을 그대로 다 기다림).
-            float hitDelay = 0f;
-
-            if (hasDamage)
+            // HitCount(연타 수)만큼 루프를 돌며 개별 타격합니다.
+            for (int h = 0; h < hitCount; h++)
             {
-                // 실제로 재생되는 첫 펀치면 Punch1, 그 이후는 랜덤 펀치 애니메이션 재생
-                if (playerVisuals != null)
-                {
-                    playerVisuals.PlayAttackAnimation(!hasPlayedPunchAnim, animSpeedMultiplier);
-                }
-                hasPlayedPunchAnim = true;
+                float hitDelay = 0f;
 
-                // 주먹이 뻗어 나가는 타격 시점까지 대기. 애니메이션 재생 속도(animSpeedMultiplier)에
-                // 맞춰 대기 시간도 조절된다.
-                hitDelay = 0.15f / animSpeedMultiplier; // 0.15f는 예시입니다. 애니메이션에 맞게 조절하세요.
-                yield return new WaitForSeconds(hitDelay);
-
-                if (SoundManager.Instance != null)
+                if (hasDamage)
                 {
-                    SoundManager.Instance.PlayRandomPunch();
-                }
-            }
+                    if (playerVisuals != null)
+                    {
+                        // 연타 중에는 연속 펀치 느낌을 살리기 위해 랜덤 펀치가 나가게 합니다.
+                        playerVisuals.PlayAttackAnimation(!hasPlayedPunchAnim, animSpeedMultiplier);
+                    }
+                    hasPlayedPunchAnim = true;
 
-            // ========== 타격감 연출 ==========
-            if (hasDamage && enemyManager.currentEnemy != null)
-            {
-                // 1. 카메라 쉐이크 - 펀치마다 흔들면 Shake()가 매번 StopAllCoroutines로 이전
-                // 흔들림을 끊고 다시 시작해서 펀치가 여러 번일 때 쉴 새 없이 흔들리는 것처럼 보인다.
-                // 시퀀스당 실제 첫 펀치 한 번만 흔든다.
-                // (세기는 인스펙터의 hitShakeDuration/hitShakeMagnitude로 조절한다 - 흔들림이
-                //  약하거나 세다고 느껴지면 코드가 아니라 그쪽 값을 만질 것.)
-                if (!hasShaken && CameraShake.Instance != null)
-                {
-                    CameraShake.Instance.Shake(hitShakeDuration, hitShakeMagnitude);
-                    hasShaken = true;
+                    hitDelay = 0.15f / animSpeedMultiplier;
+                    yield return new WaitForSeconds(hitDelay);
+
+                    // [핵심] 매 타격마다 타격음 재생
+                    if (SoundManager.Instance != null)
+                    {
+                        SoundManager.Instance.PlayRandomPunch();
+                    }
                 }
 
-                // 2. 피격 이펙트
-                if (HitEffectManager.Instance != null)
+                // ========== 타격감 연출 ==========
+                if (hasDamage && enemyManager.currentEnemy != null)
                 {
-                    HitEffectManager.Instance.PlayHitEffect(enemyManager.currentEnemy.GetComponent<SpriteRenderer>());
+                    // [수정] hasShaken 제한을 풀어 매 타격마다 카메라가 흔들리게 합니다!
+                    if (CameraShake.Instance != null)
+                    {
+                        CameraShake.Instance.Shake(hitShakeDuration, hitShakeMagnitude);
+                    }
+
+                    // 매 타격마다 피격 이펙트 재생
+                    if (HitEffectManager.Instance != null)
+                    {
+                        HitEffectManager.Instance.PlayHitEffect(enemyManager.currentEnemy.GetComponent<SpriteRenderer>());
+                    }
+
+                    // 매 타격마다 데미지 플로팅 텍스트 띄우기
+                    if (FloatingDamageManager.Instance != null)
+                    {
+                        FloatingDamageManager.Instance.ShowDamage(actionEntry.Action.Damage, enemyManager.currentEnemy.transform.position);
+                    }
                 }
 
-                // 3. 플로팅 데미지 띄우기
-                if (FloatingDamageManager.Instance != null)
-                {
-                    FloatingDamageManager.Instance.ShowDamage(actionEntry.Action.Damage, enemyManager.currentEnemy.transform.position);
-                }
-            }
-            // 데미지 및 UI 텍스트 처리
-            combatManager.ExecutePlayerAction(actionEntry.Action, player, enemyManager.currentEnemy);
+                combatManager.ExecutePlayerAction(actionEntry.Action, player, enemyManager.currentEnemy);
+                battleManager.UpdateUI();
 
-            // 럭키 판정에 성공한 조합이면 그 자리에서 보상 라운드를 쌓아둔다.
-            //
-            // ⚠️ **이 공격이 처치했는지는 보지 않는다.** 럭키는 "쓰면 확률이 오르고, 성공하면
-            // 그 스테이지를 클리어할 때 보상이 한 번 더 열린다"는 카드다 - 킬을 낸 조합에
-            // 럭키가 들어 있어야 한다는 규칙이 아니다. 예전엔 여기서 처치 여부를 같이 봐서,
-            // 판정에 성공해도 그 콤보가 마지막 일격이 아니면 아무 일도 일어나지 않았다.
-            // 수치 칸이 "보상" -> "보상됨"으로 바뀌는 것도 이 쌓인 상태를 보여주려고 있는 것이라,
-            // 처치 시점에 쌓으면 그 표시가 보일 틈이 거의 없다.
-            //
-            // 쌓아둔 라운드는 스테이지를 클리어할 때 StageManager가 TryConsumeBonusRound로
-            // 하나씩 꺼내 쓴다 - 즉 "이후 적을 처치했을 때 보상이 추가된다"는 규칙은 그쪽에서
-            // 자연히 성립한다(클리어하지 못하면 보상 창 자체가 열리지 않는다).
-            //
-            // 그래도 UI 갱신보다는 "먼저" 해야 한다. 아래 UpdateUI는 CheckGameState -> ShowResult
-            // -> OnBattleEnded까지 한 호출 안에서 이어지고, 그 안에서 StageManager가 보상 라운드를
-            // 열어버린다. 이 공격이 마침 처치 일격이었다면, 뒤에 쌓으면 이번 판이 아니라 다음
-            // 스테이지에서 창이 한 번 더 뜬다.
+                if (battleManager.IsGameOver || IsEnemyDefeated())
+                {
+                    break;
+                }
+
+                if (hasDamage)
+                {
+                    float remainingDelay = currentInterval - hitDelay;
+                    if (remainingDelay > 0)
+                    {
+                        yield return new WaitForSeconds(remainingDelay);
+                    }
+                }
+            } // 연타 루프 끝
+
+            // 럭키 보너스는 여러 대를 때려도 액션(조합) 1개당 한 번만 판정합니다.
             if (actionEntry.Action.GrantsLootBonus && wordUnlockManager != null)
                 wordUnlockManager.AddLuckyBonus();
 
-            // 타격 하나가 적용될 때마다 HP/방어도 표시를 갱신한다. 이게 없으면 수치는
-            // 한 대씩 제대로 깎이는데 화면만 그대로 있다가 턴이 끝날 때 한 번에 뚝 떨어져서,
-            // 공격이 한꺼번에 들어간 것처럼 보인다.
-            // 반드시 위의 럭키 처리보다 "뒤"에 있어야 한다 - UpdateUI는 CheckGameState ->
-            // ShowResult -> OnBattleEnded까지 한 호출 안에서 이어지고, 그 안에서 StageManager가
-            // 보상 라운드를 열기 때문이다.
-            // (예전엔 이 자리에서 OnPlayerActionResolved가 말풍선과 함께 UpdateUI를 불렀다.
-            //  말풍선은 FloatingDamageManager로 대체되어 빠졌지만, 갱신은 여전히 필요하다.)
-            battleManager.UpdateUI();
-
-            // 도중에 적이 죽거나 전투가 끝났다면 콤보 즉시 중단 (럭키는 위에서 이미 처리했다).
-            // 이벤트 스테이지는 CheckGameState가 죽은 적을 Destroy가 아니라 SetActive(false)로만
-            // 끄므로 currentEnemy가 null이 되지 않는다 - 그래서 HP/활성 상태도 함께 봐야
-            // 죽은 적에게 남은 콤보가 계속 들어가는 걸 막을 수 있다.
             if (battleManager.IsGameOver || IsEnemyDefeated())
             {
                 break;
             }
-
-            // 전체 인터벌에서 이미 기다린 타격 딜레이(hitDelay)를 빼고 남은 시간만 대기한다.
-            // 데미지 없는 액션(가드 등)은 애니메이션이 아예 없으므로 이 대기 자체를 건너뛴다 -
-            // 안 그러면 펀치 사이에 가드가 끼어 있을 때마다 아무것도 안 보이면서
-            // currentInterval만큼 조용히 멈춰서, 펀치 3번이 바로 이어지지 않고 뜨문뜨문 보인다.
-            if (hasDamage)
-            {
-                float remainingDelay = currentInterval - hitDelay;
-                if (remainingDelay > 0)
-                {
-                    yield return new WaitForSeconds(remainingDelay);
-                }
-            }
         }
 
-        // 5. 원래 위치로 복귀 및 배속 원상 복구
+        // 5. 원래 위치로 복귀
         if (playerVisuals != null)
         {
             yield return playerVisuals.MoveToOriginCoroutine(moveDuration);

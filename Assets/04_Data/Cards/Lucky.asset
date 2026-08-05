@@ -23,8 +23,8 @@ MonoBehaviour:
   effectType: 4
   value: 0
   scalingSource: 0
-  chancePercent: 10
-  chanceGainPerUse: 10
-  maxChancePercent: 50
+  chancePercent: 20
+  chanceGainPerUse: 20
+  maxChancePercent: 100
   lootPendingStatsLabel: "\uBCF4\uC0C1\uB428"
   lootPendingStatsLabelEn: LOOTED

@@ -7230,6 +7230,8 @@ MonoBehaviour:
   hintLabel: {fileID: 0}
   pausePanel: {fileID: 1173419597}
   titleReveal: {fileID: 1173419601}
+  pauseCanvas: {fileID: 0}
+  inputCanvas: {fileID: 0}
   handFanLayout: {fileID: 1259881543}
   cardSlotManager: {fileID: 1084949171}
   commandCardsLayout: {fileID: 682189038}

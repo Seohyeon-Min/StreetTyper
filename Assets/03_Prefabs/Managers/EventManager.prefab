@@ -52,4 +52,9 @@ MonoBehaviour:
   canvasTransform: {fileID: 0}
   bubbleOffset: {x: 0, y: 2.5, z: 0}
   normalEventLines: []
-  dragonEventLines: []
+  dragonEventLines:
+  - "\uC5EC\uAE30\uAE4C\uC9C0 \uD558\uC790\uAFB8\uB098!"
+  - "\uCCB4\uB825\uC774 \uD68C\uBCF5\uB410\uC5B4! (+{0})"
+  dragonEventLinesEn:
+  - "That's enough for today!"
+  - "You've been healed! (+{0})"

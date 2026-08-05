@@ -67,6 +67,11 @@ public class BattleManager : MonoBehaviour
     private int mdTurnCount = 0;
     private int savedMDDamage = 0;
 
+    // mdIntentString이 ExecuteEnemyTurnCoroutine에서 이미 일시적 말풍선(ShowBubble)으로
+    // "말해진" 상태인가. true면 UpdateUI()의 영구 인텐트 말풍선에 같은 대사를 또 띄우지 않는다
+    // (안 그러면 같은 대사가 두 메커니즘으로 연속 표시된다). 전투 시작/재시작에서만 false로 되돌린다.
+    private bool mdLineAnnounced = false;
+
     // ⚠️ 필드 초기화자에서 MotherDragonLine(0)을 부르지 않는다. 직렬화 값은 필드 초기화자보다
     // 나중에 적용되므로, 인스펙터 배열을 거기서 읽으면 항상 비어 있다. Start와 ResetBattle에서 채운다.
     private string mdIntentString = string.Empty;
@@ -101,6 +106,7 @@ public class BattleManager : MonoBehaviour
     {
         // 인스펙터 배열은 이 시점에 채워져 있다(필드 초기화자와 달리).
         mdIntentString = MotherDragonLine(0);
+        mdLineAnnounced = false;
 
         HideResultUI();
 
@@ -222,6 +228,10 @@ public class BattleManager : MonoBehaviour
 
                     // [유지] 마미드래곤일 때만 말하기 애니메이션 재생
                     enemyManager.currentEnemy.PlaySpeakAnimation();
+
+                    // 이 대사는 방금 일시적 말풍선으로 이미 보여줬다 - UpdateUI()의 영구 인텐트
+                    // 말풍선이 같은 문자열을 또 띄우지 않도록 표시해 둔다.
+                    mdLineAnnounced = true;
                 }
             }
             else
@@ -278,6 +288,7 @@ public class BattleManager : MonoBehaviour
         isEventTriggered = false;
         mdTurnCount = 0;
         mdIntentString = MotherDragonLine(0);
+        mdLineAnnounced = false;
         savedMDDamage = 0;
         isWaitingForDragonEnd = false; //   추가됨
 
@@ -319,19 +330,28 @@ public class BattleManager : MonoBehaviour
 
             if (enemyIntentBubbleObj != null && enemyIntentBubble != null && isPlayerInputPhase)
             {
-                enemyIntentBubbleObj.SetActive(true);
-
-                // 마더 드래곤은 대사(텍스트)를 그대로 쓰고, 일반 적은 아이콘 + ActionType별 색이
-                // 입혀진 텍스트를 같이 보여준다.
-                if (enemy is MotherDragon)
-                    enemyIntentBubble.Setup(mdIntentString);
-                else
-                    enemyIntentBubble.SetupIntent(enemyManager.GetIntentIcon(), enemyManager.GetIntentString(), enemyManager.GetIntentColor());
-
-                if (SpeechBubbleManager.Instance != null)
+                // 마더 드래곤의 이번 대사는 이미 일시적 말풍선(ShowBubble)으로 한 번 보여줬다 -
+                // 여기서 같은 문자열을 영구 말풍선으로 또 띄우면 같은 대사가 두 번 나온다.
+                if (enemy is MotherDragon && mdLineAnnounced)
                 {
-                    enemyIntentBubbleObj.GetComponent<RectTransform>().position =
-                        SpeechBubbleManager.Instance.GetBubbleScreenPosition(enemy.BubblePosition, false);
+                    enemyIntentBubbleObj.SetActive(false);
+                }
+                else
+                {
+                    enemyIntentBubbleObj.SetActive(true);
+
+                    // 마더 드래곤은 대사(텍스트)를 그대로 쓰고, 일반 적은 아이콘 + ActionType별 색이
+                    // 입혀진 텍스트를 같이 보여준다.
+                    if (enemy is MotherDragon)
+                        enemyIntentBubble.Setup(mdIntentString);
+                    else
+                        enemyIntentBubble.SetupIntent(enemyManager.GetIntentIcon(), enemyManager.GetIntentString(), enemyManager.GetIntentColor());
+
+                    if (SpeechBubbleManager.Instance != null)
+                    {
+                        enemyIntentBubbleObj.GetComponent<RectTransform>().position =
+                            SpeechBubbleManager.Instance.GetBubbleScreenPosition(enemy.BubblePosition, false);
+                    }
                 }
             }
             else if (enemyIntentBubbleObj != null && !isPlayerInputPhase)
@@ -369,7 +389,11 @@ public class BattleManager : MonoBehaviour
                     healAmount = savedMDDamage;
                 }
 
-                enemyManager.currentEnemy.gameObject.SetActive(false);
+                // 마더 드래곤은 자기 작별 대사를 하는 동안 화면에 남아 있어야 한다 - 여기서 끄면
+                // 정작 본인은 사라진 채 말풍선만 뜬다. 대사가 끝나면 EventManager가 끈다.
+                // (일반 적과 이벤트가 없는 경우는 예전처럼 그 자리에서 끈다.)
+                if (!isMD || eventManager == null)
+                    enemyManager.currentEnemy.gameObject.SetActive(false);
 
                 if (eventManager != null)
                 {

@@ -272,7 +272,7 @@
     },
     {
       "id": "kneekick",
-      "koName": "니",
+      "koName": "니킥",
       "koDesc": "적에게 20의 피해를 줍니다. 이번 턴에 사용한 액션 카드 한 장당 피해량이 1씩 감소합니다.",
       "koLabel": "{0}",
       "enName": "knee",

@@ -21,6 +21,9 @@ public class BattleManager : MonoBehaviour
     public HealthBarUI playerHealthBar;
     public HealthBarUI enemyHealthBar;
 
+    [Tooltip("마더 드래곤 피격 후 HP 바가 보이는 시간(초). 평소에는 숨긴다.")]
+    [SerializeField] private float motherHealthBarHitDuration = 1.2f;
+
     // 결과 화면은 종류마다 프리팹이 따로다 - 코드가 제목을 갈아끼우지 않고 어느 패널을 켤지만
     // 정한다. 겉모습은 DefeatPanel/GameClearPanel 변형이 통째로 갖는다(ResultPanelView 참조).
     [Header("Result Panels")]
@@ -63,6 +66,9 @@ public class BattleManager : MonoBehaviour
     private GameObject enemyIntentBubbleObj;
     private SpeechBubble enemyIntentBubble;
     private bool enemyIntentUsesMotherBubble;
+    private MotherDragon trackedMotherHealth;
+    private int lastMotherHealth;
+    private Coroutine motherHealthBarRoutine;
 
     // 엄마용 전투 전용 변수
     private int mdTurnCount = 0;
@@ -315,6 +321,7 @@ public class BattleManager : MonoBehaviour
         savedMDDamage = 0;
         isWaitingForDragonEnd = false; //   추가됨
 
+        ResetMotherHealthTracking();
         HideResultUI();
         UpdateUI();
     }
@@ -365,7 +372,15 @@ public class BattleManager : MonoBehaviour
             EnsureEnemyIntentBubble(isMotherDragon);
 
             if (enemyHealthBar != null)
-                enemyHealthBar.UpdateUI(enemy.currentHP, enemy.maxHP, enemy.defense);
+            {
+                if (isMotherDragon)
+                    UpdateMotherHealthBar((MotherDragon)enemy);
+                else
+                {
+                    ResetMotherHealthTracking();
+                    enemyHealthBar.UpdateUI(enemy.currentHP, enemy.maxHP, enemy.defense);
+                }
+            }
 
             // 내 턴(PlayerInput)일 때만 인텐트 말풍선을 보여준다. UpdateUI()는 펀치 한 번마다
             // (PlayPendingActions 안에서) HP 갱신용으로 계속 호출되므로, 여기서 페이즈를 안 보면
@@ -401,6 +416,51 @@ public class BattleManager : MonoBehaviour
         }
 
         CheckGameState();
+    }
+
+    private void UpdateMotherHealthBar(MotherDragon mother)
+    {
+        if (trackedMotherHealth != mother)
+        {
+            trackedMotherHealth = mother;
+            lastMotherHealth = mother.currentHP;
+            enemyHealthBar.Hide();
+            return;
+        }
+
+        bool wasHit = mother.currentHP < lastMotherHealth;
+        lastMotherHealth = mother.currentHP;
+
+        if (wasHit)
+        {
+            enemyHealthBar.UpdateUI(mother.currentHP, mother.maxHP, mother.defense);
+            if (motherHealthBarRoutine != null)
+                StopCoroutine(motherHealthBarRoutine);
+            motherHealthBarRoutine = StartCoroutine(HideMotherHealthBarAfterDelay());
+        }
+        else if (motherHealthBarRoutine == null)
+        {
+            enemyHealthBar.Hide();
+        }
+    }
+
+    private IEnumerator HideMotherHealthBarAfterDelay()
+    {
+        yield return new WaitForSeconds(motherHealthBarHitDuration);
+        if (enemyHealthBar != null)
+            enemyHealthBar.Hide();
+        motherHealthBarRoutine = null;
+    }
+
+    private void ResetMotherHealthTracking()
+    {
+        trackedMotherHealth = null;
+        lastMotherHealth = 0;
+        if (motherHealthBarRoutine == null)
+            return;
+
+        StopCoroutine(motherHealthBarRoutine);
+        motherHealthBarRoutine = null;
     }
 
     private void EnsureEnemyIntentBubble(bool useMotherBubble)

@@ -61,6 +61,49 @@ public class RewardCardView : MonoBehaviour
              "luckyBanner 안의 마스크에 붙인다). 럭키 보너스 라운드일 때만 재생한다.")]
     [SerializeField] private TextGateRevealAnimation[] luckyReveals;
 
+    [Header("럭키 보상 UI 파티클")]
+    [Tooltip("UI Image 파티클이 생성될 부모. RewardCanvas 안에서 럭키 제목보다 위에 그려질 " +
+             "RectTransform을 연결한다. 비우면 panel을 사용한다.")]
+    [SerializeField] private RectTransform luckyParticleRoot;
+
+    [Tooltip("파티클 이미지. 비워두면 기본 흰 사각형이 회전하며 다이아몬드처럼 보인다.")]
+    [SerializeField] private Sprite luckyParticleSprite;
+
+    [SerializeField, Min(1)] private int luckyParticleCount = 28;
+    [SerializeField] private Vector2 luckyParticleSizeRange = new Vector2(10f, 26f);
+    [SerializeField] private Vector2 luckyParticleDistanceRange = new Vector2(140f, 360f);
+    [SerializeField] private Vector2 luckyParticleDurationRange = new Vector2(0.65f, 1.15f);
+
+    [Tooltip("파티클 애니메이션 전체 속도 배율. 2면 두 배 빠르고 0.5면 절반 속도다.")]
+    [SerializeField, Min(0.01f)] private float luckyParticleSpeed = 1f;
+
+    [SerializeField] private float luckyParticleGravity = 180f;
+
+    [Tooltip("시간(0~1)에 따른 이동 진행도. 기본값은 빠르게 퍼졌다가 감속한다.")]
+    [SerializeField] private AnimationCurve luckyParticleMoveCurve = new AnimationCurve(
+        new Keyframe(0f, 0f, 0f, 3f),
+        new Keyframe(1f, 1f, 0f, 0f));
+
+    [Tooltip("시간(0~1)에 따른 크기. 0에서 빠르게 커지고 마지막에 0으로 사라진다.")]
+    [SerializeField] private AnimationCurve luckyParticleScaleCurve = new AnimationCurve(
+        new Keyframe(0f, 0f),
+        new Keyframe(0.15f, 1f),
+        new Keyframe(0.7f, 0.85f),
+        new Keyframe(1f, 0f));
+
+    [Tooltip("시간(0~1)에 따른 알파. 1=선명, 0=투명.")]
+    [SerializeField] private AnimationCurve luckyParticleAlphaCurve = new AnimationCurve(
+        new Keyframe(0f, 1f),
+        new Keyframe(0.65f, 1f),
+        new Keyframe(1f, 0f));
+
+    [SerializeField] private Color[] luckyParticleColors =
+    {
+        new Color(1f, 0.86f, 0.2f, 1f),
+        new Color(1f, 0.45f, 0.75f, 1f),
+        Color.white
+    };
+
     [Header("럭키 확률 표시")]
     [Tooltip("모든 카드 보상창에 플레이어의 현재 럭 확률을 표시할 TMP 라벨.")]
     [SerializeField] private TMP_Text luckLabel;
@@ -142,6 +185,8 @@ public class RewardCardView : MonoBehaviour
     private readonly List<float> _dropDelay = new List<float>();
     private readonly List<float> _dropRotationStart = new List<float>();
 
+    private readonly List<GameObject> _luckyParticles = new List<GameObject>();
+
     // 퇴장 연출이 진행 중인 동안은 Update()의 평소 들림/등장 로직이 위치를 같이 건드리면
     // 안 되므로 여기서 막는다. ExitRoutine이 남은 카드의 위치를 전담한다.
     private bool _exiting;
@@ -213,6 +258,7 @@ public class RewardCardView : MonoBehaviour
             _exitRoutine = null;
             _exiting = false;
             ClearSpawnedCards();
+            ClearLuckyParticles();
         }
         else
         {
@@ -270,6 +316,9 @@ public class RewardCardView : MonoBehaviour
             }
         }
 
+        if (isBonusRound)
+            PlayLuckyParticleBurst();
+
         for (var i = 0; i < cards.Count; i++)
             Spawn(cards[i], i, cards.Count);
 
@@ -313,6 +362,15 @@ public class RewardCardView : MonoBehaviour
     private IEnumerator ExitRoutine(int keepIndex, System.Action onComplete)
     {
         _exiting = true;
+
+        // 카드/타이틀 퇴장과 동시에 검은 배경도 서서히 걷힌다. 패널 자체는 아래의
+        // ClearVisuals까지 살아 있으므로 FadeInBackground 코루틴이 중간에 끊기지 않는다.
+        if (panel != null)
+        {
+            var background = panel.GetComponentInChildren<FadeInBackground>(true);
+            if (background != null)
+                background.FadeOut();
+        }
 
         if (reveals != null)
         {
@@ -397,6 +455,7 @@ public class RewardCardView : MonoBehaviour
     private void ClearVisuals()
     {
         ClearSpawnedCards();
+        ClearLuckyParticles();
 
         if (titleImage != null)
             titleImage.gameObject.SetActive(false);
@@ -429,6 +488,119 @@ public class RewardCardView : MonoBehaviour
 
         _highlight = -1;
         _hasInput = false;
+    }
+
+    private void PlayLuckyParticleBurst()
+    {
+        var root = luckyParticleRoot;
+        if (root == null && panel != null)
+            root = panel.GetComponent<RectTransform>();
+
+        if (root == null)
+        {
+            Debug.LogWarning("RewardCardView: 럭키 UI 파티클을 생성할 RectTransform이 없습니다.", this);
+            return;
+        }
+
+        // 제목 라벨의 화면 위치를 파티클 부모의 로컬 좌표로 바꾼다. 제목이 없으면 부모 중앙에서 터진다.
+        var origin = Vector2.zero;
+        if (luckyTitleLabel != null)
+        {
+            var canvas = root.GetComponentInParent<Canvas>();
+            var camera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? canvas.worldCamera
+                : null;
+            var screenPoint = RectTransformUtility.WorldToScreenPoint(camera, luckyTitleLabel.rectTransform.position);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(root, screenPoint, camera, out origin);
+        }
+
+        var colors = luckyParticleColors;
+        for (var i = 0; i < Mathf.Max(1, luckyParticleCount); i++)
+        {
+            var particleObject = new GameObject("LuckyUIParticle", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            var rect = particleObject.GetComponent<RectTransform>();
+            rect.SetParent(root, false);
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = origin;
+
+            var size = Random.Range(
+                Mathf.Min(luckyParticleSizeRange.x, luckyParticleSizeRange.y),
+                Mathf.Max(luckyParticleSizeRange.x, luckyParticleSizeRange.y));
+            rect.sizeDelta = Vector2.one * size;
+            rect.localRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+            rect.SetAsLastSibling();
+
+            var image = particleObject.GetComponent<Image>();
+            image.sprite = luckyParticleSprite;
+            image.raycastTarget = false;
+            image.color = colors != null && colors.Length > 0
+                ? colors[Random.Range(0, colors.Length)]
+                : Color.white;
+
+            var angle = Random.Range(0f, Mathf.PI * 2f);
+            var distance = Random.Range(
+                Mathf.Min(luckyParticleDistanceRange.x, luckyParticleDistanceRange.y),
+                Mathf.Max(luckyParticleDistanceRange.x, luckyParticleDistanceRange.y));
+            var duration = Random.Range(
+                Mathf.Min(luckyParticleDurationRange.x, luckyParticleDurationRange.y),
+                Mathf.Max(luckyParticleDurationRange.x, luckyParticleDurationRange.y));
+            var velocity = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * (distance / Mathf.Max(0.01f, duration));
+            var spin = Random.Range(-420f, 420f);
+
+            _luckyParticles.Add(particleObject);
+            StartCoroutine(AnimateLuckyParticle(particleObject, rect, image, origin, velocity, spin, duration));
+        }
+    }
+
+    private IEnumerator AnimateLuckyParticle(GameObject particleObject, RectTransform rect, Image image,
+        Vector2 origin, Vector2 velocity, float spin, float duration)
+    {
+        var startColor = image.color;
+        var elapsed = 0f;
+
+        while (elapsed < duration && particleObject != null)
+        {
+            elapsed += Time.deltaTime * Mathf.Max(0.01f, luckyParticleSpeed);
+            var t = Mathf.Clamp01(elapsed / duration);
+            var moveProgress = luckyParticleMoveCurve != null
+                ? luckyParticleMoveCurve.Evaluate(t)
+                : t;
+            var simulatedTime = duration * moveProgress;
+            var position = origin + velocity * simulatedTime;
+            position.y -= 0.5f * luckyParticleGravity * simulatedTime * simulatedTime;
+            rect.anchoredPosition = position;
+            rect.Rotate(0f, 0f, spin * Time.deltaTime * Mathf.Max(0.01f, luckyParticleSpeed));
+
+            var scale = luckyParticleScaleCurve != null
+                ? luckyParticleScaleCurve.Evaluate(t)
+                : 1f - t;
+            rect.localScale = Vector3.one * Mathf.Max(0f, scale);
+
+            var color = startColor;
+            var alpha = luckyParticleAlphaCurve != null
+                ? luckyParticleAlphaCurve.Evaluate(t)
+                : 1f - t;
+            color.a *= Mathf.Clamp01(alpha);
+            image.color = color;
+            yield return null;
+        }
+
+        _luckyParticles.Remove(particleObject);
+        if (particleObject != null)
+            Destroy(particleObject);
+    }
+
+    private void ClearLuckyParticles()
+    {
+        for (var i = 0; i < _luckyParticles.Count; i++)
+        {
+            if (_luckyParticles[i] != null)
+                Destroy(_luckyParticles[i]);
+        }
+
+        _luckyParticles.Clear();
     }
 
     /// <summary>지금 타이핑 중인 카드를 알려준다. index가 -1이면 어느 후보도 아니고,

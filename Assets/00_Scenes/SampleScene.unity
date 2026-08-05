@@ -3675,6 +3675,117 @@ MonoBehaviour:
   luckyTitleEnglish: LUCKY REWARD!
   luckyReveals:
   - {fileID: 1528314315}
+  luckyParticleRoot: {fileID: 0}
+  luckyParticleSprite: {fileID: 21300000, guid: 2f7ffdcae59d5f84ab8753239e26ee23, type: 3}
+  luckyParticleCount: 10
+  luckyParticleSizeRange: {x: 10, y: 26}
+  luckyParticleDistanceRange: {x: 140, y: 360}
+  luckyParticleDurationRange: {x: 0.65, y: 1.15}
+  luckyParticleSpeed: 0.6
+  luckyParticleGravity: 180
+  luckyParticleMoveCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 3
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  luckyParticleScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.15
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.7
+      value: 0.85
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  luckyParticleAlphaCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.65
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  luckyParticleColors:
+  - {r: 1, g: 0.86, b: 0.2, a: 1}
+  - {r: 1, g: 0.9936989, b: 0.75, a: 1}
+  - {r: 1, g: 1, b: 1, a: 1}
   luckLabel: {fileID: 951042921}
   luckyCard: {fileID: 11400000, guid: 397b868cc11e6f44e9ef45b7547f1845, type: 2}
   luckLabelFormat: 'LUCK : {0}%'

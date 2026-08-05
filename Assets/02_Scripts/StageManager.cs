@@ -332,6 +332,10 @@ public class StageManager : MonoBehaviour
 
         battleManager.ResetBattle();
 
+        // ⚠️ ResetBattle 뒤에 불러야 한다 - 그 안의 UpdateUI()가 낡은 페이즈(PlayerInput)를 보고
+        // 적 인텐트 말풍선을 이미 켰을 수 있고, 그대로 두면 등장 배너·보스 인트로 내내 떠 있는다.
+        battleManager.BeginStagePreparation();
+
         if (timerManager != null)
             timerManager.ResetToFull();
 
@@ -506,6 +510,10 @@ public class StageManager : MonoBehaviour
 
         if (timerManager != null)
             timerManager.RestartTurn();
+
+        // 이제부터 진짜 내 턴이다 - 감춰뒀던 적 인텐트 말풍선을 다시 판단해 켠다.
+        if (battleManager != null)
+            battleManager.EndStagePreparation();
 
         startRoutine = null;
     }

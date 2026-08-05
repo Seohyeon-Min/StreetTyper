@@ -156,8 +156,20 @@ public class BattleManager : MonoBehaviour
             {
                 Debug.Log("[DEBUG] 킬스위치 발동: 적 사망");
                 // 방어력을 무시(true)하고 현재 체력만큼 데미지를 줍니다.
-                enemyManager.currentEnemy.TakeDamage(enemyManager.currentEnemy.currentHP, true); 
+                enemyManager.currentEnemy.TakeDamage(enemyManager.currentEnemy.currentHP, true);
                 UpdateUI();
+            }
+        }
+
+        // 숫자 5 누르면 마더 드래곤 스테이지(인덱스 4)로 즉시 이동. 마더 드래곤 이벤트/대사가
+        // 이미 떠 있는 동안 스테이지를 다시 불러오면 그 상태가 새 스테이지 위에서 꼬이므로
+        // IsEventActive일 때는 무시한다(위 isGameOver/timeScale 가드는 이미 Update 앞머리에서 처리됨).
+        if (Keyboard.current.digit5Key.wasPressedThisFrame)
+        {
+            if (stageManager != null && !IsEventActive)
+            {
+                Debug.Log("[DEBUG] 킬스위치 발동: 마더 드래곤 스테이지로 이동");
+                stageManager.LoadStage(4);
             }
         }
 #endif

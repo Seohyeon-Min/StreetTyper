@@ -2498,8 +2498,43 @@ MonoBehaviour:
   columns: 7
   cellSize: {x: 150, y: 220}
   cardScale: 0.6
-  displacedUI: []
-  displaceDuration: 0.15
+  displacedUI:
+  - target: {fileID: 749679487}
+    offset: {x: 0, y: -300}
+  displaceDuration: 0.3
+  displaceCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.87747437
+      value: 1.0171218
+      inSlope: 0.16409001
+      outSlope: 0.16409001
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.34559327
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.7231926
+      outSlope: 0.7231926
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.22225206
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   typingLiftHeight: 40
   liftSmoothTime: 0.08
   dimAlpha: 0.4
@@ -6631,7 +6666,40 @@ MonoBehaviour:
     offset: {x: 0, y: -600}
   - target: {fileID: 749679487}
     offset: {x: 0, y: -300}
-  displaceDuration: 0.15
+  displaceDuration: 0.3
+  displaceCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.8434658
+      value: 1.0274435
+      inSlope: 0.17884259
+      outSlope: 0.17884259
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.27031294
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.47091562
+      outSlope: 0.47091562
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.207792
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   closeCommand:
     korean: "\uB2EB\uAE30"
     english: close

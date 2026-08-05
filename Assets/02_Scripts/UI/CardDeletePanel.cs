@@ -67,6 +67,10 @@ public class CardDeletePanel : CommandWordReceiver
     [Tooltip("비켜나고 돌아오는 데 걸리는 시간(초). 0이면 즉시 이동한다.")]
     [SerializeField] private float displaceDuration = 0.15f;
 
+    [Tooltip("진행도(0~1)에 따른 밀림 비율. 기본은 EaseInOut. 닫힐 때는 같은 곡선을 거꾸로 " +
+             "훑으므로 따로 반대 곡선을 만들 필요가 없다. CardCollectionPanel과 같은 기본값이다.")]
+    [SerializeField] private AnimationCurve displaceCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
     [Header("타이핑 피드백")]
     [Tooltip("타이핑 중인 카드가 떠오르는 높이(px). 손패·보상 화면과 같은 값을 기본으로 둔다.")]
     [SerializeField] private float typingLiftHeight = 40f;
@@ -169,7 +173,7 @@ public class CardDeletePanel : CommandWordReceiver
     // 위치를 쓰는 건 LateUpdate다 - 레이아웃이 자식을 배치한 뒤에 줄 전체(부모)를 옮긴다.
     private void LateUpdate()
     {
-        _displacement.Tick(displacedUI, _isOpen, displaceDuration, useUnscaledTime: false);
+        _displacement.Tick(displacedUI, _isOpen, displaceDuration, useUnscaledTime: false, displaceCurve);
     }
 
     // offset은 배치를 눈으로 보며 맞추는 값이라 보통 Play 중에 조정하게 된다. 도착해서 좌표

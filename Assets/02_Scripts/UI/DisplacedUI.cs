@@ -97,7 +97,11 @@ public class UIDisplacement
     /// <param name="useUnscaledTime">일시정지(timeScale = 0) <b>위에서</b> 열리는 창이면 true.
     /// 그 경우 보통의 deltaTime으로는 아예 움직이지 않는다. timeScale이 1인 구간에서만 뜨는
     /// 창은 false로 둘 것 - 일시정지가 timeScale 하나로 성립하는 프로젝트 전제를 따르는 쪽이 맞다.</param>
-    public void Tick(DisplacedUI[] entries, bool displaced, float duration, bool useUnscaledTime)
+    /// <param name="curve">진행도(0~1, 경과 시간 기준 선형)를 실제 밀림 비율로 바꾸는 곡선.
+    /// 비워두면(null) 선형 그대로 쓴다. 닫힐 때는 같은 진행도가 1→0으로 줄어들며 이 곡선을
+    /// 거꾸로 훑으므로, 열 때 EaseOut이면 닫을 때는 자연히 EaseIn처럼 보인다 - 별도로
+    /// 반대 곡선을 만들 필요가 없다(TextGateRevealAnimation의 PlayReverse와 같은 방식).</param>
+    public void Tick(DisplacedUI[] entries, bool displaced, float duration, bool useUnscaledTime, AnimationCurve curve = null)
     {
         if (_settled)
             return;
@@ -114,16 +118,18 @@ public class UIDisplacement
             _progress = Mathf.MoveTowards(_progress, goal, delta / duration);
         }
 
-        Apply(entries);
+        Apply(entries, curve);
 
         if (Mathf.Approximately(_progress, goal))
             _settled = true;
     }
 
-    private void Apply(DisplacedUI[] entries)
+    private void Apply(DisplacedUI[] entries, AnimationCurve curve)
     {
         if (entries == null)
             return;
+
+        var t = curve != null ? curve.Evaluate(_progress) : _progress;
 
         for (var i = 0; i < entries.Length; i++)
         {
@@ -131,7 +137,7 @@ public class UIDisplacement
             if (entry == null || !entry.Captured || entry.target == null)
                 continue;
 
-            entry.target.anchoredPosition = entry.Origin + entry.offset * _progress;
+            entry.target.anchoredPosition = entry.Origin + entry.offset * t;
         }
     }
 }

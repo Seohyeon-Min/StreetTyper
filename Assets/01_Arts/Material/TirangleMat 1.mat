@@ -41,8 +41,9 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Alpha: 0.429
+    - _Alpha: 0.222
     - _ColorMask: 15
+    - _ColorVariation: 0
     - _EdgeSoftness: 0.0188
     - _EnableExternalAlpha: 0
     - _GlowFalloff: 2.16
@@ -51,6 +52,7 @@ Material:
     - _OutlineWidth: 0
     - _PulseAmount: 0.5
     - _PulseSpeed: 0
+    - _RandomSeed: 0
     - _Roundness: 0.138
     - _Stencil: 0
     - _StencilComp: 8
@@ -61,6 +63,8 @@ Material:
     m_Colors:
     - _Color: {r: 0.92549026, g: 0.20392159, b: 0.5686275, a: 1}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+    - _EmissionColorEnd: {r: 1, g: 1, b: 1, a: 1}
+    - _EmissionColorStart: {r: 1, g: 1, b: 1, a: 1}
     - _OutlineColor: {r: 0.92549026, g: 0.20392159, b: 0.5686275, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

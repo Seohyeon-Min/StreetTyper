@@ -810,10 +810,16 @@ MonoBehaviour:
   closeButton: {fileID: 494678534600067820}
   languageButton: {fileID: 1538385683403277298}
   languageButtonText: {fileID: 6647064815698463029}
-  toKoreanLabel: "\uD55C\uAD6D\uC5B4"
-  toEnglishLabel: English
+  labelKorean: "< \uD55C\uAD6D\uC5B4 >"
+  labelEnglish: < English >
+  labelFrench: "< Fran\xE7ais >"
+  labelSpanish: "< Espa\xF1ol >"
+  labelJapanese: "< \u65E5\u672C\u8A9E >"
   closeKorean: "\uB2EB\uAE30"
   closeEnglish: CLOSE
+  closeFrench: FERMER
+  closeSpanish: CERRAR
+  closeJapanese: "\u9589\u3058\u308B"
   titleReveals:
   - {fileID: 0}
   - {fileID: 2825965918471077616}

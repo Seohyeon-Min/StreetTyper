@@ -12,12 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b67752fd9815054a9dd81da6ea1b890, type: 3}
   m_Name: Awesome
   m_EditorClassIdentifier: Assembly-CSharp::ModifierCardData
-  cardName: "\uC5B4\uC378"
+  cardNameEn: awesome
   icon: {fileID: 0}
-  description: "\uC4F8\uC218\uB85D \uC704\uB825 \uB204\uC801"
-  statsLabel: "+{0}"
-  cardNameEn: "awesome"
-  descriptionEn: "Grows with each success this run"
-  statsLabelEn: "+{0}"
   effectType: 2
   value: 1
+  scalingSource: 0
+  chancePercent: 10
+  chanceGainPerUse: 10
+  maxChancePercent: 50
+  lootPendingStatsLabel: 
+  lootPendingStatsLabelEn: 

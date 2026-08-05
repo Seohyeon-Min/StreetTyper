@@ -13,12 +13,15 @@ MonoBehaviour:
   m_Name: Colorful
   m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
   cardName: "\uCEEC\uB7EC\uD480"
-  icon: {fileID: 0}
-  description: "\uD654\uC0C1\u00B7\uB9C8\uBE44\u00B7\uC5BC\uC74C \uAC01 {0}%"
+  description: "\uB2E4\uC74C \uC561\uC158 \uBC1C\uB3D9 \uC2DC \uAC01\uAC01 {0}% \uD655\uB960\uB85C
+    \uC801\uC5D0\uAC8C 3\uD134 \uB3D9\uC548 \uC9C0\uC18D\uB418\uB294 \uD654\uC0C1,
+    \uB9C8\uBE44, \uBE59\uACB0\uC744 \uBD80\uC5EC\uD569\uB2C8\uB2E4."
   statsLabel: "\uB79C\uB364"
-  cardNameEn: "colorful"
-  descriptionEn: "{0}% each: burn, shock, ice"
-  statsLabelEn: "RANDOM"
+  cardNameEn: colorful
+  descriptionEn: '{0}% chance each to inflict burn, paralyze, or freeze (3 turns)
+    on your next action.'
+  statsLabelEn: RANDOM
+  icon: {fileID: 0}
   effectType: 1
   statusEffect: 0
   chancePercent: 10

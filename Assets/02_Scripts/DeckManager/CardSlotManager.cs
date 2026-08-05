@@ -78,10 +78,19 @@ public class CardSlotManager : MonoBehaviour
         CardBase card = null;
         if (wordDictionary != null)
         {
-            // 제외 대상은 슬롯을 덮어쓰기 전에 읽어야 한다.
-            card = excludeCurrent
-                ? wordDictionary.GetRandomWord(_currentCards[index])
-                : wordDictionary.GetRandomWord();
+            int safetyCount = 0;
+            do
+            {
+                // 제외 대상은 슬롯을 덮어쓰기 전에 읽어야 한다.
+                card = excludeCurrent
+                    ? wordDictionary.GetRandomWord(_currentCards[index])
+                    : wordDictionary.GetRandomWord();
+
+                safetyCount++;
+            }
+            // [추가] 럭키 카드가 이번 스테이지에서 소멸(사용)되었다면 덱에서 다시 뽑습니다.
+            // 무한 루프 방지를 위해 safetyCount를 체크합니다.
+            while (card != null && card.name == "Lucky" && SkillResolver.LuckyUsedThisStage && safetyCount < 20);
         }
 
         // 사전이 아직 비어 있다면 빈 슬롯을 그대로 두고 이벤트도 쏘지 않는다.

@@ -13,11 +13,17 @@ MonoBehaviour:
   m_Name: Ultra
   m_EditorClassIdentifier: Assembly-CSharp::ModifierCardData
   cardName: "\uC6B8\uD2B8\uB77C"
+  description: "\uB2E4\uC74C \uC561\uC158\uC758 \uC704\uB825\uC744 2 \uC99D\uAC00\uC2DC\uD0B5\uB2C8\uB2E4."
+  statsLabel: +2
+  cardNameEn: ultra
+  descriptionEn: Increases the power of your next action by 2.
+  statsLabelEn: +2
   icon: {fileID: 0}
-  description: "\uC704\uB825 +2"
-  statsLabel: "+2"
-  cardNameEn: "ultra"
-  descriptionEn: "Raises the value by 2"
-  statsLabelEn: "+2"
   effectType: 0
   value: 2
+  scalingSource: 0
+  chancePercent: 10
+  chanceGainPerUse: 10
+  maxChancePercent: 50
+  lootPendingStatsLabel: 
+  lootPendingStatsLabelEn: 

@@ -118,6 +118,16 @@ public class PlayerBattleVisuals : MonoBehaviour
         animator.SetTrigger("Guard");
     }
 
+    // 마더 드래곤 스테이지 아웃로(회복 연출)에서 쓴다. "Smile" 트리거/상태는 아직 Animator
+    // Controller에 없다 - 없는 트리거에 SetTrigger를 호출해도 안전한 무동작이므로, 실제 상태와
+    // 아트(웃는 표정 스프라이트/클립)가 추가되기 전에도 이 호출 자체는 문제 없다.
+    public void PlaySmileAnimation()
+    {
+        if (animator == null) return;
+
+        animator.SetTrigger("Smile");
+    }
+
     public void PlayDashAnimation(float speedMultiplier = 1.0f)
     {
         if (animator != null)

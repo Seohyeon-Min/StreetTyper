@@ -57,6 +57,36 @@ public class StageManager : MonoBehaviour
              "페이드아웃으로 퇴장). 비워두면 퇴장 시 그냥 SetActive(false)로 즉시 끈다.")]
     public StageStartEffect stageStartEffect;
 
+    [Header("보스 인트로 (마더 드래곤 전용)")]
+    [Tooltip("보스전 시작 시 stageStartObject 대신 먼저 띄우는 타이틀 카드. 비워두면 " +
+             "일반 스테이지와 같은 stageStartObject 배너로 폴백한다(안전한 기본값).")]
+    public GameObject bossTitleCardObject;
+
+    [Tooltip("bossTitleCardObject에 붙은 등장/퇴장 연출. stageStartEffect와 같은 컴포넌트를 " +
+             "재사용하되 별도 인스턴스로 둔다. 비워두면 퇴장 없이 바로 SetActive(false).")]
+    public StageStartEffect bossTitleCardEffect;
+
+    // 타이틀 카드의 제목·부제·이미지는 그 오브젝트에 붙은 BossTitleCardView가 OnEnable에서
+    // 스스로 채운다 - StageManager는 켜고 끄기만 하면 되고 문구를 알 필요가 없다(참조를 하나
+    // 더 두면 그 배선이 빌 때 영어 모드에서 한국어가 그대로 나오는 조용한 실패가 생긴다).
+
+    [Tooltip("타이틀 카드를 띄운 채로 유지하는 시간(초) - 퇴장 연출 전에 읽을 여유를 준다.")]
+    public float bossTitleCardHoldDuration = 1.5f;
+
+    [Tooltip("타이틀 카드가 퇴장한 뒤 인사 대사가 시작되기까지의 대기 시간(초).")]
+    public float bossIntroDialogueDelay = 0.6f;
+
+    [Tooltip("인사 대사 한 줄이 화면에 떠 있는 시간(초). 다음 줄로 넘어가기 전 대기 시간도 같다.")]
+    public float bossGreetingLineDuration = 1.8f;
+
+    [Tooltip("데미가 먼저 건네는 인사 대사.")]
+    public string demiGreetingLine = "엄마!";
+    public string demiGreetingLineEn = "Mom!";
+
+    [Tooltip("마더 드래곤의 답변 대사.")]
+    public string motherGreetingLine = "어디 실력좀 볼까?";
+    public string motherGreetingLineEn = "Let's see what you've got.";
+
     public TMPro.TextMeshProUGUI currentStageText;
 
     [Tooltip("currentStageText에 쓸 포맷 문자열. {0} 자리에 표시 스테이지 번호(displayStage)가 들어간다.")]
@@ -302,6 +332,10 @@ public class StageManager : MonoBehaviour
 
         battleManager.ResetBattle();
 
+        // ⚠️ ResetBattle 뒤에 불러야 한다 - 그 안의 UpdateUI()가 낡은 페이즈(PlayerInput)를 보고
+        // 적 인텐트 말풍선을 이미 켰을 수 있고, 그대로 두면 등장 배너·보스 인트로 내내 떠 있는다.
+        battleManager.BeginStagePreparation();
+
         if (timerManager != null)
             timerManager.ResetToFull();
 
@@ -349,8 +383,71 @@ public class StageManager : MonoBehaviour
         // 새 스테이지를 로드하는 시점이므로 "보상 뒤 자동 진행 중" 상태는 끝난다.
         _advancingAfterReward = false;
 
-        // 문구는 코드가 써 넣지 않는다 - 등장 배너의 내용은 stageStartObject(프리팹/애니메이션)가
-        // 통째로 갖는다. 켜는 순간 StageStartEffect.OnEnable이 등장 연출을 알아서 재생한다.
+        // 보스전이고 타이틀 카드가 배선되어 있으면 그쪽 인트로(타이틀 카드 → 인사 대사)를 먼저
+        // 재생한 뒤 기존 꼬리로 이어진다. 배선이 안 되어 있으면 지금과 똑같은 동작으로 폴백한다.
+        if (isBossBattle && bossTitleCardObject != null)
+        {
+            startRoutine = StartCoroutine(PlayBossIntroThenBegin());
+        }
+        else
+        {
+            // 문구는 코드가 써 넣지 않는다 - 등장 배너의 내용은 stageStartObject(프리팹/애니메이션)가
+            // 통째로 갖는다. 켜는 순간 StageStartEffect.OnEnable이 등장 연출을 알아서 재생한다.
+            if (stageStartObject != null)
+                stageStartObject.SetActive(true);
+
+            // 보상 중 가라앉혀뒀던 손패를 배너가 덮고 있는 동안 되돌린다(보스 인트로 경로에도
+            // 같은 호출이 있다 - 두 경로 모두 배너를 켠 직후가 같은 타이밍이다).
+            if (rewardInputHandler != null)
+                rewardInputHandler.RestoreHand();
+
+            startRoutine = StartCoroutine(BeginStageAfterDelay());
+        }
+    }
+
+    // 보스전 전용 인트로: 타이틀 카드 등장 → 유지 → 퇴장 → 짧은 대기 → 데미/마더 드래곤 인사
+    // 대사(시간차, 스페이스 입력 불필요 - 이 시점엔 입력이 이미 잠겨 있고 화면에 상호작용할
+    // 대상도 없다) → 기존 "게임시작" 배너 → BeginStageAfterDelay로 그대로 이어진다.
+    private IEnumerator PlayBossIntroThenBegin()
+    {
+        // 켜기만 하면 된다 - StageStartEffect가 OnEnable에서 등장 연출을, BossTitleCardView가
+        // OnEnable에서 지금 언어에 맞는 제목·부제·이미지를 각자 알아서 채운다.
+        if (bossTitleCardObject != null)
+            bossTitleCardObject.SetActive(true);
+
+        yield return new WaitForSeconds(bossTitleCardHoldDuration);
+
+        if (bossTitleCardEffect != null)
+        {
+            bool exited = false;
+            bossTitleCardEffect.PlayExit(() => exited = true);
+            yield return new WaitUntil(() => exited);
+        }
+        else if (bossTitleCardObject != null)
+        {
+            bossTitleCardObject.SetActive(false);
+        }
+
+        yield return new WaitForSeconds(bossIntroDialogueDelay);
+
+        if (SpeechBubbleManager.Instance != null && player != null)
+        {
+            string demiLine = LanguageSettings.Pick(demiGreetingLine, demiGreetingLineEn, this, nameof(demiGreetingLine));
+            SpeechBubbleManager.Instance.ShowBubble(demiLine, player.transform.position, true, bossGreetingLineDuration);
+        }
+
+        yield return new WaitForSeconds(bossGreetingLineDuration);
+
+        if (SpeechBubbleManager.Instance != null && currentEnemyObject != null)
+        {
+            var enemyBase = currentEnemyObject.GetComponent<EnemyBase>();
+            Vector3 motherPos = enemyBase != null ? enemyBase.BubblePosition : currentEnemyObject.transform.position;
+            string motherLine = LanguageSettings.Pick(motherGreetingLine, motherGreetingLineEn, this, nameof(motherGreetingLine));
+            SpeechBubbleManager.Instance.ShowBubble(motherLine, motherPos, false, bossGreetingLineDuration);
+        }
+
+        yield return new WaitForSeconds(bossGreetingLineDuration);
+
         if (stageStartObject != null)
             stageStartObject.SetActive(true);
 
@@ -360,7 +457,9 @@ public class StageManager : MonoBehaviour
         if (rewardInputHandler != null)
             rewardInputHandler.RestoreHand();
 
-        startRoutine = StartCoroutine(BeginStageAfterDelay());
+        // ⚠️ 여기서는 StartCoroutine으로 새로 걸지 않는다 - 이 코루틴 자신이 이미 startRoutine이라
+        // 다시 대입하면 이쪽이 추적에서 빠져 LoadStage의 StopCoroutine 가드가 무력해진다.
+        yield return BeginStageAfterDelay();
     }
 
     public void RestartStage()
@@ -411,6 +510,10 @@ public class StageManager : MonoBehaviour
 
         if (timerManager != null)
             timerManager.RestartTurn();
+
+        // 이제부터 진짜 내 턴이다 - 감춰뒀던 적 인텐트 말풍선을 다시 판단해 켠다.
+        if (battleManager != null)
+            battleManager.EndStagePreparation();
 
         startRoutine = null;
     }

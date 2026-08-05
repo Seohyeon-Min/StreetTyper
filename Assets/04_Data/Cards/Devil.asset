@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: Devil
   m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
   cardName: "\uB370\uBE4C"
-  icon: {fileID: 0}
-  description: "\uBC1B\uB294 \uD53C\uD574 {1}% \uAC10\uC18C"
+  description: "3\uD134 \uB3D9\uC548 \uC801\uC5D0\uAC8C \uBC1B\uB294 \uD53C\uD574\uAC00
+    {1}% \uAC10\uC18C\uD569\uB2C8\uB2E4."
   statsLabel: "\uACBD\uAC10"
-  cardNameEn: "devil"
-  descriptionEn: "Take {1}% less damage"
-  statsLabelEn: "-25%"
+  cardNameEn: devil
+  descriptionEn: Take {1}% less damage from the enemy for 3 turns.
+  statsLabelEn: -25%
+  icon: {fileID: 0}
   effectType: 4
   statusEffect: 0
   chancePercent: 0

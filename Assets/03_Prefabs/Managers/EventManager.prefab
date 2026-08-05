@@ -50,6 +50,12 @@ MonoBehaviour:
   motherDragonTransform: {fileID: 7205779887788570278, guid: 71523482895db8d4ca417e23e6d25046, type: 3}
   speechBubblePrefab: {fileID: 2888076677979763702, guid: ececaf37a69079c4f90e6f39dc5990d0, type: 3}
   canvasTransform: {fileID: 0}
-  bubbleOffset: {x: 0, y: 2.5, z: 0}
+  bubbleScreenOffset: {x: 0, y: 0}
+  playerBubbleScreenOffset: {x: 0, y: 0}
   normalEventLines: []
-  dragonEventLines: []
+  dragonEventLines:
+  - "\uC5EC\uAE30\uAE4C\uC9C0 \uD558\uC790\uAFB8\uB098!"
+  - "\uCCB4\uB825\uC774 \uD68C\uBCF5\uB410\uC5B4! (+{0})"
+  dragonEventLinesEn:
+  - "That's enough for today!"
+  - "You've been healed! (+{0})"

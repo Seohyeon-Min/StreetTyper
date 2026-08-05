@@ -12,13 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a9684e27ffb23a49b13d2ffd843db05, type: 3}
   m_Name: Punch
   m_EditorClassIdentifier: Assembly-CSharp::ActionCardData
-  cardName: "\uD380\uCE58"
+  cardNameEn: punch
   icon: {fileID: 0}
-  description: "\uC704\uB825 +3 \uACF5\uACA9"
-  statsLabel: "+3"
-  cardNameEn: "punch"
-  descriptionEn: "Attack with +3 power"
-  statsLabelEn: "+3"
   actionKind: 0
   strengthBonus: 3
   timerDelta: 0
@@ -28,3 +23,5 @@ MonoBehaviour:
   comboChancePercent: 0
   comboMinHits: 0
   comboMaxHits: 0
+  scalingSource: 0
+  scalingPerUnit: 0

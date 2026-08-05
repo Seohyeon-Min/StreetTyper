@@ -97,6 +97,10 @@ public class SpeechBubbleManager : MonoBehaviour
         SpeechBubble bubbleScript = bubbleObj.GetComponent<SpeechBubble>();
         if (bubbleScript != null)
         {
+            // 프리팹의 꼬리는 적 기준(오른쪽)으로 배치돼 있다 - 플레이어가 말할 때는 좌우로
+            // 뒤집어야 꼬리가 화자를 향한다. 위치는 아래 GetBubbleScreenPosition이 이미
+            // 좌우 대칭 오프셋으로 잡는다.
+            bubbleScript.SetMirrored(isPlayer);
             bubbleScript.Setup(message);
         }
 

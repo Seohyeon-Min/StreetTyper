@@ -342,6 +342,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpeechBubble
   bubbleText: {fileID: 2668929670146781178}
   iconImage: {fileID: 4094977900864723160}
+  tail: {fileID: 7621623833116908542}
 --- !u!114 &6029403777317359423
 MonoBehaviour:
   m_ObjectHideFlags: 0

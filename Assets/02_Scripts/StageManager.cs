@@ -14,9 +14,6 @@ public class StageManager : MonoBehaviour
     [Tooltip("스테이지가 열리고 플레이어가 타이핑을 시작할 수 있을 때까지의 대기 시간(초)")]
     public float stageStartDelay = 2f;
 
-    [Tooltip("총 스테이지 수(결과 화면의 '최고 도달 스테이지' 분모로만 쓰인다 - 스폰 로직과 무관)")]
-    public int totalStages = 12;
-
     [Header("References")]
     public BattleManager battleManager;
     public EnemyManager enemyManager;
@@ -27,6 +24,7 @@ public class StageManager : MonoBehaviour
     public CardSlotManager cardSlotManager;
     public WordChainManager wordChainManager;
     public PendingActionManager pendingActionManager;
+    public EventManager eventManager;
 
     [Tooltip("적 HP 바의 위치 추종 컴포넌트. 적은 스테이지마다 새로 스폰되므로 여기서 대상을 넘겨준다.")]
     public WorldAnchoredUI enemyHealthBarAnchor;
@@ -108,11 +106,13 @@ public class StageManager : MonoBehaviour
     [Tooltip("적이 처음 생성될 화면 오른쪽 밖의 X 오프셋 거리")]
     public float spawnOffScreenX = 15f;
 
+    public int totalStages = 10;
+
     private int currentBattleIndex = 0;
 
     // 지금 스테이지에 스폰된 적이 마더 드래곤인가. 보상에 "지우기" 카드를 놓을지 판단하는 데 쓴다.
     private bool stageWasMotherDragon;
-    private int totalBattles = 10;
+    private int totalBattles = 13;
     private GameObject currentEnemyObject;
     private Coroutine startRoutine;
     private Coroutine advanceRoutine;
@@ -207,8 +207,10 @@ public class StageManager : MonoBehaviour
         }
 
 
-        // 인덱스 4(5번째 전투 = 4스테이지 클리어 후)와 인덱스 9(10번째 전투 = 8스테이지 클리어 후)를 보스전으로 설정
-        bool isBossBattle = (currentBattleIndex == 4 || currentBattleIndex == 9);
+        // LoadStage() 내부
+
+        // [수정] 인덱스 4, 9, 12를 보스전으로 설정
+        bool isBossBattle = (currentBattleIndex == 4 || currentBattleIndex == 9 || currentBattleIndex == 12);
 
         if (SoundManager.Instance != null)
         {
@@ -226,10 +228,11 @@ public class StageManager : MonoBehaviour
         int displayStage = currentBattleIndex + 1;
         if (currentBattleIndex >= 4) displayStage -= 1; // 첫 번째 보스전 및 그 이후 인덱스 보정
         if (currentBattleIndex >= 9) displayStage -= 1; // 두 번째 보스전 및 그 이후 인덱스 보정
+        if (currentBattleIndex >= 12) displayStage -= 1; // [추가] 세 번째 보스전 보정
 
-        // [추가] 최고 도달 스테이지 기록 갱신
-        if (StatisticsManager.Instance != null)
-            StatisticsManager.Instance.UpdateHighestStage(currentBattleIndex + 1);
+        // [추가] 최고 도달 스테이지 기록 갱신 (보스를 제외한 순수 스테이지 번호 전달)
+        if (StatisticsManager.Instance != null) 
+            StatisticsManager.Instance.UpdateHighestStage(displayStage);
 
         if (currentStageText != null)
         {
@@ -283,6 +286,12 @@ public class StageManager : MonoBehaviour
         currentEnemyObject = Instantiate(prefabToSpawn, offScreenPos, Quaternion.identity);
 
         EnemyBase newEnemyBase = currentEnemyObject.GetComponent<EnemyBase>();
+
+        // [추가] 마지막 전투 인덱스일 경우 엔딩 보스로 설정
+        if (currentBattleIndex == totalBattles - 1)
+        {
+            newEnemyBase.isEndingBoss = true;
+        }
 
         // [유지] 이 줄은 절대 지우지 마세요! 보상(지우기 카드) 처리에 꼭 필요합니다.
         stageWasMotherDragon = newEnemyBase is MotherDragon;
@@ -379,21 +388,29 @@ public class StageManager : MonoBehaviour
         // 새 스테이지를 로드하는 시점이므로 "보상 뒤 자동 진행 중" 상태는 끝난다.
         _advancingAfterReward = false;
 
-        // 보스전이고 타이틀 카드가 배선되어 있으면 그쪽 인트로(타이틀 카드 → 인사 대사)를 먼저
-        // 재생한 뒤 기존 꼬리로 이어진다. 배선이 안 되어 있으면 지금과 똑같은 동작으로 폴백한다.
-        if (isBossBattle && bossTitleCardObject != null)
+        // =========================================================
+        // [수정] 아래 부분을 교체하여 엔딩 보스일 경우 전투 스킵 및 즉시 이벤트 실행
+        if (newEnemyBase.isEndingBoss)
+        {
+            if (eventManager != null)
+            {
+                // true를 넘겨 wasMotherDragon(엔딩 이벤트)으로 처리되게 합니다.
+                eventManager.StartEvent(true, 0, true);
+            }
+            else
+            {
+                battleManager.ShowGameClear();
+            }
+        }
+        else if (isBossBattle && bossTitleCardObject != null)
         {
             startRoutine = StartCoroutine(PlayBossIntroThenBegin());
         }
         else
         {
-            // 문구는 코드가 써 넣지 않는다 - 등장 배너의 내용은 stageStartObject(프리팹/애니메이션)가
-            // 통째로 갖는다. 켜는 순간 StageStartEffect.OnEnable이 등장 연출을 알아서 재생한다.
             if (stageStartObject != null)
                 stageStartObject.SetActive(true);
 
-            // 보상 중 가라앉혀뒀던 손패를 배너가 덮고 있는 동안 되돌린다(보스 인트로 경로에도
-            // 같은 호출이 있다 - 두 경로 모두 배너를 켠 직후가 같은 타이밍이다).
             if (rewardInputHandler != null)
                 rewardInputHandler.RestoreHand();
 

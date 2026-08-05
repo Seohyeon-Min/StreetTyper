@@ -236,7 +236,7 @@ public class BattleManager : MonoBehaviour
 
         if (player != null && enemyManager != null && enemyManager.currentEnemy != null)
         {
-            if (enemyManager.currentEnemy is MotherDragon)
+            if (enemyManager.currentEnemy.isEndingBoss)
             {
                 mdTurnCount++;
                 if (mdTurnCount == 1) mdIntentString = MotherDragonLine(1);
@@ -357,9 +357,12 @@ public class BattleManager : MonoBehaviour
 
             if (enemyIntentBubbleObj != null && enemyIntentBubble != null && isPlayerInputPhase)
             {
-                // 마더 드래곤의 이번 대사는 이미 일시적 말풍선(ShowBubble)으로 한 번 보여줬다 -
-                // 여기서 같은 문자열을 영구 말풍선으로 또 띄우면 같은 대사가 두 번 나온다.
-                if (enemy is MotherDragon && mdLineAnnounced)
+                // [추가] 엔딩 보스일 때는 전투 인텐트 말풍선을 아예 띄우지 않습니다.
+                if (enemy.isEndingBoss)
+                {
+                    enemyIntentBubbleObj.SetActive(false);
+                }
+                else if (enemy is MotherDragon && mdLineAnnounced)
                 {
                     enemyIntentBubbleObj.SetActive(false);
                 }
@@ -367,8 +370,6 @@ public class BattleManager : MonoBehaviour
                 {
                     enemyIntentBubbleObj.SetActive(true);
 
-                    // 마더 드래곤은 대사(텍스트)를 그대로 쓰고, 일반 적은 아이콘 + ActionType별 색이
-                    // 입혀진 텍스트를 같이 보여준다.
                     if (enemy is MotherDragon)
                         enemyIntentBubble.Setup(mdIntentString);
                     else
@@ -420,27 +421,17 @@ public class BattleManager : MonoBehaviour
             {
                 isEventTriggered = true;
 
-                bool isMD = enemyManager.currentEnemy is MotherDragon;
-                int healAmount = 0;
-
-                if (isMD)
+                // 엔딩 보스일 경우에만 대사 이벤트를 실행
+                if (enemyManager.currentEnemy.isEndingBoss && eventManager != null)
                 {
-                    if (savedMDDamage == 0) savedMDDamage = enemyManager.currentEnemy.maxHP;
-                    healAmount = savedMDDamage;
-                }
-
-                // 마더 드래곤은 자기 작별 대사를 하는 동안 화면에 남아 있어야 한다 - 여기서 끄면
-                // 정작 본인은 사라진 채 말풍선만 뜬다. 대사가 끝나면 EventManager가 끈다.
-                // (일반 적과 이벤트가 없는 경우는 예전처럼 그 자리에서 끈다.)
-                if (!isMD || eventManager == null)
-                    enemyManager.currentEnemy.gameObject.SetActive(false);
-
-                if (eventManager != null)
-                {
-                    eventManager.StartEvent(isMD, healAmount);
+                    eventManager.StartEvent(true, 0);
                 }
                 else
                 {
+                    // 일반 적 및 중간보스 마더 드래곤은 이벤트 대사 없이 즉시 사망 처리
+                    enemyManager.currentEnemy.gameObject.SetActive(false);
+
+                    // 곧바로 승리 처리 (이후 StageManager가 보상 라운드를 엽니다)
                     ShowResult(ResultKind.Victory);
                 }
             }

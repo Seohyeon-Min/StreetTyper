@@ -135,6 +135,9 @@ MonoBehaviour:
   edgeLineIntensity: 2
   edgeLineColor: {r: 0, g: 0, b: 0, a: 1}
   edgeLineSharpness: 5
+  enableOutline: 0
+  outlineWidth: 5
+  outlineColor: {r: 0, g: 0, b: 0, a: 1}
   preset: {fileID: 0}
 --- !u!1 &770202196253127186
 GameObject:
@@ -682,6 +685,9 @@ MonoBehaviour:
   edgeLineIntensity: 2
   edgeLineColor: {r: 0, g: 0, b: 0, a: 1}
   edgeLineSharpness: 5
+  enableOutline: 0
+  outlineWidth: 5
+  outlineColor: {r: 0, g: 0, b: 0, a: 1}
   preset: {fileID: 0}
 --- !u!1 &1641878136339658126
 GameObject:
@@ -693,6 +699,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2855174150526746081}
   - component: {fileID: 6403177337273624274}
+  - component: {fileID: 7734120066940318452}
   m_Layer: 5
   m_Name: GameObject
   m_TagString: Untagged
@@ -735,6 +742,51 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RectMask2D
   m_Padding: {x: 0, y: 0, z: 0, w: 0}
   m_Softness: {x: 0, y: 0}
+--- !u!114 &7734120066940318452
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1641878136339658126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ed8a3bb8ec0ded43a806201686f6d96, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextGateRevealAnimation
+  maskRect: {fileID: 2855174150526746081}
+  fullWidth: 1844.3
+  leftBar: {fileID: 0}
+  rightBar: {fileID: 0}
+  barOvershoot: 24
+  duration: 0.6
+  revealRatio: 0.7
+  curve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  closeFadeOutDuration: 0.15
+  playOnEnable: 1
 --- !u!1 &1679703060815786806
 GameObject:
   m_ObjectHideFlags: 0
@@ -1007,6 +1059,9 @@ MonoBehaviour:
   edgeLineIntensity: 2
   edgeLineColor: {r: 0, g: 0, b: 0, a: 1}
   edgeLineSharpness: 5
+  enableOutline: 0
+  outlineWidth: 5
+  outlineColor: {r: 0, g: 0, b: 0, a: 1}
   preset: {fileID: 0}
 --- !u!1 &4270349071200497072
 GameObject:
@@ -1440,6 +1495,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   closeFadeOutDuration: 0.15
+  playOnEnable: 1
 --- !u!114 &2369097817281888723
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1598,6 +1654,9 @@ MonoBehaviour:
   edgeLineIntensity: 10
   edgeLineColor: {r: 0, g: 0, b: 0, a: 1}
   edgeLineSharpness: 5
+  enableOutline: 0
+  outlineWidth: 5
+  outlineColor: {r: 0, g: 0, b: 0, a: 1}
   preset: {fileID: 0}
 --- !u!1 &5251819173627161789
 GameObject:

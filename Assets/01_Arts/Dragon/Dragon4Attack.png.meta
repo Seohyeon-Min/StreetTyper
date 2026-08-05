@@ -1,0 +1,431 @@
+fileFormatVersion: 2
+guid: 435a4149b5f4ce84bb9b8037c20b9a9a
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -8867330766209704147
+    second: Dragon4Attack_0
+  - first:
+      213: -1728158554077239716
+    second: Dragon4Attack_1
+  - first:
+      213: -3359067306980192217
+    second: Dragon4Attack_2
+  - first:
+      213: -5877348278164159079
+    second: Dragon4Attack_3
+  - first:
+      213: 4447009844864275223
+    second: Dragon4Attack_4
+  - first:
+      213: 7232897449423809973
+    second: Dragon4Attack_5
+  - first:
+      213: -8645882861952735735
+    second: Dragon4Attack_6
+  - first:
+      213: 491718623170936331
+    second: Dragon4Attack_7
+  - first:
+      213: -6882028404800226383
+    second: Dragon4Attack_8
+  - first:
+      213: 7380672214022284210
+    second: Dragon4Attack_9
+  - first:
+      213: -2736608843210654408
+    second: Dragon4Attack_10
+  - first:
+      213: -5407734339480201046
+    second: Dragon4Attack_11
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Dragon4Attack_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 711
+        height: 820
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2f9d2636a9e0f480800000000000000
+      internalID: -8867330766209704147
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon4Attack_1
+      rect:
+        serializedVersion: 2
+        x: 711
+        y: 0
+        width: 711
+        height: 820
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c566ca483f85408e0800000000000000
+      internalID: -1728158554077239716
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon4Attack_2
+      rect:
+        serializedVersion: 2
+        x: 1422
+        y: 0
+        width: 711
+        height: 820
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72051d6d4123261d0800000000000000
+      internalID: -3359067306980192217
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon4Attack_3
+      rect:
+        serializedVersion: 2
+        x: 2133
+        y: 0
+        width: 711
+        height: 820
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99585ca61e67f6ea0800000000000000
+      internalID: -5877348278164159079
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon4Attack_4
+      rect:
+        serializedVersion: 2
+        x: 2844
+        y: 0
+        width: 711
+        height: 820
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 713dcc384e3f6bd30800000000000000
+      internalID: 4447009844864275223
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon4Attack_5
+      rect:
+        serializedVersion: 2
+        x: 3555
+        y: 0
+        width: 711
+        height: 820
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5bd2cb1a8e9606460800000000000000
+      internalID: 7232897449423809973
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon4Attack_6
+      rect:
+        serializedVersion: 2
+        x: 4266
+        y: 0
+        width: 711
+        height: 820
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9066bab4857a30880800000000000000
+      internalID: -8645882861952735735
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon4Attack_7
+      rect:
+        serializedVersion: 2
+        x: 4977
+        y: 0
+        width: 711
+        height: 820
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0e3c878b7fe2d600800000000000000
+      internalID: 491718623170936331
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon4Attack_8
+      rect:
+        serializedVersion: 2
+        x: 5688
+        y: 0
+        width: 711
+        height: 820
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1bbfbbdd0af1e70a0800000000000000
+      internalID: -6882028404800226383
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon4Attack_9
+      rect:
+        serializedVersion: 2
+        x: 6399
+        y: 0
+        width: 711
+        height: 820
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b3e460364a6d6660800000000000000
+      internalID: 7380672214022284210
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon4Attack_10
+      rect:
+        serializedVersion: 2
+        x: 7110
+        y: 0
+        width: 711
+        height: 820
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83d7c3b91cc950ad0800000000000000
+      internalID: -2736608843210654408
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon4Attack_11
+      rect:
+        serializedVersion: 2
+        x: 7821
+        y: 0
+        width: 711
+        height: 820
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa8d997054ed3f4b0800000000000000
+      internalID: -5407734339480201046
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 04e1378a03deb884380270c0c668e6bb
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":12.0,"y":1.0},"gridSpriteSize":{"x":711.0,"y":820.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":7,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      Dragon4Attack_0: -8867330766209704147
+      Dragon4Attack_1: -1728158554077239716
+      Dragon4Attack_10: -2736608843210654408
+      Dragon4Attack_11: -5407734339480201046
+      Dragon4Attack_2: -3359067306980192217
+      Dragon4Attack_3: -5877348278164159079
+      Dragon4Attack_4: 4447009844864275223
+      Dragon4Attack_5: 7232897449423809973
+      Dragon4Attack_6: -8645882861952735735
+      Dragon4Attack_7: 491718623170936331
+      Dragon4Attack_8: -6882028404800226383
+      Dragon4Attack_9: 7380672214022284210
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

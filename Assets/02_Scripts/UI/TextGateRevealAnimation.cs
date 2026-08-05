@@ -45,6 +45,13 @@ public class TextGateRevealAnimation : MonoBehaviour
              "다 닫힌 자리에 막대(||)가 불투명하게 남는데, 이 시간 동안 그것마저 지운다.")]
     [SerializeField] private float closeFadeOutDuration = 0.15f;
 
+    [Tooltip("켜지는 순간 스스로 Play()한다. 켜고 끄는 것만으로 연출이 도는 화면(결과 창처럼 " +
+             "패널을 SetActive로 여는 것)에 쓴다 - 부르는 쪽이 이 컴포넌트를 참조로 들고 있을 " +
+             "필요가 없어진다.\n" +
+             "⚠️ 닫힘 연출(PlayReverse)을 쓰는 화면에서는 끄고 부르는 쪽이 직접 Play/PlayReverse를 " +
+             "부를 것 - 여는 것만 자동이면 여닫는 순서가 어긋난다.")]
+    [SerializeField] private bool playOnEnable;
+
     private RectTransform _leftBarRect;
     private RectTransform _rightBarRect;
     private Coroutine _routine;
@@ -56,6 +63,18 @@ public class TextGateRevealAnimation : MonoBehaviour
 
         if (rightBar != null)
             _rightBarRect = rightBar.rectTransform;
+    }
+
+    // 이 컴포넌트는 아무도 Play()를 부르지 않으면 마스크가 닫힌 채(폭 0) 남는다. 그 배선을
+    // 빠뜨리는 사고가 반복돼서, 켜는 것만으로 열리게 하는 길을 열어 둔다
+    // (StageStartEffect가 등장 연출을 OnEnable에서 자동 재생하는 것과 같은 방식이다).
+    //
+    // ⚠️ 부모가 켜질 때 자식 컴포넌트의 OnEnable도 같이 불린다 - 그래서 패널 루트만
+    // SetActive(true)해도 그 안의 게이트가 전부 스스로 재생된다.
+    private void OnEnable()
+    {
+        if (playOnEnable)
+            Play();
     }
 
     public void Play()

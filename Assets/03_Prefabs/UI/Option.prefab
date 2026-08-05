@@ -1194,6 +1194,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   closeFadeOutDuration: 0.15
+  playOnEnable: 0
 --- !u!1 &2649103403029826252
 GameObject:
   m_ObjectHideFlags: 0

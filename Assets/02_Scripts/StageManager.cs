@@ -7,6 +7,7 @@ public class StageManager : MonoBehaviour
 {
     [Header("Stage Settings")]
     public List<GameObject> enemyPrefabs;
+    private GameObject lastNormalEnemyPrefab;
     public GameObject motherDragonPrefab;
     public Transform enemySpawnPoint;
 
@@ -221,7 +222,23 @@ public class StageManager : MonoBehaviour
         {
             if (enemyPrefabs != null && enemyPrefabs.Count > 0)
             {
-                prefabToSpawn = enemyPrefabs[0]; // 일반 스테이지는 무조건 첫 번째 프리팹 사용
+                if (enemyPrefabs.Count == 1)
+                {
+                    prefabToSpawn = enemyPrefabs[0];
+                }
+                else
+                {
+                    // 직전에 나온 적과 겹치지 않도록 랜덤으로 뽑기
+                    int safetyCount = 0;
+                    do
+                    {
+                        // UnityEngine.Random을 명시하여 System.Random과의 충돌을 방지합니다.
+                        prefabToSpawn = enemyPrefabs[UnityEngine.Random.Range(0, enemyPrefabs.Count)];
+                        safetyCount++;
+                    } while (prefabToSpawn == lastNormalEnemyPrefab && safetyCount < 20);
+
+                    lastNormalEnemyPrefab = prefabToSpawn;
+                }
             }
             else
             {
@@ -543,7 +560,7 @@ public class StageManager : MonoBehaviour
         {
             foreach (var scroller in backgroundScrollers)
             {
-                if (scroller != null) scroller.StartScroll();
+                if (scroller != null) scroller.StartScroll(transitionDuration, enemySlideInDuration);
             }
         }
 

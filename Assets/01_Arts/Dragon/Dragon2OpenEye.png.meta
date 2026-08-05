@@ -1,0 +1,431 @@
+fileFormatVersion: 2
+guid: 83a65e04861b9144baec2cc30e4aa52b
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -5015885739193953463
+    second: Dragon2OpenEye_0
+  - first:
+      213: -1091408336757572734
+    second: Dragon2OpenEye_1
+  - first:
+      213: 6444721771598654879
+    second: Dragon2OpenEye_2
+  - first:
+      213: -4002507571834311078
+    second: Dragon2OpenEye_3
+  - first:
+      213: -846462275984377938
+    second: Dragon2OpenEye_4
+  - first:
+      213: 1151095196987629303
+    second: Dragon2OpenEye_5
+  - first:
+      213: 8980969766223807072
+    second: Dragon2OpenEye_6
+  - first:
+      213: -7758777116758996887
+    second: Dragon2OpenEye_7
+  - first:
+      213: 8171001596221021193
+    second: Dragon2OpenEye_8
+  - first:
+      213: -670766705281834085
+    second: Dragon2OpenEye_9
+  - first:
+      213: 1390156036525717489
+    second: Dragon2OpenEye_10
+  - first:
+      213: -2185159001502159310
+    second: Dragon2OpenEye_11
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Dragon2OpenEye_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 692
+        height: 637
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9439569de7ef36ab0800000000000000
+      internalID: -5015885739193953463
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon2OpenEye_1
+      rect:
+        serializedVersion: 2
+        x: 692
+        y: 0
+        width: 692
+        height: 637
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28b3aa676e98ad0f0800000000000000
+      internalID: -1091408336757572734
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon2OpenEye_2
+      rect:
+        serializedVersion: 2
+        x: 1384
+        y: 0
+        width: 692
+        height: 637
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9d2d504e40407950800000000000000
+      internalID: 6444721771598654879
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon2OpenEye_3
+      rect:
+        serializedVersion: 2
+        x: 2076
+        y: 0
+        width: 692
+        height: 637
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a5e2102d19c3478c0800000000000000
+      internalID: -4002507571834311078
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon2OpenEye_4
+      rect:
+        serializedVersion: 2
+        x: 2768
+        y: 0
+        width: 692
+        height: 637
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea7be247b03c044f0800000000000000
+      internalID: -846462275984377938
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon2OpenEye_5
+      rect:
+        serializedVersion: 2
+        x: 3460
+        y: 0
+        width: 692
+        height: 637
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7fe1b1f9bf289ff00800000000000000
+      internalID: 1151095196987629303
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon2OpenEye_6
+      rect:
+        serializedVersion: 2
+        x: 4152
+        y: 0
+        width: 692
+        height: 637
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0620b4e4b60d2ac70800000000000000
+      internalID: 8980969766223807072
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon2OpenEye_7
+      rect:
+        serializedVersion: 2
+        x: 4844
+        y: 0
+        width: 692
+        height: 637
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9688620f159435490800000000000000
+      internalID: -7758777116758996887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon2OpenEye_8
+      rect:
+        serializedVersion: 2
+        x: 5536
+        y: 0
+        width: 692
+        height: 637
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 90c57e1f8aa356170800000000000000
+      internalID: 8171001596221021193
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon2OpenEye_9
+      rect:
+        serializedVersion: 2
+        x: 6228
+        y: 0
+        width: 692
+        height: 637
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9364844c35f0b6f0800000000000000
+      internalID: -670766705281834085
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon2OpenEye_10
+      rect:
+        serializedVersion: 2
+        x: 6920
+        y: 0
+        width: 692
+        height: 637
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f7fa73cc83da4310800000000000000
+      internalID: 1390156036525717489
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dragon2OpenEye_11
+      rect:
+        serializedVersion: 2
+        x: 7612
+        y: 0
+        width: 692
+        height: 637
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23e67b13771cca1e0800000000000000
+      internalID: -2185159001502159310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: de658f71167a9964e8c1c9a311dbefdf
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":12.0,"y":1.0},"gridSpriteSize":{"x":692.0,"y":637.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":7,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      Dragon2OpenEye_0: -5015885739193953463
+      Dragon2OpenEye_1: -1091408336757572734
+      Dragon2OpenEye_10: 1390156036525717489
+      Dragon2OpenEye_11: -2185159001502159310
+      Dragon2OpenEye_2: 6444721771598654879
+      Dragon2OpenEye_3: -4002507571834311078
+      Dragon2OpenEye_4: -846462275984377938
+      Dragon2OpenEye_5: 1151095196987629303
+      Dragon2OpenEye_6: 8980969766223807072
+      Dragon2OpenEye_7: -7758777116758996887
+      Dragon2OpenEye_8: 8171001596221021193
+      Dragon2OpenEye_9: -670766705281834085
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -566,6 +566,9 @@ MonoBehaviour:
   edgeLineIntensity: 2
   edgeLineColor: {r: 0, g: 0, b: 0, a: 1}
   edgeLineSharpness: 5
+  enableOutline: 0
+  outlineWidth: 5
+  outlineColor: {r: 0, g: 0, b: 0, a: 1}
   preset: {fileID: 0}
 --- !u!1 &3624514737527509564
 GameObject:
@@ -702,6 +705,9 @@ MonoBehaviour:
   edgeLineIntensity: 2
   edgeLineColor: {r: 0, g: 0, b: 0, a: 1}
   edgeLineSharpness: 5
+  enableOutline: 0
+  outlineWidth: 5
+  outlineColor: {r: 0, g: 0, b: 0, a: 1}
   preset: {fileID: 0}
 --- !u!1 &5194378999179320973
 GameObject:

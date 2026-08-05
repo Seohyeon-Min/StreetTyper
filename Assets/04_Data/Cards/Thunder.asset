@@ -18,7 +18,7 @@ MonoBehaviour:
   statsLabel: "\uB9C8\uBE44"
   cardNameEn: thunder
   descriptionEn: '{0}% chance to paralyze the enemy for 3 turns on your next action.'
-  statsLabelEn: STUN
+  statsLabelEn: PARALYZE
   icon: {fileID: 0}
   effectType: 0
   statusEffect: 2

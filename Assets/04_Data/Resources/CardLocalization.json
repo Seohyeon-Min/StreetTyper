@@ -13,7 +13,10 @@
       "frLabel": "+{0}",
       "esName": "awesome",
       "esDesc": "Aumenta el poder de tu próxima acción según las veces que se haya usado 'Awesome' en esta partida.",
-      "esLabel": "+{0}"
+      "esLabel": "+{0}",
+      "jaName": "awesome",
+      "jaDesc": "今回のゲームで「オーサム」を使用した回数分、次のアクションの威力が上がります。",
+      "jaLabel": "+{0}"
     },
     {
       "id": "chop",
@@ -28,7 +31,10 @@
       "frLabel": "{0}",
       "esName": "chop",
       "esDesc": "Inflige 10 de daño. El daño aumenta en 2 por cada carta de acción usada este turno.",
-      "esLabel": "{0}"
+      "esLabel": "{0}",
+      "jaName": "chop",
+      "jaDesc": "敵に10のダメージを与えます。このターンに使用したアクションカード1枚につきダメージが2増加します。",
+      "jaLabel": "{0}"
     },
     {
       "id": "colorful",
@@ -43,7 +49,10 @@
       "frLabel": "ALÉATOIRE",
       "esName": "colorful",
       "esDesc": "{0}% de probabilidad cada uno de infligir quemadura, parálisis o congelación (3 turnos) en tu próxima acción.",
-      "esLabel": "ALEATORIO"
+      "esLabel": "ALEATORIO",
+      "jaName": "colorful",
+      "jaDesc": "次のアクション発動時、それぞれ{0}%の確率で敵に3ターンの間持続する火傷、麻痺、氷結を付与します。",
+      "jaLabel": "ランダム"
     },
     {
       "id": "dempsey",
@@ -58,7 +67,10 @@
       "frLabel": "COMBO",
       "esName": "dempsey",
       "esDesc": "Inflige 10 de daño {0}-{1} veces. {2}% de probabilidad de golpear 1 vez adicional.",
-      "esLabel": "COMBO"
+      "esLabel": "COMBO",
+      "jaName": "dempsey",
+      "jaDesc": "敵に10のダメージを{0}〜{1}回連続で与えます。{2}%の確率で1回追加攻撃します。",
+      "jaLabel": "連撃"
     },
     {
       "id": "devil",
@@ -73,7 +85,10 @@
       "frLabel": "-25%",
       "esName": "devil",
       "esDesc": "Recibe {1}% menos de daño de los enemigos durante 3 turnos.",
-      "esLabel": "-25%"
+      "esLabel": "-25%",
+      "jaName": "devil",
+      "jaDesc": "3ターンの間、敵から受けるダメージが{1}%減少します。",
+      "jaLabel": "軽減"
     },
     {
       "id": "double",
@@ -84,26 +99,32 @@
       "enDesc": "Your next action triggers {1} times in a row.",
       "enLabel": "x2",
       "frName": "double",
-      "frDesc": "Votre prochaine action se déclenche {1} fois de suite.",
+      "frDesc": "Votre prochaine action se déclenche {1} fois d'affilée.",
       "frLabel": "x2",
       "esName": "double",
       "esDesc": "Tu próxima acción se activa {1} veces seguidas.",
-      "esLabel": "x2"
+      "esLabel": "x2",
+      "jaName": "double",
+      "jaDesc": "次のアクションが{1}回連続で発動します。",
+      "jaLabel": "x2"
     },
     {
       "id": "drain",
       "koName": "드레인",
-      "koDesc": "다음 액션 발동 시 위력의 {1}%만큼 체력을 회복합니다.",
+      "koDesc": "다음 액션 발동 시 피해량의 {1}%만큼 체력을 회복합니다.",
       "koLabel": "흡혈",
       "enName": "drain",
-      "enDesc": "Heal for {1}% of your next action's power.",
+      "enDesc": "Heal for {1}% of your next action's damage.",
       "enLabel": "LIFE",
       "frName": "drain",
-      "frDesc": "Soignez-vous de {1}% de la puissance de votre prochaine action.",
+      "frDesc": "Récupérez des PV équivalents à {1}% des dégâts de votre prochaine action.",
       "frLabel": "VIE",
       "esName": "drain",
-      "esDesc": "Cúrate un {1}% del poder de tu próxima acción.",
-      "esLabel": "VIDA"
+      "esDesc": "Cúrate un {1}% del daño de tu próxima acción.",
+      "esLabel": "VIDA",
+      "jaName": "drain",
+      "jaDesc": "次のアクション発動時、ダメージの{1}%だけHPを回復します。",
+      "jaLabel": "吸収"
     },
     {
       "id": "fire",
@@ -118,7 +139,10 @@
       "frLabel": "BRÛLURE",
       "esName": "fire",
       "esDesc": "{0}% de probabilidad de infligir quemadura (3 turnos) en tu próxima acción.",
-      "esLabel": "QUEMADURA"
+      "esLabel": "QUEMADURA",
+      "jaName": "fire",
+      "jaDesc": "次のアクション発動時、{0}%の確率で敵に3ターンの間持続する火傷を付与します。",
+      "jaLabel": "火傷"
     },
     {
       "id": "guard",
@@ -133,7 +157,10 @@
       "frLabel": "BLOC",
       "esName": "guard",
       "esDesc": "Obtén 10 de bloqueo.",
-      "esLabel": "BLOQUEO"
+      "esLabel": "BLOQUEO",
+      "jaName": "guard",
+      "jaDesc": "ブロックを10獲得します。",
+      "jaLabel": "ガード"
     },
     {
       "id": "headbutt",
@@ -148,7 +175,10 @@
       "frLabel": "{0}",
       "esName": "headbutt",
       "esDesc": "Inflige 10 de daño. El daño aumenta en 2 por cada carta de sinergia usada este turno.",
-      "esLabel": "{0}"
+      "esLabel": "{0}",
+      "jaName": "headbutt",
+      "jaDesc": "敵に10のダメージを与えます。このターンに使用したシナジーカード1枚につきダメージが2増加します。",
+      "jaLabel": "{0}"
     },
     {
       "id": "hook",
@@ -162,8 +192,11 @@
       "frDesc": "Inflige 15 dégâts. Perdez 1 seconde sur le chronomètre.",
       "frLabel": "+5",
       "esName": "hook",
-      "esDesc": "Inflige 15 de daño. Pierdes 1 segundo del temporizador.",
-      "esLabel": "+5"
+      "esDesc": "Inflige 15 de daño. Pierde 1 segundo del temporizador.",
+      "esLabel": "+5",
+      "jaName": "hook",
+      "jaDesc": "敵に15のダメージを与えます。タイマーから1秒減らします。",
+      "jaLabel": "+5"
     },
     {
       "id": "hyper",
@@ -178,7 +211,10 @@
       "frLabel": "+3",
       "esName": "hyper",
       "esDesc": "Aumenta el poder de tu próxima acción en 3.",
-      "esLabel": "+3"
+      "esLabel": "+3",
+      "jaName": "hyper",
+      "jaDesc": "次のアクションの威力を3増加させます。",
+      "jaLabel": "+3"
     },
     {
       "id": "ice",
@@ -193,7 +229,10 @@
       "frLabel": "GEL",
       "esName": "ice",
       "esDesc": "{0}% de probabilidad de congelar al enemigo durante 3 turnos en tu próxima acción.",
-      "esLabel": "CONGELAR"
+      "esLabel": "CONGELAR",
+      "jaName": "ice",
+      "jaDesc": "次のアクション発動時、{0}%の確率で敵を3ターンの間氷結状態にします。",
+      "jaLabel": "氷結"
     },
     {
       "id": "jab",
@@ -208,7 +247,10 @@
       "frLabel": "+1s",
       "esName": "jab",
       "esDesc": "Inflige 10 de daño. Añade 1 segundo al temporizador.",
-      "esLabel": "+1s"
+      "esLabel": "+1s",
+      "jaName": "jab",
+      "jaDesc": "敵に10のダメージを与えます。タイマーに1秒追加します。",
+      "jaLabel": "+1s"
     },
     {
       "id": "kick",
@@ -219,11 +261,14 @@
       "enDesc": "Deal 10 damage, ignoring enemy block.",
       "enLabel": "PIERCE",
       "frName": "kick",
-      "frDesc": "Inflige 10 dégâts, ignorant le blocage ennemi.",
+      "frDesc": "Inflige 10 dégâts en ignorant le blocage ennemi.",
       "frLabel": "PERCÉE",
       "esName": "kick",
       "esDesc": "Inflige 10 de daño, ignorando el bloqueo enemigo.",
-      "esLabel": "PERFORAR"
+      "esLabel": "PERFORAR",
+      "jaName": "kick",
+      "jaDesc": "敵のブロックを無視して10のダメージを与えます。",
+      "jaLabel": "貫通"
     },
     {
       "id": "kneekick",
@@ -238,7 +283,10 @@
       "frLabel": "{0}",
       "esName": "knee",
       "esDesc": "Inflige 20 de daño. El daño disminuye en 1 por cada acción usada este turno.",
-      "esLabel": "{0}"
+      "esLabel": "{0}",
+      "jaName": "knee",
+      "jaDesc": "敵に20のダメージを与えます。このターンに使用したアクションカード1枚につきダメージが1減少します。",
+      "jaLabel": "{0}"
     },
     {
       "id": "lucky",
@@ -249,11 +297,14 @@
       "enDesc": "{0}% chance to gain an additional reward upon clearing the stage.",
       "enLabel": "LOOT",
       "frName": "lucky",
-      "frDesc": "{0}% de chance d'obtenir une récompense supplémentaire en terminant le niveau.",
+      "frDesc": "{0}% de chance d'obtenir une récompense supplémentaire en terminant l'étape.",
       "frLabel": "BUTIN",
       "esName": "lucky",
-      "esDesc": "{0}% de probabilidad de ganar una recompensa adicional al completar el nivel.",
-      "esLabel": "BOTÍN"
+      "esDesc": "{0}% de probabilidad de obtener una recompensa adicional al completar la fase.",
+      "esLabel": "BOTÍN",
+      "jaName": "lucky",
+      "jaDesc": "{0}%の確率でステージクリア時に報酬を追加で1回獲得します。",
+      "jaLabel": "幸運"
     },
     {
       "id": "megaton",
@@ -268,7 +319,10 @@
       "frLabel": "+4",
       "esName": "megaton",
       "esDesc": "Aumenta el poder de tu próxima acción en 4.",
-      "esLabel": "+4"
+      "esLabel": "+4",
+      "jaName": "megaton",
+      "jaDesc": "次のアクションの威力を4増加させます。",
+      "jaLabel": "+4"
     },
     {
       "id": "perfect",
@@ -279,11 +333,14 @@
       "enDesc": "Next action gains +2 power for each second lost this turn.",
       "enLabel": "{0}",
       "frName": "perfect",
-      "frDesc": "La prochaine action gagne +2 en puissance pour chaque seconde perdue ce tour.",
+      "frDesc": "La prochaine action gagne +2 de puissance pour chaque seconde perdue ce tour.",
       "frLabel": "{0}",
       "esName": "perfect",
-      "esDesc": "La siguiente acción gana +2 de poder por cada segundo perdido este turno.",
-      "esLabel": "{0}"
+      "esDesc": "La próxima acción gana +2 de poder por cada segundo perdido este turno.",
+      "esLabel": "{0}",
+      "jaName": "perfect",
+      "jaDesc": "このターンに消費した時間（秒）1につき、次のアクションの威力が2増加します。",
+      "jaLabel": "{0}"
     },
     {
       "id": "power",
@@ -294,11 +351,14 @@
       "enDesc": "Increases the power boost provided by other synergy cards by 1.",
       "enLabel": "BOOST",
       "frName": "power",
-      "frDesc": "Augmente de 1 le bonus de puissance fourni par d'autres cartes de synergie.",
+      "frDesc": "Augmente de 1 le bonus de puissance fourni par les autres cartes de synergie.",
       "frLabel": "BOOST",
       "esName": "power",
-      "esDesc": "Aumenta en 1 la bonificación de poder proporcionada por otras cartas de sinergia.",
-      "esLabel": "POTENCIAR"
+      "esDesc": "Aumenta en 1 el aumento de poder proporcionado por otras cartas de sinergia.",
+      "esLabel": "POTENCIAR",
+      "jaName": "power",
+      "jaDesc": "他のシナジーカードが提供する威力増加量をそれぞれ1ずつ高めます。",
+      "jaLabel": "強化"
     },
     {
       "id": "punch",
@@ -313,7 +373,10 @@
       "frLabel": "+3",
       "esName": "punch",
       "esDesc": "Inflige 13 de daño.",
-      "esLabel": "+3"
+      "esLabel": "+3",
+      "jaName": "punch",
+      "jaDesc": "敵に13のダメージを与えます。",
+      "jaLabel": "+3"
     },
     {
       "id": "quick",
@@ -328,22 +391,28 @@
       "frLabel": "+1s",
       "esName": "quick",
       "esDesc": "Añade 1 segundo al temporizador.",
-      "esLabel": "+1s"
+      "esLabel": "+1s",
+      "jaName": "quick",
+      "jaDesc": "タイマーに1秒追加します。",
+      "jaLabel": "+1s"
     },
     {
       "id": "smart",
       "koName": "스마트",
-      "koDesc": "다음 액션 시 {0}% 확률로 대성공하여 위력이 {1}배가 됩니다.",
+      "koDesc": "다음 액션 시 {0}% 확률로 대성공하여 피해량이 {1}배가 됩니다.",
       "koLabel": "치명",
       "enName": "smart",
-      "enDesc": "{0}% chance for your next action to trigger a critical success, multiplying its power by {1}.",
+      "enDesc": "{0}% chance for your next action to trigger a critical success, multiplying its damage by {1}.",
       "enLabel": "CRIT",
       "frName": "smart",
-      "frDesc": "{0}% de chance que votre prochaine action déclenche un succès critique, multipliant sa puissance par {1}.",
+      "frDesc": "{0}% de chance que votre prochaine action déclenche un succès critique, multipliant ses dégâts par {1}.",
       "frLabel": "CRIT",
       "esName": "smart",
-      "esDesc": "{0}% de probabilidad de que tu próxima acción sea un éxito crítico, multiplicando su poder por {1}.",
-      "esLabel": "CRÍTICO"
+      "esDesc": "{0}% de probabilidad de que tu próxima acción sea un éxito crítico, multiplicando su daño por {1}.",
+      "esLabel": "CRÍTICO",
+      "jaName": "smart",
+      "jaDesc": "次のアクション時、{0}%の確率でクリティカルが発生し、ダメージが{1}倍になります。",
+      "jaLabel": "クリティカル"
     },
     {
       "id": "super",
@@ -358,7 +427,10 @@
       "frLabel": "+1",
       "esName": "super",
       "esDesc": "Aumenta el poder de tu próxima acción en 1.",
-      "esLabel": "+1"
+      "esLabel": "+1",
+      "jaName": "super",
+      "jaDesc": "次のアクションの威力を1増加させます。",
+      "jaLabel": "+1"
     },
     {
       "id": "thunder",
@@ -373,7 +445,10 @@
       "frLabel": "PARALYSIE",
       "esName": "thunder",
       "esDesc": "{0}% de probabilidad de paralizar al enemigo durante 3 turnos en tu próxima acción.",
-      "esLabel": "PARÁLISIS"
+      "esLabel": "PARÁLISIS",
+      "jaName": "thunder",
+      "jaDesc": "次のアクション発動時、{0}%の確率で敵を3ターンの間麻痺させます。",
+      "jaLabel": "麻痺"
     },
     {
       "id": "triple",
@@ -384,11 +459,14 @@
       "enDesc": "Your next action triggers {1} times in a row.",
       "enLabel": "x3",
       "frName": "triple",
-      "frDesc": "Votre prochaine action se déclenche {1} fois de suite.",
+      "frDesc": "Votre prochaine action se déclenche {1} fois d'affilée.",
       "frLabel": "x3",
       "esName": "triple",
       "esDesc": "Tu próxima acción se activa {1} veces seguidas.",
-      "esLabel": "x3"
+      "esLabel": "x3",
+      "jaName": "triple",
+      "jaDesc": "次のアクションが{1}回連続で発動します。",
+      "jaLabel": "x3"
     },
     {
       "id": "ultra",
@@ -403,7 +481,10 @@
       "frLabel": "+2",
       "esName": "ultra",
       "esDesc": "Aumenta el poder de tu próxima acción en 2.",
-      "esLabel": "+2"
+      "esLabel": "+2",
+      "jaName": "ultra",
+      "jaDesc": "次のアクションの威力を2増加させます。",
+      "jaLabel": "+2"
     },
     {
       "id": "uppercut",
@@ -414,11 +495,14 @@
       "enDesc": "Destroy enemy block and deal 15 damage.",
       "enLabel": "BREAK",
       "frName": "uppercut",
-      "frDesc": "Détruit le blocage de l'ennemi et inflige 15 dégâts.",
+      "frDesc": "Détruit le blocage ennemi et inflige 15 dégâts.",
       "frLabel": "BRISER",
       "esName": "uppercut",
       "esDesc": "Destruye el bloqueo enemigo e inflige 15 de daño.",
-      "esLabel": "ROMPER"
+      "esLabel": "ROMPER",
+      "jaName": "uppercut",
+      "jaDesc": "敵のブロックを破壊し、15のダメージを与えます。",
+      "jaLabel": "破壊"
     },
     {
       "id": "cards",
@@ -433,7 +517,10 @@
       "frLabel": "LISTE",
       "esName": "cards",
       "esDesc": "Ver todas tus cartas",
-      "esLabel": "LISTA"
+      "esLabel": "LISTA",
+      "jaName": "cards",
+      "jaDesc": "所持しているカードをすべて見ます",
+      "jaLabel": "一覧"
     },
     {
       "id": "erase",
@@ -448,7 +535,10 @@
       "frLabel": "EFFACER",
       "esName": "erase",
       "esDesc": "Borrar una de tus cartas",
-      "esLabel": "BORRAR"
+      "esLabel": "BORRAR",
+      "jaName": "erase",
+      "jaDesc": "所持しているカードを1枚削除します",
+      "jaLabel": "削除"
     },
     {
       "id": "resume",
@@ -463,7 +553,10 @@
       "frLabel": "ALLER",
       "esName": "resume",
       "esDesc": "Volver al juego",
-      "esLabel": "IR"
+      "esLabel": "IR",
+      "jaName": "resume",
+      "jaDesc": "ゲームに戻ります",
+      "jaLabel": "再開"
     },
     {
       "id": "retry",
@@ -478,7 +571,10 @@
       "frLabel": "RÉESSAYER",
       "esName": "retry",
       "esDesc": "Desafiar el nivel de nuevo",
-      "esLabel": "REINTENTAR"
+      "esLabel": "REINTENTAR",
+      "jaName": "retry",
+      "jaDesc": "ステージを最初からもう一度挑戦します",
+      "jaLabel": "リトライ"
     },
     {
       "id": "skip",
@@ -493,7 +589,10 @@
       "frLabel": "PASSER",
       "esName": "skip",
       "esDesc": "Continuar sin tomar una carta",
-      "esLabel": "OMITIR"
+      "esLabel": "OMITIR",
+      "jaName": "skip",
+      "jaDesc": "報酬を受け取らずに次に進みます",
+      "jaLabel": "スキップ"
     },
     {
       "id": "title",
@@ -508,7 +607,10 @@
       "frLabel": "QUITTER",
       "esName": "title",
       "esDesc": "Salir a la pantalla del título",
-      "esLabel": "SALIR"
+      "esLabel": "SALIR",
+      "jaName": "title",
+      "jaDesc": "タイトル画面に戻ります",
+      "jaLabel": "タイトル"
     }
   ]
 }

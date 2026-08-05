@@ -7,7 +7,8 @@ public enum GameLanguage
     Korean,
     English,
     French,
-    Spanish
+    Spanish,
+    Japanese
 }
 
 [Serializable]
@@ -18,6 +19,7 @@ public class CardTranslation
     public string enName, enDesc, enLabel;
     public string frName, frDesc, frLabel;
     public string esName, esDesc, esLabel;
+    public string jaName, jaDesc, jaLabel;
 }
 
 [Serializable]
@@ -96,10 +98,16 @@ public static class LanguageSettings
         OnChanged?.Invoke();
     }
 
-    /// <summary>한국어 ↔ 영어를 오간다. 타이틀의 언어 버튼이 부른다.</summary>
-    public static void Toggle()
+    // 방향키 입력에 맞춰 양방향으로 언어를 순환시키는 함수
+    public static void ChangeLanguage(int direction)
     {
-        int nextLang = ((int)_current + 1) % 4; // 4개 언어 순환
+        int langCount = 5; // 언어 개수 (한국어, 영어, 프랑스어, 스페인어, 일어)
+        int nextLang = ((int)_current + direction) % langCount;
+
+        // C#의 % 연산자는 음수일 때 음수를 반환하므로 양수로 보정해줍니다.
+        if (nextLang < 0)
+            nextLang += langCount;
+
         Set((GameLanguage)nextLang);
     }
 
@@ -168,6 +176,12 @@ public static class LanguageSettings
                 if (textType == "name") return trans.enName;
                 if (textType == "desc") return trans.esDesc;
                 if (textType == "label") return trans.esLabel;
+                break;
+            case GameLanguage.Japanese:
+                // [핵심] 일본어일 때도 '이름(타이핑 타겟)'은 무조건 영어를 반환!
+                if (textType == "name") return trans.enName;
+                if (textType == "desc") return trans.jaDesc;
+                if (textType == "label") return trans.jaLabel;
                 break;
         }
         return "";

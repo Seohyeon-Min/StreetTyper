@@ -86,18 +86,21 @@ public class StageStartEffect : MonoBehaviour
         _routine = null;
     }
 
-    /// <summary>등장의 거울상 - 더 작아지며 페이드아웃한 뒤 오브젝트를 끈다. onComplete는 다
-    /// 사라진 뒤(오브젝트가 꺼진 뒤) 불린다 - 비워도 된다(StageManager는 지금 이 연출을
-    /// 기다리지 않고 그냥 지나간다).</summary>
-    public void PlayExit(Action onComplete)
+    /// <summary>등장의 거울상 - 더 작아지며 페이드아웃한 뒤 오브젝트를 끈다. onComplete는 항상
+    /// 마지막에 불린다(비워도 된다 - StageManager는 지금 이 연출을 기다리지 않고 그냥 지나간다).
+    /// deactivateOnComplete를 false로 주면 다 사라진 채로(알파 0, 축소된 크기) 오브젝트는 켜둔
+    /// 채로 남겨둔다 - 같은 오브젝트에서 다른 닫힘 연출(예: OptionsPanel의 titleReveals)이
+    /// 아직 돌고 있을 때, 여기서 먼저 끝났다고 SetActive(false)를 불러버리면 그 코루틴들이
+    /// 그 자리에서 끊긴다. 그런 경우엔 호출부가 모든 연출이 끝난 뒤 직접 꺼야 한다.</summary>
+    public void PlayExit(Action onComplete, bool deactivateOnComplete = true)
     {
         if (_routine != null)
             StopCoroutine(_routine);
 
-        _routine = StartCoroutine(ExitRoutine(onComplete));
+        _routine = StartCoroutine(ExitRoutine(onComplete, deactivateOnComplete));
     }
 
-    private IEnumerator ExitRoutine(Action onComplete)
+    private IEnumerator ExitRoutine(Action onComplete, bool deactivateOnComplete)
     {
         // 지금 크기/알파에서 시작한다(원래 크기로 고정하지 않는다) - 등장이 아직 안 끝난
         // 상태에서 퇴장이 걸려도(스테이지 대기 시간이 아주 짧으면 가능하다) 튀지 않고
@@ -116,7 +119,9 @@ public class StageStartEffect : MonoBehaviour
             yield return null;
         }
 
-        gameObject.SetActive(false);
+        if (deactivateOnComplete)
+            gameObject.SetActive(false);
+
         _routine = null;
         onComplete?.Invoke();
     }

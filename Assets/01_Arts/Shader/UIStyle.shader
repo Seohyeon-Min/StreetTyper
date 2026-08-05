@@ -83,7 +83,12 @@ Shader "UI/UIStyle"
         _EdgeLineIntensity ("Edge Line Intensity", Range(0, 1)) = 0.2
         _EdgeLineColor ("Edge Line Color", Color) = (0, 0, 0, 1)
         _EdgeLineSharpness ("Edge Line Sharpness", Range(0, 1)) = 0.5
-        
+
+        [Header(Outline)]
+        [Toggle] _EnableOutline ("Enable Outline", Float) = 0
+        _OutlineWidth ("Outline Width (도형 안쪽으로 파고드는 두께)", Range(0, 0.5)) = 0.05
+        _OutlineColor ("Outline Color", Color) = (0, 0, 0, 1)
+
         _StencilComp ("Stencil Comparison", Float) = 8
         _Stencil ("Stencil ID", Float) = 0
         _StencilOp ("Stencil Operation", Float) = 0
@@ -223,7 +228,12 @@ Shader "UI/UIStyle"
                 float _EdgeLineIntensity;
                 half4 _EdgeLineColor;
                 float _EdgeLineSharpness;
-                
+
+                // Outline
+                float _EnableOutline;
+                float _OutlineWidth;
+                half4 _OutlineColor;
+
                 // Aspect Ratio (실제 화면 비율)
                 float _AspectRatio;
             CBUFFER_END
@@ -671,6 +681,18 @@ Shader "UI/UIStyle"
                     }
                 }
                 
+                // ===== OUTLINE (윤곽선) =====
+                // 도형 가장자리(sdf = 0)에서 안쪽으로 _OutlineWidth만큼 파고든 띠 모양 마스크.
+                // 바깥쪽 경계(sdf=0 기준 마스크)에서 안쪽으로 더 줄인 마스크(sdf + width 기준)를 빼면
+                // 그 차이가 곧 테두리 링이 된다 - Bottom Edge Line과 같은 SDF 링 계산이지만 사방에 적용한다.
+                if (_EnableOutline > 0.5)
+                {
+                    float outlineOuterAlpha = smoothstep(edgeWidth, -edgeWidth, sdf);
+                    float outlineInnerAlpha = smoothstep(edgeWidth, -edgeWidth, sdf + _OutlineWidth);
+                    float outlineMask = saturate(outlineOuterAlpha - outlineInnerAlpha);
+                    mainColor.rgb = lerp(mainColor.rgb, _OutlineColor.rgb, outlineMask * _OutlineColor.a);
+                }
+
                 // ===== BOTTOM EDGE LINE (아래 엣지 라인) =====
                 if (_EnableBottomEdgeLine > 0.5)
                 {

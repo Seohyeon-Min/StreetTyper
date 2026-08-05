@@ -328,11 +328,11 @@ public class BattleManager : MonoBehaviour
                 else
                     enemyIntentBubble.SetupIntent(enemyManager.GetIntentIcon(), enemyManager.GetIntentString(), enemyManager.GetIntentColor());
 
-                if (SpeechBubbleManager.Instance != null)
-                {
-                    enemyIntentBubbleObj.GetComponent<RectTransform>().position =
-                        SpeechBubbleManager.Instance.GetBubbleScreenPosition(enemy.BubblePosition, false);
-                }
+                //if (SpeechBubbleManager.Instance != null)
+                //{
+                //    enemyIntentBubbleObj.GetComponent<RectTransform>().position =
+                //        SpeechBubbleManager.Instance.GetBubbleScreenPosition(enemy.BubblePosition, false);
+                //}
             }
             else if (enemyIntentBubbleObj != null && !isPlayerInputPhase)
             {
@@ -346,6 +346,22 @@ public class BattleManager : MonoBehaviour
         }
 
         CheckGameState();
+    }
+
+    private void LateUpdate()
+    {
+        // 인텐트 말풍선이 활성화되어 있고, 적이 화면에 존재할 때 매 프레임 위치를 갱신
+        if (enemyIntentBubbleObj != null && enemyIntentBubbleObj.activeSelf)
+        {
+            if (enemyManager != null && enemyManager.currentEnemy != null)
+            {
+                if (SpeechBubbleManager.Instance != null)
+                {
+                    enemyIntentBubbleObj.GetComponent<RectTransform>().position =
+                        SpeechBubbleManager.Instance.GetBubbleScreenPosition(enemyManager.currentEnemy.BubblePosition, false);
+                }
+            }
+        }
     }
 
     void CheckGameState()

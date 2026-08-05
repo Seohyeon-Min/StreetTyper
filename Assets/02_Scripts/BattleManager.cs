@@ -239,6 +239,10 @@ public class BattleManager : MonoBehaviour
 
         if (player != null && enemyManager != null && enemyManager.currentEnemy != null)
         {
+            // ⚠️ 마더 드래곤은 <b>싸우는 보스가 아니다</b> - 세 보스 스테이지(4·9·12) 모두
+            // motherDragonPrefab을 스폰하며, 서로 공격을 주고받는 전투가 아니라 대사를 주고받는
+            // 스파링이다. 조건을 isEndingBoss로 바꾸면 마더 드래곤이 else로 떨어져 일반 적처럼
+            // 돌진해 때리게 된다 - 그렇게 바꾸지 말 것.
             if (enemyManager.currentEnemy is MotherDragon)
             {
                 mdTurnCount++;
@@ -376,19 +380,28 @@ public class BattleManager : MonoBehaviour
 
             if (enemyIntentBubbleObj != null && enemyIntentBubble != null && isPlayerInputPhase)
             {
-                enemyIntentBubbleObj.SetActive(true);
-
-                // 마더 드래곤은 대사(텍스트)를 그대로 쓰고, 일반 적은 아이콘 + ActionType별 색이
-                // 입혀진 텍스트를 같이 보여준다. 마더 드래곤의 대사가 두 번 나오지 않게 하는 건
-                // 여기서 끄는 게 아니라 적 턴 쪽에서 일시적 말풍선을 안 띄우는 것으로 해결한다
-                // (ExecuteEnemyTurnCoroutine 참조) - 여기서 끄면 내 턴 내내 말풍선이 빈다.
-                if (enemy is MotherDragon)
-                    enemyIntentBubble.Setup(mdIntentString);
+                // 엔딩 보스 스테이지는 전투 없이 대사만 오가므로(StageManager가 곧바로
+                // StartEvent를 부른다) 전투 인텐트를 띄울 일이 없다.
+                if (enemy.isEndingBoss)
+                {
+                    enemyIntentBubbleObj.SetActive(false);
+                }
                 else
-                    enemyIntentBubble.SetupIntent(enemyManager.GetIntentIcon(), enemyManager.GetIntentString(), enemyManager.GetIntentColor());
+                {
+                    enemyIntentBubbleObj.SetActive(true);
 
-                // 위치는 여기서 한 번 잡지 않고 LateUpdate가 매 프레임 갱신한다 - 적이
-                // 돌진했다 복귀하는 동안에도 말풍선이 따라가야 하기 때문이다.
+                    // 마더 드래곤은 대사(텍스트)를 그대로 쓰고, 일반 적은 아이콘 + ActionType별 색이
+                    // 입혀진 텍스트를 같이 보여준다. 마더 드래곤의 대사가 두 번 나오지 않게 하는 건
+                    // 여기서 끄는 게 아니라 적 턴 쪽에서 일시적 말풍선을 안 띄우는 것으로 해결한다
+                    // (ExecuteEnemyTurnCoroutine 참조) - 여기서 끄면 내 턴 내내 말풍선이 빈다.
+                    if (enemy is MotherDragon)
+                        enemyIntentBubble.Setup(mdIntentString);
+                    else
+                        enemyIntentBubble.SetupIntent(enemyManager.GetIntentIcon(), enemyManager.GetIntentString(), enemyManager.GetIntentColor());
+
+                    // 위치는 여기서 한 번 잡지 않고 LateUpdate가 매 프레임 갱신한다 - 적이
+                    // 돌진했다 복귀하는 동안에도 말풍선이 따라가야 하기 때문이다.
+                }
             }
             else if (enemyIntentBubbleObj != null && !isPlayerInputPhase)
             {
@@ -432,6 +445,10 @@ public class BattleManager : MonoBehaviour
             {
                 isEventTriggered = true;
 
+                // ⚠️ 마더 드래곤은 <b>모든</b> 보스 스테이지에서 대사 이벤트로 끝난다 - 싸워서
+                // 죽이는 보스가 아니라 스파링이라, 3턴을 채우면 FinishMotherDragonBattle이
+                // 체력을 0으로 만들어 여기로 온다. 조건을 isEndingBoss로 좁히면 중간 보스(4·9)의
+                // 아웃로(작별 대사·회복·데미 웃는 연출)가 통째로 사라진다.
                 bool isMD = enemyManager.currentEnemy is MotherDragon;
                 int healAmount = 0;
 
@@ -453,6 +470,7 @@ public class BattleManager : MonoBehaviour
                 }
                 else
                 {
+                    // 곧바로 승리 처리 (이후 StageManager가 보상 라운드를 엽니다)
                     ShowResult(ResultKind.Victory);
                 }
             }

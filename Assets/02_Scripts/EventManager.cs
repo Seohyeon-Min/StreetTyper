@@ -46,6 +46,10 @@ public class EventManager : MonoBehaviour
     public string[] normalEventLines = { "새로운 단어 카드를 획득했다!", "placeholder1", "placeholder2" };
     public string[] dragonEventLines = { "placeholder0", "placeholder1", "placeholder2" };
 
+    [Header("Dialogues - Ending")]
+    public string[] endingEventLines = { "플레이스홀더텍스트0", "플레이스홀더텍스트1" };
+    private bool _isEndingEvent = false;
+
     // ⚠️ 기본값을 비워 둔다. EventManager.prefab의 한국어 배열이 둘 다 빈 배열이라서,
     // 여기에 대사를 채우면 영어 모드에서만 대사가 생겨 스페이스를 여러 번 눌러야 넘어가게 된다.
     // 그 사이 ShowResult가 불리지 않아 결과 화면도 클리어 보상도 나오지 않는다 - 실제로 겪은 회귀다.
@@ -113,21 +117,24 @@ public class EventManager : MonoBehaviour
         }
     }
 
-    public void StartEvent(bool isMotherDragon, int healAmount = 0)
+    public void StartEvent(bool isMotherDragon, int healAmount = 0, bool isEnding = false) // [수정] isEnding 매개변수 추가
     {
         isEventActive = true;
         currentLineIndex = 0;
         pendingHealAmount = healAmount;
         wasMotherDragon = isMotherDragon;
+        _isEndingEvent = isEnding; // [추가]
 
         ResolveBubbleAnchor();
-
         activeDialogueLines.Clear();
 
-        // 영문 배열이 비어 있으면 한국어로 넘어간다 - 대사는 타이핑 대상이 아니라
-        // 읽고 스페이스로 넘기기만 하므로, 비어 있어도 진행이 막히지는 않는다.
         string[] linesToUse;
-        if (LanguageSettings.IsEnglish)
+        if (isEnding)
+        {
+            // [추가] 엔딩일 경우 전용 대사 배열 사용
+            linesToUse = endingEventLines;
+        }
+        else if (LanguageSettings.IsEnglish)
         {
             var en = isMotherDragon ? dragonEventLinesEn : normalEventLinesEn;
             linesToUse = en != null && en.Length > 0 ? en : (isMotherDragon ? dragonEventLines : normalEventLines);
@@ -145,13 +152,25 @@ public class EventManager : MonoBehaviour
         if (motherDragonVisual != null) motherDragonVisual.SetActive(true);
         if (dialogueBubbleObj != null) dialogueBubbleObj.SetActive(true);
 
-        // 마더 드래곤 아웃로는 스페이스를 기다리지 않고 시간이 지나면 저절로 진행된다 - 이미
-        // 이겼고 더 칠 것도 없는 화면에서 입력을 요구하는 건 불필요한 마찰이라는 피드백을 반영했다.
-        // normalEventLines(지금은 실제로 쓰이는 곳이 없다)는 기존처럼 스페이스로 넘긴다.
-        if (isMotherDragon)
+        // [수정] 엔딩 전용 코루틴 분기 추가
+        if (isEnding)
+            StartCoroutine(PlayEndingRoutine());
+        else if (isMotherDragon)
             StartCoroutine(PlayMotherDragonOutroRoutine());
         else
             ShowNextDialogue();
+    }
+
+    private IEnumerator PlayEndingRoutine()
+    {
+        // 체력 회복 없이 입력된 대사만 차례대로 출력합니다.
+        for (int i = 0; i < activeDialogueLines.Count; i++)
+        {
+            SpeakLine(i, fromPlayer: false); // 마더 드래곤이 말함
+            yield return new WaitForSeconds(mdLineAutoAdvanceDelay);
+        }
+
+        EndEvent();
     }
 
     // 말풍선이 따라갈 대상과 말하는 모션을 재생할 적을 이벤트가 열릴 때 잡는다.
@@ -335,24 +354,26 @@ public class EventManager : MonoBehaviour
         isEventActive = false;
         speakingIsPlayer = false;
 
-        // 마더 드래곤은 대사가 끝나는 지금 화면에서 물러난다 - BattleManager.CheckGameState가
-        // 일부러 켜둔 채로 넘겨줬다(작별 대사 동안 본인이 보여야 하므로).
-        if (speakingEnemy != null && speakingEnemy.gameObject.activeSelf)
+        // [수정] 엔딩 이벤트가 아닐 때만 적을 숨김 (엔딩 땐 화면에 남겨둠)
+        if (!_isEndingEvent && speakingEnemy != null && speakingEnemy.gameObject.activeSelf)
             speakingEnemy.gameObject.SetActive(false);
 
         if (motherDragonVisual != null) motherDragonVisual.SetActive(false);
         if (dialogueBubbleObj != null) dialogueBubbleObj.SetActive(false);
 
-        // 마더 드래곤의 회복은 이제 PlayMotherDragonOutroRoutine()에서 회복 대사가 뜨는
-        // 시점에 적용된다(여기서 다시 적용하지 않는다 - pendingHealAmount를 그때 0으로
-        // 되돌려 이중 적용을 막는다).
-
         if (battleManager != null)
         {
             battleManager.UpdateUI();
-            // 제목("VICTORY!")은 BattleManager의 ScreenPresentation에서, 안내 문구는
-            // ResultInputHandler에서 나온다 - 둘 다 인스펙터에서 바꿀 수 있다.
-            battleManager.ShowResult(ResultKind.Victory);
+
+            // [수정] 엔딩 이벤트면 보상(Victory) 없이 바로 전체 클리어 화면 호출
+            if (_isEndingEvent)
+            {
+                battleManager.ShowGameClear();
+            }
+            else
+            {
+                battleManager.ShowResult(ResultKind.Victory);
+            }
         }
     }
 }

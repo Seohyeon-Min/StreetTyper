@@ -7,6 +7,12 @@ public class EnemyBase : CharacterStats
     public EnemyData enemyData;
     private bool isScaled = false;
 
+    /// <summary>이 적이 방어할 때 한 번에 쌓는 방어도. <see cref="CharacterStats.power"/>와 같은
+    /// <b>런타임 스탯</b>이다 - 스테이지마다 값이 달라지므로 EnemyData 에셋을 직접 읽으면 안 된다
+    /// (예전에는 EnemyManager가 <c>enemyData.defensePower</c>를 그대로 읽어서 방어도만 끝까지
+    /// 고정이었다). 실제 값은 <see cref="ApplyScaling"/>이 채운다.</summary>
+    [HideInInspector] public int defensePower;
+
     [Header("Visuals")]
     [SerializeField] private Animator animator;
     [Tooltip("말풍선(의도/화상 등)이 뜰 위치. 비워두면 오브젝트 자신의 위치를 쓴다. 캐릭터마다 크기가 달라 프리팹별로 지정할 수 있게 뺐다.")]
@@ -124,14 +130,13 @@ public class EnemyBase : CharacterStats
     /// <summary>스폰 직후 스테이지에 맞는 스탯을 입힌다(<see cref="StageManager.LoadStage"/>).
     ///
     /// <para><b>수치는 전부 부르는 쪽(StageManager)이 정한다.</b> 스테이지 진행을 아는 쪽이
-    /// 계산해야 하고, 인스펙터에서 조절할 값도 거기 한곳에 모여 있어야 하기 때문이다. 여기서는
-    /// 넘어온 값을 <see cref="enemyData"/> 기준으로 적용하기만 한다 - 체력은 절대값,
-    /// 공격력은 <see cref="EnemyData.power"/>에 곱할 배율이다.</para>
+    /// 계산해야 하고, 인스펙터에서 조절할 값도 거기 한곳에 모여 있어야 하기 때문이다.
+    /// 셋 다 <b>이미 계산이 끝난 절대값</b>이며 여기서는 대입만 한다.</para>
     ///
-    /// <para>⚠️ 두 인자 모두 0 이하면 그 스탯을 건드리지 않는다 - 마더 드래곤처럼 스케일링에서
+    /// <para>⚠️ 각 인자는 0 이하면 그 스탯을 건드리지 않는다 - 마더 드래곤처럼 스케일링에서
     /// 빠져야 하는 적을 위한 통로다(3턴을 버텨야 스파링이 성립하는데 일반 공식을 태우면 그 전에
     /// 죽어 아웃로 이벤트가 통째로 깨진다).</para></summary>
-    public void ApplyScaling(int scaledMaxHP, float powerMultiplier)
+    public void ApplyScaling(int scaledMaxHP, int scaledPower, int scaledDefensePower)
     {
         if (enemyData == null)
             return;
@@ -142,8 +147,11 @@ public class EnemyBase : CharacterStats
             currentHP = maxHP;
         }
 
-        if (powerMultiplier > 0f)
-            power = Mathf.RoundToInt(enemyData.power * powerMultiplier);
+        if (scaledPower > 0)
+            power = scaledPower;
+
+        if (scaledDefensePower > 0)
+            defensePower = scaledDefensePower;
 
         // 새로 등장한 적은 방어도가 없는 상태에서 시작해야 한다. 적 방어도는 턴마다 비워주는
         // 곳이 없어서(플레이어 쪽만 DeckManager가 비운다) 한 번 남으면 계속 쌓인 채로 간다.
@@ -193,7 +201,13 @@ public class EnemyBase : CharacterStats
             maxHP = enemyData.maxHP;
             currentHP = maxHP;
             power = enemyData.power;
+            defensePower = enemyData.defensePower;
         }
+
+        // 스케일링에서 방어도를 뺀 적(마더 드래곤)은 여기가 0으로 남는다 - 방어를 고르는
+        // 순간 0을 쌓게 되므로 에셋 값으로 채워둔다.
+        if (defensePower <= 0 && enemyData != null)
+            defensePower = enemyData.defensePower;
 
         if (enemyData != null) gameObject.name = enemyData.enemyName;
     }

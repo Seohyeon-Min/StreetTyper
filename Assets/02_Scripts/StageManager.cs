@@ -29,14 +29,29 @@ public class StageManager : MonoBehaviour
     public int enemyHPGainIncreaseAfterBoss = 10;
 
     [Header("적 공격력 스케일링")]
-    [Tooltip("적 공격력은 EnemyData의 power에 배율로 곱해진다(체력처럼 더하는 방식이 아니다). " +
-             "이 값은 일반 스테이지를 하나 지날 때마다 늘어나는 비율(%)이다. " +
-             "0이면 EnemyData의 power가 끝까지 그대로 쓰인다.")]
+    [Tooltip("첫 스테이지 일반 적의 공격력. EnemyData의 power 대신 이 값을 기준으로 삼는다.")]
+    public int enemyBasePower = 5;
+
+    [Tooltip("공격력은 체력과 달리 배율로 오른다. 일반 스테이지를 하나 지날 때마다 " +
+             "늘어나는 비율(%)이다. 0이면 위 기본값이 끝까지 그대로 쓰인다.")]
     public float enemyPowerGainPercentPerStage = 20f;
 
     [Tooltip("마더 드래곤(보스)을 지날 때마다 위 증가 비율(%)이 이만큼 커진다. " +
              "0이면 비율이 끝까지 일정하다.")]
     public float enemyPowerGainPercentIncreaseAfterBoss = 0f;
+
+    [Header("적 방어력 스케일링")]
+    [Tooltip("첫 스테이지 일반 적이 '방어'를 고를 때 한 번에 쌓는 방어도. " +
+             "EnemyData의 defensePower 대신 이 값을 기준으로 삼는다.")]
+    public int enemyBaseDefensePower = 5;
+
+    [Tooltip("방어력도 공격력과 같은 배율 방식이다. 일반 스테이지를 하나 지날 때마다 " +
+             "늘어나는 비율(%)이다. 0이면 위 기본값이 끝까지 그대로 쓰인다.")]
+    public float enemyDefenseGainPercentPerStage = 20f;
+
+    [Tooltip("마더 드래곤(보스)을 지날 때마다 위 증가 비율(%)이 이만큼 커진다. " +
+             "0이면 비율이 끝까지 일정하다.")]
+    public float enemyDefenseGainPercentIncreaseAfterBoss = 0f;
 
     [Header("References")]
     public BattleManager battleManager;
@@ -312,9 +327,18 @@ public class StageManager : MonoBehaviour
         // ⚠️ 마더 드래곤에는 체력 공식을 태우지 않는다(0을 넘기면 체력을 건드리지 않는다).
         // 3턴을 버텨야 스파링이 성립하는데 일반 적 공식(기본 20)을 태우면 그 전에 죽어
         // 아웃로 이벤트가 통째로 깨진다 - 프리팹/EnemyData 값을 그대로 쓴다.
-        int scaledHP = isBossBattle ? 0 : ComputeEnemyMaxHP(currentBattleIndex);
-        float powerMultiplier = isBossBattle ? 0f : ComputeEnemyPowerMultiplier(currentBattleIndex);
-        newEnemyBase.ApplyScaling(scaledHP, powerMultiplier);
+        int scaledHP = 0, scaledPower = 0, scaledDefense = 0;
+
+        if (!isBossBattle)
+        {
+            scaledHP = ComputeEnemyMaxHP(currentBattleIndex);
+            scaledPower = Mathf.Max(1, Mathf.RoundToInt(enemyBasePower *
+                ComputeGrowthMultiplier(currentBattleIndex, enemyPowerGainPercentPerStage, enemyPowerGainPercentIncreaseAfterBoss)));
+            scaledDefense = Mathf.Max(1, Mathf.RoundToInt(enemyBaseDefensePower *
+                ComputeGrowthMultiplier(currentBattleIndex, enemyDefenseGainPercentPerStage, enemyDefenseGainPercentIncreaseAfterBoss)));
+        }
+
+        newEnemyBase.ApplyScaling(scaledHP, scaledPower, scaledDefense);
 
         // [트랜지션 마무리 연출]
         // 1. 배경 스크롤 서서히 정지
@@ -531,26 +555,26 @@ public class StageManager : MonoBehaviour
         return Mathf.Max(1, hp);
     }
 
-    /// <summary>이 전투의 일반 적 공격력 배율(<see cref="EnemyData.power"/>에 곱한다).
+    /// <summary>공격력·방어력이 공유하는 배율 계산(체력만 덧셈이라 따로 있다).
     ///
-    /// <para>체력과 같은 걸음으로 오른다 - 첫 스테이지는 1배, 일반 스테이지를 하나 지날 때마다
-    /// <see cref="enemyPowerGainPercentPerStage"/>%씩 더해지고, 보스를 지나면 그 뒤부터
-    /// <see cref="enemyPowerGainPercentIncreaseAfterBoss"/>%만큼 걸음이 커진다.</para>
+    /// <para>첫 스테이지는 1배, 일반 스테이지를 하나 지날 때마다 <paramref name="percentPerStage"/>%씩
+    /// 더해지고, 보스를 지나면 그 뒤부터 <paramref name="percentIncreaseAfterBoss"/>%만큼 걸음이
+    /// 커진다. 체력 공식(<see cref="ComputeEnemyMaxHP"/>)과 같은 걸음이다.</para>
     ///
     /// <para>기본값(20% / 0%) 기준: 1.0 → 1.2 → 1.4 → 1.6 → [보스] → 1.8 → 2.0 → 2.2 → 2.4.
-    /// 예전의 "스테이지당 +20%"와 같은 진행이고, 이제 인스펙터에서 조절할 수 있다.</para></summary>
-    private float ComputeEnemyPowerMultiplier(int battleIndex)
+    /// 예전의 "스테이지당 +20%"와 같은 진행이다.</para></summary>
+    private float ComputeGrowthMultiplier(int battleIndex, float percentPerStage, float percentIncreaseAfterBoss)
     {
         var percent = 0f;
-        var step = enemyPowerGainPercentPerStage;
+        var step = percentPerStage;
         var isFirstNormal = true;
 
         for (var i = 0; i <= battleIndex; i++)
         {
-            // 보스는 공격력이 누적되는 스테이지가 아니다 - 걸음만 키우고 지나간다.
+            // 보스는 수치가 누적되는 스테이지가 아니다 - 걸음만 키우고 지나간다.
             if (IsBossBattle(i))
             {
-                step += enemyPowerGainPercentIncreaseAfterBoss;
+                step += percentIncreaseAfterBoss;
                 continue;
             }
 
@@ -564,8 +588,7 @@ public class StageManager : MonoBehaviour
             percent += step;
         }
 
-        // 0 이하가 되면 EnemyBase가 "건드리지 말라"는 뜻으로 읽으므로 최소값을 둔다.
-        return Mathf.Max(0.01f, 1f + percent / 100f);
+        return Mathf.Max(0f, 1f + percent / 100f);
     }
 
     public void RestartStage()

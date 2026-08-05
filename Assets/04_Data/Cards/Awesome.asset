@@ -13,11 +13,19 @@ MonoBehaviour:
   m_Name: Awesome
   m_EditorClassIdentifier: Assembly-CSharp::ModifierCardData
   cardName: "\uC5B4\uC378"
+  description: "\uC774\uBC88 \uAC8C\uC784\uC5D0\uC11C '\uC5B4\uC378'\uC744 \uC0AC\uC6A9\uD55C
+    \uD69F\uC218\uB9CC\uD07C \uB2E4\uC74C \uC561\uC158\uC758 \uC704\uB825\uC774 \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  statsLabel: +{0}
+  cardNameEn: awesome
+  descriptionEn: Increases the power of your next action by the number of times 'Awesome'
+    has been used this run.
+  statsLabelEn: +{0}
   icon: {fileID: 0}
-  description: "\uC4F8\uC218\uB85D \uC704\uB825 \uB204\uC801"
-  statsLabel: "+{0}"
-  cardNameEn: "awesome"
-  descriptionEn: "Grows with each success this run"
-  statsLabelEn: "+{0}"
   effectType: 2
   value: 1
+  scalingSource: 0
+  chancePercent: 10
+  chanceGainPerUse: 10
+  maxChancePercent: 50
+  lootPendingStatsLabel: 
+  lootPendingStatsLabelEn: 

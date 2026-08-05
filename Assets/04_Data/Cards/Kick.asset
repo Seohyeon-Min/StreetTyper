@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: Kick
   m_EditorClassIdentifier: Assembly-CSharp::ActionCardData
   cardName: "\uD0A5"
-  icon: {fileID: 0}
-  description: "\uBC29\uC5B4 \uBB34\uC2DC \uACF5\uACA9"
+  description: "\uC801\uC758 \uBC29\uC5B4\uB3C4\uB97C \uBB34\uC2DC\uD558\uACE0 10\uC758
+    \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
   statsLabel: "\uAD00\uD1B5"
-  cardNameEn: "kick"
-  descriptionEn: "Ignores enemy defense"
-  statsLabelEn: "PIERCE"
+  cardNameEn: kick
+  descriptionEn: Deal 10 damage, ignoring enemy block.
+  statsLabelEn: PIERCE
+  icon: {fileID: 0}
   actionKind: 0
   strengthBonus: 0
   timerDelta: 0
@@ -28,3 +29,5 @@ MonoBehaviour:
   comboChancePercent: 0
   comboMinHits: 0
   comboMaxHits: 0
+  scalingSource: 0
+  scalingPerUnit: 0

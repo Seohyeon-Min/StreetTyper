@@ -13,11 +13,17 @@ MonoBehaviour:
   m_Name: Quick
   m_EditorClassIdentifier: Assembly-CSharp::ModifierCardData
   cardName: "\uD035"
-  icon: {fileID: 0}
-  description: "\uC2DC\uAC04 +1\uCD08"
+  description: "\uD0C0\uC774\uBA38\uC5D0 1\uCD08\uB97C \uCD94\uAC00\uD569\uB2C8\uB2E4."
   statsLabel: "+1\uCD08"
-  cardNameEn: "quick"
-  descriptionEn: "Adds 1 second to the timer"
-  statsLabelEn: "+1s"
+  cardNameEn: quick
+  descriptionEn: Adds 1 second to the timer.
+  statsLabelEn: +1s
+  icon: {fileID: 0}
   effectType: 3
   value: 1
+  scalingSource: 0
+  chancePercent: 10
+  chanceGainPerUse: 10
+  maxChancePercent: 50
+  lootPendingStatsLabel: 
+  lootPendingStatsLabelEn: 

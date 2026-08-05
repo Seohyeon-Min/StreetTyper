@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Punch
   m_EditorClassIdentifier: Assembly-CSharp::ActionCardData
   cardName: "\uD380\uCE58"
+  description: "\uC801\uC5D0\uAC8C 13\uC758 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
+  statsLabel: +3
+  cardNameEn: punch
+  descriptionEn: Deal 13 damage.
+  statsLabelEn: +3
   icon: {fileID: 0}
-  description: "\uC704\uB825 +3 \uACF5\uACA9"
-  statsLabel: "+3"
-  cardNameEn: "punch"
-  descriptionEn: "Attack with +3 power"
-  statsLabelEn: "+3"
   actionKind: 0
   strengthBonus: 3
   timerDelta: 0
@@ -28,3 +28,5 @@ MonoBehaviour:
   comboChancePercent: 0
   comboMinHits: 0
   comboMaxHits: 0
+  scalingSource: 0
+  scalingPerUnit: 0

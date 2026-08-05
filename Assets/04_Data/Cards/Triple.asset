@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: Triple
   m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
   cardName: "\uD2B8\uB9AC\uD50C"
-  icon: {fileID: 0}
-  description: "\uD0C0\uACA9 {1}\uD68C"
+  description: "\uB2E4\uC74C \uC561\uC158\uC774 {1}\uBC88 \uC5F0\uC18D\uC73C\uB85C
+    \uBC1C\uB3D9\uD569\uB2C8\uB2E4."
   statsLabel: "3\uD68C"
-  cardNameEn: "triple"
-  descriptionEn: "Hits {1} times"
-  statsLabelEn: "x3"
+  cardNameEn: triple
+  descriptionEn: Your next action triggers {1} times in a row.
+  statsLabelEn: x3
+  icon: {fileID: 0}
   effectType: 6
   statusEffect: 0
   chancePercent: 0

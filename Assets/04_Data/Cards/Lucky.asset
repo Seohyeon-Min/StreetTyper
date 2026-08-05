@@ -13,10 +13,11 @@ MonoBehaviour:
   m_Name: Lucky
   m_EditorClassIdentifier: Assembly-CSharp::ModifierCardData
   cardName: "\uB7ED\uD0A4"
-  description: "{0}% \uD655\uB960\uB85C \uD074\uB9AC\uC5B4 \uBCF4\uC0C1 +1\uD68C"
+  description: "{0}% \uD655\uB960\uB85C \uC2A4\uD14C\uC774\uC9C0 \uD074\uB9AC\uC5B4
+    \uC2DC \uBCF4\uC0C1\uC744 \uCD94\uAC00\uB85C 1\uD68C \uD68D\uB4DD\uD569\uB2C8\uB2E4."
   statsLabel: "\uBCF4\uC0C1"
   cardNameEn: lucky
-  descriptionEn: '{0}% chance: +1 reward'
+  descriptionEn: '{0}% chance to gain an additional reward upon clearing the stage.'
   statsLabelEn: LOOT
   icon: {fileID: 0}
   effectType: 4

@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: Thunder
   m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
   cardName: "\uC36C\uB354"
-  icon: {fileID: 0}
-  description: "{0}% \uD655\uB960 \uB9C8\uBE44"
+  description: "\uB2E4\uC74C \uC561\uC158 \uBC1C\uB3D9 \uC2DC {0}% \uD655\uB960\uB85C
+    \uC801\uC744 3\uD134 \uB3D9\uC548 \uB9C8\uBE44\uC2DC\uD0B5\uB2C8\uB2E4."
   statsLabel: "\uB9C8\uBE44"
-  cardNameEn: "thunder"
-  descriptionEn: "{0}% chance to paralyze"
-  statsLabelEn: "STUN"
+  cardNameEn: thunder
+  descriptionEn: '{0}% chance to paralyze the enemy for 3 turns on your next action.'
+  statsLabelEn: STUN
+  icon: {fileID: 0}
   effectType: 0
   statusEffect: 2
   chancePercent: 20

@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: Jab
   m_EditorClassIdentifier: Assembly-CSharp::ActionCardData
   cardName: "\uC7BD"
-  icon: {fileID: 0}
-  description: "\uC57D\uACF5\uACA9, \uC2DC\uAC04 +1\uCD08"
+  description: "\uC801\uC5D0\uAC8C 10\uC758 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4.
+    \uD0C0\uC774\uBA38\uC5D0 1\uCD08\uB97C \uCD94\uAC00\uD569\uB2C8\uB2E4."
   statsLabel: "+1\uCD08"
-  cardNameEn: "jab"
-  descriptionEn: "Weak hit, gain 1 second"
-  statsLabelEn: "+1s"
+  cardNameEn: jab
+  descriptionEn: Deal 10 damage. Add 1 second to the timer.
+  statsLabelEn: +1s
+  icon: {fileID: 0}
   actionKind: 0
   strengthBonus: 0
   timerDelta: 1
@@ -28,3 +29,5 @@ MonoBehaviour:
   comboChancePercent: 0
   comboMinHits: 0
   comboMaxHits: 0
+  scalingSource: 0
+  scalingPerUnit: 0

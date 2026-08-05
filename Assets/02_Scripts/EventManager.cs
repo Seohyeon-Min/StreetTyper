@@ -23,6 +23,12 @@ public class EventManager : MonoBehaviour
 
     [Header("Speech Bubble Settings")]
     public GameObject speechBubblePrefab;
+    [Tooltip("마더 드래곤 이벤트 전용 말풍선 프리팹. 비워두면 위의 일반 말풍선을 사용한다. " +
+             "마더 드래곤 본인의 대사에만 사용한다.")]
+    public GameObject motherDragonSpeechBubblePrefab;
+    [Tooltip("마더 드래곤 이벤트에서 플레이어가 말할 때 사용할 전용 프리팹. 비워두면 " +
+             "SpeechBubbleManager의 플레이어 전용 프리팹, 그것도 비어 있으면 일반 말풍선을 사용한다.")]
+    public GameObject motherDragonPlayerSpeechBubblePrefab;
     public Transform canvasTransform;
     [Tooltip("적이 말할 때의 미세 조정. 기본 위치는 SpeechBubbleManager가 다른 말풍선과 같은 " +
              "규칙으로 잡고, 이 값은 거기서 더 밀어내는 양이다.\n" +
@@ -56,6 +62,7 @@ public class EventManager : MonoBehaviour
 
     private GameObject dialogueBubbleObj;
     private SpeechBubble dialogueBubbleScript;
+    private GameObject currentDialogueBubblePrefab;
 
     // 매 프레임 GetComponent를 부르지 않으려고 캐시한다.
     private RectTransform _dialogueBubbleRect;
@@ -111,11 +118,13 @@ public class EventManager : MonoBehaviour
     {
         if (motherDragonVisual != null) motherDragonVisual.SetActive(false);
 
-        if (speechBubblePrefab != null && canvasTransform != null)
+        // EventManager에 연결한 두 전용 프리팹을 보스 등장 대화/인텐트 경로도 같이 사용한다.
+        if (SpeechBubbleManager.Instance != null)
         {
-            dialogueBubbleObj = Instantiate(speechBubblePrefab, canvasTransform);
-            dialogueBubbleScript = dialogueBubbleObj.GetComponent<SpeechBubble>();
-            dialogueBubbleObj.SetActive(false);
+            if (motherDragonSpeechBubblePrefab != null)
+                SpeechBubbleManager.Instance.motherDragonSpeechBubblePrefab = motherDragonSpeechBubblePrefab;
+            if (motherDragonPlayerSpeechBubblePrefab != null)
+                SpeechBubbleManager.Instance.motherDragonPlayerSpeechBubblePrefab = motherDragonPlayerSpeechBubblePrefab;
         }
     }
 
@@ -125,6 +134,8 @@ public class EventManager : MonoBehaviour
         currentLineIndex = 0;
         pendingHealAmount = healAmount;
         wasMotherDragon = isMotherDragon;
+
+        CreateDialogueBubble(isMotherDragon, false);
 
         ResolveBubbleAnchor();
 
@@ -158,6 +169,49 @@ public class EventManager : MonoBehaviour
             StartCoroutine(PlayMotherDragonOutroRoutine());
         else
             ShowNextDialogue();
+    }
+
+    private void CreateDialogueBubble(bool isMotherDragon, bool fromPlayer)
+    {
+        var prefab = ResolveDialogueBubblePrefab(isMotherDragon, fromPlayer);
+        if (dialogueBubbleObj != null && currentDialogueBubblePrefab == prefab)
+            return;
+
+        if (dialogueBubbleObj != null)
+        {
+            dialogueBubbleObj.SetActive(false);
+            Destroy(dialogueBubbleObj);
+        }
+
+        dialogueBubbleObj = null;
+        dialogueBubbleScript = null;
+        _dialogueBubbleRect = null;
+        _dialogueCanvas = null;
+
+        if (canvasTransform == null)
+            return;
+
+        if (prefab == null)
+            return;
+
+        dialogueBubbleObj = Instantiate(prefab, canvasTransform);
+        currentDialogueBubblePrefab = prefab;
+        dialogueBubbleScript = dialogueBubbleObj.GetComponent<SpeechBubble>();
+        dialogueBubbleObj.SetActive(false);
+    }
+
+    private GameObject ResolveDialogueBubblePrefab(bool isMotherDragon, bool fromPlayer)
+    {
+        if (!isMotherDragon)
+            return speechBubblePrefab;
+        if (fromPlayer)
+        {
+            var playerPrefab = motherDragonPlayerSpeechBubblePrefab;
+            if (playerPrefab == null && SpeechBubbleManager.Instance != null)
+                playerPrefab = SpeechBubbleManager.Instance.motherDragonPlayerSpeechBubblePrefab;
+            return playerPrefab != null ? playerPrefab : speechBubblePrefab;
+        }
+        return motherDragonSpeechBubblePrefab != null ? motherDragonSpeechBubblePrefab : speechBubblePrefab;
     }
 
     // 말풍선이 따라갈 대상과 말하는 모션을 재생할 적을 이벤트가 열릴 때 잡는다.
@@ -273,6 +327,13 @@ public class EventManager : MonoBehaviour
     private void SpeakLine(int index, bool fromPlayer = false)
     {
         speakingIsPlayer = fromPlayer;
+
+        if (wasMotherDragon)
+        {
+            CreateDialogueBubble(true, fromPlayer);
+            if (dialogueBubbleObj != null)
+                dialogueBubbleObj.SetActive(true);
+        }
 
         // 말풍선이 따라갈 대상을 화자에 맞춰 바꾼다. 플레이어 참조가 없으면 원래 대상에 그대로 둔다.
         if (fromPlayer && player != null)

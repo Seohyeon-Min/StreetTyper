@@ -18,7 +18,16 @@ public class CharacterStats : MonoBehaviour
              "EnemyBase와 플레이어가 같은 개념을 쓰도록 여기(공통 베이스)에 있다.")]
     [SerializeField] private Transform bubbleAnchor;
 
-    public Vector3 BubblePosition => bubbleAnchor != null ? bubbleAnchor.position : transform.position;
+    public Vector3 BubblePosition
+    {
+        get
+        {
+            if (bubbleAnchor == null)
+                bubbleAnchor = transform.Find("Pos");
+
+            return bubbleAnchor != null ? bubbleAnchor.position : transform.position;
+        }
+    }
 
     protected virtual void Start()
     {

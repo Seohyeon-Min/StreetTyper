@@ -6,6 +6,10 @@ public class SpeechBubbleManager : MonoBehaviour
     public static SpeechBubbleManager Instance;
 
     public GameObject speechBubblePrefab;
+    [Tooltip("마더 드래곤 본인의 대사와 인텐트에 사용하는 전용 프리팹.")]
+    public GameObject motherDragonSpeechBubblePrefab;
+    [Tooltip("마더 드래곤 구간에서 플레이어가 말할 때 사용할 전용 프리팹. 비워두면 일반 말풍선을 쓴다.")]
+    public GameObject motherDragonPlayerSpeechBubblePrefab;
     public Transform canvasTransform;
 
     [Header("말풍선 위치 (참조 해상도 1920x1080 기준 픽셀)")]
@@ -85,14 +89,23 @@ public class SpeechBubbleManager : MonoBehaviour
 
     public void ShowBubble(string message, Vector3 worldPosition, bool isPlayer, float duration = 1.0f)
     {
-        StartCoroutine(ShowBubbleRoutine(message, worldPosition, isPlayer, duration));
+        StartCoroutine(ShowBubbleRoutine(speechBubblePrefab, message, worldPosition, isPlayer, duration));
     }
 
-    private IEnumerator ShowBubbleRoutine(string message, Vector3 worldPosition, bool isPlayer, float duration)
+    public void ShowMotherDragonBubble(string message, Vector3 worldPosition, bool isPlayer, float duration = 1.0f)
     {
-        if (speechBubblePrefab == null || canvasTransform == null) yield break;
+        var prefab = isPlayer
+            ? (motherDragonPlayerSpeechBubblePrefab != null ? motherDragonPlayerSpeechBubblePrefab : speechBubblePrefab)
+            : (motherDragonSpeechBubblePrefab != null ? motherDragonSpeechBubblePrefab : speechBubblePrefab);
+        StartCoroutine(ShowBubbleRoutine(prefab, message, worldPosition, isPlayer, duration));
+    }
 
-        GameObject bubbleObj = Instantiate(speechBubblePrefab, canvasTransform);
+    private IEnumerator ShowBubbleRoutine(GameObject prefab, string message, Vector3 worldPosition,
+                                          bool isPlayer, float duration)
+    {
+        if (prefab == null || canvasTransform == null) yield break;
+
+        GameObject bubbleObj = Instantiate(prefab, canvasTransform);
 
         SpeechBubble bubbleScript = bubbleObj.GetComponent<SpeechBubble>();
         if (bubbleScript != null)

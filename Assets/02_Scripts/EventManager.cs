@@ -24,11 +24,15 @@ public class EventManager : MonoBehaviour
     [Header("Speech Bubble Settings")]
     public GameObject speechBubblePrefab;
     public Transform canvasTransform;
-    public Vector3 bubbleOffset = new Vector3(0f, 2.5f, 0f);
+    [Tooltip("적이 말할 때의 미세 조정. 기본 위치는 SpeechBubbleManager가 다른 말풍선과 같은 " +
+             "규칙으로 잡고, 이 값은 거기서 더 밀어내는 양이다.\n" +
+             "⚠️ 단위가 참조 해상도(1920x1080) 픽셀이다 - 예전의 월드 단위가 아니다(월드 1은 " +
+             "1080p에서 100픽셀이 넘어 미세 조정이 불가능했다).")]
+    public Vector2 bubbleScreenOffset = Vector2.zero;
 
-    [Tooltip("회복 대사처럼 플레이어(데미)가 말할 때 쓰는 오프셋. 적보다 스프라이트가 작아 " +
-             "따로 둔다.")]
-    public Vector3 playerBubbleOffset = new Vector3(0f, 2f, 0f);
+    [Tooltip("회복 대사처럼 플레이어(데미)가 말할 때의 미세 조정. 적보다 스프라이트가 작아 " +
+             "따로 둔다. 단위는 위와 같은 참조 해상도 픽셀이다.")]
+    public Vector2 playerBubbleScreenOffset = Vector2.zero;
 
     [Tooltip("마더 드래곤 아웃로 전용: 0번 대사(\"여기까지 하자꾸나!\") 다음, 회복 대사가 " +
              "뜨기 전에 웃는 애니메이션 + 회복 이펙트를 재생하며 두는 대기 시간(초).")]
@@ -56,6 +60,10 @@ public class EventManager : MonoBehaviour
 
     private GameObject dialogueBubbleObj;
     private SpeechBubble dialogueBubbleScript;
+
+    // 매 프레임 GetComponent를 부르지 않으려고 캐시한다.
+    private RectTransform _dialogueBubbleRect;
+    private Canvas _dialogueCanvas;
 
     private int currentLineIndex = 0;
     private List<string> activeDialogueLines = new List<string>();
@@ -198,11 +206,52 @@ public class EventManager : MonoBehaviour
     {
         if (!isEventActive) return;
 
-        if (dialogueBubbleObj != null && bubbleAnchor != null && dialogueBubbleObj.activeSelf && Camera.main != null)
+        PositionDialogueBubble();
+    }
+
+    // 말풍선 위치는 SpeechBubbleManager의 계산 하나로 통일한다 - 전투 말풍선·적 인텐트와 같은
+    // 규칙이라 화자 기준 위치가 화면마다 어긋나지 않는다.
+    //
+    // ⚠️ 예전에는 여기서 WorldToScreenPoint를 직접 불렀는데 문제가 셋이었다:
+    //   ① z를 0으로 지우지 않아(WorldToScreenPoint의 z는 카메라와의 거리다) Overlay 캔버스
+    //      평면을 벗어났다.
+    //   ② 오프셋이 월드 단위라 1이 1080p에서 100픽셀을 넘어 미세 조정이 사실상 불가능했다.
+    //   ③ 캔버스 scaleFactor를 곱하지 않아 해상도가 바뀌면 위치가 밀렸다.
+    private void PositionDialogueBubble()
+    {
+        if (dialogueBubbleObj == null || bubbleAnchor == null || !dialogueBubbleObj.activeSelf)
+            return;
+
+        if (_dialogueBubbleRect == null)
+            _dialogueBubbleRect = dialogueBubbleObj.GetComponent<RectTransform>();
+
+        if (_dialogueBubbleRect == null || SpeechBubbleManager.Instance == null)
+            return;
+
+        Vector3 screenPos = SpeechBubbleManager.Instance.GetBubbleScreenPosition(bubbleAnchor.position, speakingIsPlayer);
+
+        // 그 위에 이 화면만의 미세 조정을 얹는다. 참조 해상도 기준 값이라 실제 픽셀로 바꿀 때
+        // 캔버스 scaleFactor를 곱한다(SpeechBubbleManager가 자기 오프셋에 하는 것과 같다).
+        Vector2 offset = speakingIsPlayer ? playerBubbleScreenOffset : bubbleScreenOffset;
+
+        if (offset != Vector2.zero)
         {
-            Vector3 offset = speakingIsPlayer ? playerBubbleOffset : bubbleOffset;
-            Vector3 screenPos = Camera.main.WorldToScreenPoint(bubbleAnchor.position + offset);
-            dialogueBubbleObj.GetComponent<RectTransform>().position = screenPos;
+            float scale = DialogueCanvasScale;
+            screenPos.x += offset.x * scale;
+            screenPos.y += offset.y * scale;
+        }
+
+        _dialogueBubbleRect.position = screenPos;
+    }
+
+    private float DialogueCanvasScale
+    {
+        get
+        {
+            if (_dialogueCanvas == null && canvasTransform != null)
+                _dialogueCanvas = canvasTransform.GetComponentInParent<Canvas>();
+
+            return _dialogueCanvas != null ? _dialogueCanvas.scaleFactor : 1f;
         }
     }
 
@@ -235,7 +284,12 @@ public class EventManager : MonoBehaviour
             bubbleAnchor = player.transform;
 
         if (dialogueBubbleScript != null)
+        {
+            // 같은 말풍선 오브젝트를 화자만 바꿔 가며 쓰므로 꼬리 방향도 같이 뒤집어야 한다 -
+            // 플레이어는 화면 왼쪽, 적은 오른쪽이라 꼬리가 서로 반대를 향한다.
+            dialogueBubbleScript.SetMirrored(fromPlayer);
             dialogueBubbleScript.Setup(activeDialogueLines[index]);
+        }
 
         if (fromPlayer)
             return; // 플레이어가 말하는 줄에서 적의 말하는 모션을 재생하면 화자가 둘로 보인다.

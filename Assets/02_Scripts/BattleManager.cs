@@ -67,10 +67,14 @@ public class BattleManager : MonoBehaviour
     private int mdTurnCount = 0;
     private int savedMDDamage = 0;
 
-    // mdIntentString이 ExecuteEnemyTurnCoroutine에서 이미 일시적 말풍선(ShowBubble)으로
-    // "말해진" 상태인가. true면 UpdateUI()의 영구 인텐트 말풍선에 같은 대사를 또 띄우지 않는다
-    // (안 그러면 같은 대사가 두 메커니즘으로 연속 표시된다). 전투 시작/재시작에서만 false로 되돌린다.
-    private bool mdLineAnnounced = false;
+    // 스테이지가 열리는 중인가(등장 배너 대기, 보스 인트로 대사). 이 동안에는 적 인텐트
+    // 말풍선을 띄우지 않는다.
+    //
+    // ⚠️ DeckManager.CurrentPhase만으로는 걸러지지 않는다 - 그 값은 지난 턴이 끝난 뒤
+    // PlayerInput으로 남아 있어서, LoadStage의 ResetBattle()이 부르는 UpdateUI()가 "내 턴"으로
+    // 착각하고 말풍선을 켜버린다. 그러면 아직 시작도 안 한 스테이지에 적 대사가 떠서 보스
+    // 인트로 대사와 겹친다(실제로 겪은 버그다).
+    private bool isStagePreparing;
 
     // ⚠️ 필드 초기화자에서 MotherDragonLine(0)을 부르지 않는다. 직렬화 값은 필드 초기화자보다
     // 나중에 적용되므로, 인스펙터 배열을 거기서 읽으면 항상 비어 있다. Start와 ResetBattle에서 채운다.
@@ -106,7 +110,6 @@ public class BattleManager : MonoBehaviour
     {
         // 인스펙터 배열은 이 시점에 채워져 있다(필드 초기화자와 달리).
         mdIntentString = MotherDragonLine(0);
-        mdLineAnnounced = false;
 
         HideResultUI();
 
@@ -249,17 +252,14 @@ public class BattleManager : MonoBehaviour
                     Invoke("FinishMotherDragonBattle", 1.5f);
                 }
 
-                if (SpeechBubbleManager.Instance != null)
-                {
-                    SpeechBubbleManager.Instance.ShowBubble(mdIntentString, enemyManager.currentEnemy.BubblePosition, false, actionBubbleDuration);
-
-                    // [유지] 마미드래곤일 때만 말하기 애니메이션 재생
-                    enemyManager.currentEnemy.PlaySpeakAnimation();
-
-                    // 이 대사는 방금 일시적 말풍선으로 이미 보여줬다 - UpdateUI()의 영구 인텐트
-                    // 말풍선이 같은 문자열을 또 띄우지 않도록 표시해 둔다.
-                    mdLineAnnounced = true;
-                }
+                // 대사는 UpdateUI의 인텐트 말풍선이 내 턴 동안 계속 보여준다 - 여기서 일시적
+                // 말풍선(ShowBubble)까지 띄우면 같은 대사가 두 번 나온다(적 턴에 1초 반짝,
+                // 내 턴에 다시). 일반 적도 아래 else에서 같은 이유로 뺐다.
+                //
+                // ⚠️ 반대로 일시적 말풍선만 남기는 식으로 되돌리지 말 것. 그러면 대사가 적 턴에
+                // 1초만 보이고 내 턴 내내 말풍선이 비어, 스파링 내내 아무 말도 안 하는 것처럼
+                // 보인다 - 실제로 그렇게 만들었다가 되돌린 회귀다.
+                enemyManager.currentEnemy.PlaySpeakAnimation();
             }
             else
             {
@@ -315,11 +315,29 @@ public class BattleManager : MonoBehaviour
         isEventTriggered = false;
         mdTurnCount = 0;
         mdIntentString = MotherDragonLine(0);
-        mdLineAnnounced = false;
         savedMDDamage = 0;
         isWaitingForDragonEnd = false; //   추가됨
 
         HideResultUI();
+        UpdateUI();
+    }
+
+    /// <summary>스테이지가 열리기 시작했다(등장 배너·보스 인트로). 적 인텐트 말풍선을 감춰
+    /// 두었다가 <see cref="EndStagePreparation"/>에서 다시 판단한다. ResetBattle()이 부르는
+    /// UpdateUI()가 이미 말풍선을 켰을 수 있으므로 여기서 명시적으로 끈다.</summary>
+    public void BeginStagePreparation()
+    {
+        isStagePreparing = true;
+
+        if (enemyIntentBubbleObj != null)
+            enemyIntentBubbleObj.SetActive(false);
+    }
+
+    /// <summary>플레이어 턴이 실제로 열렸다(<see cref="StageManager.BeginStageAfterDelay"/>).
+    /// 이 시점엔 페이즈 변화가 없어 UpdateUI가 저절로 불리지 않으므로 여기서 직접 부른다.</summary>
+    public void EndStagePreparation()
+    {
+        isStagePreparing = false;
         UpdateUI();
     }
 
@@ -353,16 +371,13 @@ public class BattleManager : MonoBehaviour
             // 내 턴(PlayerInput)일 때만 인텐트 말풍선을 보여준다. UpdateUI()는 펀치 한 번마다
             // (PlayPendingActions 안에서) HP 갱신용으로 계속 호출되므로, 여기서 페이즈를 안 보면
             // 애니메이션 재생 중에도 펀치마다 말풍선이 다시 켜졌다 꺼졌다 한다.
-            var isPlayerInputPhase = deckManager == null || deckManager.CurrentPhase == DeckManager.TurnPhase.PlayerInput;
+            var isPlayerInputPhase = !isStagePreparing &&
+                                     (deckManager == null || deckManager.CurrentPhase == DeckManager.TurnPhase.PlayerInput);
 
-            if (enemyIntentBubbleObj != null && enemyIntentBubble != null && isPlayerInputPhase)
+           if (enemyIntentBubbleObj != null && enemyIntentBubble != null && isPlayerInputPhase)
             {
                 // [추가] 엔딩 보스일 때는 전투 인텐트 말풍선을 아예 띄우지 않습니다.
                 if (enemy.isEndingBoss)
-                {
-                    enemyIntentBubbleObj.SetActive(false);
-                }
-                else if (enemy is MotherDragon && mdLineAnnounced)
                 {
                     enemyIntentBubbleObj.SetActive(false);
                 }
@@ -370,6 +385,10 @@ public class BattleManager : MonoBehaviour
                 {
                     enemyIntentBubbleObj.SetActive(true);
 
+                    // 마더 드래곤은 대사(텍스트)를 그대로 쓰고, 일반 적은 아이콘 + ActionType별 색이
+                    // 입혀진 텍스트를 같이 보여준다. 마더 드래곤의 대사가 두 번 나오지 않게 하는 건
+                    // 여기서 끄는 게 아니라 적 턴 쪽에서 일시적 말풍선을 안 띄우는 것으로 해결한다
+                    // (ExecuteEnemyTurnCoroutine 참조) - 여기서 끄면 내 턴 내내 말풍선이 빈다.
                     if (enemy is MotherDragon)
                         enemyIntentBubble.Setup(mdIntentString);
                     else

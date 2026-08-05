@@ -12,15 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3d7aa169b8e8744b998338c5fb05c1b, type: 3}
   m_Name: Drain
   m_EditorClassIdentifier: Assembly-CSharp::AttributeCardData
-  cardName: "\uB4DC\uB808\uC778"
-  description: "\uB2E4\uC74C \uC561\uC158 \uBC1C\uB3D9 \uC2DC \uC704\uB825\uC758
-    {1}%\uB9CC\uD07C \uCCB4\uB825\uC744 \uD68C\uBCF5\uD569\uB2C8\uB2E4."
-  statsLabel: "\uD761\uD608"
   cardNameEn: drain
-  descriptionEn: Heal for {1}% of your next action's power.
-  statsLabelEn: LIFE
   icon: {fileID: 0}
   effectType: 3
   statusEffect: 0
   chancePercent: 0
-  value: 10
+  value: 20

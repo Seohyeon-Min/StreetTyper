@@ -65,6 +65,10 @@ public class SkillResolver : MonoBehaviour
     /// ⚠️ 어썸(<see cref="AwesomeBonus"/>)과 범위가 다르다. 그쪽은 런 내내 누적된다.</summary>
     public static int LuckyUses { get; private set; }
 
+    // 에디터/Development Build의 8번 디버그 키가 현재 스테이지 동안만 켠다.
+    // LuckyChance 한 곳에서 실제 판정과 모든 표시가 함께 100%로 바뀐다.
+    private static bool _debugLuckyChance100;
+
     /// <summary>
     /// 럭키가 지금 성공할 확률(%). <paramref name="basePercent"/>에서 시작해 쓴 횟수만큼
     /// <paramref name="gainPerUse"/>씩 오르고 <paramref name="maxPercent"/>에서 멈춘다.
@@ -75,6 +79,9 @@ public class SkillResolver : MonoBehaviour
     /// </summary>
     public static float LuckyChance(float basePercent, float gainPerUse, float maxPercent)
     {
+        if (_debugLuckyChance100)
+            return 100f;
+
         // ⚠️ 상한이 기본 확률보다 작으면 상한을 무시한다. 안 그러면 "기본 100%"로 두고 시험할 때
         // 상한(기본 50%)이 조용히 잘라내서 "확률을 100으로 했는데 안 걸린다"가 된다 - 실제로
         // 그렇게 헛다리를 짚은 적이 있다. 상한은 "쓸수록 오르는 걸 어디서 멈출지"지
@@ -82,6 +89,16 @@ public class SkillResolver : MonoBehaviour
         var ceiling = Mathf.Max(maxPercent, basePercent);
 
         return Mathf.Min(basePercent + gainPerUse * LuckyUses, ceiling);
+    }
+
+    /// <summary>현재 스테이지의 럭키 확률을 100%로 강제한다. 출시 빌드에서는 호출되지 않는다.</summary>
+    public static void DebugForceLuckyChance100()
+    {
+        if (_debugLuckyChance100)
+            return;
+
+        _debugLuckyChance100 = true;
+        OnCardValuesChanged?.Invoke();
     }
 
     /// <summary>럭키 누적이 바뀌었을 때 <see cref="WordUnlockManager"/>가 부른다.
@@ -116,6 +133,7 @@ public class SkillResolver : MonoBehaviour
         _timerChangeThisTurn = 0f;
         LootBonusRounds = 0;
         LuckyUses = 0;
+        _debugLuckyChance100 = false;
         OnCardValuesChanged = null;
     }
 
@@ -135,6 +153,7 @@ public class SkillResolver : MonoBehaviour
     {
         // 럭키 확률은 스테이지 단위다 - 새 스테이지는 다시 기본 확률에서 시작한다.
         LuckyUses = 0;
+        _debugLuckyChance100 = false;
 
         ResetTurn();
     }

@@ -137,6 +137,9 @@ public class BattleManager : MonoBehaviour
         // 일시정지 메뉴 뒤에서도 마찬가지다. Update는 timeScale 0에서도 계속 돈다.
         if (Mathf.Approximately(Time.timeScale, 0f)) return;
 
+        // 이벤트 대화 중에는 디버그 입력으로 전투/스테이지 상태가 뒤에서 바뀌면 안 된다.
+        if (IsEventActive) return;
+
         // 숫자 0 누르면 플레이어 즉사
         if (Keyboard.current.digit0Key.wasPressedThisFrame)
         {
@@ -161,12 +164,24 @@ public class BattleManager : MonoBehaviour
             }
         }
 
-        // 숫자 5 누르면 마더 드래곤 스테이지(인덱스 4)로 즉시 이동. 마더 드래곤 이벤트/대사가
-        // 이미 떠 있는 동안 스테이지를 다시 불러오면 그 상태가 새 스테이지 위에서 꼬이므로
-        // IsEventActive일 때는 무시한다(위 isGameOver/timeScale 가드는 이미 Update 앞머리에서 처리됨).
+        // 숫자 8 누르면 현재 스테이지의 럭키 실제 판정과 표시를 모두 100%로 강제
+        if (Keyboard.current.digit8Key.wasPressedThisFrame)
+        {
+            SkillResolver.DebugForceLuckyChance100();
+
+            // 확률만 올리면 럭키 조합을 실제로 완성해야 판정이 발생한다. 8→9 킬스위치로도
+            // 럭키 보상 UI를 시험할 수 있게 보너스 라운드를 최소 1회 함께 예약한다.
+            if (stageManager != null && stageManager.wordUnlockManager != null)
+                stageManager.wordUnlockManager.DebugEnsureLuckyBonus();
+
+            Debug.Log("[DEBUG] 럭키 확률 100% 강제 + 보상 라운드 예약 (현재 스테이지)");
+        }
+
+        // 숫자 5 누르면 마더 드래곤 스테이지(인덱스 4)로 즉시 이동.
+        // 결과 화면·일시정지·이벤트 가드는 Update 앞머리에서 공통으로 처리한다.
         if (Keyboard.current.digit5Key.wasPressedThisFrame)
         {
-            if (stageManager != null && !IsEventActive)
+            if (stageManager != null)
             {
                 Debug.Log("[DEBUG] 킬스위치 발동: 마더 드래곤 스테이지로 이동");
                 stageManager.LoadStage(4);

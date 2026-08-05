@@ -23,7 +23,17 @@ public class TimerView : MonoBehaviour
     [Tooltip("남은 초를 숫자로 보여줄 라벨(선택). 바만으로는 몇 초인지 알기 어렵다.")]
     [SerializeField] private TMP_Text remainingText;
 
+    [Header("표시/숨김")]
+    [Tooltip("SetVisible로 페이드인/아웃할 대상. 게이지·텍스트를 한 번에 묶어서 숨기려고 " +
+             "CanvasGroup을 쓴다(WorldAnchoredUI/StageStartEffect와 같은 이유). 비워두면 " +
+             "SetVisible을 불러도 아무 일도 일어나지 않는다.")]
+    [SerializeField] private CanvasGroup canvasGroup;
+
+    [Tooltip("페이드인/아웃에 걸리는 시간(초).")]
+    [SerializeField] private float visibilityFadeDuration = 0.2f;
+
     private Coroutine _flashCoroutine;
+    private Coroutine _visibilityCoroutine;
 
     private void OnEnable()
     {
@@ -80,5 +90,37 @@ public class TimerView : MonoBehaviour
         yield return new WaitForSeconds(flashDuration);
         fillImage.color = neutralColor;
         _flashCoroutine = null;
+    }
+
+    /// <summary>보상 선택 중처럼 타이머가 의미 없어지는 구간에 페이드아웃/인한다. 판단은
+    /// 부르는 쪽(RewardInputHandler 등)이 하고, 여기는 그리기만 한다.</summary>
+    public void SetVisible(bool visible)
+    {
+        if (canvasGroup == null)
+        {
+            Debug.LogWarning("TimerView: canvasGroup이 연결되지 않아 SetVisible이 아무 일도 하지 않습니다.", this);
+            return;
+        }
+
+        if (_visibilityCoroutine != null)
+            StopCoroutine(_visibilityCoroutine);
+
+        _visibilityCoroutine = StartCoroutine(SetVisibleRoutine(visible ? 1f : 0f));
+    }
+
+    private IEnumerator SetVisibleRoutine(float target)
+    {
+        var start = canvasGroup.alpha;
+        var elapsed = 0f;
+
+        while (elapsed < visibilityFadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(start, target, Mathf.Clamp01(elapsed / visibilityFadeDuration));
+            yield return null;
+        }
+
+        canvasGroup.alpha = target;
+        _visibilityCoroutine = null;
     }
 }

@@ -34,6 +34,10 @@ public class WordUnlockManager : MonoBehaviour
     // 럭키로 확정된 추가 보상 라운드. 적을 처치한 순간 쌓이고, 라운드가 끝날 때마다 하나씩 소비된다.
     private int _pendingBonusRounds;
 
+    // 8번 키가 실제 럭키 판정 전에 미리 예약한 1회. 이후 럭키가 실제로 성공하면 새 라운드를
+    // 더하지 않고 이 예약을 실제 발동으로 간주해, 디버그 때문에 보상이 두 번 늘지 않게 한다.
+    private bool _debugBonusPrebooked;
+
     // 시작 단어 지급용. 매번 새 리스트를 만들지 않도록 재사용한다.
     private readonly List<CardBase> _granted = new List<CardBase>();
     private readonly List<CardBase> _candidates = new List<CardBase>();
@@ -53,6 +57,7 @@ public class WordUnlockManager : MonoBehaviour
 
         // 런이 다시 시작되는 지점이다. 지난 런에서 쌓다 만 럭키 라운드가 이월되지 않게 비운다.
         SetBonusRounds(0);
+        _debugBonusPrebooked = false;
         _offered.Clear();
 
         _granted.Clear();
@@ -134,10 +139,32 @@ public class WordUnlockManager : MonoBehaviour
     /// luckyBonusRounds만큼 라운드를 더 연다. 한 턴에 여러 번 성공하면 그만큼 쌓인다.</summary>
     public void AddLuckyBonus()
     {
+        if (_debugBonusPrebooked)
+        {
+            _debugBonusPrebooked = false;
+
+            if (logDebugEvents)
+                Debug.Log("WordUnlock: 럭키 성공 - 8번 디버그로 예약된 보상 라운드 사용", this);
+            return;
+        }
+
         SetBonusRounds(_pendingBonusRounds + luckyBonusRounds);
 
         if (logDebugEvents)
             Debug.Log($"WordUnlock: 럭키 처치 - 보상 라운드 +{luckyBonusRounds} (누적 +{_pendingBonusRounds})", this);
+    }
+
+    /// <summary>8번 디버그용. 럭키 조합을 직접 쓰지 않고 9번으로 적을 처치해도 럭키 보상창을
+    /// 확인할 수 있도록, 아직 예약된 보너스가 없을 때만 최소 한 묶음을 예약한다.</summary>
+    public void DebugEnsureLuckyBonus()
+    {
+        if (_pendingBonusRounds > 0)
+            return;
+
+        SetBonusRounds(Mathf.Max(1, luckyBonusRounds));
+        _debugBonusPrebooked = true;
+
+        Debug.Log($"[DEBUG] 럭키 보상 라운드 예약 +{_pendingBonusRounds}", this);
     }
 
     /// <summary>보너스 라운드 수를 바꾸는 <b>유일한 통로</b>. 값을 넣고 럭키 카드가 읽는 창구까지
@@ -157,6 +184,9 @@ public class WordUnlockManager : MonoBehaviour
             return false;
 
         SetBonusRounds(_pendingBonusRounds - 1);
+
+        if (_pendingBonusRounds == 0)
+            _debugBonusPrebooked = false;
 
         if (logDebugEvents)
             Debug.Log($"WordUnlock: 럭키 보상 라운드 소비 (남은 {_pendingBonusRounds})", this);

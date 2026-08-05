@@ -43,6 +43,35 @@ public class RewardCardView : MonoBehaviour
              "Show()가 패널을 켤 때 여기 담긴 것 전부를 같이 재생한다.")]
     [SerializeField] private TextGateRevealAnimation[] reveals;
 
+    [Header("럭키 보상 배너")]
+    [Tooltip("럭키로 얻은 보너스 라운드일 때만 추가로 켜는 배너 오브젝트. 평소(일반 보상)엔 " +
+             "꺼져 있어야 한다 - Show(isBonusRound: false)가 매번 꺼서 되돌린다.")]
+    [SerializeField] private GameObject luckyBanner;
+
+    [Tooltip("배너 안의 제목 라벨.")]
+    [SerializeField] private TMP_Text luckyTitleLabel;
+
+    [Tooltip("럭키 보상 배너 제목(한국어).")]
+    [SerializeField] private string luckyTitleKorean = "럭키 보상!";
+
+    [Tooltip("럭키 보상 배너 제목(영어).")]
+    [SerializeField] private string luckyTitleEnglish = "LUCKY REWARD!";
+
+    [Tooltip("배너가 뜰 때 같이 재생할 TextGateRevealAnimation들(reveals와 같은 패턴, " +
+             "luckyBanner 안의 마스크에 붙인다). 럭키 보너스 라운드일 때만 재생한다.")]
+    [SerializeField] private TextGateRevealAnimation[] luckyReveals;
+
+    [Header("럭키 확률 표시")]
+    [Tooltip("모든 카드 보상창에 플레이어의 현재 럭 확률을 표시할 TMP 라벨.")]
+    [SerializeField] private TMP_Text luckLabel;
+
+    [Tooltip("현재 확률을 읽을 럭키 카드 데이터(LootBonusOnKill). 보상 후보가 아니라 플레이어의 " +
+             "현재 럭 수치를 표시하는 용도이므로 에셋을 직접 연결한다.")]
+    [SerializeField] private ModifierCardData luckyCard;
+
+    [Tooltip("{0} 자리에 반올림한 현재 럭 확률이 들어간다.")]
+    [SerializeField] private string luckLabelFormat = "LUCK : {0}%";
+
     [Header("타이핑 피드백")]
     [Tooltip("타이핑 중인 카드가 떠오르는 높이(px). 손패(CardSlotView)와 같은 값을 기본으로 둔다.")]
     [SerializeField] private float typingLiftHeight = 40f;
@@ -94,8 +123,10 @@ public class RewardCardView : MonoBehaviour
         new Keyframe(0f, 0f, 0f, 0f),
         new Keyframe(1f, 1f, 2f, 2f));
 
-    [Tooltip("나머지가 다 떨어진 뒤, 고른 카드 혼자 남아 보이는 시간(초). 이 시간이 지나야 패널을 닫는다.")]
-    [SerializeField] private float exitKeepLinger = 0.5f;
+    [Tooltip("나머지가 다 떨어진 뒤, 고른 카드 혼자 남아 보이는 시간(초). 이 시간이 지나야 패널을 닫는다. " +
+             "선택 연출(뽀잉 0.5초 + 유지 0.2초 + 페이드아웃 0.1초 = 0.8초, SelectedPulseRoutine)이 " +
+             "다 재생될 시간은 확보해야 중간에 끊겨 보이지 않는다.")]
+    [SerializeField] private float exitKeepLinger = 0.8f;
 
     [SerializeField] private bool logDebugEvents;
 
@@ -116,6 +147,11 @@ public class RewardCardView : MonoBehaviour
     private bool _exiting;
     private Coroutine _exitRoutine;
 
+    // 지금 라운드가 럭키 보너스 라운드인지. ExitRoutine이 luckyReveals를 반대로 닫을지
+    // 판단하는 데 쓴다 - Show가 껐다 켰다만 하는 luckyBanner와 달리 이건 라운드가 끝나도
+    // 잠깐 더 필요하다.
+    private bool _isBonusRound;
+
     // 지금 타이핑 중인 카드. -1이면 후보 없음.
     private int _highlight = -1;
 
@@ -126,12 +162,25 @@ public class RewardCardView : MonoBehaviour
     // 카드 사이 여백은 인스펙터에 적은 그대로 유지된다.
     private float _cardWidth;
 
+    // 선택 연출(뽀잉 + 페이드아웃)용.
+    private Coroutine pulseRoutine;
+
     private void Awake()
     {
         CacheCardWidth();
 
         // 시작할 때는 아무것도 보이지 않아야 한다.
         Clear();
+    }
+
+    private void OnEnable()
+    {
+        SkillResolver.OnCardValuesChanged += ApplyLuckLabel;
+    }
+
+    private void OnDisable()
+    {
+        SkillResolver.OnCardValuesChanged -= ApplyLuckLabel;
     }
 
     private void CacheCardWidth()
@@ -152,9 +201,23 @@ public class RewardCardView : MonoBehaviour
     }
 
     /// <summary>후보 카드를 화면에 펼친다. 목록이 비어 있으면 아무것도 표시하지 않는다.</summary>
-    public void Show(IReadOnlyList<CardBase> cards)
+    public void Show(IReadOnlyList<CardBase> cards, bool isBonusRound = false)
     {
-        Clear();
+        // 일반 보상에서 럭키 보상으로 바로 이어질 때는 바깥 패널과 기존 제목 대문을 닫지 않는다.
+        // 카드만 교체하고 럭키 제목 대문만 새로 연다.
+        var keepBasePresentationOpen = isBonusRound && panel != null && panel.activeSelf;
+
+        if (keepBasePresentationOpen)
+        {
+            StopAllCoroutines();
+            _exitRoutine = null;
+            _exiting = false;
+            ClearSpawnedCards();
+        }
+        else
+        {
+            Clear();
+        }
 
         if (cards == null || cards.Count == 0)
             return;
@@ -165,14 +228,42 @@ public class RewardCardView : MonoBehaviour
             return;
         }
 
+        _isBonusRound = isBonusRound;
+
         if (panel != null)
             panel.SetActive(true);
 
-        ApplyPresentation();
+        if (!keepBasePresentationOpen)
+            ApplyPresentation();
 
-        if (reveals != null)
+        ApplyLuckLabel();
+
+        // 럭키 제목은 기존 보상 제목과 별개다. 일반 보상에서는 꺼 두고 럭키 라운드에서만 연다.
+        if (luckyBanner != null)
+            luckyBanner.SetActive(isBonusRound);
+
+        if (isBonusRound)
+        {
+            var luckyTitle = LanguageSettings.Pick(
+                luckyTitleKorean, luckyTitleEnglish, this, nameof(luckyTitleEnglish));
+
+            if (luckyTitleLabel != null)
+                luckyTitleLabel.text = luckyTitle;
+        }
+
+        // 이미 열린 일반 보상 대문은 럭키 라운드로 넘어갈 때 다시 재생하지 않는다.
+        if (!keepBasePresentationOpen && reveals != null)
         {
             foreach (var reveal in reveals)
+            {
+                if (reveal != null)
+                    reveal.Play();
+            }
+        }
+
+        if (isBonusRound && luckyReveals != null)
+        {
+            foreach (var reveal in luckyReveals)
             {
                 if (reveal != null)
                     reveal.Play();
@@ -232,6 +323,24 @@ public class RewardCardView : MonoBehaviour
             }
         }
 
+
+        if (_isBonusRound && luckyReveals != null)
+        {
+            foreach (var reveal in luckyReveals)
+            {
+                if (reveal != null)
+                    reveal.PlayReverse();
+            }
+        }
+
+        // 남긴 카드(고른 카드)에 선택 연출(뽀잉+페이드아웃)을 재생한다. ⚠️ 여기서 재생하는 게 핵심이다 -
+        // PlayExit 맨 앞의 StopAllCoroutines()가 지나간 뒤라서, 여기서 시작한 코루틴이 그 자리에서
+        // 죽지 않는다. RewardInputHandler.OnCommandMatched에서 곧바로 재생하면 그 직후 이어지는
+        // EndSelection -> OnSelectionFinished -> StageManager.FinishReward -> PlayExit가 같은 프레임
+        // 안에서 동기적으로 불려, 코루틴이 한 프레임도 그려지기 전에 StopAllCoroutines()에 끊긴다
+        // (실제로 그렇게 나서 옮겼다). keepIndex가 -1이면(넘기기·지우기) 재생하지 않는다.
+        PlaySelectedPulse(keepIndex);
+
         // keepIndex를 뺀 나머지에만 낙하 코루틴을 건다 - 시차는 "떨어지는 카드끼리의 순서"
         // 기준이라, 가운데 카드를 남겨도 나머지끼리는 듬성듬성해 보이지 않는다.
         var fallerCount = 0;
@@ -287,6 +396,23 @@ public class RewardCardView : MonoBehaviour
     // 부르는 쪽이 각자의 사정에 맞게 처리하므로 여기서는 건드리지 않는다.
     private void ClearVisuals()
     {
+        ClearSpawnedCards();
+
+        if (titleImage != null)
+            titleImage.gameObject.SetActive(false);
+
+        if (luckyBanner != null)
+            luckyBanner.SetActive(false);
+
+        _isBonusRound = false;
+
+        if (panel != null)
+            panel.SetActive(false);
+    }
+
+    // 일반 보상 → 럭키 보상 전환에서는 바깥 패널과 기존 제목 대문을 유지하고 카드만 갈아야 한다.
+    private void ClearSpawnedCards()
+    {
         for (var i = 0; i < _spawned.Count; i++)
         {
             if (_spawned[i] != null)
@@ -303,12 +429,6 @@ public class RewardCardView : MonoBehaviour
 
         _highlight = -1;
         _hasInput = false;
-
-        if (titleImage != null)
-            titleImage.gameObject.SetActive(false);
-
-        if (panel != null)
-            panel.SetActive(false);
     }
 
     /// <summary>지금 타이핑 중인 카드를 알려준다. index가 -1이면 어느 후보도 아니고,
@@ -318,6 +438,75 @@ public class RewardCardView : MonoBehaviour
     {
         _highlight = index;
         _hasInput = hasInput;
+    }
+
+    /// <summary>화면 줄의 index번째 카드에 뽀잉(스퀘시&스트레치) + 페이드아웃 연출을 재생한다.
+    /// ExitRoutine이 keepIndex(고른 카드, 없으면 -1)를 그대로 넘긴다 - PlayExit의
+    /// StopAllCoroutines() 이후에 시작해야 코루틴이 곧바로 끊기지 않는다.</summary>
+    private void PlaySelectedPulse(int index)
+    {
+        if (index < 0 || index >= _rects.Count || _rects[index] == null)
+            return;
+
+        if (pulseRoutine != null)
+            StopCoroutine(pulseRoutine);
+
+        pulseRoutine = StartCoroutine(SelectedPulseRoutine(index));
+    }
+
+    // ---- 선택 연출(뽀잉 + 페이드아웃) ----
+
+    /// <summary>선택 순간 카드가 젤리처럼 출렁이며(뽀잉) 커졌다 원래 크기로 돌아온 뒤,
+    /// 잠깐 그대로 떠 있다가(holdDuration) 짧게 페이드아웃한다(알파 1 -> 0). 세로/가로
+    /// 스케일을 반대 위상으로 흔들어 스퀘시&스트레치 느낌을 내고, 감쇠하는 사인파로 몇 번
+    /// 통통 튀다가 잦아든다. 세 구간의 합(0.8초)이 RewardCardView.exitKeepLinger와 맞도록
+    /// 되어 있다 - 이 상수를 바꾸면 그쪽도 같이 볼 것.</summary>
+    private IEnumerator SelectedPulseRoutine(int index)
+    {
+        var entryAnimator = _rects[index];
+        var view = _views[index];
+
+        const float bounceDuration = 0.5f;
+        const float amplitude = 0.22f;
+        const float squashRatio = 0.55f;
+        const float oscillations = 2.5f;
+
+        var elapsed = 0f;
+        while (elapsed < bounceDuration)
+        {
+            elapsed += Time.deltaTime;
+            var t = Mathf.Clamp01(elapsed / bounceDuration);
+            var bounce = Mathf.Sin(t * Mathf.PI * oscillations) * Mathf.Pow(1f - t, 1.5f);
+
+            var scaleY = 1f + bounce * amplitude;
+            var scaleX = 1f - bounce * amplitude * squashRatio;
+            entryAnimator.localScale = new Vector3(scaleX, scaleY, 1f);
+
+            yield return null;
+        }
+
+        entryAnimator.localScale = Vector3.one;
+
+        // 뽀잉이 끝난 뒤 알파 그대로(선명하게) 잠깐 더 떠 있다가,
+        const float holdDuration = 0.2f;
+        yield return new WaitForSeconds(holdDuration);
+
+        // 짧게 페이드아웃한다.
+        const float fadeOutDuration = 0.1f;
+        elapsed = 0f;
+        while (elapsed < fadeOutDuration)
+        {
+            elapsed += Time.deltaTime;
+            if (view != null)
+                view.SetAlpha(1f - Mathf.Clamp01(elapsed / fadeOutDuration));
+
+            yield return null;
+        }
+
+        if (view != null)
+            view.SetAlpha(0f);
+
+        pulseRoutine = null;
     }
 
     // 제목과 이미지는 인스펙터 값에서 나온다. 화면에 나가는 글자를 코드에 박지 않는 게 기본 사양이다.
@@ -430,6 +619,7 @@ public class RewardCardView : MonoBehaviour
             cardView.SetCard(card);
             // 등장 연출이 첫 프레임부터 페이드인을 그리므로 스폰 시점엔 투명하게 시작한다.
             cardView.SetAlpha(0f);
+
         }
         else
         {
@@ -445,5 +635,24 @@ public class RewardCardView : MonoBehaviour
         _dropElapsed.Add(0f);
         _dropDelay.Add(index * dropStagger);
         _dropRotationStart.Add(Random.Range(-dropMaxRotation, dropMaxRotation));
+    }
+
+    private void ApplyLuckLabel()
+    {
+        if (luckLabel == null)
+            return;
+
+        luckLabel.gameObject.SetActive(true);
+
+        if (luckyCard == null || luckyCard.EffectType != ModifierEffectType.LootBonusOnKill)
+        {
+            luckLabel.text = string.Format(luckLabelFormat, 0);
+            Debug.LogWarning("RewardCardView: luckLabel은 연결됐지만 올바른 럭키 카드 데이터가 " +
+                             "연결되지 않아 럭 확률을 0%로 표시합니다.", this);
+            return;
+        }
+
+        luckLabel.text = string.Format(
+            luckLabelFormat, Mathf.RoundToInt(luckyCard.CurrentChancePercent));
     }
 }

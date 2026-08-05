@@ -70,6 +70,17 @@ public class MenuKeyboardNavigator : MonoBehaviour
     [Tooltip("항목 사이를 옮겨갈 때 미끄러지는 시정수(초). 0이면 즉시 튄다.")]
     [SerializeField] private float pointerSmoothTime = 0.08f;
 
+    [Header("포인터 - 양옆 삼각형 (선택)")]
+    [Tooltip("포커스된 항목 왼쪽에 놓을 삼각형(오른쪽=항목 쪽을 가리키도록 미리 90도 돌려둘 것). " +
+             "위 pointer와 별개로 동시에 써도 된다. 비워두면 이 방식은 쓰지 않는다.")]
+    [SerializeField] private RectTransform leftTriangle;
+
+    [Tooltip("포커스된 항목 오른쪽에 놓을 삼각형(왼쪽=항목 쪽을 가리키도록 미리 -90도 돌려둘 것).")]
+    [SerializeField] private RectTransform rightTriangle;
+
+    [Tooltip("삼각형과 항목 가장자리 사이의 여백(px, 기준 해상도 1920x1080).")]
+    [SerializeField] private float trianglePointerGap = 16f;
+
     [Header("슬라이더")]
     [Tooltip("좌우 키 한 번에 움직일 값(슬라이더 범위 0~1 기준이라 0.05면 5%).")]
     [SerializeField] private float sliderStep = 0.05f;
@@ -108,6 +119,9 @@ public class MenuKeyboardNavigator : MonoBehaviour
     // 메뉴가 열릴 때마다 포인터가 화면 밖에서 날아오면 어색하다.
     private bool _pointerPlaced;
 
+    // 양옆 삼각형도 같은 이유로 첫 배치는 미끄러지지 않고 바로 찍는다.
+    private bool _trianglesPlaced;
+
     // GetWorldCorners가 채워줄 버퍼. 매 프레임 부르므로 배열을 새로 만들지 않는다.
     private readonly Vector3[] _corners = new Vector3[4];
 
@@ -124,9 +138,17 @@ public class MenuKeyboardNavigator : MonoBehaviour
 
         // 다시 열릴 때는 첫 항목에 바로 찍히게 한다(창을 닫을 때 있던 자리에서 미끄러져 오지 않게).
         _pointerPlaced = false;
+        _trianglesPlaced = false;
 
-        if (pointer != null && _canvas == null)
-            _canvas = pointer.GetComponentInParent<Canvas>();
+        if (_canvas == null)
+        {
+            if (pointer != null)
+                _canvas = pointer.GetComponentInParent<Canvas>();
+            else if (leftTriangle != null)
+                _canvas = leftTriangle.GetComponentInParent<Canvas>();
+            else if (rightTriangle != null)
+                _canvas = rightTriangle.GetComponentInParent<Canvas>();
+        }
 
         if (items == null || items.Length == 0)
         {
@@ -157,6 +179,7 @@ public class MenuKeyboardNavigator : MonoBehaviour
             HandleKeys();
 
         UpdatePointer();
+        UpdateTrianglePointers();
     }
 
     private void HandleKeys()
@@ -336,6 +359,40 @@ public class MenuKeyboardNavigator : MonoBehaviour
         // 있어야 한다. 타이틀은 timeScale이 1이라 값이 같다.
         var t = 1f - Mathf.Exp(-Time.unscaledDeltaTime / Mathf.Max(pointerSmoothTime, 0.0001f));
         pointer.position = Vector3.Lerp(pointer.position, goal, t);
+    }
+
+    // 포커스된 항목의 좌우 가장자리 바로 바깥에 삼각형 두 개를 각각 놓는다 - "▶ 항목 ◀"처럼
+    // 양옆에서 가리키는 모양이 되도록, 삼각형 자체는 미리 90도씩 돌려서 준비해 둔다(에디터에서).
+    // 단일 pointer와 완전히 독립적이라 둘 다 동시에 켜둬도 서로 간섭하지 않는다.
+    private void UpdateTrianglePointers()
+    {
+        if (leftTriangle == null && rightTriangle == null)
+            return;
+
+        var rect = Current() != null ? Current().transform as RectTransform : null;
+        if (rect == null)
+            return;
+
+        var scale = _canvas != null ? _canvas.scaleFactor : 1f;
+        rect.GetWorldCorners(_corners);
+
+        // GetWorldCorners: 0 = 좌하, 1 = 좌상, 2 = 우상, 3 = 우하.
+        var leftEdge = (_corners[0] + _corners[1]) * 0.5f;
+        var rightEdge = (_corners[2] + _corners[3]) * 0.5f;
+
+        var leftGoal = leftEdge + new Vector3(-trianglePointerGap * scale, 0f, 0f);
+        var rightGoal = rightEdge + new Vector3(trianglePointerGap * scale, 0f, 0f);
+
+        var snap = !_trianglesPlaced || pointerSmoothTime <= 0f;
+        var t = 1f - Mathf.Exp(-Time.unscaledDeltaTime / Mathf.Max(pointerSmoothTime, 0.0001f));
+
+        if (leftTriangle != null)
+            leftTriangle.position = snap ? leftGoal : Vector3.Lerp(leftTriangle.position, leftGoal, t);
+
+        if (rightTriangle != null)
+            rightTriangle.position = snap ? rightGoal : Vector3.Lerp(rightTriangle.position, rightGoal, t);
+
+        _trianglesPlaced = true;
     }
 
     private Vector3 AnchorWorldPoint(RectTransform rect)

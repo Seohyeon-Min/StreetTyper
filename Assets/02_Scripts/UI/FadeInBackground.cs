@@ -1,4 +1,5 @@
 using System.Collections;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -57,6 +58,39 @@ public class FadeInBackground : MonoBehaviour
 
         SetAlpha(_targetAlpha);
         _routine = null;
+    }
+
+    /// <summary>현재 알파에서 0까지 페이드아웃한 뒤 콜백을 부른다. 부모 패널을 끄는 작업은
+    /// 반드시 콜백에서 해야 이 컴포넌트의 코루틴이 중간에 끊기지 않는다.</summary>
+    public void FadeOut(Action onComplete = null)
+    {
+        if (!gameObject.activeInHierarchy)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+
+        if (_routine != null)
+            StopCoroutine(_routine);
+
+        _routine = StartCoroutine(FadeOutRoutine(onComplete));
+    }
+
+    private IEnumerator FadeOutRoutine(Action onComplete)
+    {
+        var startAlpha = _image.color.a;
+        var elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            SetAlpha(Mathf.Lerp(startAlpha, 0f, Mathf.Clamp01(elapsed / duration)));
+            yield return null;
+        }
+
+        SetAlpha(0f);
+        _routine = null;
+        onComplete?.Invoke();
     }
 
     private void SetAlpha(float alpha)

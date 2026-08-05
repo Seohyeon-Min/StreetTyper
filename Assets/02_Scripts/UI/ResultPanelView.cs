@@ -39,7 +39,13 @@ public class ResultPanelView
     /// 해로울 게 없고, 배선 누락 경고는 <see cref="Show"/> 쪽에서 한 번만 내는 게 낫다.</summary>
     public void Hide()
     {
-        if (panel != null)
+        if (panel == null || !panel.activeSelf)
+            return;
+
+        var background = panel.GetComponentInChildren<FadeInBackground>(true);
+        if (background != null && panel.activeInHierarchy)
+            background.FadeOut(() => panel.SetActive(false));
+        else
             panel.SetActive(false);
     }
 

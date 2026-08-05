@@ -320,7 +320,13 @@ public class DeckManager : MonoBehaviour
         // IsGameOver로는 걸러지지 않는다 - 이벤트 스테이지는 대사가 끝날 때까지 false다.
         // 여기서 끊어도 갇히지 않는다: 대사가 끝나면 EndEvent -> ShowResult -> OnBattleEnded ->
         // HandleBattleEnded가 입력을 다시 열어준다.
-        if (battleManager.IsEventActive)
+        //
+        // ⚠️ IsEventActive만으로는 부족하다. 대사가 아주 짧거나 플레이어가 스페이스를 빠르게 눌러
+        // 이 대기가 끝나기 전에 대사까지 이미 다 끝나버리면(EndEvent -> ShowResult -> OnBattleEnded
+        // -> HandleBattleEnded가 timerManager.StopTimer()까지 이미 실행된 상태), IsEventActive가
+        // 다시 false로 돌아와 있어 이 가드를 그냥 통과한다. 그러면 아래 RestartTurn()이 방금 멈춘
+        // 타이머를 승리 화면 뒤에서 도로 돌려버린다. IsGameOver도 같이 봐야 그 경로까지 막힌다.
+        if (battleManager.IsGameOver || battleManager.IsEventActive)
             yield break;
 
         // 이번 턴에 쌓은 방어도는 적 공격을 막는 데까지만 쓰인다. 여기서 비우지 않으면

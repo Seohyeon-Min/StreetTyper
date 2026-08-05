@@ -263,7 +263,13 @@ public class PauseManager : CommandWordReceiver
         HideCommandCards();
 
         if (pausePanel != null)
-            pausePanel.SetActive(false);
+        {
+            var background = pausePanel.GetComponentInChildren<FadeInBackground>(true);
+            if (background != null)
+                background.FadeOut(() => pausePanel.SetActive(false));
+            else
+                pausePanel.SetActive(false);
+        }
 
         if (inputManager != null)
         {

@@ -392,6 +392,11 @@ public class StageManager : MonoBehaviour
             if (stageStartObject != null)
                 stageStartObject.SetActive(true);
 
+            // 보상 중 가라앉혀뒀던 손패를 배너가 덮고 있는 동안 되돌린다(보스 인트로 경로에도
+            // 같은 호출이 있다 - 두 경로 모두 배너를 켠 직후가 같은 타이밍이다).
+            if (rewardInputHandler != null)
+                rewardInputHandler.RestoreHand();
+
             startRoutine = StartCoroutine(BeginStageAfterDelay());
         }
     }
@@ -442,6 +447,14 @@ public class StageManager : MonoBehaviour
         if (stageStartObject != null)
             stageStartObject.SetActive(true);
 
+        // 보상 중 가라앉혀뒀던 손패를 여기서 되돌린다 - 배너가 화면을 덮고 있는 동안 다시
+        // 떠올라야, 보상 카드가 미처 정리되기도 전에 손패가 불쑥 올라오는 것처럼 안 보인다.
+        // 숨긴 게 없으면(보상을 거치지 않고 재시작한 경우 등) 아무 일도 하지 않는다.
+        if (rewardInputHandler != null)
+            rewardInputHandler.RestoreHand();
+
+        // ⚠️ 여기서는 StartCoroutine으로 새로 걸지 않는다 - 이 코루틴 자신이 이미 startRoutine이라
+        // 다시 대입하면 이쪽이 추적에서 빠져 LoadStage의 StopCoroutine 가드가 무력해진다.
         yield return BeginStageAfterDelay();
     }
 
@@ -530,7 +543,9 @@ public class StageManager : MonoBehaviour
     }
 
     // 보상 한 라운드. 럭키가 쌓여 있으면 선택이 끝난 뒤 여기로 다시 들어온다.
-    private void BeginRewardRound()
+    // isBonusRound는 이 라운드가 럭키로 얻은 보너스 라운드인지다 - "럭키 보상!" 배너를 켤지
+    // 화면(RewardCardView)에 전달하는 용도로만 쓴다.
+    private void BeginRewardRound(bool isBonusRound = false)
     {
         // 지금은 호출부 두 곳 모두 null을 걸러내고 들어오지만, 라운드가 여러 경로로 열리게 된
         // 뒤라 여기서도 막아둔다.
@@ -554,13 +569,13 @@ public class StageManager : MonoBehaviour
         // 쪽이 순서를 정해야 매칭 인덱스와 화면 배치가 어긋나지 않는다.
         if (rewardInputHandler != null)
         {
-            rewardInputHandler.BeginSelection(candidates, stageWasMotherDragon);
+            rewardInputHandler.BeginSelection(candidates, stageWasMotherDragon, isBonusRound);
             return;
         }
 
         // 폴백 경로에서는 고를 수단이 없으니 표시만이라도 해준다.
         if (rewardCardView != null)
-            rewardCardView.Show(candidates);
+            rewardCardView.Show(candidates, isBonusRound);
 
         // 폴백: 고를 수단이 없으면 후보를 전부 지급하는 옛 동작으로 떨어진다.
         // 조용히 보상이 증발하는 것보다는 낫다.
@@ -578,7 +593,7 @@ public class StageManager : MonoBehaviour
     {
         if (wordUnlockManager != null && wordUnlockManager.TryConsumeBonusRound())
         {
-            BeginRewardRound();
+            BeginRewardRound(isBonusRound: true);
             return;
         }
 

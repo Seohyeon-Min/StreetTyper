@@ -11,6 +11,10 @@ public class FlyInAnimation : MonoBehaviour
     [SerializeField] private Vector2 startPosition;
 
     [Header("애니메이션")]
+    [Tooltip("시작 위치로 순간이동한 뒤, 실제로 날아오기 시작하기까지 대기하는 시간(초). " +
+             "여러 개를 시차를 두고 띄울 때 쓴다(0 = 바로 시작).")]
+    [SerializeField] private float delay = 0f;
+
     [Tooltip("재생 시간(초).")]
     [SerializeField] private float duration = 0.6f;
 
@@ -60,7 +64,12 @@ public class FlyInAnimation : MonoBehaviour
 
     private IEnumerator FlyInRoutine()
     {
+        // 대기 중에도 도착 자리가 아니라 시작 자리에 가만히 있어야 한다 - 안 그러면 원래
+        // 자리에 잠깐 나타났다가 시작 좌표로 순간이동하는 게 보인다.
         _rect.anchoredPosition = startPosition;
+
+        if (delay > 0f)
+            yield return new WaitForSeconds(delay);
 
         var elapsed = 0f;
         while (elapsed < duration)

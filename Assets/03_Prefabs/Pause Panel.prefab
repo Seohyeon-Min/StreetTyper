@@ -246,6 +246,9 @@ MonoBehaviour:
   edgeLineIntensity: 2
   edgeLineColor: {r: 0, g: 0, b: 0, a: 1}
   edgeLineSharpness: 5
+  enableOutline: 0
+  outlineWidth: 5
+  outlineColor: {r: 0, g: 0, b: 0, a: 1}
   preset: {fileID: 0}
 --- !u!1 &5586898243388837939
 GameObject:
@@ -511,6 +514,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   closeFadeOutDuration: 0.15
+  playOnEnable: 0
 --- !u!114 &7398181453964401631
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -922,6 +926,9 @@ MonoBehaviour:
   edgeLineIntensity: 2
   edgeLineColor: {r: 0, g: 0, b: 0, a: 1}
   edgeLineSharpness: 5
+  enableOutline: 0
+  outlineWidth: 5
+  outlineColor: {r: 0, g: 0, b: 0, a: 1}
   preset: {fileID: 0}
 --- !u!1 &7254579990521258702
 GameObject:
@@ -1196,6 +1203,9 @@ MonoBehaviour:
   edgeLineIntensity: 10
   edgeLineColor: {r: 0, g: 0, b: 0, a: 1}
   edgeLineSharpness: 5
+  enableOutline: 0
+  outlineWidth: 5
+  outlineColor: {r: 0, g: 0, b: 0, a: 1}
   preset: {fileID: 0}
 --- !u!1 &7754815713234778070
 GameObject:
@@ -1332,6 +1342,9 @@ MonoBehaviour:
   edgeLineIntensity: 2
   edgeLineColor: {r: 0, g: 0, b: 0, a: 1}
   edgeLineSharpness: 5
+  enableOutline: 0
+  outlineWidth: 5
+  outlineColor: {r: 0, g: 0, b: 0, a: 1}
   preset: {fileID: 0}
 --- !u!1 &8137720636838119296
 GameObject:

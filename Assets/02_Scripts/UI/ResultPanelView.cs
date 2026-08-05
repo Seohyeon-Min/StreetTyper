@@ -28,8 +28,11 @@ public class ResultPanelView
     [SerializeField] private ResultStatsView stats;
 
     [Tooltip("패널이 뜰 때 같이 재생할 TextGateRevealAnimation들(제목 텍스트, 배경 윈도우 등 " +
-             "- 마스크마다 컴포넌트가 하나씩 따로 필요하다). ⚠️ 아무도 Play()를 부르지 않으면 " +
-             "마스크가 닫힌 채(폭 0)로 남으므로, 패널에 게이트를 새로 붙였다면 반드시 여기 넣을 것.")]
+             "- 마스크마다 컴포넌트가 하나씩 따로 필요하다).\n" +
+             "비워둬도 된다 - 그 경우 게이트 쪽에서 Play On Enable을 켜면 패널이 켜질 때 스스로 " +
+             "재생된다(권장). 여기 넣는 건 패널 밖에 있는 게이트까지 같이 재생하고 싶을 때다.\n" +
+             "⚠️ 둘 다 하면 같은 프레임에 두 번 재생된다 - Play()가 이전 코루틴을 끊고 다시 " +
+             "시작하므로 눈에 띄는 고장은 아니지만, 한쪽으로 정할 것.")]
     [SerializeField] private TextGateRevealAnimation[] reveals;
 
     /// <summary>이 패널을 감춘다. 연결이 비어 있으면 조용히 넘어간다 - 감추는 건 실패해도

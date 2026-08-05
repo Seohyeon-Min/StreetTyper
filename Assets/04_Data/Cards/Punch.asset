@@ -12,12 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a9684e27ffb23a49b13d2ffd843db05, type: 3}
   m_Name: Punch
   m_EditorClassIdentifier: Assembly-CSharp::ActionCardData
-  cardName: "\uD380\uCE58"
-  description: "\uC801\uC5D0\uAC8C 13\uC758 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
-  statsLabel: +3
   cardNameEn: punch
-  descriptionEn: Deal 13 damage.
-  statsLabelEn: +3
   icon: {fileID: 0}
   actionKind: 0
   strengthBonus: 3

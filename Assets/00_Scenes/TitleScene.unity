@@ -1352,8 +1352,12 @@ MonoBehaviour:
   languageButtonText: {fileID: 158209437}
   toKoreanLabel: "\uD55C\uAD6D\uC5B4"
   toEnglishLabel: English
+  toFrenchLabel: "Fran\xE7ais"
+  toSpanishLabel: "Espa\xF1ol"
   closeKorean: "\uB2EB\uAE30"
   closeEnglish: CLOSE
+  closeFrench: FERMER
+  closeSpanish: CERRAR
   titleReveal: {fileID: 331904776}
 --- !u!1 &341034574
 GameObject:

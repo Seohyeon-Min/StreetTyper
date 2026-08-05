@@ -12,14 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b67752fd9815054a9dd81da6ea1b890, type: 3}
   m_Name: Awesome
   m_EditorClassIdentifier: Assembly-CSharp::ModifierCardData
-  cardName: "\uC5B4\uC378"
-  description: "\uC774\uBC88 \uAC8C\uC784\uC5D0\uC11C '\uC5B4\uC378'\uC744 \uC0AC\uC6A9\uD55C
-    \uD69F\uC218\uB9CC\uD07C \uB2E4\uC74C \uC561\uC158\uC758 \uC704\uB825\uC774 \uC99D\uAC00\uD569\uB2C8\uB2E4."
-  statsLabel: +{0}
   cardNameEn: awesome
-  descriptionEn: Increases the power of your next action by the number of times 'Awesome'
-    has been used this run.
-  statsLabelEn: +{0}
   icon: {fileID: 0}
   effectType: 2
   value: 1

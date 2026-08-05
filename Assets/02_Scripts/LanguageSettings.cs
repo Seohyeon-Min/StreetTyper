@@ -5,7 +5,25 @@ using UnityEngine;
 public enum GameLanguage
 {
     Korean,
-    English
+    English,
+    French,
+    Spanish
+}
+
+[Serializable]
+public class CardTranslation
+{
+    public string id;
+    public string koName, koDesc, koLabel;
+    public string enName, enDesc, enLabel;
+    public string frName, frDesc, frLabel;
+    public string esName, esDesc, esLabel;
+}
+
+[Serializable]
+public class CardLocalizationData
+{
+    public List<CardTranslation> cards;
 }
 
 /// <summary>
@@ -33,17 +51,36 @@ public static class LanguageSettings
     /// <summary>언어가 바뀐 순간 화면에 붙은 라벨들이 스스로 갱신하도록 알린다.</summary>
     public static event Action OnChanged;
 
+    // [추가] 번역 데이터를 담아둘 딕셔너리
+    private static Dictionary<string, CardTranslation> _cardDict = new Dictionary<string, CardTranslation>();
+
     // 도메인 리로드 설정과 무관하게 실행마다 한 번은 확실히 읽어 오게 한다.
     // static 필드는 Play를 멈춰도 남을 수 있어서 초기화 지점을 명시해 두는 편이 안전하다.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Load()
     {
-        // 설정이 없으면 한국어. 기본값을 시스템 언어로 따라가게 하지 않는다 -
-        // 한글 IME 경로가 기본이 아닌 실행 환경이 생기면 확인해야 할 경우의 수만 늘어난다.
         _current = (GameLanguage)PlayerPrefs.GetInt(PrefsKey, (int)GameLanguage.Korean);
-
-        // static이라 Play를 멈춰도 남는다. 실행마다 다시 경고가 뜨도록 비워준다.
         _warnedFields.Clear();
+
+        // [추가] 게임 시작 시 Resources 폴더에서 JSON 로드
+        LoadJsonData();
+    }
+
+    private static void LoadJsonData()
+    {
+        TextAsset jsonAsset = Resources.Load<TextAsset>("CardLocalization");
+        if (jsonAsset != null)
+        {
+            CardLocalizationData data = JsonUtility.FromJson<CardLocalizationData>(jsonAsset.text);
+            foreach (var card in data.cards)
+            {
+                _cardDict[card.id] = card;
+            }
+        }
+        else
+        {
+            Debug.LogError("CardLocalization.json 파일을 Resources 폴더에서 찾을 수 없습니다.");
+        }
     }
 
     /// <summary>언어를 바꾸고 디스크에 저장한다. 값이 그대로면 아무 일도 하지 않는다.</summary>
@@ -62,7 +99,8 @@ public static class LanguageSettings
     /// <summary>한국어 ↔ 영어를 오간다. 타이틀의 언어 버튼이 부른다.</summary>
     public static void Toggle()
     {
-        Set(_current == GameLanguage.Korean ? GameLanguage.English : GameLanguage.Korean);
+        int nextLang = ((int)_current + 1) % 4; // 4개 언어 순환
+        Set((GameLanguage)nextLang);
     }
 
     // 같은 빈 칸을 몇 번이나 경고하지 않는다. Pick은 타이핑 매칭 경로에서 글자마다 불려서
@@ -98,5 +136,40 @@ public static class LanguageSettings
         Debug.LogWarning($"LanguageSettings: '{key}'의 영문 값이 비어 있어 한국어로 대체합니다. " +
                          "영어 모드에서는 한글을 입력할 수 없으니, 타이핑 대상이라면 그 카드는 " +
                          "손패에 떠도 영영 칠 수 없습니다.", owner);
+    }
+
+    public static string PickCardText(string cardId, string textType)
+    {
+        if (!_cardDict.TryGetValue(cardId, out var trans))
+        {
+            return "MISSING_ID"; // JSON에 해당 카드가 없을 때
+        }
+
+        switch (_current)
+        {
+            case GameLanguage.Korean:
+                if (textType == "name") return trans.koName;
+                if (textType == "desc") return trans.koDesc;
+                if (textType == "label") return trans.koLabel;
+                break;
+            case GameLanguage.English:
+                if (textType == "name") return trans.enName;
+                if (textType == "desc") return trans.enDesc;
+                if (textType == "label") return trans.enLabel;
+                break;
+            case GameLanguage.French:
+                // [핵심] 프랑스어일 때 '이름(타이핑 타겟)'은 무조건 영어를 반환!
+                if (textType == "name") return trans.enName;
+                if (textType == "desc") return trans.frDesc;
+                if (textType == "label") return trans.frLabel;
+                break;
+            case GameLanguage.Spanish:
+                // [핵심] 스페인어일 때 '이름(타이핑 타겟)'은 무조건 영어를 반환!
+                if (textType == "name") return trans.enName;
+                if (textType == "desc") return trans.esDesc;
+                if (textType == "label") return trans.esLabel;
+                break;
+        }
+        return "";
     }
 }

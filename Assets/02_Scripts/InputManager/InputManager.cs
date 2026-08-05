@@ -317,15 +317,8 @@ public class InputManager : MonoBehaviour
 
     private void HandleTextInput(char character)
     {
-        // 어느 언어든 글자만 받는다. 공백과 숫자를 버리는 건 양쪽 공통이다 -
-        // 띄어쓰기 없이 이어 치는 게 게임 규칙이라 공백이 버퍼에 들어가면 매칭이 어긋난다.
-        //
-        // 반대 언어의 글자가 들어왔다는 건 IME가 반대 모드로 빠졌다는 뜻이다(플레이어가 한/영을
-        // 눌렀거나 다른 앱에서 그 상태로 돌아왔거나). 그 글자는 버리고 곧바로 모드를 되돌려,
-        // 한 글자만 잃고 계속 타이핑할 수 있게 한다. 한/영 키 자체는 Windows IME가 앱보다 먼저
-        // 처리하므로 막을 수 없고, 이 자가 복구가 그 대체책이다.
-        // 숫자/공백까지 신호로 보면 조합 중인 글자가 끊길 수 있어 "글자"만 본다.
-        if (LanguageSettings.IsEnglish)
+        // [수정] 한국어가 아닌 모든 언어(영어, 프랑스어, 스페인어)는 알파벳 입력을 받습니다.
+        if (LanguageSettings.Current != GameLanguage.Korean)
         {
             if (!IsLatinLetter(character))
             {
@@ -335,8 +328,6 @@ public class InputManager : MonoBehaviour
                 return;
             }
 
-            // 카드 이름은 전부 소문자로 저장되어 있다. 여기서 한 번 내려두면 CapsLock을 켰든
-            // Shift를 눌렀든 똑같이 매칭되고, 비교하는 쪽들은 Ordinal 그대로 둘 수 있다.
             character = char.ToLowerInvariant(character);
         }
         else if (!IsHangul(character))
@@ -347,17 +338,12 @@ public class InputManager : MonoBehaviour
             return;
         }
 
-        // 상한을 넘으면 조용히 버린다. 오타를 자동으로 지우지 않는 대신 길이를 제한하는 것이라,
-        // 여기서 입력을 비워버리면 그 취지가 무너진다 - 플레이어가 백스페이스로 지워야 한다.
         if (CurrentInput.Length >= Mathf.Max(1, maxInputLength))
             return;
 
         CurrentInput += character;
         OnCharacterEntered?.Invoke(character);
 
-        // ⚠️ 커밋 경로에서는 조합 문자열을 빈 문자열로 넘긴다. 커밋되는 순간 Composition은
-        // 아직 방금 커밋된 옛 값을 들고 있어서, 그대로 이어붙이면 "펀펀"처럼 중복되어
-        // 오타로 오인된다. 커밋된 글자는 이미 CurrentInput에 들어가 있다.
         DispatchToReceiver(CurrentInput, string.Empty);
     }
 
@@ -380,21 +366,15 @@ public class InputManager : MonoBehaviour
     // 한쪽만 강제하면 반대 언어로 바꿨을 때 IME가 이전 상태로 남아 입력이 통째로 사라진다.
     private void ApplyImeMode()
     {
-        // ⚠️ 모드를 바꾸면 진행 중이던 조합은 더 이상 우리에게 돌아오지 않는다.
-        // Composition 미러를 그대로 두면 낡은 값이 남고, Update의 isComposing 가드가
-        // 백스페이스를 영영 막아 입력을 지울 수 없는 상태가 된다.
-        //
-        // 두 언어 모두에서 일어난다. 영어는 한/영으로 한글 조합이 시작될 때, 한국어는 조합 도중
-        // 한/영을 눌러 IME가 영문으로 빠지면서 조합 종료 이벤트를 보내지 않을 때다.
-        // (한국어 쪽은 턴이 바뀔 때 DisableInput이 비워줘서 잘 드러나지 않을 뿐이다.)
         ClearComposition();
 
-        // 조합 중에 변환 상태를 다시 쓰면 진행 중인 글자가 끊길 수 있으니 쿨다운으로 묶는다.
         if (Time.unscaledTime - _lastImeForceTime < imeForceCooldown)
             return;
 
         _lastImeForceTime = Time.unscaledTime;
-        HangulImeMode.SetHangul(!LanguageSettings.IsEnglish);
+
+        // [수정] 현재 언어가 한국어일 때만 한글 IME를 강제하고, 나머지는 영문 모드로 강제합니다.
+        HangulImeMode.SetHangul(LanguageSettings.Current == GameLanguage.Korean);
     }
 
     // 조합 미러만 비운다. CurrentInput(커밋된 글자)은 건드리지 않는다 - 플레이어가 지금까지
@@ -434,27 +414,17 @@ public class InputManager : MonoBehaviour
     {
         var text = composition.ToString();
 
-        // 영어 모드에서는 조합이 일어날 일이 없다. 조합이 들어왔다는 건 플레이어가 한/영을 눌러
-        // IME가 한글로 빠졌다는 뜻이다.
-        //
-        // ⚠️ 이걸 커밋 시점(HandleTextInput)에서만 되돌리면 늦는다. 한글은 다음 글자를 칠 때까지
-        // 커밋되지 않아서 그동안 Composition에 글자가 남고, 아래 Update의 isComposing 가드가
-        // 백스페이스를 막아 입력을 지울 수도 칠 수도 없는 상태가 된다. 실제로 났던 버그다.
-        // 그래서 조합이 시작되는 순간 곧바로 영문 모드로 되돌리고 조합 문자열을 받아들이지 않는다.
-        if (LanguageSettings.IsEnglish && !string.IsNullOrEmpty(text))
+        // [수정] 한국어가 아닐 때 한글 조합이 들어오면 무시하고 영문 모드로 돌립니다.
+        if (LanguageSettings.Current != GameLanguage.Korean && !string.IsNullOrEmpty(text))
         {
-            // ApplyImeMode가 조합 미러까지 털어준다.
             ApplyImeMode();
             return;
         }
 
-        // IME가 살아서 조합을 갱신했다. 낡음 판정 기준을 새로 잡는다.
         Composition = text;
         _lastBackspaceComposition = null;
         OnCompositionChanged?.Invoke(Composition);
 
-        // 조합 중에도 평가해야 한다 - 한 음절 단어(퀵/잽/훅, "계속"의 "속", "다음"의 "음")는
-        // 뒤에 이어질 음절이 없어 IME가 영원히 커밋하지 않는다. 커밋만 기다리면 완성되지 않는다.
         DispatchToReceiver(CurrentInput, Composition);
     }
 

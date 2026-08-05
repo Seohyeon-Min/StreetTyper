@@ -24,12 +24,10 @@ public class OptionsPanel : MonoBehaviour
     [SerializeField] private Button closeButton;
 
     [Header("언어")]
-    [Tooltip("누를 때마다 한국어 ↔ 영어를 오간다. 전투 중에는 바꿀 수 없고 타이틀에만 둔다 - " +
-             "CardName이 곧 타이핑 매칭 키라서 런 도중에 바꾸면 사전과 손패가 어긋난다.")]
+    [Tooltip("누를 때마다 한국어 -> 영어 -> 프랑스어 -> 스페인어 순으로 오갑니다.")]
     [SerializeField] private Button languageButton;
 
-    [Tooltip("언어 버튼에 표시할 글자. 지금 언어가 아니라 '누르면 바뀔 언어'를 보여준다. " +
-             "비워두면 버튼 안의 TMP 라벨을 자동으로 찾는다.")]
+    [Tooltip("언어 버튼에 표시할 글자. 비워두면 버튼 안의 TMP 라벨을 자동으로 찾는다.")]
     [SerializeField] private TMP_Text languageButtonText;
 
     [Tooltip("지금 영어일 때 언어 버튼에 띄울 글자. 라벨은 '지금 언어'가 아니라 " +
@@ -39,9 +37,17 @@ public class OptionsPanel : MonoBehaviour
     [Tooltip("지금 한국어일 때 언어 버튼에 띄울 글자. 위와 같은 이유로 영어를 적는다.")]
     [SerializeField] private string toEnglishLabel = "English";
 
+    [Tooltip("현재 영어일 때 띄울 글자")]
+    [SerializeField] private string toFrenchLabel = "Français";
+
+    [Tooltip("현재 프랑스어일 때 띄울 글자")]
+    [SerializeField] private string toSpanishLabel = "Español";
+
     [Header("닫기 버튼 글자")]
     [SerializeField] private string closeKorean = "닫기";
     [SerializeField] private string closeEnglish = "CLOSE";
+    [SerializeField] private string closeFrench = "FERMER";
+    [SerializeField] private string closeSpanish = "CERRAR";
 
     [Header("열림 연출")]
     [Tooltip("옵션 창이 열릴 때(OnEnable) 재생할 마스크 리빌 연출. PauseManager.titleReveal과 같은 패턴 - " +
@@ -118,17 +124,41 @@ public class OptionsPanel : MonoBehaviour
         if (label == null && languageButton != null)
             label = languageButton.GetComponentInChildren<TMP_Text>(true);
 
-        // ⚠️ LanguageSettings.Pick을 쓰지 않는다. Pick은 "지금 언어에 맞는 값"을 고르는데
-        // 여기는 일부러 반대를 고르기 때문이다 - 지금 영어면 "한국어"를 띄워야 한다.
         if (label != null)
-            label.text = LanguageSettings.IsEnglish ? toKoreanLabel : toEnglishLabel;
+        {
+            // 현재 언어 상태에 따라 '다음' 언어를 버튼에 표시합니다.
+            switch (LanguageSettings.Current)
+            {
+                case GameLanguage.Korean:
+                    label.text = toEnglishLabel;
+                    break;
+                case GameLanguage.English:
+                    label.text = toFrenchLabel;
+                    break;
+                case GameLanguage.French:
+                    label.text = toSpanishLabel;
+                    break;
+                case GameLanguage.Spanish:
+                    label.text = toKoreanLabel;
+                    break;
+            }
+        }
 
-        // 닫기 버튼도 같이 갱신한다. 라벨을 따로 배선하지 않아도 되게 버튼에서 자식을 찾는다.
+        // 닫기 버튼도 같이 갱신합니다.
         if (closeButton != null)
         {
             var closeLabel = closeButton.GetComponentInChildren<TMP_Text>(true);
             if (closeLabel != null)
-                closeLabel.text = LanguageSettings.Pick(closeKorean, closeEnglish, closeButton, "closeEnglish");
+            {
+                // 현재 언어에 맞춰 닫기 텍스트를 할당합니다.
+                switch (LanguageSettings.Current)
+                {
+                    case GameLanguage.Korean: closeLabel.text = closeKorean; break;
+                    case GameLanguage.English: closeLabel.text = closeEnglish; break;
+                    case GameLanguage.French: closeLabel.text = closeFrench; break;
+                    case GameLanguage.Spanish: closeLabel.text = closeSpanish; break;
+                }
+            }
         }
     }
 

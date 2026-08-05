@@ -701,6 +701,9 @@ MonoBehaviour:
   pointerSide: 2
   pointerOffset: {x: 0, y: 50}
   pointerSmoothTime: 0.08
+  leftTriangle: {fileID: 0}
+  rightTriangle: {fileID: 0}
+  trianglePointerGap: 16
   sliderStep: 0.01
   upKeys: 3f00000025000000
   downKeys: 4000000021000000

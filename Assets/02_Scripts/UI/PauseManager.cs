@@ -223,6 +223,18 @@ public class PauseManager : CommandWordReceiver
 
     private void HandleCollectionOpened()
     {
+        // Pause를 연 직후 곧바로 "카드"를 입력하면 입력 패널의 Pause 위치 이동과
+        // CardCollectionPanel의 아래 이동이 동시에 실행된다. 남아 있는 상승 코루틴이
+        // 마지막 프레임에 Y=415를 다시 써서 목록 위를 가리지 않도록 여기서 끝낸다.
+        if (_inputPanelMoveRoutine != null)
+        {
+            StopCoroutine(_inputPanelMoveRoutine);
+            _inputPanelMoveRoutine = null;
+        }
+
+        if (inputPanel != null)
+            inputPanel.anchoredPosition = pauseInputPosition;
+
         foreach (var card in _commandCardInstances)
         {
             if (card != null)

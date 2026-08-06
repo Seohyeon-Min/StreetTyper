@@ -269,6 +269,12 @@ public class StageManager : MonoBehaviour
             return;
         }
 
+        // 새 적은 화면 밖에서 생성된다. 이전 전투의 PlayerInput 상태가 남아 있는 동안
+        // ResetBattle/UpdateUI가 먼저 실행되면 첫 인텐트가 화면 밖 좌표에서 켜질 수 있으므로,
+        // 적을 만들기 전에 준비 상태부터 잠근다.
+        if (battleManager != null)
+            battleManager.BeginStagePreparation();
+
 
         // 보스전 인덱스는 IsBossBattle 한 곳에서만 정한다 - 스폰 분기와 스탯 공식(체력·공격력·
         // 방어력)이 같은 판단을 써야 엔딩 보스가 일반 적 공식에 휘말리지 않는다.
@@ -428,8 +434,6 @@ public class StageManager : MonoBehaviour
 
         // ⚠️ ResetBattle 뒤에 불러야 한다 - 그 안의 UpdateUI()가 낡은 페이즈(PlayerInput)를 보고
         // 적 인텐트 말풍선을 이미 켰을 수 있고, 그대로 두면 등장 배너·보스 인트로 내내 떠 있는다.
-        battleManager.BeginStagePreparation();
-
         if (timerManager != null)
             timerManager.ResetToFull();
 

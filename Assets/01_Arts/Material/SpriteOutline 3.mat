@@ -31,7 +31,7 @@ Material:
     m_Floats:
     - _OutlineMinSpriteThickness: 0
     - _OutlineMinThickness: 1
-    - _OutlineThickness: 2.49
+    - _OutlineThickness: 3
     - _SpriteRectInset: 1.5
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}

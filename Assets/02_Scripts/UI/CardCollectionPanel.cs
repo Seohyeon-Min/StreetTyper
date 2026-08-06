@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -68,6 +69,11 @@ public class CardCollectionPanel : CommandWordReceiver
              "훑으므로 따로 반대 곡선을 만들 필요가 없다.")]
     [SerializeField] private AnimationCurve displaceCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+    [Header("페이드")]
+    [Tooltip("패널이 열리고 닫힐 때 페이드인/아웃하는 데 걸리는 시간(초). panel의 CanvasGroup을 " +
+             "직접 만지므로 프리팹에 CanvasGroup이 없으면 여기서 하나 붙인다.")]
+    [SerializeField] private float fadeDuration = 0.25f;
+
     [Header("명령 단어")]
     [SerializeField]
     private TypedCommand closeCommand = new TypedCommand(
@@ -86,6 +92,11 @@ public class CardCollectionPanel : CommandWordReceiver
 
     // 비켜나기 진행 상태 + 로직. CardDeletePanel과 같은 것을 쓴다(UIDisplacement 참조).
     private readonly UIDisplacement _displacement = new UIDisplacement();
+
+    // panel 전체(배경+제목+카드)를 한꺼번에 페이드하는 데 쓴다. FadeInBackground가 배경
+    // Image 하나만 페이드하는 것과 달리, 여기는 자식이 여럿이라 CanvasGroup으로 통째로 다룬다.
+    private CanvasGroup _panelCanvasGroup;
+    private Coroutine _fadeRoutine;
 
     /// <summary>목록이 지금 떠 있는가. PauseManager가 ESC를 "목록만 닫기"로 돌리는 데 쓴다.</summary>
     public bool IsOpen => _isOpen;
@@ -118,9 +129,21 @@ public class CardCollectionPanel : CommandWordReceiver
     private void Awake()
     {
         if (panel != null)
+        {
             panel.SetActive(false);
+
+            _panelCanvasGroup = panel.GetComponent<CanvasGroup>();
+            if (_panelCanvasGroup == null)
+                _panelCanvasGroup = panel.AddComponent<CanvasGroup>();
+
+            // 닫힌 채로 시작하는 상태와 알파를 맞춰둔다 - 안 그러면 처음 열릴 때 CanvasGroup의
+            // 기본값(1)이라 페이드 없이 바로 다 보인 채로 시작한다.
+            _panelCanvasGroup.alpha = 0f;
+        }
         else
+        {
             Debug.LogWarning("CardCollectionPanel: panel이 연결되지 않아 카드 목록 창을 여닫을 수 없습니다.", this);
+        }
 
         _displacement.CaptureOrigins(displacedUI, this, nameof(displacedUI));
     }
@@ -159,6 +182,8 @@ public class CardCollectionPanel : CommandWordReceiver
         RefreshHint();
 
         Rebuild();
+
+        StartFade(1f);
     }
 
     /// <summary>목록을 닫고 카드를 치운다. "닫기"를 맞혔을 때와, 일시정지가 풀리거나
@@ -176,14 +201,52 @@ public class CardCollectionPanel : CommandWordReceiver
         // Pause Canvas에 붙어 계속 살아 있으므로 복귀는 끝까지 재생된다.
         _displacement.MarkDirty();
 
-        ClearCards();
-
-        if (panel != null)
-            panel.SetActive(false);
+        // ⚠️ 카드 정리(ClearCards)와 panel.SetActive(false)는 페이드아웃이 끝난 뒤로 미룬다
+        // (StartFade 안 코루틴에서 처리) - 바로 지우면 페이드가 안 보이고 뚝 끊겨 사라진다.
+        StartFade(0f);
 
         // 치다 만 "닫기"가 남아 일시정지 명령 단어에 섞이지 않게 비운다.
         if (inputManager != null)
             inputManager.ClearInput();
+    }
+
+    // ⚠️ unscaledDeltaTime을 쓴다 - 이 목록은 일시정지 위에서 열릴 수 있다(FadeInBackground와
+    // 같은 이유).
+    private void StartFade(float target)
+    {
+        if (_panelCanvasGroup == null)
+            return;
+
+        if (_fadeRoutine != null)
+            StopCoroutine(_fadeRoutine);
+
+        _fadeRoutine = StartCoroutine(FadeRoutine(target));
+    }
+
+    private IEnumerator FadeRoutine(float target)
+    {
+        var start = _panelCanvasGroup.alpha;
+        var elapsed = 0f;
+
+        while (elapsed < fadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            _panelCanvasGroup.alpha = Mathf.Lerp(start, target, Mathf.Clamp01(elapsed / fadeDuration));
+            yield return null;
+        }
+
+        _panelCanvasGroup.alpha = target;
+        _fadeRoutine = null;
+
+        // 닫히는 쪽(target 0)으로 끝났을 때만 실제로 치운다 - 열리는 쪽이면 카드가 이미
+        // Open()에서 다시 그려졌으므로 여기서 손댈 게 없다.
+        if (Mathf.Approximately(target, 0f))
+        {
+            ClearCards();
+
+            if (panel != null)
+                panel.SetActive(false);
+        }
     }
 
     // 제목과 이미지는 인스펙터 값에서 나온다. 화면에 나가는 글자를 코드에 박지 않는 게 기본 사양이다.

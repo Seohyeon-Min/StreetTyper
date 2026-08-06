@@ -25,6 +25,13 @@ public class PauseManager : CommandWordReceiver
     [Tooltip("\"PAUSE\" 제목이 가운데서부터 열리는 연출. pausePanel을 켤 때마다 재생한다. 비워두면 재생하지 않는다.")]
     [SerializeField] private TextGateRevealAnimation titleReveal;
 
+    [Header("퍼즈 Canvas 정렬")]
+    [Tooltip("퍼즈가 열릴 때 모든 Canvas보다 위로 올릴 Canvas. 비우면 pausePanel의 부모에서 찾는다.")]
+    [SerializeField] private Canvas pauseCanvas;
+
+    [Tooltip("퍼즈 Canvas보다 한 단계 더 위로 올릴 입력창 Canvas. 비우면 InputFieldDisplay를 찾아 자동 연결한다.")]
+    [SerializeField] private Canvas inputCanvas;
+
     [Header("References")]
     [Tooltip("평소 손패를 그리는 HandFanLayout(Card Canvas 쪽). 일시정지 중엔 5장을 전부 숨긴다.")]
     [SerializeField] private HandFanLayout handFanLayout;
@@ -68,6 +75,11 @@ public class PauseManager : CommandWordReceiver
 
     private bool _isPaused;
     private bool _inputWasEnabled;
+    private bool _canvasOrderRaised;
+    private int _pauseCanvasOriginalOrder;
+    private int _inputCanvasOriginalOrder;
+    private bool _pauseCanvasOriginalOverrideSorting;
+    private bool _inputCanvasOriginalOverrideSorting;
 
     // 명령 단어를 담아둘 버퍼. 글자마다 Targets가 불리므로 매번 새로 만들지 않는다.
     // 순서가 곧 OnCommandMatched의 index이자 화면에 놓이는 카드 순서다.
@@ -172,6 +184,8 @@ public class PauseManager : CommandWordReceiver
 
         if (inputManager != null)
             inputManager.OnCancel -= HandleCancel;
+
+        RestorePauseCanvases();
     }
 
     // ESC는 InputManager가 준다. 그쪽에서 입력 잠금(_inputEnabled)보다 위에서 읽으므로
@@ -213,6 +227,8 @@ public class PauseManager : CommandWordReceiver
             return;
 
         _isPaused = true;
+
+        RaisePauseCanvases();
 
         // 멈추기 전 입력 상태를 기억해 뒀다가 재개할 때 그대로 되돌린다.
         _inputWasEnabled = inputManager != null && inputManager.IsInputEnabled;
@@ -266,9 +282,20 @@ public class PauseManager : CommandWordReceiver
         {
             var background = pausePanel.GetComponentInChildren<FadeInBackground>(true);
             if (background != null)
-                background.FadeOut(() => pausePanel.SetActive(false));
+                background.FadeOut(() =>
+                {
+                    pausePanel.SetActive(false);
+                    RestorePauseCanvases();
+                });
             else
+            {
                 pausePanel.SetActive(false);
+                RestorePauseCanvases();
+            }
+        }
+        else
+        {
+            RestorePauseCanvases();
         }
 
         if (inputManager != null)
@@ -369,10 +396,90 @@ public class PauseManager : CommandWordReceiver
 
         // 씬을 넘어가도 timeScale은 유지된다 - 여기서 되돌리지 않으면 타이틀이 멈춘 채로 뜬다.
         Time.timeScale = 1f;
+        RestorePauseCanvases();
 
         if (SoundManager.Instance != null)
             SoundManager.Instance.StopBGM();
 
         SceneManager.LoadScene(GameScenes.Title);
+    }
+
+    private void RaisePauseCanvases()
+    {
+        if (_canvasOrderRaised)
+            return;
+
+        ResolvePauseCanvases();
+        if (pauseCanvas == null || inputCanvas == null || pauseCanvas == inputCanvas)
+        {
+            Debug.LogWarning("PauseManager: Pause Canvas/Input Canvas를 찾지 못해 최상단 정렬을 적용할 수 없습니다.", this);
+            return;
+        }
+
+        _pauseCanvasOriginalOrder = pauseCanvas.sortingOrder;
+        _inputCanvasOriginalOrder = inputCanvas.sortingOrder;
+        _pauseCanvasOriginalOverrideSorting = pauseCanvas.overrideSorting;
+        _inputCanvasOriginalOverrideSorting = inputCanvas.overrideSorting;
+
+        var highestOrder = int.MinValue;
+        var canvases = FindObjectsOfType<Canvas>(true);
+        foreach (var canvas in canvases)
+        {
+            if (canvas == null || canvas == pauseCanvas || canvas == inputCanvas)
+                continue;
+            highestOrder = Mathf.Max(highestOrder, canvas.sortingOrder);
+        }
+
+        if (highestOrder == int.MinValue)
+            highestOrder = 0;
+
+        pauseCanvas.overrideSorting = true;
+        inputCanvas.overrideSorting = true;
+        pauseCanvas.sortingOrder = highestOrder + 1;
+        inputCanvas.sortingOrder = highestOrder + 2;
+        _canvasOrderRaised = true;
+    }
+
+    private void RestorePauseCanvases()
+    {
+        if (!_canvasOrderRaised)
+            return;
+
+        if (pauseCanvas != null)
+        {
+            pauseCanvas.sortingOrder = _pauseCanvasOriginalOrder;
+            pauseCanvas.overrideSorting = _pauseCanvasOriginalOverrideSorting;
+        }
+
+        if (inputCanvas != null)
+        {
+            inputCanvas.sortingOrder = _inputCanvasOriginalOrder;
+            inputCanvas.overrideSorting = _inputCanvasOriginalOverrideSorting;
+        }
+
+        _canvasOrderRaised = false;
+    }
+
+    private void ResolvePauseCanvases()
+    {
+        if (pauseCanvas == null && pausePanel != null)
+            pauseCanvas = pausePanel.GetComponentInParent<Canvas>();
+
+        if (inputCanvas != null)
+            return;
+
+        var canvases = FindObjectsOfType<Canvas>(true);
+        foreach (var canvas in canvases)
+        {
+            var transforms = canvas.GetComponentsInChildren<Transform>(true);
+            foreach (var child in transforms)
+            {
+                if (child.name != "InputFieldDisplay")
+                    continue;
+
+                inputCanvas = canvas;
+                return;
+            }
+        }
     }
 }

@@ -503,6 +503,17 @@ public class StageManager : MonoBehaviour
 
         yield return new WaitForSeconds(bossTitleCardHoldDuration);
 
+        if (bossTitleCardObject != null)
+        {
+            var titleView = bossTitleCardObject.GetComponent<BossTitleCardView>();
+            if (titleView != null)
+            {
+                bool gateClosed = false;
+                titleView.PlayGateClose(() => gateClosed = true);
+                yield return new WaitUntil(() => gateClosed);
+            }
+        }
+
         if (bossTitleCardEffect != null)
         {
             bool exited = false;
@@ -519,7 +530,8 @@ public class StageManager : MonoBehaviour
         if (SpeechBubbleManager.Instance != null && player != null)
         {
             string demiLine = LanguageSettings.Pick(demiGreetingLine, demiGreetingLineEn, this, nameof(demiGreetingLine));
-            SpeechBubbleManager.Instance.ShowBubble(demiLine, player.transform.position, true, bossGreetingLineDuration);
+            SpeechBubbleManager.Instance.ShowMotherDragonBubble(
+                demiLine, player.BubblePosition, true, bossGreetingLineDuration);
         }
 
         yield return new WaitForSeconds(bossGreetingLineDuration);
@@ -529,7 +541,8 @@ public class StageManager : MonoBehaviour
             var enemyBase = currentEnemyObject.GetComponent<EnemyBase>();
             Vector3 motherPos = enemyBase != null ? enemyBase.BubblePosition : currentEnemyObject.transform.position;
             string motherLine = LanguageSettings.Pick(motherGreetingLine, motherGreetingLineEn, this, nameof(motherGreetingLine));
-            SpeechBubbleManager.Instance.ShowBubble(motherLine, motherPos, false, bossGreetingLineDuration);
+            SpeechBubbleManager.Instance.ShowMotherDragonBubble(
+                motherLine, motherPos, false, bossGreetingLineDuration);
         }
 
         yield return new WaitForSeconds(bossGreetingLineDuration);

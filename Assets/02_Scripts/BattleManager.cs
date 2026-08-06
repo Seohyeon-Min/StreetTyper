@@ -21,6 +21,9 @@ public class BattleManager : MonoBehaviour
     public HealthBarUI playerHealthBar;
     public HealthBarUI enemyHealthBar;
 
+    [Tooltip("마더 드래곤 피격 후 HP 바가 보이는 시간(초). 평소에는 숨긴다.")]
+    [SerializeField] private float motherHealthBarHitDuration = 1.2f;
+
     // 결과 화면은 종류마다 프리팹이 따로다 - 코드가 제목을 갈아끼우지 않고 어느 패널을 켤지만
     // 정한다. 겉모습은 DefeatPanel/GameClearPanel 변형이 통째로 갖는다(ResultPanelView 참조).
     [Header("Result Panels")]
@@ -62,6 +65,10 @@ public class BattleManager : MonoBehaviour
 
     private GameObject enemyIntentBubbleObj;
     private SpeechBubble enemyIntentBubble;
+    private bool enemyIntentUsesMotherBubble;
+    private MotherDragon trackedMotherHealth;
+    private int lastMotherHealth;
+    private Coroutine motherHealthBarRoutine;
 
     // 엄마용 전투 전용 변수
     private int mdTurnCount = 0;
@@ -114,11 +121,7 @@ public class BattleManager : MonoBehaviour
         HideResultUI();
 
         if (SpeechBubbleManager.Instance != null)
-        {
-            enemyIntentBubbleObj = Instantiate(SpeechBubbleManager.Instance.speechBubblePrefab, SpeechBubbleManager.Instance.canvasTransform);
-            enemyIntentBubble = enemyIntentBubbleObj.GetComponent<SpeechBubble>();
-            enemyIntentBubbleObj.SetActive(false);
-        }
+            EnsureEnemyIntentBubble(false);
 
         if (enemyManager != null)
         {
@@ -225,7 +228,7 @@ public class BattleManager : MonoBehaviour
 
         if (SpeechBubbleManager.Instance != null && player != null)
         {
-            SpeechBubbleManager.Instance.ShowBubble(bubbleText, player.transform.position, true, actionBubbleDuration);
+            SpeechBubbleManager.Instance.ShowBubble(bubbleText, player.BubblePosition, true, actionBubbleDuration);
         }
 
         UpdateUI();
@@ -322,6 +325,7 @@ public class BattleManager : MonoBehaviour
         savedMDDamage = 0;
         isWaitingForDragonEnd = false; //   추가됨
 
+        ResetMotherHealthTracking();
         HideResultUI();
         UpdateUI();
     }
@@ -368,9 +372,19 @@ public class BattleManager : MonoBehaviour
         if (enemyManager != null && enemyManager.currentEnemy != null && enemyManager.currentEnemy.currentHP > 0)
         {
             EnemyBase enemy = enemyManager.currentEnemy;
+            bool isMotherDragon = enemy is MotherDragon;
+            EnsureEnemyIntentBubble(isMotherDragon);
 
             if (enemyHealthBar != null)
-                enemyHealthBar.UpdateUI(enemy.currentHP, enemy.maxHP, enemy.defense);
+            {
+                if (isMotherDragon)
+                    UpdateMotherHealthBar((MotherDragon)enemy);
+                else
+                {
+                    ResetMotherHealthTracking();
+                    enemyHealthBar.UpdateUI(enemy.currentHP, enemy.maxHP, enemy.defense);
+                }
+            }
 
             // 내 턴(PlayerInput)일 때만 인텐트 말풍선을 보여준다. UpdateUI()는 펀치 한 번마다
             // (PlayPendingActions 안에서) HP 갱신용으로 계속 호출되므로, 여기서 페이즈를 안 보면
@@ -378,7 +392,7 @@ public class BattleManager : MonoBehaviour
             var isPlayerInputPhase = !isStagePreparing &&
                                      (deckManager == null || deckManager.CurrentPhase == DeckManager.TurnPhase.PlayerInput);
 
-            if (enemyIntentBubbleObj != null && enemyIntentBubble != null && isPlayerInputPhase)
+           if (enemyIntentBubbleObj != null && enemyIntentBubble != null && isPlayerInputPhase)
             {
                 // 엔딩 보스 스테이지는 전투 없이 대사만 오가므로(StageManager가 곧바로
                 // StartEvent를 부른다) 전투 인텐트를 띄울 일이 없다.
@@ -394,7 +408,7 @@ public class BattleManager : MonoBehaviour
                     // 입혀진 텍스트를 같이 보여준다. 마더 드래곤의 대사가 두 번 나오지 않게 하는 건
                     // 여기서 끄는 게 아니라 적 턴 쪽에서 일시적 말풍선을 안 띄우는 것으로 해결한다
                     // (ExecuteEnemyTurnCoroutine 참조) - 여기서 끄면 내 턴 내내 말풍선이 빈다.
-                    if (enemy is MotherDragon)
+                    if (isMotherDragon)
                         enemyIntentBubble.Setup(mdIntentString);
                     else
                         enemyIntentBubble.SetupIntent(enemyManager.GetIntentIcon(), enemyManager.GetIntentString(), enemyManager.GetIntentColor());
@@ -415,6 +429,78 @@ public class BattleManager : MonoBehaviour
         }
 
         CheckGameState();
+    }
+
+    private void UpdateMotherHealthBar(MotherDragon mother)
+    {
+        if (trackedMotherHealth != mother)
+        {
+            trackedMotherHealth = mother;
+            lastMotherHealth = mother.currentHP;
+            enemyHealthBar.Hide();
+            return;
+        }
+
+        bool wasHit = mother.currentHP < lastMotherHealth;
+        lastMotherHealth = mother.currentHP;
+
+        if (wasHit)
+        {
+            enemyHealthBar.UpdateUI(mother.currentHP, mother.maxHP, mother.defense);
+            if (motherHealthBarRoutine != null)
+                StopCoroutine(motherHealthBarRoutine);
+            motherHealthBarRoutine = StartCoroutine(HideMotherHealthBarAfterDelay());
+        }
+        else if (motherHealthBarRoutine == null)
+        {
+            enemyHealthBar.Hide();
+        }
+    }
+
+    private IEnumerator HideMotherHealthBarAfterDelay()
+    {
+        yield return new WaitForSeconds(motherHealthBarHitDuration);
+        if (enemyHealthBar != null)
+            enemyHealthBar.Hide();
+        motherHealthBarRoutine = null;
+    }
+
+    private void ResetMotherHealthTracking()
+    {
+        trackedMotherHealth = null;
+        lastMotherHealth = 0;
+        if (motherHealthBarRoutine == null)
+            return;
+
+        StopCoroutine(motherHealthBarRoutine);
+        motherHealthBarRoutine = null;
+    }
+
+    private void EnsureEnemyIntentBubble(bool useMotherBubble)
+    {
+        var manager = SpeechBubbleManager.Instance;
+        if (manager == null || manager.canvasTransform == null)
+            return;
+
+        var prefab = useMotherBubble && manager.motherDragonSpeechBubblePrefab != null
+            ? manager.motherDragonSpeechBubblePrefab
+            : manager.speechBubblePrefab;
+        if (prefab == null)
+            return;
+
+        if (enemyIntentBubbleObj != null && enemyIntentUsesMotherBubble == useMotherBubble)
+            return;
+
+        if (enemyIntentBubbleObj != null)
+        {
+            enemyIntentBubbleObj.SetActive(false);
+            Destroy(enemyIntentBubbleObj);
+        }
+
+        enemyIntentBubbleObj = Instantiate(prefab, manager.canvasTransform);
+        enemyIntentBubble = enemyIntentBubbleObj.GetComponent<SpeechBubble>();
+        enemyIntentUsesMotherBubble = useMotherBubble;
+        enemyIntentBubbleObj.SetActive(false);
     }
 
     private void LateUpdate()

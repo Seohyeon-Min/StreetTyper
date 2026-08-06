@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpeechBubbleManager
   speechBubblePrefab: {fileID: 2888076677979763702, guid: ececaf37a69079c4f90e6f39dc5990d0, type: 3}
+  motherDragonSpeechBubblePrefab: {fileID: 2888076677979763702, guid: 9227fafe4b7dc0d48b74f200c0f74325, type: 3}
   canvasTransform: {fileID: 0}
   playerScreenOffset: {x: 120, y: 300}
   enemyScreenOffset: {x: -80, y: 80}

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -10,8 +11,29 @@ using UnityEngine;
 /// </summary>
 public class BossTitleCardView : MonoBehaviour
 {
-    [Tooltip("제목 + 이미지 + 글자색 한 덩어리. 인스펙터에서 문구·이미지·색을 전부 바꿀 수 있다.")]
-    [SerializeField] private ScreenPresentation presentation = new ScreenPresentation("마그나 마테르", "Magna Mater");
+    [Serializable]
+    private sealed class BossPresentation
+    {
+        [SerializeField] private string titleKorean;
+        [SerializeField] private string titleEnglish;
+        [SerializeField] private Sprite image;
+
+        public BossPresentation(string korean, string english)
+        {
+            titleKorean = korean;
+            titleEnglish = english;
+        }
+
+        public string Title(UnityEngine.Object owner, string fieldName)
+        {
+            return LanguageSettings.Pick(titleKorean, titleEnglish, owner, fieldName);
+        }
+
+        public Sprite Image => image;
+    }
+
+    [Tooltip("보스 제목과 이미지. 제목 색은 Title Label의 TMP 색을 그대로 사용한다.")]
+    [SerializeField] private BossPresentation presentation = new BossPresentation("마그나 마테르", "Magna Mater");
 
     [Tooltip("부제 문구(한국어).")]
     [SerializeField, TextArea] private string subtitleKorean = "~너가 할 수 있는 모든걸 보여줘!~";
@@ -27,6 +49,8 @@ public class BossTitleCardView : MonoBehaviour
              "비어 있으면 이 이미지는 건드리지 않는다 - 인스펙터에서 직접 넣어둔 카드 배경 아트를 " +
              "그대로 쓰는 게 기본이다.")]
     [SerializeField] private UnityEngine.UI.Image titleImage;
+
+    private bool _isClosing;
 
     // 카드가 켜질 때마다 스스로 문구를 채운다 - 같은 오브젝트의 StageStartEffect가 OnEnable에서
     // 등장 연출을 알아서 재생하는 것과 같은 방식이다. 부르는 쪽(StageManager)이 참조를 들고
@@ -44,7 +68,6 @@ public class BossTitleCardView : MonoBehaviour
         if (titleLabel != null)
         {
             titleLabel.text = presentation.Title(this, nameof(presentation));
-            titleLabel.color = presentation.TitleColor;
         }
         else
         {
@@ -68,5 +91,43 @@ public class BossTitleCardView : MonoBehaviour
         else
             Debug.LogWarning($"{nameof(BossTitleCardView)}: {nameof(subtitleLabel)}이 연결되지 않아 부제가 " +
                              "언어에 따라 바뀌지 않습니다(씬에 저장된 문구가 그대로 나옵니다).", this);
+    }
+
+    /// <summary>Closes every title gate before the owner hides the whole card.</summary>
+    public void PlayGateClose(Action onComplete)
+    {
+        if (_isClosing)
+            return;
+
+        var reveals = GetComponentsInChildren<TextGateRevealAnimation>(true);
+        var droppingTexts = GetComponentsInChildren<TMPCharacterDropBounce>(true);
+        if (reveals.Length == 0 && droppingTexts.Length == 0)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+
+        _isClosing = true;
+        var remaining = reveals.Length + droppingTexts.Length;
+        void HandleClosed()
+        {
+            remaining--;
+            if (remaining > 0)
+                return;
+
+            _isClosing = false;
+            onComplete?.Invoke();
+        }
+
+        for (var i = 0; i < reveals.Length; i++)
+            reveals[i].PlayReverse(HandleClosed);
+
+        for (var i = 0; i < droppingTexts.Length; i++)
+            droppingTexts[i].PlayExit(HandleClosed);
+    }
+
+    private void OnDisable()
+    {
+        _isClosing = false;
     }
 }

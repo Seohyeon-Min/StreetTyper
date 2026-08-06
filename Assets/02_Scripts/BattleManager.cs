@@ -392,7 +392,7 @@ public class BattleManager : MonoBehaviour
             var isPlayerInputPhase = !isStagePreparing &&
                                      (deckManager == null || deckManager.CurrentPhase == DeckManager.TurnPhase.PlayerInput);
 
-            if (enemyIntentBubbleObj != null && enemyIntentBubble != null && isPlayerInputPhase)
+           if (enemyIntentBubbleObj != null && enemyIntentBubble != null && isPlayerInputPhase)
             {
                 // 엔딩 보스 스테이지는 전투 없이 대사만 오가므로(StageManager가 곧바로
                 // StartEvent를 부른다) 전투 인텐트를 띄울 일이 없다.

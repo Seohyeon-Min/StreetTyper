@@ -143,6 +143,10 @@ public class DeckManager : MonoBehaviour
     [Tooltip("펀치 한 번당 카메라 흔들림 크기. CameraShake의 shakeMultiplier와 곱해져서 최종 크기가 된다.")]
     [SerializeField] private float hitShakeMagnitude = 0.2f;
 
+    [Tooltip("첫 타격 이후 카메라 흔들림 강도 배율. 0.18이면 후속 타격은 첫 타격의 18% 세기입니다.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float followUpHitShakeMultiplier = 0.18f;
+
     [Tooltip("적 앞으로 돌진하기 시작하기 전에 잠깐 두는 대기 시간(초).")]
     [SerializeField] private float dashStartDelay = 0.3f;
 
@@ -521,6 +525,9 @@ public class DeckManager : MonoBehaviour
         }
 
         // 4. 공격 스택 하나씩 실행
+        // 한 번의 공격 실행 전체에서 첫 유효 타격만 강하게 흔든다.
+        bool hasPlayedStrongHitShake = false;
+
         for (int i = 0; i < totalActions; i++)
         {
             var actionEntry = actions[i];
@@ -557,7 +564,11 @@ public class DeckManager : MonoBehaviour
                     // [수정] hasShaken 제한을 풀어 매 타격마다 카메라가 흔들리게 합니다!
                     if (CameraShake.Instance != null)
                     {
-                        CameraShake.Instance.Shake(hitShakeDuration, hitShakeMagnitude);
+                        float shakeMagnitude = hasPlayedStrongHitShake
+                            ? hitShakeMagnitude * followUpHitShakeMultiplier
+                            : hitShakeMagnitude;
+                        CameraShake.Instance.Shake(hitShakeDuration, shakeMagnitude);
+                        hasPlayedStrongHitShake = true;
                     }
 
                     // 매 타격마다 피격 이펙트 재생

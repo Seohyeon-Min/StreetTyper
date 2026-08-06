@@ -1,0 +1,429 @@
+fileFormatVersion: 2
+guid: 96834d26dd2de294fbe72f91dada108f
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -4493428956413881403
+    second: DemiSmileEyes_0
+  - first:
+      213: -3630046394972189538
+    second: DemiSmileEyes_1
+  - first:
+      213: -2644227883912779772
+    second: DemiSmileEyes_2
+  - first:
+      213: 6774955295904313138
+    second: DemiSmileEyes_3
+  - first:
+      213: -9051071146689246424
+    second: DemiSmileEyes_4
+  - first:
+      213: -685433580057256320
+    second: DemiSmileEyes_5
+  - first:
+      213: 8723086941705985581
+    second: DemiSmileEyes_6
+  - first:
+      213: 412746627555214859
+    second: DemiSmileEyes_7
+  - first:
+      213: -4498869459534024350
+    second: DemiSmileEyes_8
+  - first:
+      213: 1354736122040821233
+    second: DemiSmileEyes_9
+  - first:
+      213: -4130414065663922869
+    second: DemiSmileEyes_10
+  - first:
+      213: -2685549834296160703
+    second: DemiSmileEyes_11
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: DemiSmileEyes_0
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 21
+        width: 590
+        height: 826
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c31f7ddb2224a1c0800000000000000
+      internalID: -4493428956413881403
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiSmileEyes_1
+      rect:
+        serializedVersion: 2
+        x: 622
+        y: 21
+        width: 593
+        height: 837
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9cce7d590c7f9dc0800000000000000
+      internalID: -3630046394972189538
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiSmileEyes_2
+      rect:
+        serializedVersion: 2
+        x: 1238
+        y: 21
+        width: 595
+        height: 848
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4082232dfb0dd4bd0800000000000000
+      internalID: -2644227883912779772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiSmileEyes_3
+      rect:
+        serializedVersion: 2
+        x: 1853
+        y: 21
+        width: 599
+        height: 851
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23f278542f9750e50800000000000000
+      internalID: 6774955295904313138
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiSmileEyes_4
+      rect:
+        serializedVersion: 2
+        x: 2469
+        y: 20
+        width: 601
+        height: 852
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82bccc82fb2246280800000000000000
+      internalID: -9051071146689246424
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiSmileEyes_5
+      rect:
+        serializedVersion: 2
+        x: 3085
+        y: 20
+        width: 603
+        height: 853
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 08e109f5ac9dc76f0800000000000000
+      internalID: -685433580057256320
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiSmileEyes_6
+      rect:
+        serializedVersion: 2
+        x: 3703
+        y: 20
+        width: 603
+        height: 855
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2edb394b51ae0970800000000000000
+      internalID: 8723086941705985581
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiSmileEyes_7
+      rect:
+        serializedVersion: 2
+        x: 4316
+        y: 20
+        width: 601
+        height: 869
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b064ba5fede5ab500800000000000000
+      internalID: 412746627555214859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiSmileEyes_8
+      rect:
+        serializedVersion: 2
+        x: 4929
+        y: 20
+        width: 599
+        height: 882
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 261fe95001ec091c0800000000000000
+      internalID: -4498869459534024350
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiSmileEyes_9
+      rect:
+        serializedVersion: 2
+        x: 5543
+        y: 21
+        width: 597
+        height: 871
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f522a6435dfcc210800000000000000
+      internalID: 1354736122040821233
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiSmileEyes_10
+      rect:
+        serializedVersion: 2
+        x: 6157
+        y: 21
+        width: 595
+        height: 857
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4d23d88a42dda6c0800000000000000
+      internalID: -4130414065663922869
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DemiSmileEyes_11
+      rect:
+        serializedVersion: 2
+        x: 6772
+        y: 21
+        width: 593
+        height: 842
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14e0b2487a20bbad0800000000000000
+      internalID: -2685549834296160703
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      DemiSmileEyes_0: -4493428956413881403
+      DemiSmileEyes_1: -3630046394972189538
+      DemiSmileEyes_10: -4130414065663922869
+      DemiSmileEyes_11: -2685549834296160703
+      DemiSmileEyes_2: -2644227883912779772
+      DemiSmileEyes_3: 6774955295904313138
+      DemiSmileEyes_4: -9051071146689246424
+      DemiSmileEyes_5: -685433580057256320
+      DemiSmileEyes_6: 8723086941705985581
+      DemiSmileEyes_7: 412746627555214859
+      DemiSmileEyes_8: -4498869459534024350
+      DemiSmileEyes_9: 1354736122040821233
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

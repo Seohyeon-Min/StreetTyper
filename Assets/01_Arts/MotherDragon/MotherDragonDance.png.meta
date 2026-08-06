@@ -1,0 +1,743 @@
+fileFormatVersion: 2
+guid: badb23a0a3072ae4282b6c87b0c8cd1c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6494331487869276074
+    second: MotherDragonDance_0
+  - first:
+      213: -6616347204818969231
+    second: MotherDragonDance_1
+  - first:
+      213: 7586168057229631430
+    second: MotherDragonDance_2
+  - first:
+      213: 6276732442514689376
+    second: MotherDragonDance_3
+  - first:
+      213: 7434288407918891730
+    second: MotherDragonDance_4
+  - first:
+      213: 951897345566566676
+    second: MotherDragonDance_5
+  - first:
+      213: -5659853359927394091
+    second: MotherDragonDance_6
+  - first:
+      213: 6932469436660789736
+    second: MotherDragonDance_7
+  - first:
+      213: 108925259103815683
+    second: MotherDragonDance_8
+  - first:
+      213: -6926294414583705404
+    second: MotherDragonDance_9
+  - first:
+      213: 3306663314376934353
+    second: MotherDragonDance_10
+  - first:
+      213: -4537101668119463441
+    second: MotherDragonDance_11
+  - first:
+      213: 1769126828387728242
+    second: MotherDragonDance_12
+  - first:
+      213: 8030851648604447409
+    second: MotherDragonDance_13
+  - first:
+      213: 6068721316847628186
+    second: MotherDragonDance_14
+  - first:
+      213: 5779025208722512912
+    second: MotherDragonDance_15
+  - first:
+      213: 4677309411267978559
+    second: MotherDragonDance_16
+  - first:
+      213: -3004394359841121152
+    second: MotherDragonDance_17
+  - first:
+      213: -6257552419231696491
+    second: MotherDragonDance_18
+  - first:
+      213: 338071112118572827
+    second: MotherDragonDance_19
+  - first:
+      213: -668972692564290552
+    second: MotherDragonDance_20
+  - first:
+      213: -5058377100127267515
+    second: MotherDragonDance_21
+  - first:
+      213: 8711883823442374171
+    second: MotherDragonDance_22
+  - first:
+      213: -5216581084726550477
+    second: MotherDragonDance_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: MotherDragonDance_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 2922
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 650fae39bef7fd5a0800000000000000
+      internalID: -6494331487869276074
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_1
+      rect:
+        serializedVersion: 2
+        x: 1673
+        y: 2922
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17ddd1aa5430e24a0800000000000000
+      internalID: -6616347204818969231
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_2
+      rect:
+        serializedVersion: 2
+        x: 3346
+        y: 2922
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6cf5691a7ab774960800000000000000
+      internalID: 7586168057229631430
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_3
+      rect:
+        serializedVersion: 2
+        x: 5019
+        y: 2922
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06d0242a6ee6b1750800000000000000
+      internalID: 6276732442514689376
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_4
+      rect:
+        serializedVersion: 2
+        x: 6692
+        y: 2922
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d25fcf1be5eb2760800000000000000
+      internalID: 7434288407918891730
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_5
+      rect:
+        serializedVersion: 2
+        x: 8365
+        y: 2922
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 419e129a791d53d00800000000000000
+      internalID: 951897345566566676
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1948
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d00ab83b592471b0800000000000000
+      internalID: -5659853359927394091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_7
+      rect:
+        serializedVersion: 2
+        x: 1673
+        y: 1948
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e13b6c0934153060800000000000000
+      internalID: 6932469436660789736
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_8
+      rect:
+        serializedVersion: 2
+        x: 3346
+        y: 1948
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 30843ff22faf28100800000000000000
+      internalID: 108925259103815683
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_9
+      rect:
+        serializedVersion: 2
+        x: 5019
+        y: 1948
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c057f05debd0ef90800000000000000
+      internalID: -6926294414583705404
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_10
+      rect:
+        serializedVersion: 2
+        x: 6692
+        y: 1948
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d3c045d3c0a3ed20800000000000000
+      internalID: 3306663314376934353
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_11
+      rect:
+        serializedVersion: 2
+        x: 8365
+        y: 1948
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe938e9421af801c0800000000000000
+      internalID: -4537101668119463441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_12
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 974
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27bf9a82a733d8810800000000000000
+      internalID: 1769126828387728242
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_13
+      rect:
+        serializedVersion: 2
+        x: 1673
+        y: 974
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b2adee6601537f60800000000000000
+      internalID: 8030851648604447409
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_14
+      rect:
+        serializedVersion: 2
+        x: 3346
+        y: 974
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9f2b8b52ed683450800000000000000
+      internalID: 6068721316847628186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_15
+      rect:
+        serializedVersion: 2
+        x: 5019
+        y: 974
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 01cdee90fc8333050800000000000000
+      internalID: 5779025208722512912
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_16
+      rect:
+        serializedVersion: 2
+        x: 6692
+        y: 974
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f35283bc02429e040800000000000000
+      internalID: 4677309411267978559
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_17
+      rect:
+        serializedVersion: 2
+        x: 8365
+        y: 974
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 08c9b786f3f3e46d0800000000000000
+      internalID: -3004394359841121152
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_18
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 599fe488a35b829a0800000000000000
+      internalID: -6257552419231696491
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_19
+      rect:
+        serializedVersion: 2
+        x: 1673
+        y: 0
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b1716a2a2e111b400800000000000000
+      internalID: 338071112118572827
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_20
+      rect:
+        serializedVersion: 2
+        x: 3346
+        y: 0
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 804d44761e457b6f0800000000000000
+      internalID: -668972692564290552
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_21
+      rect:
+        serializedVersion: 2
+        x: 5019
+        y: 0
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54591fee3d80dc9b0800000000000000
+      internalID: -5058377100127267515
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_22
+      rect:
+        serializedVersion: 2
+        x: 6692
+        y: 0
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b1e21cc0e24d6e870800000000000000
+      internalID: 8711883823442374171
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherDragonDance_23
+      rect:
+        serializedVersion: 2
+        x: 8365
+        y: 0
+        width: 1673
+        height: 974
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3302ade542bfa97b0800000000000000
+      internalID: -5216581084726550477
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: dadcf9c3922f9874a98c25e180b1be6e
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":6.0,"y":4.0},"gridSpriteSize":{"x":1673.0,"y":974.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":7,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      MotherDragonDance_0: -6494331487869276074
+      MotherDragonDance_1: -6616347204818969231
+      MotherDragonDance_10: 3306663314376934353
+      MotherDragonDance_11: -4537101668119463441
+      MotherDragonDance_12: 1769126828387728242
+      MotherDragonDance_13: 8030851648604447409
+      MotherDragonDance_14: 6068721316847628186
+      MotherDragonDance_15: 5779025208722512912
+      MotherDragonDance_16: 4677309411267978559
+      MotherDragonDance_17: -3004394359841121152
+      MotherDragonDance_18: -6257552419231696491
+      MotherDragonDance_19: 338071112118572827
+      MotherDragonDance_2: 7586168057229631430
+      MotherDragonDance_20: -668972692564290552
+      MotherDragonDance_21: -5058377100127267515
+      MotherDragonDance_22: 8711883823442374171
+      MotherDragonDance_23: -5216581084726550477
+      MotherDragonDance_3: 6276732442514689376
+      MotherDragonDance_4: 7434288407918891730
+      MotherDragonDance_5: 951897345566566676
+      MotherDragonDance_6: -5659853359927394091
+      MotherDragonDance_7: 6932469436660789736
+      MotherDragonDance_8: 108925259103815683
+      MotherDragonDance_9: -6926294414583705404
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

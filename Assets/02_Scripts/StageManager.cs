@@ -562,6 +562,8 @@ public class StageManager : MonoBehaviour
             var enemyBase = currentEnemyObject.GetComponent<EnemyBase>();
             Vector3 motherPos = enemyBase != null ? enemyBase.BubblePosition : currentEnemyObject.transform.position;
             string motherLine = LanguageSettings.Pick(motherGreetingLine, motherGreetingLineEn, this, nameof(motherGreetingLine));
+            if (enemyBase != null)
+                enemyBase.PlaySpeakAnimation();
             SpeechBubbleManager.Instance.ShowMotherDragonBubble(
                 motherLine, motherPos, false, bossGreetingLineDuration);
         }

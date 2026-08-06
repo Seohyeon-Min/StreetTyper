@@ -52,7 +52,7 @@ public class ResultPanelView
     /// <summary>수치를 채우고 패널을 켠다.</summary>
     /// <param name="owner">경고에 찍을 주인. 어느 컴포넌트인지 알려준다.</param>
     /// <param name="fieldName">경고에 찍을 인스펙터 필드 이름(예: defeatResult).</param>
-    public void Show(int highestStage, int totalStages, int cpm, int wordsUsed,
+    public bool Show(int highestStage, int totalStages, int cpm, int wordsUsed,
         int damageDealt, int damageTaken, UnityEngine.Object owner, string fieldName)
     {
         // 조용히 폴백하지 않는다 - 폴백할 곳이 있으면 배선이 빠진 걸 못 알아채고
@@ -61,7 +61,7 @@ public class ResultPanelView
         {
             Debug.LogWarning($"{owner.GetType().Name}: {fieldName}.panel이 연결되지 않아 " +
                              "결과 화면을 띄울 수 없습니다.", owner);
-            return;
+            return false;
         }
 
         // ⚠️ 게이트 연출은 꺼짐 -> 켜짐으로 <b>바뀔 때만</b> 재생한다. ApplyResult는 같은 결과로
@@ -74,13 +74,24 @@ public class ResultPanelView
 
         panel.SetActive(true);
 
-        if (!wasHidden || reveals == null)
-            return;
+        if (!wasHidden)
+            return false;
 
-        foreach (var reveal in reveals)
+        if (reveals != null)
         {
-            if (reveal != null)
-                reveal.Play();
+            foreach (var reveal in reveals)
+            {
+                if (reveal != null)
+                    reveal.Play();
+            }
         }
+
+        return true;
+    }
+
+    public void PlayConfetti(Color[] colors, Sprite sparkleSprite)
+    {
+        if (panel != null)
+            UIConfettiBurst.Play(panel.GetComponent<RectTransform>(), colors, sparkleSprite);
     }
 }

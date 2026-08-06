@@ -636,7 +636,7 @@ MonoBehaviour:
   canvasGroup: {fileID: 8390982987784004762}
   actionFrame: {fileID: 21300000, guid: 31d8c03497ff71444a1011f2b0cf73c0, type: 3}
   defaultFrame: {fileID: 21300000, guid: 39b13361f9164dc4ebb477400621f7b3, type: 3}
-  commandFrame: {fileID: -6022337359400110510, guid: 5a3171d0271df7d4d99c9b52756442f5, type: 3}
+  commandFrame: {fileID: 21300000, guid: 1b34e931bc56bd9479b2a16102ae289f, type: 3}
   actionBadge: {fileID: 21300000, guid: ceb29733065d1b346909413fc83687ef, type: 3}
   multiplyBadge: {fileID: 21300000, guid: 11471e6e48d978047bec92f450deb986, type: 3}
   upBadge: {fileID: 21300000, guid: 0988b8222d071e54ab461751417e0840, type: 3}

@@ -48,12 +48,20 @@ public class EventManager : MonoBehaviour
              "이 아웃로는 스페이스로 넘기지 않고 시간이 지나면 자동으로 진행된다.")]
     public float mdLineAutoAdvanceDelay = 1.8f;
 
+    [Header("Ending Exit")]
+    [Min(0.1f)] public float endingExitDuration = 2.2f;
+    [Min(0f)] public float endingExitScreenMargin = 0.18f;
+    [Min(0f)] public float endingBackgroundScrollSpeed = 0.8f;
+    public AnimationCurve endingExitCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
     [Header("Dialogues (Inspector에서 변경 가능)")]
     public string[] normalEventLines = { "새로운 단어 카드를 획득했다!", "placeholder1", "placeholder2" };
     public string[] dragonEventLines = { "placeholder0", "placeholder1", "placeholder2" };
 
     [Header("Dialogues - Ending")]
     public string[] endingEventLines = { "플레이스홀더텍스트0", "플레이스홀더텍스트1" };
+    [Tooltip("영어 모드에서 사용할 엔딩 대사. 비어 있으면 한국어 엔딩 대사를 사용합니다.")]
+    public string[] endingEventLinesEn = { "Placeholder text 0", "Placeholder text 1" };
     private bool _isEndingEvent = false;
 
     // ⚠️ 기본값을 비워 둔다. EventManager.prefab의 한국어 배열이 둘 다 빈 배열이라서,
@@ -132,6 +140,26 @@ public class EventManager : MonoBehaviour
         }
     }
 
+    private string[] GetEndingLines()
+    {
+        if (!LanguageSettings.IsEnglish || endingEventLinesEn == null || endingEventLinesEn.Length == 0)
+            return endingEventLines;
+
+        int koreanCount = endingEventLines != null ? endingEventLines.Length : 0;
+        int count = Mathf.Max(koreanCount, endingEventLinesEn.Length);
+        string[] localized = new string[count];
+
+        for (int i = 0; i < count; i++)
+        {
+            bool hasEnglish = i < endingEventLinesEn.Length && !string.IsNullOrEmpty(endingEventLinesEn[i]);
+            localized[i] = hasEnglish
+                ? endingEventLinesEn[i]
+                : (i < koreanCount ? endingEventLines[i] : string.Empty);
+        }
+
+        return localized;
+    }
+
     public void StartEvent(bool isMotherDragon, int healAmount = 0, bool isEnding = false) // [수정] isEnding 매개변수 추가
     {
         isEventActive = true;
@@ -148,8 +176,7 @@ public class EventManager : MonoBehaviour
         string[] linesToUse;
         if (isEnding)
         {
-            // [추가] 엔딩일 경우 전용 대사 배열 사용
-            linesToUse = endingEventLines;
+            linesToUse = GetEndingLines();
         }
         else if (LanguageSettings.IsEnglish)
         {
@@ -230,7 +257,68 @@ public class EventManager : MonoBehaviour
             yield return new WaitForSeconds(mdLineAutoAdvanceDelay);
         }
 
+        if (dialogueBubbleObj != null)
+            dialogueBubbleObj.SetActive(false);
+
+        yield return PlayEndingExitRoutine();
         EndEvent();
+    }
+
+    private IEnumerator PlayEndingExitRoutine()
+    {
+        Transform playerTransform = player != null ? player.transform : null;
+        Transform motherTransform = speakingEnemy != null ? speakingEnemy.transform : bubbleAnchor;
+
+        if (battleManager != null && battleManager.stageManager != null &&
+            battleManager.stageManager.backgroundScrollers != null)
+        {
+            foreach (var scroller in battleManager.stageManager.backgroundScrollers)
+            {
+                if (scroller != null)
+                    scroller.StartConstantScroll(endingBackgroundScrollSpeed);
+            }
+        }
+
+        Vector3 playerStart = playerTransform != null ? playerTransform.position : Vector3.zero;
+        Vector3 motherStart = motherTransform != null ? motherTransform.position : Vector3.zero;
+        Vector3 playerTarget = OffscreenTarget(playerTransform, playerStart, false);
+        Vector3 motherTarget = OffscreenTarget(motherTransform, motherStart, true);
+
+        float duration = Mathf.Max(0.1f, endingExitDuration);
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float eased = endingExitCurve != null ? endingExitCurve.Evaluate(t) : t;
+
+            if (playerTransform != null)
+                playerTransform.position = Vector3.LerpUnclamped(playerStart, playerTarget, eased);
+            if (motherTransform != null)
+                motherTransform.position = Vector3.LerpUnclamped(motherStart, motherTarget, eased);
+
+            yield return null;
+        }
+
+        if (playerTransform != null) playerTransform.position = playerTarget;
+        if (motherTransform != null) motherTransform.position = motherTarget;
+    }
+
+    private Vector3 OffscreenTarget(Transform subject, Vector3 start, bool exitRight)
+    {
+        Camera camera = Camera.main;
+        if (camera == null)
+            return start + Vector3.right * (exitRight ? 14f : -14f);
+
+        Vector3 viewport = camera.WorldToViewportPoint(start);
+        viewport.x = exitRight ? 1f + endingExitScreenMargin : -endingExitScreenMargin;
+        Vector3 target = camera.ViewportToWorldPoint(viewport);
+        SpriteRenderer renderer = subject != null ? subject.GetComponentInChildren<SpriteRenderer>() : null;
+        if (renderer != null)
+            target.x += renderer.bounds.extents.x * (exitRight ? 1f : -1f);
+        target.y = start.y;
+        target.z = start.z;
+        return target;
     }
 
     // 말풍선이 따라갈 대상과 말하는 모션을 재생할 적을 이벤트가 열릴 때 잡는다.

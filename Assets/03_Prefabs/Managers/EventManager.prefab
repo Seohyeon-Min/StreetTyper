@@ -52,6 +52,33 @@ MonoBehaviour:
   canvasTransform: {fileID: 0}
   bubbleScreenOffset: {x: 0, y: 0}
   playerBubbleScreenOffset: {x: 0, y: 0}
+  endingExitDuration: 2.2
+  endingExitScreenMargin: 0.18
+  endingBackgroundScrollSpeed: 0.8
+  endingExitCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   normalEventLines: []
   dragonEventLines:
   - "\uC5EC\uAE30\uAE4C\uC9C0 \uD558\uC790\uAFB8\uB098!"
@@ -59,3 +86,9 @@ MonoBehaviour:
   dragonEventLinesEn:
   - "That's enough for today!"
   - "You've been healed! (+{0})"
+  endingEventLines:
+  - "\uD50C\uB808\uC774\uC2A4\uD640\uB354\uD14D\uC2A4\uD2B80"
+  - "\uD50C\uB808\uC774\uC2A4\uD640\uB354\uD14D\uC2A4\uD2B81"
+  endingEventLinesEn:
+  - Placeholder text 0
+  - Placeholder text 1

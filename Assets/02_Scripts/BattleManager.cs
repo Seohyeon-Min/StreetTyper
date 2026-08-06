@@ -33,6 +33,20 @@ public class BattleManager : MonoBehaviour
     [Tooltip("모든 스테이지를 클리어했을 때 띄울 결과 창 한 벌.")]
     [SerializeField] private ResultPanelView gameClearResult;
 
+    [Header("Game Clear Confetti")]
+    [Tooltip("게임 클리어 축하 파티클 색상. 각 파티클은 이 목록에서 무작위 색을 사용합니다.")]
+    [SerializeField] private Color[] gameClearConfettiColors =
+    {
+        new Color(1f, 0.18f, 0.48f),
+        new Color(1f, 0.78f, 0.08f),
+        new Color(0.15f, 0.82f, 1f),
+        new Color(0.5f, 0.25f, 1f),
+        new Color(0.22f, 1f, 0.5f),
+        Color.white
+    };
+    [Tooltip("화면 가장자리에서 반짝일 이미지. 비워두면 45도 회전한 기본 사각형을 사용합니다.")]
+    [SerializeField] private Sprite gameClearSparkleSprite;
+
     [Header("마더 드래곤 대사")]
     [Tooltip("스파링 연출이라 순서가 정해져 있다. 0=시작, 1=1턴 뒤, 2=2턴 뒤, 3=마무리")]
     [SerializeField]
@@ -649,7 +663,7 @@ public class BattleManager : MonoBehaviour
         // 분모를 리터럴로 박으면 스테이지 수를 바꿨을 때 조용히 어긋난다.
         var totalStages = stageManager != null ? stageManager.TotalStages : 0;
 
-        view.Show(
+        var wasJustShown = view.Show(
             stats != null ? stats.highestStageReached : 0,
             totalStages,
             stats != null ? Mathf.RoundToInt(stats.GetCPM()) : 0,
@@ -658,6 +672,9 @@ public class BattleManager : MonoBehaviour
             stats != null ? stats.totalDamageTaken : 0,
             this,
             FieldNameFor(kind));
+
+        if (kind == ResultKind.GameClear && wasJustShown)
+            view.PlayConfetti(gameClearConfettiColors, gameClearSparkleSprite);
     }
 
     /// <summary>결과 종류에 맞는 화면. Victory는 결과를 띄우지 않으므로 여기 오지 않는다

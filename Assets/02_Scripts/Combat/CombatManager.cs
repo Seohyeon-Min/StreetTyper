@@ -37,10 +37,18 @@ public class CombatManager : MonoBehaviour
             {
                 visuals.PlayGuardAnimation();
             }
+
+            if (HealEffectManager.Instance != null)
+                HealEffectManager.Instance.PlayGuardEffect(player.GetComponent<SpriteRenderer>());
         }
 
         if (action.Heal > 0)
+        {
             player.Heal(action.Heal);
+
+            if (HealEffectManager.Instance != null)
+                HealEffectManager.Instance.PlayHealEffect(player.GetComponent<SpriteRenderer>());
+        }
 
         ApplyStatusEffects(action, player, target);
     }

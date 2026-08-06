@@ -44,4 +44,70 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5069bfcc431a884dc98401f11f1d35ca, type: 3}
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::HealEffectManager
-  healEffectPrefab: {fileID: 665991635209637165, guid: fa0e482190b681d555755bdbef45ad4c, type: 3}
+  guardParticleSprite: {fileID: 0}
+  healParticleSprite: {fileID: 0}
+  particleSpawnPoint: {fileID: 0}
+  enemyParticleSpawnPoint: {fileID: 0}
+  guardParticleColor: {r: 0.25, g: 0.75, b: 1, a: 0.9}
+  healParticleColor: {r: 0.35, g: 1, b: 0.45, a: 0.9}
+  guardParticleCount: 10
+  guardParticleSpeed: 1
+  guardParticleSize: 0.14
+  guardParticleLifetime: 0.75
+  guardRiseDistance: 1.1
+  guardSpawnEdgeLength: 1
+  healParticleCount: 10
+  healParticleSpeed: 1
+  healParticleSize: 0.14
+  healParticleLifetime: 0.75
+  healRiseDistance: 1.1
+  healSpawnEdgeLength: 1
+  horizontalSpread: 0.45
+  riseCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  fadeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4

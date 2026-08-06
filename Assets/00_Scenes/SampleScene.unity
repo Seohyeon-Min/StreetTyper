@@ -3019,6 +3019,7 @@ Transform:
   m_Children:
   - {fileID: 979527230}
   - {fileID: 524534440}
+  - {fileID: 2048775980}
   - {fileID: 108802002}
   - {fileID: 1439353701}
   - {fileID: 537148281}
@@ -8363,6 +8364,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fa4d8bed0a14fb1b48860dcfe61d8f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BackgroundBlurController
+--- !u!1 &2048775979
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2048775980}
+  m_Layer: 0
+  m_Name: PlayerPos4Effect
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2048775980
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2048775979}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -4.7, y: -0.28, z: 0}
+  m_LocalScale: {x: 0.4, y: 0.4, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 896204145}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2049325832
 GameObject:
   m_ObjectHideFlags: 0
@@ -9073,7 +9105,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!1 &291872308900390955
 GameObject:
   m_ObjectHideFlags: 0
@@ -9187,8 +9219,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uB9C8\uADF8\uB098 \uB9C8\uD14C\uB974"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 80cc6b00dbd63ac4c9644223150de38e, type: 2}
-  m_sharedMaterial: {fileID: -8121802027939262357, guid: 80cc6b00dbd63ac4c9644223150de38e, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5e4c757046c642f48a34b3443a0bd975, type: 2}
+  m_sharedMaterial: {fileID: -8121802027939262357, guid: 5e4c757046c642f48a34b3443a0bd975, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -9265,6 +9297,110 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2092489548}
     m_Modifications:
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: particleSize
+      value: 0.19
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: particleCount
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: particleSpeed
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: healParticleSize
+      value: 0.24
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: healRiseDistance
+      value: 1.72
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: horizontalSpread
+      value: 0.83
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: particleLifetime
+      value: 0.88
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: guardParticleSize
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: guardRiseDistance
+      value: 1.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: healParticleCount
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: healParticleSpeed
+      value: 0.63
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: guardParticleCount
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: guardParticleSpeed
+      value: 0.34
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: healParticleSprite
+      value: 
+      objectReference: {fileID: 2903848411162822477, guid: 0a52226f2607bcb4ba4410541c20cdc2, type: 3}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: particleSpawnPoint
+      value: 
+      objectReference: {fileID: 2048775980}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: guardParticleSprite
+      value: 
+      objectReference: {fileID: 2389193319765324094, guid: c80f29430eb1f4740a60abce4f029476, type: 3}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: healParticleColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: healParticleColor.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: healParticleColor.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: healSpawnEdgeLength
+      value: 1.24
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: guardParticleColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: guardParticleColor.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: guardParticleColor.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: guardSpawnEdgeLength
+      value: 1.24
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: healParticleLifetime
+      value: 0.75
+      objectReference: {fileID: 0}
+    - target: {fileID: 648540057728552652, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
+      propertyPath: enemyParticleSpawnPoint
+      value: 
+      objectReference: {fileID: 1439353701}
     - target: {fileID: 684743160403965019, guid: afeed3a3b46d83f1d8eb4f02d9b5eecc, type: 3}
       propertyPath: m_Name
       value: HealEffectManager
@@ -9391,8 +9527,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uB124\uAC00 \uD560 \uC218 \uC788\uB294 \uBAA8\uB4E0\uAC78 \uBCF4\uC5EC\uC918!"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 03d3b38623907e04b9f51cc6c42a3fb4, type: 2}
-  m_sharedMaterial: {fileID: 2112900777092130074, guid: 03d3b38623907e04b9f51cc6c42a3fb4, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: adf7e3f6cf5f79247ace8dbc07525a90, type: 2}
+  m_sharedMaterial: {fileID: 8883447635858602033, guid: adf7e3f6cf5f79247ace8dbc07525a90, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

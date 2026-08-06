@@ -91,11 +91,25 @@ public class DeckManager : MonoBehaviour
     [Tooltip("적 앞으로 돌진하기 시작하기 전에 잠깐 두는 대기 시간(초).")]
     [SerializeField] private float dashStartDelay = 0.3f;
 
+    [Header("시간 소각 (Ctrl)")]
+    [Tooltip("Ctrl을 누르고 있을 때 한 번의 반복마다 깎을 시간(초). 얼마나 자주 깎이는지는 " +
+             "InputManager의 ctrlRepeatInterval이 정한다. 태운 시간은 퍼펙트의 위력으로 돌아온다.")]
+    [SerializeField] private float ctrlBurnSeconds = 0.25f;
+
     [SerializeField] private bool logDebugEvents;
 
     public CardSlotManager Slots => cardSlotManager;
     public CardInputHandler Input => cardInputHandler;
     public MainBufferManager Buffer => mainBufferManager;
+
+    private void Awake()
+    {
+        // 0이면 TimerManager.AddTime이 Mathf.Approximately로 조용히 버려서 "Ctrl이 안 먹는다"로만
+        // 보인다 - 조용한 실패를 만들지 않는다.
+        if (ctrlBurnSeconds <= 0f)
+            Debug.LogWarning($"{nameof(DeckManager)}: {nameof(ctrlBurnSeconds)}가 0 이하라 Ctrl로 " +
+                             "시간을 깎을 수 없습니다.", this);
+    }
 
     private void OnEnable()
     {
@@ -103,6 +117,9 @@ public class DeckManager : MonoBehaviour
         wordChainManager.OnChainCompleted += HandleChainCompleted;
         timerManager.OnTimeExpired += HandleTimeExpired;
         battleManager.OnBattleEnded += HandleBattleEnded;
+
+        if (inputManager != null)
+            inputManager.OnBurnTime += HandleBurnTime;
 
         if (!logDebugEvents)
             return;
@@ -118,6 +135,9 @@ public class DeckManager : MonoBehaviour
         wordChainManager.OnChainCompleted -= HandleChainCompleted;
         timerManager.OnTimeExpired -= HandleTimeExpired;
         battleManager.OnBattleEnded -= HandleBattleEnded;
+
+        if (inputManager != null)
+            inputManager.OnBurnTime -= HandleBurnTime;
 
         if (!logDebugEvents)
             return;
@@ -174,6 +194,25 @@ public class DeckManager : MonoBehaviour
         // 이 호출 안에서 곧바로 OnTimeExpired -> 턴 전환이 시작되기 때문이다. 위의 Enqueue가
         // 이보다 앞에 있어야 그 조합이 재생 목록에 들어간 상태로 턴이 넘어간다.
         timerManager.AddTime(action.TimerChange);
+    }
+
+    /// <summary>플레이어가 Ctrl을 누르고 있어 남은 시간을 일부러 깎는다.
+    /// 태운 시간은 퍼펙트의 위력(SkillResolver.SecondsSpentThisTurn)으로 돌아온다.
+    ///
+    /// ⚠️ 가드는 <see cref="InputManager.HasTypingFocus"/> 하나만 쓴다. CurrentPhase로는
+    /// <b>일시정지를 막지 못한다</b> - 일시정지는 timeScale을 0으로 둘 뿐 페이즈를 바꾸지 않고,
+    /// TimerManager는 여전히 running이라 AddTime의 가드도 통과한다. 이 한 줄이 일시정지·보상·
+    /// 결과 화면·삭제/목록 창을 한꺼번에 덮는다("지금 손패가 입력을 받는가"가 곧 그 질문이다).</summary>
+    private void HandleBurnTime()
+    {
+        if (inputManager == null || timerManager == null)
+            return;
+
+        if (!inputManager.HasTypingFocus(cardInputHandler))
+            return;
+
+        // ⚠️ 이 호출 안에서 남은 시간이 0이 되면 곧바로 HandleTimeExpired까지 이어진다.
+        timerManager.ReduceTime(ctrlBurnSeconds);
     }
 
     // 플레이어 턴의 입력 제한 시간이 다 됐다. 여기가 실제 턴의 끝 - 미완성 체인은 버리고

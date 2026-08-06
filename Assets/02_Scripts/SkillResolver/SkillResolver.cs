@@ -6,6 +6,10 @@ using UnityEngine;
 // 대상의 방어도나 상태이상은 여기서 모른다 - 그 상호작용은 CombatManager가 담당한다.
 public class SkillResolver : MonoBehaviour
 {
+    [Header("참조")]
+    [Tooltip("퍼펙트가 '이번 턴에 흘러간 초'를 읽는 데 쓴다. 비워두면 퍼펙트 보너스가 항상 0이 된다.")]
+    [SerializeField] private TimerManager timerManager;
+
     [Header("디버그")]
     [Tooltip("켜면 상태이상 확률 판정을 건너뛰고 항상 부여한다. 파이어/일렉트릭/아이스가 " +
              "20%라 동작 확인이 어려울 때만 켜고, 밸런스 확인 전에 반드시 끌 것.")]
@@ -40,12 +44,26 @@ public class SkillResolver : MonoBehaviour
     /// <summary>이번 턴에 쓴 수식어(<see cref="CardCategory.Modifier"/>) 카드의 수.</summary>
     public static int ModifiersThisTurn { get; private set; }
 
-    // 효과로 변한 초의 합(양수 = 늘어남). 자연 감소는 여기 들어오지 않는다.
-    // 카드가 읽는 건 부호를 뒤집은 SecondsSpentThisTurn 쪽이다.
-    private static float _timerChangeThisTurn;
+    // 타이머를 라이브로 읽기 위한 창구. AwesomeBonus와 같은 이유로 static이다
+    // (카드 에셋이 씬 컴포넌트를 참조할 수 없다). Awake에서 인스펙터 참조를 옮겨 담는다.
+    private static TimerManager _timer;
 
-    /// <summary>이번 턴에 단어 효과로 <b>줄어든</b> 초. 늘렸으면 음수다.</summary>
-    public static int SecondsSpentThisTurn => Mathf.RoundToInt(-_timerChangeThisTurn);
+    /// <summary>이번 턴에 <b>실제로 흘러간</b> 초 = 자연 감소 + Ctrl 소각 + 훅 감소 − 잽/퀵 증가.
+    ///
+    /// <para>타이머의 남은 시간에서 바로 계산하므로 별도 누적 상태가 없다 - 예전에는 카드 효과로
+    /// 변한 초만 따로 세서, 가만히 있으면 퍼펙트가 오르지 않아 카드 문구("이번 턴에 소모된
+    /// 시간")와 실제 동작이 어긋났다.</para>
+    ///
+    /// <para>⚠️ <see cref="TimerManager.IsRunning"/>을 같이 보는 게 핵심이다. 타이머가 멈춘 뒤에도
+    /// RemainingTime은 그 자리에 남아 있어서, 가드가 없으면 턴이 끝난 순간과 결과·보상 화면에서
+    /// "Duration 전체가 흘렀다"로 읽힌다(보상 후보로 뜬 퍼펙트 카드가 최대치로 보인다).</para>
+    ///
+    /// <para>이번에 완성하는 조합 자신의 시간 증감은 포함되지 않는다 - DeckManager가
+    /// <c>AddTime</c>을 체인 처리의 <b>맨 마지막에</b> 부르기 때문이다(옛 규칙 그대로다).</para></summary>
+    public static int SecondsSpentThisTurn =>
+        _timer != null && _timer.IsRunning
+            ? Mathf.RoundToInt(_timer.Duration - _timer.RemainingTime)
+            : 0;
 
     /// <summary>
     /// 럭키로 쌓여 아직 쓰지 않은 추가 보상 라운드 수. 럭키 카드가 자기 수치 칸에
@@ -132,7 +150,7 @@ public class SkillResolver : MonoBehaviour
         AwesomeBonus = 0;
         ActionsThisTurn = 0;
         ModifiersThisTurn = 0;
-        _timerChangeThisTurn = 0f;
+        _timer = null;
         LootBonusRounds = 0;
         LuckyUses = 0;
         LuckyUsedThisStage = false;
@@ -169,9 +187,42 @@ public class SkillResolver : MonoBehaviour
     {
         ActionsThisTurn = 0;
         ModifiersThisTurn = 0;
-        _timerChangeThisTurn = 0f;
+
+        // 흘러간 초는 타이머에서 라이브로 읽으므로 여기서 비울 상태가 없다 - 턴이 끝나는
+        // 시점엔 TimerManager가 이미 멈춰 있어(CheckExpired가 OnTimeExpired보다 먼저
+        // _running을 내린다) SecondsSpentThisTurn이 0으로 읽힌다. 아래 갱신 기준값만 되돌린다.
+        _lastBroadcastSeconds = 0;
 
         // 손패에 남아 있는 춉/박치기 같은 카드가 새 턴의 0으로 되돌아가 보여야 한다.
+        OnCardValuesChanged?.Invoke();
+    }
+
+    private int _lastBroadcastSeconds;
+
+    private void Awake()
+    {
+        _timer = timerManager;
+
+        if (timerManager == null)
+            Debug.LogWarning($"{nameof(SkillResolver)}: {nameof(timerManager)}가 연결되지 않아 " +
+                             "퍼펙트가 흘러간 시간을 세지 못합니다(보너스가 항상 0).", this);
+    }
+
+    private void OnDestroy()
+    {
+        if (_timer == timerManager)
+            _timer = null;
+    }
+
+    // 흘러간 초가 바뀌는 순간에만 카드 표시를 갱신한다. 매 프레임 쏘면 퍼펙트가 손패에 있는
+    // 동안 CardView가 초당 수십 번 다시 그려진다 - 값이 정수 초 단위라 그럴 이유가 없다.
+    private void Update()
+    {
+        var now = SecondsSpentThisTurn;
+        if (now == _lastBroadcastSeconds)
+            return;
+
+        _lastBroadcastSeconds = now;
         OnCardValuesChanged?.Invoke();
     }
 
@@ -328,8 +379,10 @@ public class SkillResolver : MonoBehaviour
         result.BreaksEnemyDefense = actionCard.BreaksEnemyDefense;
         result.DamageReduction = damageReduction;
         result.TimerChange = timerChange;
-        // 럭키 확률 판정. 쓴 횟수만큼 오른 확률로 굴리고, 성공했을 때만 처치 보상이 붙는다
-        // (실제로 라운드가 열리는 건 이 공격으로 적을 쓰러뜨렸을 때다 - DeckManager가 본다).
+        // 럭키 확률 판정. 쓴 횟수만큼 오른 확률로 굴린다.
+        // ⚠️ 처치 여부는 보지 않는다 - 판정에 성공하면 보상 라운드가 쌓이고, 그 스테이지를
+        // 클리어할 때 창이 한 번 더 열린다(클리어해야 보상이 열리므로 그것만으로 성립한다).
+        // 쌓이는 건 스테이지당 WordUnlockManager.maxLuckyRoundsPerStage번까지다.
         // ⚠️ UnityEngine.Random으로 명시할 것. 이 파일은 using System이 있어 Random만 쓰면
         // System.Random과 모호해져 컴파일이 깨진다.
         if (luckyCard != null)
@@ -376,7 +429,11 @@ public class SkillResolver : MonoBehaviour
 
         ActionsThisTurn++;
         ModifiersThisTurn += modifierCount;
-        _timerChangeThisTurn += timerChange;
+
+        // ⚠️ 시간 증감은 여기서 따로 세지 않는다. SecondsSpentThisTurn이 타이머의
+        // Duration - RemainingTime을 그대로 읽으므로, 여기서 또 더하면 이중 계산이 된다
+        // (DeckManager가 AddTime을 체인 처리 맨 마지막에 부르는 순서 덕분에, 이번 조합
+        // 자신의 증감이 자기 퍼펙트에 안 잡히는 성질도 그대로 유지된다).
 
         // 손패에 남아 있는 어썸·춉·박치기·퍼펙트의 수치 칸을 방금 바뀐 값으로 다시 쓰게 한다.
         OnCardValuesChanged?.Invoke();

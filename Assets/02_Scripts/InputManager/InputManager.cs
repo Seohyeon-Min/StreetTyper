@@ -23,8 +23,20 @@ public class InputManager : MonoBehaviour
     /// <summary>스페이스. 이벤트 대사를 넘기는 데 쓴다.</summary>
     public event Action OnAdvance;
 
+    /// <summary>Ctrl을 누르고 있는 동안 반복해서 발생한다. 남은 시간을 일부러 깎는 데 쓴다
+    /// (얼마나 깎을지는 받는 쪽인 DeckManager가 정한다 - 여기는 입력만 본다).</summary>
+    public event Action OnBurnTime;
+
     [SerializeField] private float backspaceRepeatDelay = 0.4f;
     [SerializeField] private float backspaceRepeatInterval = 0.05f;
+
+    [Tooltip("Ctrl을 누른 뒤 시간이 깎이기 시작할 때까지의 대기(초). 이 시간이 지나기 전에 떼면 " +
+             "아무 일도 일어나지 않는다 - 잘못 눌렀을 때를 위한 여유이자, 연타로 공짜 차감을 " +
+             "얻지 못하게 하는 장치다.")]
+    [SerializeField] private float ctrlRepeatDelay = 0.4f;
+
+    [Tooltip("Ctrl을 계속 누르고 있을 때 시간이 깎이는 간격(초).")]
+    [SerializeField] private float ctrlRepeatInterval = 0.1f;
 
     [Tooltip("한글 모드 강제를 다시 걸기까지의 최소 간격(초). 영문이 연타로 들어와도 IMM32 호출이 폭주하지 않게 한다.")]
     [SerializeField] private float imeForceCooldown = 0.2f;
@@ -36,6 +48,7 @@ public class InputManager : MonoBehaviour
 
     private bool _inputEnabled;
     private float _backspaceRepeatTimer;
+    private float _ctrlRepeatTimer;
     private float _lastImeForceTime = float.NegativeInfinity;
 
     // 직전 백스페이스를 눌렀을 때의 조합 문자열. 눌러도 값이 그대로면 IME가 받지 않은 것이라
@@ -218,6 +231,12 @@ public class InputManager : MonoBehaviour
         // 우리 버퍼를 먼저 비우고, IME 쪽 조합은 컨텍스트가 붙는 다음 프레임에 버리게 한다.
         ClearInput();
 
+        // ⚠️ 키 반복 타이머도 같이 되돌린다. 플레이어가 키를 누른 채로 턴 전환을 지나면
+        // wasPressedThisFrame은 이미 지난 턴에서 소비됐고 타이머는 0 이하로 남아 있어,
+        // 입력이 열리는 첫 프레임에 대기 없이 곧바로 반복이 터진다.
+        _backspaceRepeatTimer = backspaceRepeatDelay;
+        _ctrlRepeatTimer = ctrlRepeatDelay;
+
         // 방금 켠 IME는 이 프레임엔 아직 창에 붙지 않아 ImmGetContext가 빈 컨텍스트를 준다.
         // 한 프레임 뒤에 맞춘다.
         if (isActiveAndEnabled)
@@ -313,6 +332,38 @@ public class InputManager : MonoBehaviour
                 _backspaceRepeatTimer = backspaceRepeatInterval;
             }
         }
+
+        HandleBurnTimeKey();
+    }
+
+    /// <summary>Ctrl을 누르고 있는 동안 <see cref="OnBurnTime"/>을 반복해서 쏜다.
+    ///
+    /// ⚠️ <b>누른 첫 프레임에는 쏘지 않는다.</b> 백스페이스처럼 wasPressedThisFrame에서 곧바로
+    /// 발동하면 탭 한 번당 공짜로 한 틱을 얻어, 연타가 홀드보다 이득이 된다(시간을 태워 퍼펙트를
+    /// 키우는 게 목적이라 그건 비용 없는 이득이 되어버린다). 첫 프레임에는 대기만 걸고,
+    /// 실제 차감은 반복 분기에서만 한다.</summary>
+    private void HandleBurnTimeKey()
+    {
+        var ctrlHeld = Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed;
+
+        if (!ctrlHeld)
+        {
+            _ctrlRepeatTimer = ctrlRepeatDelay;
+            return;
+        }
+
+        _ctrlRepeatTimer -= Time.deltaTime;
+        if (_ctrlRepeatTimer > 0f)
+            return;
+
+        _ctrlRepeatTimer = ctrlRepeatInterval;
+        OnBurnTime?.Invoke();
+
+        // ⚠️ 이 호출 안에서 턴이 끝날 수 있다. 남은 시간이 0이 되면 TimerManager.AddTime이
+        // 그 자리에서 CheckExpired -> OnTimeExpired -> DeckManager의 턴 전환을 동기적으로 돌리고,
+        // 그 첫 구간이 DisableInput()을 부른다. 그 뒤로는 이 Update를 계속 진행하면 안 된다.
+        if (!_inputEnabled)
+            _ctrlRepeatTimer = ctrlRepeatDelay;
     }
 
     private void HandleTextInput(char character)
@@ -328,7 +379,10 @@ public class InputManager : MonoBehaviour
                 return;
             }
 
-            character = char.ToLowerInvariant(character);
+            // 대문자로 정규화한다. 카드 영문 이름도 LanguageSettings.PickCardText에서 대문자로
+            // 나오므로, CapsLock/Shift와 무관하게 매칭되고 비교하는 쪽은 Ordinal 그대로 둘 수 있다.
+            // ⚠️ 이 둘은 반드시 같이 움직여야 한다 - 한쪽만 바꾸면 매칭이 통째로 깨진다.
+            character = char.ToUpperInvariant(character);
         }
         else if (!IsHangul(character))
         {
@@ -340,6 +394,11 @@ public class InputManager : MonoBehaviour
 
         if (CurrentInput.Length >= Mathf.Max(1, maxInputLength))
             return;
+
+        // 실제로 버퍼에 들어간 글자만 센다(길이 상한에 걸려 버려진 글자는 제외).
+        // 오타·나중에 지운 글자도 그대로 센다 - 결과 화면의 "1분당 평균 글자 수"는 누적 타이핑 량이다.
+        if (StatisticsManager.Instance != null)
+            StatisticsManager.Instance.AddTypedCharacter();
 
         CurrentInput += character;
         OnCharacterEntered?.Invoke(character);

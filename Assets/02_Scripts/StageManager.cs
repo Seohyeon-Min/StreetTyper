@@ -142,13 +142,23 @@ public class StageManager : MonoBehaviour
     [Tooltip("적이 처음 생성될 화면 오른쪽 밖의 X 오프셋 거리")]
     public float spawnOffScreenX = 15f;
 
+    [Tooltip("결과 화면의 '최고 도달 스테이지' 분모로만 쓰인다 - 런 길이와는 무관하다. " +
+             "런 길이를 바꾸려면 아래 totalBattles를 바꿀 것. 보통 totalBattles에서 보스 수를 뺀 값이다.")]
     public int totalStages = 10;
+
+    [Header("스테이지 구성")]
+    [Tooltip("이번 런의 총 전투 수(보스 포함). 마지막 전투가 엔딩 대결이 된다.")]
+    public int totalBattles = 13;
+
+    [Tooltip("마더 드래곤이 나오는 전투 인덱스(0부터). 여기 적힌 전투는 싸우지 않고 대사로 " +
+             "진행되며 체력·공격력·방어력 스케일링에서도 빠진다.\n" +
+             "⚠️ 마지막 전투(totalBattles - 1)는 엔딩 대결이라 여기 없어도 자동으로 포함된다.")]
+    public int[] bossBattleIndices = { 4, 9 };
 
     private int currentBattleIndex = 0;
 
     // 지금 스테이지에 스폰된 적이 마더 드래곤인가. 보상에 "지우기" 카드를 놓을지 판단하는 데 쓴다.
     private bool stageWasMotherDragon;
-    private int totalBattles = 13;
     private GameObject currentEnemyObject;
     private Coroutine startRoutine;
     private Coroutine advanceRoutine;
@@ -260,10 +270,15 @@ public class StageManager : MonoBehaviour
         }
 
         // 실제 UI 및 통계에 표시될 스테이지 번호 계산 (보스는 카운트 제외)
+        // 보스전은 표시 번호에서 빼야 "STAGE 1,2,3,4 → MOMMY → STAGE 5..."로 이어진다.
+        // ⚠️ 인덱스를 하드코딩하지 않고 IsBossBattle을 그대로 센다 - 보스 구성이 바뀌면
+        // 여기도 같이 따라와야 하는데, 예전에는 4·9·12가 박혀 있어 따로 놀았다.
         int displayStage = currentBattleIndex + 1;
-        if (currentBattleIndex >= 4) displayStage -= 1; // 첫 번째 보스전 및 그 이후 인덱스 보정
-        if (currentBattleIndex >= 9) displayStage -= 1; // 두 번째 보스전 및 그 이후 인덱스 보정
-        if (currentBattleIndex >= 12) displayStage -= 1; // [추가] 세 번째 보스전 보정
+        for (var i = 0; i < currentBattleIndex; i++)
+        {
+            if (IsBossBattle(i))
+                displayStage--;
+        }
 
         // [추가] 최고 도달 스테이지 기록 갱신 (보스를 제외한 순수 스테이지 번호 전달)
         if (StatisticsManager.Instance != null) 
@@ -421,6 +436,11 @@ public class StageManager : MonoBehaviour
         if (skillResolver != null)
             skillResolver.ResetStage();
 
+        // 럭키 보상은 스테이지당 정해진 횟수까지만 열린다 - 그 카운터와 소비되지 않고 남은
+        // 보너스 라운드를 여기서 되돌린다(누적의 주인이 WordUnlockManager라 따로 부른다).
+        if (wordUnlockManager != null)
+            wordUnlockManager.ResetStage();
+
         if (statusEffectManager != null)
             statusEffectManager.ClearAll();
 
@@ -528,10 +548,29 @@ public class StageManager : MonoBehaviour
         yield return BeginStageAfterDelay();
     }
 
-    /// <summary>이 전투 인덱스가 보스전(마더 드래곤)인가. 스폰 분기와 체력 공식이 같은 판단을
-    /// 써야 하므로 한 곳에 모아둔다.</summary>
-    private static bool IsBossBattle(int battleIndex) =>
-        battleIndex == 4 || battleIndex == 9 || battleIndex == 12;
+    /// <summary>이 전투 인덱스가 보스전(마더 드래곤)인가. 스폰 분기·스탯 공식·엔딩 판정이
+    /// 모두 이 하나를 써야 서로 어긋나지 않는다.
+    ///
+    /// <para>⚠️ <b>마지막 전투는 인스펙터 목록에 없어도 항상 보스다.</b> 예전에는 보스 목록이
+    /// 4·9·12로 하드코딩되어 있고 엔딩은 <c>totalBattles - 1</c>로 따로 계산돼서, 전투 수를
+    /// 바꾸면 엔딩이 보스가 아닌 자리에 떨어져 <b>마더 드래곤 대신 일반 드래곤이 스폰</b>됐다.
+    /// 그러면 엔딩 대사도 스케일링 제외도 어긋난다.</para></summary>
+    private bool IsBossBattle(int battleIndex)
+    {
+        if (battleIndex == totalBattles - 1)
+            return true;
+
+        if (bossBattleIndices == null)
+            return false;
+
+        for (var i = 0; i < bossBattleIndices.Length; i++)
+        {
+            if (bossBattleIndices[i] == battleIndex)
+                return true;
+        }
+
+        return false;
+    }
 
     /// <summary>이 전투의 일반 적 최대 체력.
     ///

@@ -22,6 +22,11 @@ public class TimerManager : MonoBehaviour
     /// 판단해 바 길이를 늘릴 때 기준으로 쓴다.</summary>
     public float BaseDuration => baseDuration;
 
+    /// <summary>카운트다운이 실제로 도는 중인가. 턴 사이 대기·결과 화면·보상 화면에서는 false다.
+    /// "이번 턴에 몇 초가 흘렀는가"를 읽는 쪽(SkillResolver)이 턴 밖의 값을 읽지 않으려면
+    /// 이 값을 같이 봐야 한다 - RemainingTime은 턴이 끝난 뒤에도 그 자리에 남아 있다.</summary>
+    public bool IsRunning => _running;
+
     public event Action<float> OnTimeChanged;
     public event Action OnTimeExpired;
 

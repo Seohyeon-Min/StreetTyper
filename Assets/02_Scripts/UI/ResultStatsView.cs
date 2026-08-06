@@ -28,7 +28,7 @@ public class ResultStatsView : MonoBehaviour
     [SerializeField] private string highestStageLabelText = "최고 도달 스테이지";
     [SerializeField] private string highestStageLabelTextEn = "Highest stage";
 
-    [SerializeField] private string cpmLabelText = "평균 타자 속도 (CPM)";
+    [SerializeField] private string cpmLabelText = "1분당 평균 글자 수";
     [SerializeField] private string cpmLabelTextEn = "Average speed (CPM)";
 
     [SerializeField] private string wordsUsedLabelText = "사용한 단어 수";

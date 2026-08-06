@@ -24,10 +24,14 @@ public class WordUnlockManager : MonoBehaviour
     [Tooltip("스테이지 클리어 시 보여줄 후보 단어 개수. 플레이어는 이 중 하나만 고른다.")]
     [SerializeField] private int wordsPerReward = 3;
 
-    [Tooltip("럭키가 포함된 공격으로 적을 처치했을 때 추가로 열리는 보상 라운드 수. " +
+    [Tooltip("럭키 조합이 성공했을 때 추가로 열리는 보상 라운드 수. " +
              "장수를 늘리는 게 아니라 보상 창을 한 번 더 띄운다 - 선택제에서는 후보를 늘리면 " +
              "고를 수 있는 건 여전히 하나라 오히려 보상이 줄어드는 것처럼 보인다.")]
     [SerializeField] private int luckyBonusRounds = 1;
+
+    [Tooltip("한 스테이지에서 럭키로 받을 수 있는 보상 라운드의 최대 횟수. 이 수를 채우면 " +
+             "같은 스테이지에서 럭키를 몇 번 더 성공시켜도 라운드가 늘지 않는다.")]
+    [SerializeField] private int maxLuckyRoundsPerStage = 1;
 
     [SerializeField] private bool logDebugEvents = true;
 
@@ -37,6 +41,9 @@ public class WordUnlockManager : MonoBehaviour
     // 8번 키가 실제 럭키 판정 전에 미리 예약한 1회. 이후 럭키가 실제로 성공하면 새 라운드를
     // 더하지 않고 이 예약을 실제 발동으로 간주해, 디버그 때문에 보상이 두 번 늘지 않게 한다.
     private bool _debugBonusPrebooked;
+
+    // 이번 스테이지에서 럭키로 이미 열어준 보상 라운드 수. ResetStage가 되돌린다.
+    private int _luckyRoundsGrantedThisStage;
 
     // 시작 단어 지급용. 매번 새 리스트를 만들지 않도록 재사용한다.
     private readonly List<CardBase> _granted = new List<CardBase>();
@@ -135,12 +142,18 @@ public class WordUnlockManager : MonoBehaviour
         return added;
     }
 
-    /// <summary>럭키가 포함된 공격으로 적을 처치했을 때 호출한다. 다음 클리어 보상에
-    /// luckyBonusRounds만큼 라운드를 더 연다. 한 턴에 여러 번 성공하면 그만큼 쌓인다.</summary>
+    /// <summary>럭키 조합이 성공했을 때 호출한다(적을 처치했는지는 보지 않는다 - 클리어해야
+    /// 보상 창이 열리므로 그 조건만으로 이미 성립한다). 다음 클리어 보상에 luckyBonusRounds만큼
+    /// 라운드를 더 연다.
+    ///
+    /// ⚠️ <b>한 스테이지에 <see cref="maxLuckyRoundsPerStage"/>번까지만 열린다.</b> 예전에는
+    /// 성공할 때마다 무제한으로 쌓여서, 럭키를 반복해 치면 보상 창이 그만큼 연달아 떴다.</summary>
     public void AddLuckyBonus()
     {
         if (_debugBonusPrebooked)
         {
+            // 예약을 "소비"만 한다 - 라운드를 실제로 더한 건 DebugEnsureLuckyBonus이고
+            // 스테이지 카운터도 거기서 이미 올렸다. 여기서 또 올리면 상한이 두 번 깎인다.
             _debugBonusPrebooked = false;
 
             if (logDebugEvents)
@@ -148,10 +161,32 @@ public class WordUnlockManager : MonoBehaviour
             return;
         }
 
+        if (_luckyRoundsGrantedThisStage >= Mathf.Max(0, maxLuckyRoundsPerStage))
+        {
+            if (logDebugEvents)
+                Debug.Log($"WordUnlock: 럭키 성공했지만 이번 스테이지 상한({maxLuckyRoundsPerStage}회)을 " +
+                          "이미 채워 보상 라운드를 더하지 않습니다.", this);
+            return;
+        }
+
         SetBonusRounds(_pendingBonusRounds + luckyBonusRounds);
+        _luckyRoundsGrantedThisStage++;
 
         if (logDebugEvents)
-            Debug.Log($"WordUnlock: 럭키 처치 - 보상 라운드 +{luckyBonusRounds} (누적 +{_pendingBonusRounds})", this);
+            Debug.Log($"WordUnlock: 럭키 성공 - 보상 라운드 +{luckyBonusRounds} (누적 +{_pendingBonusRounds}, " +
+                      $"이번 스테이지 {_luckyRoundsGrantedThisStage}/{maxLuckyRoundsPerStage})", this);
+    }
+
+    /// <summary>스테이지가 새로 열릴 때 호출한다(<see cref="StageManager.LoadStage"/>).
+    /// 럭키 상한 카운터를 되돌리고, 소비되지 않고 남은 보너스 라운드도 비운다.
+    ///
+    /// 남은 라운드까지 비우는 이유: 보통은 보상 루프가 다 소비하지만, 미보유 단어가 떨어져
+    /// 후보가 비면 BeginRewardRound가 소비 없이 FinishReward로 빠져 라운드가 남는다.</summary>
+    public void ResetStage()
+    {
+        _luckyRoundsGrantedThisStage = 0;
+        _debugBonusPrebooked = false;
+        SetBonusRounds(0);
     }
 
     /// <summary>8번 디버그용. 럭키 조합을 직접 쓰지 않고 9번으로 적을 처치해도 럭키 보상창을
@@ -163,6 +198,9 @@ public class WordUnlockManager : MonoBehaviour
 
         SetBonusRounds(Mathf.Max(1, luckyBonusRounds));
         _debugBonusPrebooked = true;
+
+        // 실제로 라운드를 더한 건 여기다 - 스테이지 상한도 여기서 같이 센다.
+        _luckyRoundsGrantedThisStage++;
 
         Debug.Log($"[DEBUG] 럭키 보상 라운드 예약 +{_pendingBonusRounds}", this);
     }

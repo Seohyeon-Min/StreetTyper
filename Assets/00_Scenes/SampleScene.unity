@@ -8368,9 +8368,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 108802000}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: totalStages
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: enemyManager
       value: 
       objectReference: {fileID: 1457634979}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: eventManager
+      value: 
+      objectReference: {fileID: 240152057}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: inputManager
       value: 
@@ -9371,6 +9379,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: InputManager
       objectReference: {fileID: 0}
+    - target: {fileID: 1722145678539859636, guid: b6f47acbe21fd2043a04cb8c8041526e, type: 3}
+      propertyPath: timerManager
+      value:
+      objectReference: {fileID: 2017997002785934851}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

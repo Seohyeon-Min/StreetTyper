@@ -13,7 +13,12 @@ public enum CardCategory
 public enum TurnScalingSource
 {
     None,
+
+    /// <summary>이번 턴에 <b>실제로 흘러간</b> 초 = 자연 감소 + Ctrl 소각 + 훅 감소 − 잽/퀵 증가.
+    /// 타이머의 남은 시간에서 바로 계산한다(<see cref="SkillResolver.SecondsSpentThisTurn"/>) -
+    /// 예전에는 카드 효과로 변한 초만 세서 가만히 있으면 오르지 않았다.</summary>
     SecondsSpentThisTurn,
+
     ActionsThisTurn,
     ModifiersThisTurn,
 }

@@ -16,7 +16,8 @@ public class TypedCommand
     [Tooltip("한국어 모드에서 칠 명령 단어")]
     [SerializeField] private string korean;
 
-    [Tooltip("영어 모드에서 칠 명령 단어. 소문자로 적을 것 - 입력이 소문자로 정규화되어 들어온다.")]
+    [Tooltip("영어 모드에서 칠 명령 단어. 대소문자는 아무렇게나 적어도 된다 - Word()가 대문자로 " +
+             "맞춰준다(입력도 대문자로 정규화되어 들어온다).")]
     [SerializeField] private string english;
 
     [Tooltip("이 명령을 안내하는 한국어 문구. {0} 자리에 지금 언어의 명령 단어가 들어간다. " +
@@ -41,10 +42,21 @@ public class TypedCommand
         this.hintEnglish = hintEnglish;
     }
 
-    /// <summary>지금 언어로 쳐야 하는 단어. 타이핑 매칭 키다.</summary>
+    /// <summary>지금 언어로 쳐야 하는 단어. 타이핑 매칭 키다.
+    ///
+    /// ⚠️ 비한국어는 <b>대문자로 정규화</b>한다. 입력(<see cref="InputManager.HandleTextInput"/>)이
+    /// 대문자로 들어오고 매칭 비교가 Ordinal이라, 인스펙터에 소문자로 적혀 있으면 영영 안 맞는다.
+    /// 여기서 맞춰주면 씬/프리팹에 이미 저장된 옛 소문자 값도 그대로 동작한다
+    /// (실제로 CardCollectionPanel의 "close"가 이 경로다 - 안 맞추면 영어 모드에서
+    /// 보유 카드 목록을 타이핑으로 닫을 수 없다).</summary>
     public string Word(UnityEngine.Object owner, string fieldName)
     {
-        return LanguageSettings.Pick(korean, english, owner, fieldName);
+        var word = LanguageSettings.Pick(korean, english, owner, fieldName);
+
+        if (LanguageSettings.Current == GameLanguage.Korean || string.IsNullOrEmpty(word))
+            return word;
+
+        return word.ToUpperInvariant();
     }
 
     /// <summary>지금 언어의 안내 문구. 포맷이 비어 있으면 빈 문자열을 돌려주므로

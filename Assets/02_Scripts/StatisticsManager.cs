@@ -37,12 +37,24 @@ public class StatisticsManager : MonoBehaviour
     public void StartTracking() => isTrackingTime = true;
     public void StopTracking() => isTrackingTime = false;
 
+    /// <summary>단어 하나를 성공적으로 완성했다. 글자 수는 여기서 세지 않는다 -
+    /// <see cref="AddTypedCharacter"/>가 입력 시점에 이미 세고 있어서, 여기서 또 더하면
+    /// 성공한 단어만 두 번 계산된다.</summary>
     public void AddValidWord(string word)
     {
         validWordsUsed++;
-        // 공백을 제외한 순수 알파벳/글자 수만 누적합니다.
-        totalTypedCharacters += word.Replace(" ", "").Length;
     }
+
+    /// <summary>글자 하나가 실제로 입력창에 들어갔다(<see cref="InputManager.HandleTextInput"/>).
+    ///
+    /// 오타든 나중에 지운 글자든 전부 센다 - "1분 동안 타이핑한 글자 수"는 누적 타이핑 량이라
+    /// 백스페이스로 되돌리지 않는다. 예전에는 성공한 단어의 글자 수만 세서 실제로 친 양보다
+    /// 적게 나왔다.
+    ///
+    /// ⚠️ 한글은 <b>커밋된 음절</b> 하나당 1이다(조합 중인 자모는 세지 않는다 - 조합은 음절마다
+    /// 여러 번 갱신되어 3배쯤 부풀려진다). 그래서 한글은 음절 수, 영어는 글자 수가 되어
+    /// 두 언어의 수치를 직접 비교할 수는 없다.</summary>
+    public void AddTypedCharacter() => totalTypedCharacters++;
 
     public void AddDamageDealt(int damage) => totalDamageDealt += damage;
     public void AddDamageTaken(int damage) => totalDamageTaken += damage;

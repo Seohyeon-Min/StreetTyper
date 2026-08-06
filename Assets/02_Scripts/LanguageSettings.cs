@@ -161,29 +161,39 @@ public static class LanguageSettings
                 if (textType == "label") return trans.koLabel;
                 break;
             case GameLanguage.English:
-                if (textType == "name") return trans.enName;
+                if (textType == "name") return UpperName(trans.enName);
                 if (textType == "desc") return trans.enDesc;
                 if (textType == "label") return trans.enLabel;
                 break;
             case GameLanguage.French:
                 // [핵심] 프랑스어일 때 '이름(타이핑 타겟)'은 무조건 영어를 반환!
-                if (textType == "name") return trans.enName;
+                if (textType == "name") return UpperName(trans.enName);
                 if (textType == "desc") return trans.frDesc;
                 if (textType == "label") return trans.frLabel;
                 break;
             case GameLanguage.Spanish:
                 // [핵심] 스페인어일 때 '이름(타이핑 타겟)'은 무조건 영어를 반환!
-                if (textType == "name") return trans.enName;
+                if (textType == "name") return UpperName(trans.enName);
                 if (textType == "desc") return trans.esDesc;
                 if (textType == "label") return trans.esLabel;
                 break;
             case GameLanguage.Japanese:
                 // [핵심] 일본어일 때도 '이름(타이핑 타겟)'은 무조건 영어를 반환!
-                if (textType == "name") return trans.enName;
+                if (textType == "name") return UpperName(trans.enName);
                 if (textType == "desc") return trans.jaDesc;
                 if (textType == "label") return trans.jaLabel;
                 break;
         }
         return "";
     }
+
+    /// <summary>영어 카드 이름을 대문자로 바꾼다. 이름은 <b>표시 문자열이자 타이핑 매칭 키</b>라,
+    /// 이 변환은 <see cref="InputManager.HandleTextInput"/>의 대문자 정규화와 <b>반드시 짝을
+    /// 이뤄야 한다</b> - 매칭 비교가 전부 Ordinal(대소문자 구분)이라 한쪽만 바꾸면 손패·보상·
+    /// 명령 카드가 통째로 안 맞는다.
+    ///
+    /// ToUpper가 아니라 ToUpperInvariant인 건 터키어 로케일에서 i가 İ로 바뀌는 걸 피하기
+    /// 위해서다(입력 쪽도 같은 이유로 Invariant를 쓴다). 한국어 이름에는 적용하지 않는다.</summary>
+    private static string UpperName(string name) =>
+        string.IsNullOrEmpty(name) ? name : name.ToUpperInvariant();
 }

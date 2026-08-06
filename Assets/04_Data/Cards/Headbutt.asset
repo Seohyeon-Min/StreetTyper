@@ -32,4 +32,4 @@ MonoBehaviour:
   comboMinHits: 0
   comboMaxHits: 0
   scalingSource: 3
-  scalingPerUnit: 2
+  scalingPerUnit: 1

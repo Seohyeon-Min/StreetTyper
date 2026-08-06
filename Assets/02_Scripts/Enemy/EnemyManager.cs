@@ -55,8 +55,10 @@ public class EnemyManager : MonoBehaviour
         {
             case ActionType.Attack:
                 return currentEnemy.power.ToString();
+            // ⚠️ enemyData.defensePower가 아니라 런타임 스탯을 읽는다 - 에셋 값은 스테이지마다
+            // 스케일링되지 않아서, 예고 숫자와 실제로 쌓이는 방어도가 어긋난다.
             case ActionType.Defend:
-                return currentEnemy.enemyData.defensePower.ToString();
+                return currentEnemy.defensePower.ToString();
             case ActionType.Buff:
                 return currentEnemy.enemyData.buffPower.ToString();
             default:
@@ -143,7 +145,7 @@ public class EnemyManager : MonoBehaviour
                 break;
             case ActionType.Defend:
                 Debug.Log(data.enemyName + " Action: DEFEND!");
-                currentEnemy.AddDefense(data.defensePower);
+                currentEnemy.AddDefense(currentEnemy.defensePower);
                 break;
             case ActionType.Buff:
                 Debug.Log(data.enemyName + " Action: BUFF POWER!");

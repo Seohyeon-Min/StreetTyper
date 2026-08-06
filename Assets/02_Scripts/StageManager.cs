@@ -14,8 +14,41 @@ public class StageManager : MonoBehaviour
     [Tooltip("스테이지가 열리고 플레이어가 타이핑을 시작할 수 있을 때까지의 대기 시간(초)")]
     public float stageStartDelay = 2f;
 
-    [Tooltip("총 스테이지 수(결과 화면의 '최고 도달 스테이지' 분모로만 쓰인다 - 스폰 로직과 무관)")]
-    public int totalStages = 12;
+    [Header("적 체력 스케일링")]
+    [Tooltip("첫 스테이지 일반 적의 최대 체력.")]
+    public int enemyBaseMaxHP = 20;
+
+    [Tooltip("일반 스테이지를 하나 지날 때마다 적 최대 체력에 더할 양.")]
+    public int enemyHPGainPerStage = 10;
+
+    [Tooltip("마더 드래곤(보스)을 지날 때마다 위 '스테이지당 증가량'이 이만큼 커진다. " +
+             "0이면 증가량이 끝까지 일정하다.")]
+    public int enemyHPGainIncreaseAfterBoss = 10;
+
+    [Header("적 공격력 스케일링")]
+    [Tooltip("첫 스테이지 일반 적의 공격력. EnemyData의 power 대신 이 값을 기준으로 삼는다.")]
+    public int enemyBasePower = 5;
+
+    [Tooltip("공격력은 체력과 달리 배율로 오른다. 일반 스테이지를 하나 지날 때마다 " +
+             "늘어나는 비율(%)이다. 0이면 위 기본값이 끝까지 그대로 쓰인다.")]
+    public float enemyPowerGainPercentPerStage = 20f;
+
+    [Tooltip("마더 드래곤(보스)을 지날 때마다 위 증가 비율(%)이 이만큼 커진다. " +
+             "0이면 비율이 끝까지 일정하다.")]
+    public float enemyPowerGainPercentIncreaseAfterBoss = 0f;
+
+    [Header("적 방어력 스케일링")]
+    [Tooltip("첫 스테이지 일반 적이 '방어'를 고를 때 한 번에 쌓는 방어도. " +
+             "EnemyData의 defensePower 대신 이 값을 기준으로 삼는다.")]
+    public int enemyBaseDefensePower = 5;
+
+    [Tooltip("방어력도 공격력과 같은 배율 방식이다. 일반 스테이지를 하나 지날 때마다 " +
+             "늘어나는 비율(%)이다. 0이면 위 기본값이 끝까지 그대로 쓰인다.")]
+    public float enemyDefenseGainPercentPerStage = 20f;
+
+    [Tooltip("마더 드래곤(보스)을 지날 때마다 위 증가 비율(%)이 이만큼 커진다. " +
+             "0이면 비율이 끝까지 일정하다.")]
+    public float enemyDefenseGainPercentIncreaseAfterBoss = 0f;
 
     [Header("References")]
     public BattleManager battleManager;
@@ -27,6 +60,7 @@ public class StageManager : MonoBehaviour
     public CardSlotManager cardSlotManager;
     public WordChainManager wordChainManager;
     public PendingActionManager pendingActionManager;
+    public EventManager eventManager;
 
     [Tooltip("적 HP 바의 위치 추종 컴포넌트. 적은 스테이지마다 새로 스폰되므로 여기서 대상을 넘겨준다.")]
     public WorldAnchoredUI enemyHealthBarAnchor;
@@ -108,11 +142,13 @@ public class StageManager : MonoBehaviour
     [Tooltip("적이 처음 생성될 화면 오른쪽 밖의 X 오프셋 거리")]
     public float spawnOffScreenX = 15f;
 
+    public int totalStages = 10;
+
     private int currentBattleIndex = 0;
 
     // 지금 스테이지에 스폰된 적이 마더 드래곤인가. 보상에 "지우기" 카드를 놓을지 판단하는 데 쓴다.
     private bool stageWasMotherDragon;
-    private int totalBattles = 10;
+    private int totalBattles = 13;
     private GameObject currentEnemyObject;
     private Coroutine startRoutine;
     private Coroutine advanceRoutine;
@@ -207,8 +243,9 @@ public class StageManager : MonoBehaviour
         }
 
 
-        // 인덱스 4(5번째 전투 = 4스테이지 클리어 후)와 인덱스 9(10번째 전투 = 8스테이지 클리어 후)를 보스전으로 설정
-        bool isBossBattle = (currentBattleIndex == 4 || currentBattleIndex == 9);
+        // 보스전 인덱스는 IsBossBattle 한 곳에서만 정한다 - 스폰 분기와 스탯 공식(체력·공격력·
+        // 방어력)이 같은 판단을 써야 엔딩 보스가 일반 적 공식에 휘말리지 않는다.
+        bool isBossBattle = IsBossBattle(currentBattleIndex);
 
         if (SoundManager.Instance != null)
         {
@@ -226,10 +263,11 @@ public class StageManager : MonoBehaviour
         int displayStage = currentBattleIndex + 1;
         if (currentBattleIndex >= 4) displayStage -= 1; // 첫 번째 보스전 및 그 이후 인덱스 보정
         if (currentBattleIndex >= 9) displayStage -= 1; // 두 번째 보스전 및 그 이후 인덱스 보정
+        if (currentBattleIndex >= 12) displayStage -= 1; // [추가] 세 번째 보스전 보정
 
-        // [추가] 최고 도달 스테이지 기록 갱신
-        if (StatisticsManager.Instance != null)
-            StatisticsManager.Instance.UpdateHighestStage(currentBattleIndex + 1);
+        // [추가] 최고 도달 스테이지 기록 갱신 (보스를 제외한 순수 스테이지 번호 전달)
+        if (StatisticsManager.Instance != null) 
+            StatisticsManager.Instance.UpdateHighestStage(displayStage);
 
         if (currentStageText != null)
         {
@@ -284,11 +322,31 @@ public class StageManager : MonoBehaviour
 
         EnemyBase newEnemyBase = currentEnemyObject.GetComponent<EnemyBase>();
 
+        // [추가] 마지막 전투 인덱스일 경우 엔딩 보스로 설정
+        if (currentBattleIndex == totalBattles - 1)
+        {
+            newEnemyBase.isEndingBoss = true;
+        }
+
         // [유지] 이 줄은 절대 지우지 마세요! 보상(지우기 카드) 처리에 꼭 필요합니다.
         stageWasMotherDragon = newEnemyBase is MotherDragon;
 
-        // [추가] 생성 직후 스탯 스케일링 적용
-        newEnemyBase.ApplyScaling(displayStage - 1);
+        // [추가] 생성 직후 스탯 스케일링 적용.
+        // ⚠️ 마더 드래곤에는 체력 공식을 태우지 않는다(0을 넘기면 체력을 건드리지 않는다).
+        // 3턴을 버텨야 스파링이 성립하는데 일반 적 공식(기본 20)을 태우면 그 전에 죽어
+        // 아웃로 이벤트가 통째로 깨진다 - 프리팹/EnemyData 값을 그대로 쓴다.
+        int scaledHP = 0, scaledPower = 0, scaledDefense = 0;
+
+        if (!isBossBattle)
+        {
+            scaledHP = ComputeEnemyMaxHP(currentBattleIndex);
+            scaledPower = Mathf.Max(1, Mathf.RoundToInt(enemyBasePower *
+                ComputeGrowthMultiplier(currentBattleIndex, enemyPowerGainPercentPerStage, enemyPowerGainPercentIncreaseAfterBoss)));
+            scaledDefense = Mathf.Max(1, Mathf.RoundToInt(enemyBaseDefensePower *
+                ComputeGrowthMultiplier(currentBattleIndex, enemyDefenseGainPercentPerStage, enemyDefenseGainPercentIncreaseAfterBoss)));
+        }
+
+        newEnemyBase.ApplyScaling(scaledHP, scaledPower, scaledDefense);
 
         // [트랜지션 마무리 연출]
         // 1. 배경 스크롤 서서히 정지
@@ -383,21 +441,29 @@ public class StageManager : MonoBehaviour
         // 새 스테이지를 로드하는 시점이므로 "보상 뒤 자동 진행 중" 상태는 끝난다.
         _advancingAfterReward = false;
 
-        // 보스전이고 타이틀 카드가 배선되어 있으면 그쪽 인트로(타이틀 카드 → 인사 대사)를 먼저
-        // 재생한 뒤 기존 꼬리로 이어진다. 배선이 안 되어 있으면 지금과 똑같은 동작으로 폴백한다.
-        if (isBossBattle && bossTitleCardObject != null)
+        // =========================================================
+        // [수정] 아래 부분을 교체하여 엔딩 보스일 경우 전투 스킵 및 즉시 이벤트 실행
+        if (newEnemyBase.isEndingBoss)
+        {
+            if (eventManager != null)
+            {
+                // true를 넘겨 wasMotherDragon(엔딩 이벤트)으로 처리되게 합니다.
+                eventManager.StartEvent(true, 0, true);
+            }
+            else
+            {
+                battleManager.ShowGameClear();
+            }
+        }
+        else if (isBossBattle && bossTitleCardObject != null)
         {
             startRoutine = StartCoroutine(PlayBossIntroThenBegin());
         }
         else
         {
-            // 문구는 코드가 써 넣지 않는다 - 등장 배너의 내용은 stageStartObject(프리팹/애니메이션)가
-            // 통째로 갖는다. 켜는 순간 StageStartEffect.OnEnable이 등장 연출을 알아서 재생한다.
             if (stageStartObject != null)
                 stageStartObject.SetActive(true);
 
-            // 보상 중 가라앉혀뒀던 손패를 배너가 덮고 있는 동안 되돌린다(보스 인트로 경로에도
-            // 같은 호출이 있다 - 두 경로 모두 배너를 켠 직후가 같은 타이밍이다).
             if (rewardInputHandler != null)
                 rewardInputHandler.RestoreHand();
 
@@ -473,6 +539,86 @@ public class StageManager : MonoBehaviour
         // ⚠️ 여기서는 StartCoroutine으로 새로 걸지 않는다 - 이 코루틴 자신이 이미 startRoutine이라
         // 다시 대입하면 이쪽이 추적에서 빠져 LoadStage의 StopCoroutine 가드가 무력해진다.
         yield return BeginStageAfterDelay();
+    }
+
+    /// <summary>이 전투 인덱스가 보스전(마더 드래곤)인가. 스폰 분기와 체력 공식이 같은 판단을
+    /// 써야 하므로 한 곳에 모아둔다.</summary>
+    private static bool IsBossBattle(int battleIndex) =>
+        battleIndex == 4 || battleIndex == 9 || battleIndex == 12;
+
+    /// <summary>이 전투의 일반 적 최대 체력.
+    ///
+    /// <para>첫 스테이지는 <see cref="enemyBaseMaxHP"/>에서 시작하고, 일반 스테이지를 하나
+    /// 지날 때마다 <see cref="enemyHPGainPerStage"/>씩 더한다. 보스를 지나면 그 뒤부터
+    /// 증가량이 <see cref="enemyHPGainIncreaseAfterBoss"/>만큼 커진다.</para>
+    ///
+    /// <para>기본값(20 / 10 / 10) 기준 진행: 20 → 30 → 40 → 50 → [보스] → 70 → 90 → 110 → 130.
+    /// 보스 다음 스테이지부터 증가량이 10에서 20으로 올라간 것이다.</para>
+    ///
+    /// <para>⚠️ 보스전 자체는 이 값을 쓰지 않는다(LoadStage가 0을 넘긴다). 보스는 체력이 아니라
+    /// 턴 수로 끝나는 스파링이다.</para></summary>
+    private int ComputeEnemyMaxHP(int battleIndex)
+    {
+        var hp = enemyBaseMaxHP;
+        var isFirstNormal = true;
+        var bossesPassed = 0;
+
+        for (var i = 0; i <= battleIndex; i++)
+        {
+            // 보스는 체력이 누적되는 스테이지가 아니다 - 증가량만 키우고 지나간다.
+            if (IsBossBattle(i))
+            {
+                bossesPassed++;
+                continue;
+            }
+
+            // 첫 일반 스테이지는 기본값 그대로다(아직 지나온 스테이지가 없다).
+            if (isFirstNormal)
+            {
+                isFirstNormal = false;
+                continue;
+            }
+
+            hp += enemyHPGainPerStage + enemyHPGainIncreaseAfterBoss * bossesPassed;
+        }
+
+        return Mathf.Max(1, hp);
+    }
+
+    /// <summary>공격력·방어력이 공유하는 배율 계산(체력만 덧셈이라 따로 있다).
+    ///
+    /// <para>첫 스테이지는 1배, 일반 스테이지를 하나 지날 때마다 <paramref name="percentPerStage"/>%씩
+    /// 더해지고, 보스를 지나면 그 뒤부터 <paramref name="percentIncreaseAfterBoss"/>%만큼 걸음이
+    /// 커진다. 체력 공식(<see cref="ComputeEnemyMaxHP"/>)과 같은 걸음이다.</para>
+    ///
+    /// <para>기본값(20% / 0%) 기준: 1.0 → 1.2 → 1.4 → 1.6 → [보스] → 1.8 → 2.0 → 2.2 → 2.4.
+    /// 예전의 "스테이지당 +20%"와 같은 진행이다.</para></summary>
+    private float ComputeGrowthMultiplier(int battleIndex, float percentPerStage, float percentIncreaseAfterBoss)
+    {
+        var percent = 0f;
+        var step = percentPerStage;
+        var isFirstNormal = true;
+
+        for (var i = 0; i <= battleIndex; i++)
+        {
+            // 보스는 수치가 누적되는 스테이지가 아니다 - 걸음만 키우고 지나간다.
+            if (IsBossBattle(i))
+            {
+                step += percentIncreaseAfterBoss;
+                continue;
+            }
+
+            // 첫 일반 스테이지는 배율 1배 그대로다(아직 지나온 스테이지가 없다).
+            if (isFirstNormal)
+            {
+                isFirstNormal = false;
+                continue;
+            }
+
+            percent += step;
+        }
+
+        return Mathf.Max(0f, 1f + percent / 100f);
     }
 
     public void RestartStage()

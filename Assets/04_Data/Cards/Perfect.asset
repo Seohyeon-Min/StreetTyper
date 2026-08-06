@@ -21,7 +21,7 @@ MonoBehaviour:
   statsLabelEn: '{0}'
   icon: {fileID: 0}
   effectType: 5
-  value: 2
+  value: 1
   scalingSource: 1
   chancePercent: 10
   chanceGainPerUse: 10

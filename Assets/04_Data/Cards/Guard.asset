@@ -20,7 +20,7 @@ MonoBehaviour:
   statsLabelEn: BLOCK
   icon: {fileID: 0}
   actionKind: 1
-  strengthBonus: 0
+  strengthBonus: 2
   timerDelta: 0
   ignoresDefense: 0
   breaksEnemyDefense: 0

@@ -21,7 +21,7 @@ MonoBehaviour:
   statsLabelEn: +5
   icon: {fileID: 0}
   actionKind: 0
-  strengthBonus: 5
+  strengthBonus: 3
   timerDelta: -1
   ignoresDefense: 0
   breaksEnemyDefense: 0

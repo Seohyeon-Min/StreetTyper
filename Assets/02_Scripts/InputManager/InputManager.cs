@@ -165,7 +165,11 @@ public class InputManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        DisableInput();
+        // ⚠️ DisableInput()을 부르지 않는다 - 그 안의 ClearInput이 OnInputCleared 같은 이벤트를
+        // 쏘는데, 파괴 시점에는 구독자(InputFieldDisplay 등)가 이미 파괴돼 있을 수 있어
+        // MissingReference가 난다. 여기서 필요한 건 키보드 구독을 끊는 것뿐이다.
+        _inputEnabled = false;
+        UnsubscribeKeyboard();
     }
 
     // 창을 다시 활성화하면 IME 상태가 그동안 다른 앱에서 바뀌어 있을 수 있다.
@@ -250,20 +254,25 @@ public class InputManager : MonoBehaviour
         if (!_inputEnabled) return;
         _inputEnabled = false;
 
-        // IME를 끄기 전에 조합을 버리게 한다. 남겨두면 다음에 입력이 열릴 때
-        // 그 글자가 뒤늦게 커밋되어 새 턴의 첫 글자에 섞인다.
-        if (Composition.Length > 0)
-            HangulImeMode.CancelComposition();
+        // 입력창에 남아 있던 글자를 여기서 비운다. 부르는 쪽이 ClearInput을 따로 붙이는 걸
+        // 잊어도 잠긴 화면에 옛 글자가 남지 않는다(턴 전환 대기 내내 보인다).
+        //
+        // ⚠️ IME를 끄기 <b>전에</b> 불러야 한다 - 안에서 도는 조합 취소는 IME가 아직
+        // 살아 있을 때만 먹는다. 남겨두면 다음에 입력이 열릴 때 그 글자가 뒤늦게 커밋되어
+        // 새 턴의 첫 글자에 섞인다.
+        ClearInput();
 
-        if (Keyboard.current != null)
-        {
-            Keyboard.current.onTextInput -= HandleTextInput;
-            Keyboard.current.onIMECompositionChange -= HandleCompositionChange;
-            Keyboard.current.SetIMEEnabled(false);
-        }
+        UnsubscribeKeyboard();
+    }
 
-        Composition = string.Empty;
-        _lastBackspaceComposition = null;
+    private void UnsubscribeKeyboard()
+    {
+        if (Keyboard.current == null)
+            return;
+
+        Keyboard.current.onTextInput -= HandleTextInput;
+        Keyboard.current.onIMECompositionChange -= HandleCompositionChange;
+        Keyboard.current.SetIMEEnabled(false);
     }
 
     public void ClearInput()
@@ -412,11 +421,20 @@ public class InputManager : MonoBehaviour
     {
         yield return null;
 
-        // 잠긴 동안 IME가 쌓아둔 조합을 버린다. 우리 버퍼는 EnableInput에서 이미 비웠다.
+        // 잠긴 동안 IME가 쌓아둔 조합을 버린다.
         HangulImeMode.CancelComposition();
 
-        // 취소로 조합 종료 이벤트가 들어올 수 있으니 미러도 함께 정리한다.
-        ClearComposition();
+        // ⚠️ 조합만이 아니라 <b>입력창 전체</b>를 비운다.
+        //
+        // EnableInput은 구독을 먼저 걸고(onTextInput) 그 다음에 ClearInput을 부른다. 그런데
+        // 입력이 잠긴 동안 플레이어가 계속 쳤다면 OS IME가 그 글자를 붙잡고 있다가 구독이
+        // 걸리는 순간 커밋해서 보내는데, 그게 ClearInput <b>뒤에</b> 도착하면 그대로 남는다.
+        // 예전에는 여기서 ClearComposition만 해서 조합만 지우고 이미 커밋된 글자는 못 지웠다 -
+        // "턴이 넘어갈 때 막 치고 있으면 그때 친 게 새 턴 입력창에 남는" 증상이 이것이다.
+        //
+        // 새 턴 첫 프레임에 플레이어가 의도적으로 친 글자까지 같이 날아가지만, 그건 16ms짜리
+        // 창이라 실제로 칠 수 없는 시간이다.
+        ClearInput();
 
         ApplyImeMode();
     }

@@ -451,12 +451,18 @@ public class DeckManager : MonoBehaviour
             {
                 playerVisuals.PlayAttackAnimation(true, animSpeedMultiplier);
                 hasPlayedPunchAnim = true;
+                if (dashStartDelay > 0f)
+                    yield return new WaitForSeconds(dashStartDelay);
+
+                yield return playerVisuals.MoveToEnemyCoroutine(moveDuration);
+            }
+            else
+            {
+                // [추가] 방어만 할 때는 제자리에서 살짝 대기 시간만 가집니다.
+                if (dashStartDelay > 0f)
+                    yield return new WaitForSeconds(dashStartDelay);
             }
 
-            if (dashStartDelay > 0f)
-                yield return new WaitForSeconds(dashStartDelay);
-
-            yield return playerVisuals.MoveToEnemyCoroutine(moveDuration);
         }
 
         // 4. 공격 스택 하나씩 실행

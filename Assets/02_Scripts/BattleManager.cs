@@ -123,7 +123,7 @@ public class BattleManager : MonoBehaviour
         if (SpeechBubbleManager.Instance != null)
             EnsureEnemyIntentBubble(false);
 
-        if (enemyManager != null)
+        if (enemyManager != null && enemyManager.currentEnemy != null)
         {
             enemyManager.GenerateNextAction();
         }

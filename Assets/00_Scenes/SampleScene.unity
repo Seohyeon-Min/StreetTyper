@@ -9576,7 +9576,7 @@ PrefabInstance:
       objectReference: {fileID: 108802000}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: totalStages
-      value: 12
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: enemyManager
@@ -9594,6 +9594,10 @@ PrefabInstance:
       propertyPath: timerManager
       value: 
       objectReference: {fileID: 2017997002785934851}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: totalBattles
+      value: 13
+      objectReference: {fileID: 0}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: battleManager
       value: 
@@ -9614,6 +9618,10 @@ PrefabInstance:
       propertyPath: enemySpawnPoint
       value: 
       objectReference: {fileID: 1439353701}
+    - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
+      propertyPath: spawnOffScreenX
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 7851338780647570391, guid: 9261b7c21db478a42ba8ff9c8e867d76, type: 3}
       propertyPath: currentStageText
       value: 

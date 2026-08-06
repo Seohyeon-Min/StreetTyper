@@ -142,9 +142,26 @@ public class StageManager : MonoBehaviour
     [Tooltip("적이 처음 생성될 화면 오른쪽 밖의 X 오프셋 거리")]
     public float spawnOffScreenX = 15f;
 
-    [Tooltip("결과 화면의 '최고 도달 스테이지' 분모로만 쓰인다 - 런 길이와는 무관하다. " +
-             "런 길이를 바꾸려면 아래 totalBattles를 바꿀 것. 보통 totalBattles에서 보스 수를 뺀 값이다.")]
-    public int totalStages = 10;
+    /// <summary>결과 화면의 "최고 도달 스테이지" 분모. 마더 드래곤 전투를 뺀 일반 스테이지 수다.
+    ///
+    /// <para>⚠️ 예전에는 인스펙터 필드였고, 분자(displayStage)가 보스를 빼고 세는데 분모는
+    /// 손으로 적은 값이라 <b>둘이 조용히 어긋났다</b>(실제로 "11 / 12"가 떴다). 이제
+    /// <see cref="totalBattles"/>와 <see cref="bossBattleIndices"/>에서 계산하므로 전투 구성을
+    /// 바꾸면 분모도 저절로 따라온다.</para></summary>
+    public int TotalStages
+    {
+        get
+        {
+            var count = 0;
+            for (var i = 0; i < totalBattles; i++)
+            {
+                if (!IsBossBattle(i))
+                    count++;
+            }
+
+            return count;
+        }
+    }
 
     [Header("스테이지 구성")]
     [Tooltip("이번 런의 총 전투 수(보스 포함). 마지막 전투가 엔딩 대결이 된다.")]
@@ -281,7 +298,11 @@ public class StageManager : MonoBehaviour
         }
 
         // [추가] 최고 도달 스테이지 기록 갱신 (보스를 제외한 순수 스테이지 번호 전달)
-        if (StatisticsManager.Instance != null) 
+        //
+        // ⚠️ 보스전에서는 갱신하지 않는다. 위 displayStage는 "이 전투 앞의 일반 스테이지 수 + 1"이라
+        // 보스전에서도 값이 하나 올라가는데, 보스는 스테이지로 세지 않으므로 그대로 넘기면
+        // 분자가 분모(TotalStages)를 넘어선다 - 엔딩 보스에서 "11 / 10"이 되는 식이다.
+        if (StatisticsManager.Instance != null && !isBossBattle)
             StatisticsManager.Instance.UpdateHighestStage(displayStage);
 
         if (currentStageText != null)

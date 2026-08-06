@@ -204,8 +204,16 @@ public class BattleManager : MonoBehaviour
             if (stageManager != null)
             {
                 Debug.Log("[DEBUG] 킬스위치 발동: 엔딩 스테이지로 이동");
-                // 총 13개의 전투(0~12) 중 마지막 전투로 직행합니다.
-                stageManager.LoadStage(12);
+
+                // 중간 스테이지를 통째로 건너뛰므로 최고 도달 스테이지가 1에 머물러 결과 화면이
+                // "1 / 10"으로 뜬다. 결과 화면을 확인하려고 누르는 키이니 진행도도 함께 채운다.
+                // (타자·데미지 통계는 실제로 친 적이 없어 0으로 남는 게 맞다.)
+                if (StatisticsManager.Instance != null)
+                    StatisticsManager.Instance.UpdateHighestStage(stageManager.TotalStages);
+
+                // 마지막 전투로 직행한다. 인덱스를 박아두면 totalBattles를 바꿨을 때
+                // 조용히 엉뚱한 스테이지로 간다(IsBossBattle이 마지막 전투를 자동으로 보스로 치는 것과 같은 이유).
+                stageManager.LoadStage(stageManager.totalBattles - 1);
             }
         }
 #endif
@@ -639,7 +647,7 @@ public class BattleManager : MonoBehaviour
         var stats = StatisticsManager.Instance;
 
         // 분모를 리터럴로 박으면 스테이지 수를 바꿨을 때 조용히 어긋난다.
-        var totalStages = stageManager != null ? stageManager.totalStages : 0;
+        var totalStages = stageManager != null ? stageManager.TotalStages : 0;
 
         view.Show(
             stats != null ? stats.highestStageReached : 0,

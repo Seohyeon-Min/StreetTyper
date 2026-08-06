@@ -73,6 +73,7 @@ public class BattleManager : MonoBehaviour
 
     private bool isGameOver = false;
     private bool isEventTriggered = false;
+    private bool isResolvingDeath = false;
 
     // 마지막으로 띄운 결과 종류. 보상 선택이 끝난 뒤 같은 화면을 다시 그리려면 필요하다.
     private ResultKind lastResultKind = ResultKind.Victory;
@@ -351,6 +352,7 @@ public class BattleManager : MonoBehaviour
     {
         isGameOver = false;
         isEventTriggered = false;
+        isResolvingDeath = false;
         mdTurnCount = 0;
         mdIntentString = MotherDragonLine(0);
         savedMDDamage = 0;
@@ -554,7 +556,11 @@ public class BattleManager : MonoBehaviour
     {
         if (player == null || player.currentHP <= 0)
         {
-            if (!isGameOver) ShowResult(ResultKind.Defeat);
+            if (!isGameOver && !isResolvingDeath)
+            {
+                isResolvingDeath = true;
+                StartCoroutine(ShowDefeatAfterDeathEffect());
+            }
         }
         else if (enemyManager != null && enemyManager.currentEnemy != null && enemyManager.currentEnemy.currentHP <= 0)
         {
@@ -575,6 +581,12 @@ public class BattleManager : MonoBehaviour
                     healAmount = savedMDDamage;
                 }
 
+                if (!isMD)
+                {
+                    StartCoroutine(FinishEnemyDeathAfterEffect(enemyManager.currentEnemy));
+                    return;
+                }
+
                 // 마더 드래곤은 자기 작별 대사를 하는 동안 화면에 남아 있어야 한다 - 여기서 끄면
                 // 정작 본인은 사라진 채 말풍선만 뜬다. 대사가 끝나면 EventManager가 끈다.
                 // (일반 적과 이벤트가 없는 경우는 예전처럼 그 자리에서 끈다.)
@@ -592,6 +604,28 @@ public class BattleManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    private IEnumerator ShowDefeatAfterDeathEffect()
+    {
+        while (player != null && !player.IsDeathAnimationComplete)
+            yield return null;
+
+        ShowResult(ResultKind.Defeat);
+    }
+
+    private IEnumerator FinishEnemyDeathAfterEffect(EnemyBase enemy)
+    {
+        while (enemy != null && !enemy.IsDeathAnimationComplete)
+            yield return null;
+
+        if (enemy != null)
+            enemy.gameObject.SetActive(false);
+
+        if (eventManager != null)
+            eventManager.StartEvent(false, 0);
+        else
+            ShowResult(ResultKind.Victory);
     }
 
     /// <summary>

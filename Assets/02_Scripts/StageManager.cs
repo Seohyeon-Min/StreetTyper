@@ -687,6 +687,7 @@ public class StageManager : MonoBehaviour
     {
         if (player != null)
         {
+            player.ResetVisualState();
             player.currentHP = player.maxHP;
             player.defense = 0;
             player.gameObject.SetActive(true);

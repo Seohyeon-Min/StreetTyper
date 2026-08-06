@@ -53,6 +53,7 @@ MonoBehaviour:
   bubbleScreenOffset: {x: 0, y: 0}
   playerBubbleScreenOffset: {x: 0, y: 0}
   endingExitDuration: 2.2
+  motherExitDuration: 1.2
   endingExitScreenMargin: 0.18
   endingBackgroundScrollSpeed: 0.8
   endingExitCurve:

@@ -50,6 +50,7 @@ public class EventManager : MonoBehaviour
 
     [Header("Ending Exit")]
     [Min(0.1f)] public float endingExitDuration = 2.2f;
+    [Min(0.1f)] public float motherExitDuration = 1.2f;
     [Min(0f)] public float endingExitScreenMargin = 0.18f;
     [Min(0f)] public float endingBackgroundScrollSpeed = 0.8f;
     public AnimationCurve endingExitCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
@@ -512,7 +513,34 @@ public class EventManager : MonoBehaviour
             yield return new WaitForSeconds(mdLineAutoAdvanceDelay);
         }
 
+        if (dialogueBubbleObj != null)
+            dialogueBubbleObj.SetActive(false);
+
+        yield return PlayMotherExitRoutine();
         EndEvent();
+    }
+
+    private IEnumerator PlayMotherExitRoutine()
+    {
+        Transform motherTransform = speakingEnemy != null ? speakingEnemy.transform : bubbleAnchor;
+        if (motherTransform == null)
+            yield break;
+
+        Vector3 start = motherTransform.position;
+        Vector3 target = OffscreenTarget(motherTransform, start, true);
+        float duration = Mathf.Max(0.1f, motherExitDuration);
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float eased = endingExitCurve != null ? endingExitCurve.Evaluate(t) : t;
+            motherTransform.position = Vector3.LerpUnclamped(start, target, eased);
+            yield return null;
+        }
+
+        motherTransform.position = target;
     }
 
     private void EndEvent()

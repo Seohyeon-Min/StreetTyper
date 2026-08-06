@@ -193,6 +193,10 @@ MonoBehaviour:
   power: 1
   defense: 0
   damageTakenMultiplier: 1
+  deathBounceDuration: 0.3
+  deathPauseDuration: 0.18
+  deathFallDuration: 0.55
+  deathBounceHeight: 0.55
   bubbleAnchor: {fileID: 108802011}
 --- !u!212 &108802001
 SpriteRenderer:

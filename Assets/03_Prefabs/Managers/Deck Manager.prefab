@@ -47,6 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70dd0ff43b2058447aa1f9e969681199, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeckManager
+  yourTurnBannerPrefab: {fileID: 100005, guid: cb409431a83c46949351e0a9a0e53a67, type: 3}
   cardSlotManager: {fileID: 3055105887782069283}
   cardInputHandler: {fileID: 1335612949842731433}
   mainBufferManager: {fileID: 5619809762217796564}

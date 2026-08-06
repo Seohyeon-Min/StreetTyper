@@ -382,6 +382,9 @@ public class BattleManager : MonoBehaviour
     /// 이 시점엔 페이즈 변화가 없어 UpdateUI가 저절로 불리지 않으므로 여기서 직접 부른다.</summary>
     public void EndStagePreparation()
     {
+        if (deckManager != null)
+            deckManager.BeginNewStagePlayerInput();
+
         isStagePreparing = false;
         UpdateUI();
     }

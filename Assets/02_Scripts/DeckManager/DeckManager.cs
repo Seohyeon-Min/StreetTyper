@@ -27,10 +27,65 @@ public class DeckManager : MonoBehaviour
     private void SetPhase(TurnPhase phase)
     {
         if (CurrentPhase == phase)
+        {
+            if (phase == TurnPhase.PlayerInput)
+                ShowYourTurnBanner();
             return;
+        }
 
         CurrentPhase = phase;
         OnTurnPhaseChanged?.Invoke(phase);
+
+        if (phase == TurnPhase.PlayerInput)
+            ShowYourTurnBanner();
+    }
+
+    [Header("Your Turn Banner")]
+    [Tooltip("Input Canvas 중앙에 생성할 YOUR TURN 프리팹.")]
+    [SerializeField] private YourTurnBanner yourTurnBannerPrefab;
+
+    private YourTurnBanner yourTurnBannerInstance;
+
+    private void ShowYourTurnBanner()
+    {
+        if (yourTurnBannerInstance == null)
+        {
+            if (yourTurnBannerPrefab == null)
+            {
+                Debug.LogWarning("DeckManager: yourTurnBannerPrefab이 연결되지 않았습니다.", this);
+                return;
+            }
+
+            Canvas inputCanvas = null;
+            var canvases = FindObjectsOfType<Canvas>(true);
+            foreach (var canvas in canvases)
+            {
+                if (canvas != null && canvas.name == "Input Canvas")
+                {
+                    inputCanvas = canvas;
+                    break;
+                }
+            }
+
+            if (inputCanvas == null)
+            {
+                Debug.LogWarning("DeckManager: YOUR TURN 배너를 배치할 Input Canvas를 찾지 못했습니다.", this);
+                return;
+            }
+
+            yourTurnBannerInstance = Instantiate(yourTurnBannerPrefab, inputCanvas.transform, false);
+        }
+
+        yourTurnBannerInstance.Play();
+    }
+
+    /// <summary>
+    /// 새 스테이지의 첫 플레이어 턴을 연다. 이전 적이 공격 처리 도중 죽으면 코루틴이
+    /// ResolvingPlayerActions에서 끝날 수 있으므로 다음 스테이지에서 반드시 초기화해야 한다.
+    /// </summary>
+    public void BeginNewStagePlayerInput()
+    {
+        SetPhase(TurnPhase.PlayerInput);
     }
 
     [SerializeField] private CardSlotManager cardSlotManager;

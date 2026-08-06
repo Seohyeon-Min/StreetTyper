@@ -348,6 +348,41 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
+      time: 0.8840938
+      value: 0.43495974
+      inSlope: 1.4551299
+      outSlope: 1.4551299
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.03745141
+      outWeight: 0.23643115
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 10.013353
+      outSlope: 10.013353
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.08484184
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  stageJumpForwardDistance: 0.6
+  stageJumpHeight: 0.45
+  stageJumpCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
       time: 1
       value: 1
       inSlope: 0

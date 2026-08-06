@@ -599,7 +599,7 @@ PrefabInstance:
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: slides.Array.data[0].image
       value: 
-      objectReference: {fileID: -613363052048103786, guid: 75591239215447948ba5673335675010, type: 3}
+      objectReference: {fileID: -7790544929387226549, guid: ccb8b6ac551891848b66a24a3c541979, type: 3}
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: slides.Array.data[1].image
       value: 

@@ -901,7 +901,8 @@ public class StageManager : MonoBehaviour
         if (player != null)
         {
             PlayerBattleVisuals visuals = player.GetComponent<PlayerBattleVisuals>();
-            if (visuals != null) visuals.PlayDashAnimation(1.5f); // 살짝 배속을 주어 다급하게 달리는 느낌
+            if (visuals != null)
+                visuals.PlayStageTransitionJump(transitionDuration, 1.5f);
         }
 
         // 4. 달려가는 연출 시간 동안 대기

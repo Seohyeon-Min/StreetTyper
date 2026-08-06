@@ -19,10 +19,21 @@ public class PlayerBattleVisuals : MonoBehaviour
     [Tooltip("원래 자리로 복귀할 때(공격 종료) 시간에 따른 이동 비율.")]
     public AnimationCurve moveToOriginCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+    [Header("스테이지 전환 점프")]
+    [Tooltip("배경 스크롤 중 오른쪽 앞으로 나아가는 최대 거리.")]
+    [SerializeField] private float stageJumpForwardDistance = 0.8f;
+
+    [Tooltip("배경 스크롤 중 위로 뛰어오르는 최대 높이.")]
+    [SerializeField] private float stageJumpHeight = 0.45f;
+
+    [Tooltip("스테이지 점프의 진행 속도 커브. 0에서 출발해 1에서 끝나야 한다.")]
+    [SerializeField] private AnimationCurve stageJumpCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
     private Vector3 originalPosition;
 
     // 돌진 전 정렬 순서. 적 앞에 서 있는 동안만 이보다 위로 올렸다가 복귀하면 되돌린다.
     private int originalSortingOrder;
+    private Coroutine stageJumpRoutine;
 
     void Start()
     {
@@ -136,6 +147,50 @@ public class PlayerBattleVisuals : MonoBehaviour
             // 요청하신 대로 트랜지션 동안 Punch1 모션을 취하게 합니다.
             animator.SetTrigger("Punch1");
         }
+    }
+
+    /// <summary>다음 스테이지로 넘어갈 때 오른쪽 위로 날아올랐다가 원래 자리로 착지한다.</summary>
+    public void PlayStageTransitionJump(float duration, float animationSpeed = 1f)
+    {
+        if (stageJumpRoutine != null)
+            StopCoroutine(stageJumpRoutine);
+
+        PlayDashAnimation(animationSpeed);
+        stageJumpRoutine = StartCoroutine(StageTransitionJumpRoutine(duration));
+    }
+
+    private IEnumerator StageTransitionJumpRoutine(float duration)
+    {
+        var startPosition = originalPosition;
+        var elapsed = 0f;
+
+        if (duration <= 0f)
+        {
+            transform.position = startPosition;
+            stageJumpRoutine = null;
+            yield break;
+        }
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            var progress = Mathf.Clamp01(elapsed / duration);
+            var curvedProgress = stageJumpCurve != null
+                ? Mathf.Clamp01(stageJumpCurve.Evaluate(progress))
+                : progress;
+
+            // 0 → 1 → 0의 부드러운 호. 중간 지점에서 가장 높고 가장 앞으로 나간다.
+            var arc = Mathf.Sin(curvedProgress * Mathf.PI);
+            transform.position = startPosition + new Vector3(
+                stageJumpForwardDistance * arc,
+                stageJumpHeight * arc,
+                0f);
+            yield return null;
+        }
+
+        transform.position = startPosition;
+        ResetAnimationSpeed();
+        stageJumpRoutine = null;
     }
 
 }

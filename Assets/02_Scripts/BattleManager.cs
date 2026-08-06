@@ -199,6 +199,15 @@ public class BattleManager : MonoBehaviour
                 stageManager.LoadStage(4);
             }
         }
+        if (Keyboard.current.digit6Key.wasPressedThisFrame)
+        {
+            if (stageManager != null)
+            {
+                Debug.Log("[DEBUG] 킬스위치 발동: 엔딩 스테이지로 이동");
+                // 총 13개의 전투(0~12) 중 마지막 전투로 직행합니다.
+                stageManager.LoadStage(12);
+            }
+        }
 #endif
     }
 

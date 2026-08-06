@@ -2142,11 +2142,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9a075fc79354114cb38c31cdec4ac4a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandFanLayout
---- !u!224 &682189039 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 949455752747894256, guid: 4b3e0a97b3d0db64eba3274caf761181, type: 3}
-  m_PrefabInstance: {fileID: 8995351106001376285}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &749679486
 GameObject:
   m_ObjectHideFlags: 0
@@ -7738,13 +7733,41 @@ MonoBehaviour:
   titleReveal: {fileID: 1173419601}
   pauseCanvas: {fileID: 0}
   inputCanvas: {fileID: 0}
+  inputPanel: {fileID: 749679487}
+  pauseInputPosition: {x: 0, y: 415}
+  inputPanelMoveDuration: 0.25
+  inputPanelMoveCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   handFanLayout: {fileID: 1259881543}
   cardSlotManager: {fileID: 1084949171}
   commandCardsLayout: {fileID: 682189038}
   commandCardPrefab: {fileID: 7534683157795553136, guid: 01a72023d39fa9c47aa3a6b8ae82e92d, type: 3}
   commandCardTransitionHeight: 80
+  collectionCardTransitionHeight: 600
   cardCollectionPanel: {fileID: 1861501382}
-  battleManager: {fileID: 0}
+  battleManager: {fileID: 1457634980}
   resumeCard: {fileID: 11400000, guid: 3c58e271bd049a54e9317ac6d0b85f42, type: 2}
   cardsCard: {fileID: 11400000, guid: 9f14a6c85e2b71d4c8360be79a4d2f13, type: 2}
   titleCard: {fileID: 11400000, guid: 5d92b8f0c473ea24d8175f9ec3a06b71, type: 2}
@@ -7845,8 +7868,6 @@ MonoBehaviour:
   cellSize: {x: 150, y: 220}
   cardScale: 0.6
   displacedUI:
-  - target: {fileID: 682189039}
-    offset: {x: 0, y: -600}
   - target: {fileID: 749679487}
     offset: {x: 0, y: -300}
   displaceDuration: 0.3

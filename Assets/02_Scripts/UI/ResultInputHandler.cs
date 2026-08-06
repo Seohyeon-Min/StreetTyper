@@ -51,6 +51,9 @@ public class ResultInputHandler : CommandWordReceiver
     [Tooltip("카드가 뜨는 방향으로 움직이는 거리(px).")]
     [SerializeField] private float cardTransitionHeight = 80f;
 
+    [Tooltip("카드 목록을 열 때 결과 명령 카드들이 아래로 떨어지는 거리(px).")]
+    [SerializeField] private float collectionCardTransitionHeight = 600f;
+
     [Tooltip("평소 손패를 그리는 HandFanLayout(Card Canvas 쪽). 패배 시 손패가 무너져 다 떨어질 " +
              "때까지 기다렸다가 명령 카드를 띄우는 데 쓴다. 비워두면 기다리지 않고 " +
              "cardsAppearDelay만으로 뜨므로, 떨어지는 카드와 겹칠 수 있다.")]
@@ -178,6 +181,12 @@ public class ResultInputHandler : CommandWordReceiver
 
         if (battleManager != null)
             battleManager.OnBattleEnded += HandleBattleEnded;
+
+        if (cardCollectionPanel != null)
+        {
+            cardCollectionPanel.Opened += HandleCollectionOpened;
+            cardCollectionPanel.Closed += HandleCollectionClosed;
+        }
     }
 
     protected override void OnDisable()
@@ -187,7 +196,34 @@ public class ResultInputHandler : CommandWordReceiver
         if (battleManager != null)
             battleManager.OnBattleEnded -= HandleBattleEnded;
 
+        if (cardCollectionPanel != null)
+        {
+            cardCollectionPanel.Opened -= HandleCollectionOpened;
+            cardCollectionPanel.Closed -= HandleCollectionClosed;
+        }
+
         HideCards();
+    }
+
+    private void HandleCollectionOpened()
+    {
+        foreach (var card in _cardInstances)
+        {
+            if (card != null)
+                card.PlayExit(-collectionCardTransitionHeight, () => card.gameObject.SetActive(false));
+        }
+    }
+
+    private void HandleCollectionClosed()
+    {
+        if (!ShowsCards)
+            return;
+
+        foreach (var card in _cardInstances)
+        {
+            if (card != null)
+                card.PlayEnter(-collectionCardTransitionHeight);
+        }
     }
 
     // OnBattleEnded는 승패와 무관하게 isGameOver가 false -> true로 바뀌는 순간 한 번 온다.

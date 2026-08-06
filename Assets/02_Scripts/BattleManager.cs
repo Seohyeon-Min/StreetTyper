@@ -348,6 +348,10 @@ public class BattleManager : MonoBehaviour
     /// </summary>
     public bool IsFinalResult => isGameOver && lastResultKind != ResultKind.Victory;
 
+    /// <summary>사망 연출이 시작된 순간부터 결과 화면 동안에는 전투 손패를 다시 표시하지 않는다.</summary>
+    public bool ShouldKeepBattleHandHidden =>
+        isResolvingDeath || IsFinalResult || player == null || player.currentHP <= 0;
+
     public void ResetBattle()
     {
         isGameOver = false;

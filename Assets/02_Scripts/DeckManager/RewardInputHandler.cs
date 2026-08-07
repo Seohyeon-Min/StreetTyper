@@ -31,13 +31,15 @@ public class RewardInputHandler : CommandWordReceiver
     [Tooltip("타이핑 중인 카드를 들어올리고 나머지를 흐리게 하는 뷰. 비워도 선택 자체는 동작한다.")]
     [SerializeField] private RewardCardView rewardCardView;
 
-    [Header("명령 카드")]
-    [Tooltip("줄 오른쪽 끝에 놓일 건너뛰기 카드. 04_Data/Cards/Commands/Skip")]
-    [SerializeField] private CommandCardData skipCard;
+    [Header("명령 카드 (CardLocalization.json의 id)")]
+    [Tooltip("줄 오른쪽 끝에 놓일 건너뛰기 카드의 id.")]
+    [SerializeField] private string skipCardId = "skip";
 
-    [Tooltip("줄 왼쪽 끝에 놓일 카드 삭제 카드. 04_Data/Cards/Commands/Erase. " +
-             "마더 드래곤 스테이지에서만 나온다.")]
-    [SerializeField] private CommandCardData eraseCard;
+    [Tooltip("줄 왼쪽 끝에 놓일 카드 삭제 카드의 id. 마더 드래곤 스테이지에서만 나온다.")]
+    [SerializeField] private string eraseCardId = "erase";
+
+    private CommandCardData skipCard;
+    private CommandCardData eraseCard;
 
     [Header("카드 삭제")]
     [Tooltip("\"지우기\"를 쳤을 때 열 사전 카드 목록. 비워두면 지우기 카드 자체가 나오지 않는다 - " +
@@ -154,6 +156,10 @@ public class RewardInputHandler : CommandWordReceiver
     private void Awake()
     {
         _displacement.CaptureOrigins(displacedUI, this, nameof(displacedUI));
+
+        // 명령 카드는 여기서 한 번만 꺼낸다(PauseManager와 같은 이유 - Targets는 글자마다 불린다).
+        skipCard = CardDatabase.Get<CommandCardData>(skipCardId, this, nameof(skipCardId));
+        eraseCard = CardDatabase.Get<CommandCardData>(eraseCardId, this, nameof(eraseCardId));
     }
 
     // ⚠️ 반드시 LateUpdate에서 부른다 - HandFanLayout이 손패(자식)를 배치한 뒤에 밀려나는

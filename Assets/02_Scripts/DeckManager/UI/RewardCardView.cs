@@ -108,9 +108,11 @@ public class RewardCardView : MonoBehaviour
     [Tooltip("모든 카드 보상창에 플레이어의 현재 럭 확률을 표시할 TMP 라벨.")]
     [SerializeField] private TMP_Text luckLabel;
 
-    [Tooltip("현재 확률을 읽을 럭키 카드 데이터(LootBonusOnKill). 보상 후보가 아니라 플레이어의 " +
-             "현재 럭 수치를 표시하는 용도이므로 에셋을 직접 연결한다.")]
-    [SerializeField] private ModifierCardData luckyCard;
+    [Tooltip("현재 확률을 읽을 럭키 카드의 id(CardLocalization.json). 보상 후보가 아니라 " +
+             "플레이어의 현재 럭 수치를 표시하는 용도다.")]
+    [SerializeField] private string luckyCardId = "lucky";
+
+    private ModifierCardData luckyCard;
 
     [Tooltip("{0} 자리에 반올림한 현재 럭 확률이 들어간다.")]
     [SerializeField] private string luckLabelFormat = "LUCK : {0}%";
@@ -213,6 +215,8 @@ public class RewardCardView : MonoBehaviour
     private void Awake()
     {
         CacheCardWidth();
+
+        luckyCard = CardDatabase.Get<ModifierCardData>(luckyCardId, this, nameof(luckyCardId));
 
         // 시작할 때는 아무것도 보이지 않아야 한다.
         Clear();

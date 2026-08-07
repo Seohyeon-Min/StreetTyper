@@ -7,19 +7,7 @@ using UnityEngine;
 // 사전(WordDictionary)은 "지금 쓸 수 있는 단어"만 알 뿐 전체 목록은 모른다 - 그 구분이 이 둘의 역할 분담이다.
 public class WordUnlockManager : MonoBehaviour
 {
-    [Serializable]
-    public class WordEntry
-    {
-        public CardBase card;
-
-        [Tooltip("체크하면 게임 시작 시 사전에 바로 들어갑니다.")]
-        public bool grantedAtStart;
-    }
-
     [SerializeField] private WordDictionary wordDictionary;
-
-    [Tooltip("게임에 존재하는 모든 단어. 여기 없는 단어는 어떤 경로로도 등장하지 않습니다.")]
-    [SerializeField] private List<WordEntry> allWords = new List<WordEntry>();
 
     [Tooltip("스테이지 클리어 시 보여줄 후보 단어 개수. 플레이어는 이 중 하나만 고른다.")]
     [SerializeField] private int wordsPerReward = 3;
@@ -68,17 +56,24 @@ public class WordUnlockManager : MonoBehaviour
         _offered.Clear();
 
         _granted.Clear();
-        for (var i = 0; i < allWords.Count; i++)
+        var all = CardDatabase.All;
+        for (var i = 0; i < all.Count; i++)
         {
-            var entry = allWords[i];
-            if (entry != null && entry.grantedAtStart && entry.card != null)
-                _granted.Add(entry.card);
+            var card = all[i];
+            var def = CardDatabase.Definition(card.CardId);
+
+            // 명령 카드는 grantedAtStart를 켤 일이 없지만, 켜져 있으면 손패에 떠서 타이핑으로
+            // 소비되므로 여기서도 막는다(사전·해금·조합 세 곳이 각각 막는 것과 같은 이유).
+            if (def == null || !def.grantedAtStart || card.Category == CardCategory.Command)
+                continue;
+
+            _granted.Add(card);
         }
 
         if (_granted.Count == 0)
         {
-            Debug.LogWarning("WordUnlockManager: Granted At Start로 표시된 단어가 없어 사전이 빈 채로 시작합니다. " +
-                             "All Words 목록에서 시작 단어를 체크하세요.", this);
+            Debug.LogWarning("WordUnlockManager: grantedAtStart가 켜진 카드가 없어 사전이 빈 채로 시작합니다. " +
+                             "CardLocalization.json에서 시작 단어에 \"grantedAtStart\": true를 넣으세요.", this);
             return;
         }
 
@@ -233,15 +228,21 @@ public class WordUnlockManager : MonoBehaviour
     }
 
     // 아직 사전에 없는 단어들을 후보로 모은다.
+    //
+    // ⚠️ 명령 카드(넘기기/계속 등)는 제외한다. CardDatabase.All에는 같이 들어 있는데, 보상
+    // 후보로 나오면 고른 순간 사전에 들어가 손패에 뜬다. 예전에는 이 목록이 인스펙터에 따로
+    // 있어서 "실수로 끌어다 넣지 말 것"이 규칙이었지만, 지금은 전체 목록을 그대로 훑으므로
+    // 여기서 거르는 게 유일한 방어선이다.
     private void CollectLockedWords()
     {
         _candidates.Clear();
 
-        for (var i = 0; i < allWords.Count; i++)
+        var all = CardDatabase.All;
+        for (var i = 0; i < all.Count; i++)
         {
-            var entry = allWords[i];
-            if (entry?.card != null && !wordDictionary.Contains(entry.card))
-                _candidates.Add(entry.card);
+            var card = all[i];
+            if (card.Category != CardCategory.Command && !wordDictionary.Contains(card))
+                _candidates.Add(card);
         }
     }
 
@@ -268,38 +269,31 @@ public class WordUnlockManager : MonoBehaviour
         return sb.ToString();
     }
 
+    /// <summary>
+    /// 카드 목록이 인스펙터를 떠나 JSON으로 갔으므로, 여기서는 <b>이름 중복</b>만 본다.
+    /// <see cref="CardName"/>은 타이핑 매칭 키라서 두 카드가 같은 이름을 가지면 하나는 영영
+    /// 입력할 수 없다 - 특히 JSON에 id를 추가하면서 이름을 복사해 붙였을 때 나기 쉽다.
+    ///
+    /// ⚠️ 지금 언어의 이름만 본다. 다른 언어 칸의 중복은 그 언어로 바꿔봐야 드러난다.
+    /// </summary>
     private void OnValidate()
     {
-        if (allWords == null)
-            return;
+        var all = CardDatabase.All;
 
-        for (var i = 0; i < allWords.Count; i++)
+        for (var i = 0; i < all.Count; i++)
         {
-            var entry = allWords[i];
-
-            if (entry == null || entry.card == null)
-            {
-                Debug.LogWarning($"WordUnlockManager: All Words[{i}]에 카드가 비어 있습니다.", this);
+            var name = all[i].CardName;
+            if (string.IsNullOrEmpty(name))
                 continue;
-            }
 
-            // 명령 카드(넘기기/계속 등)는 해금 대상이 아니다. 여기 들어가면 클리어 보상 후보로
-            // 나오고, 고르면 사전에 들어가 손패에 뜬다. CardBase를 상속하는 이상 드래그로 꽂힐 수
-            // 있으니 화면에 나오기 전에 시끄럽게 알린다.
-            if (entry.card.Category == CardCategory.Command)
+            for (var j = i + 1; j < all.Count; j++)
             {
-                Debug.LogWarning($"WordUnlockManager: All Words[{i}]의 '{entry.card.CardName}'은(는) 명령 카드라 " +
-                                 "해금 목록에 들어가면 안 됩니다. 보상 후보로 나와 사전에 섞입니다.", this);
-            }
-
-            for (var j = i + 1; j < allWords.Count; j++)
-            {
-                var other = allWords[j];
-                if (other?.card == null || other.card.CardName != entry.card.CardName)
+                if (all[j].CardName != name)
                     continue;
 
-                Debug.LogWarning($"WordUnlockManager: '{entry.card.CardName}'이(가) All Words[{i}]와 [{j}]에 중복되어 " +
-                                 "있습니다. CardName은 타이핑 매칭 키라서 중복되면 하나는 영영 입력할 수 없습니다.", this);
+                Debug.LogWarning($"WordUnlockManager: 카드 이름 '{name}'이(가) id '{all[i].CardId}'와 " +
+                                 $"'{all[j].CardId}'에 중복되어 있습니다. 이름은 타이핑 매칭 키라서 " +
+                                 "중복되면 하나는 영영 입력할 수 없습니다.", this);
             }
         }
     }

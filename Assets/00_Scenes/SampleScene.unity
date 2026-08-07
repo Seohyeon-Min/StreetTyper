@@ -3972,7 +3972,7 @@ MonoBehaviour:
   - {r: 1, g: 0.9936989, b: 0.75, a: 1}
   - {r: 1, g: 1, b: 1, a: 1}
   luckLabel: {fileID: 951042921}
-  luckyCard: {fileID: 11400000, guid: 397b868cc11e6f44e9ef45b7547f1845, type: 2}
+  luckyCardId: lucky
   luckLabelFormat: 'LUCK : {0}%'
   typingLiftHeight: 40
   liftSmoothTime: 0.08
@@ -7894,9 +7894,9 @@ MonoBehaviour:
   collectionCardTransitionHeight: 600
   cardCollectionPanel: {fileID: 1861501382}
   battleManager: {fileID: 1457634980}
-  resumeCard: {fileID: 11400000, guid: 3c58e271bd049a54e9317ac6d0b85f42, type: 2}
-  cardsCard: {fileID: 11400000, guid: 9f14a6c85e2b71d4c8360be79a4d2f13, type: 2}
-  titleCard: {fileID: 11400000, guid: 5d92b8f0c473ea24d8175f9ec3a06b71, type: 2}
+  resumeCardId: resume
+  cardsCardId: cards
+  titleCardId: title
 --- !u!114 &1861501379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10382,14 +10382,6 @@ PrefabInstance:
       value: RewardInputHandler
       objectReference: {fileID: 0}
     - target: {fileID: 4573702726212017277, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
-      propertyPath: skipCard
-      value: 
-      objectReference: {fileID: 11400000, guid: b2f47c918a3d05e4c9a76e1d84f30b25, type: 2}
-    - target: {fileID: 4573702726212017277, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
-      propertyPath: eraseCard
-      value: 
-      objectReference: {fileID: 11400000, guid: e7a3d05b16c94f34ab82d7e05193c6a8, type: 2}
-    - target: {fileID: 4573702726212017277, guid: 55cb090fed3ba424e97e1be5b614ce39, type: 3}
       propertyPath: timerView
       value: 
       objectReference: {fileID: 443029974}
@@ -11002,46 +10994,6 @@ PrefabInstance:
       propertyPath: wordDictionary
       value: 
       objectReference: {fileID: 390248573}
-    - target: {fileID: 6425235086595999068, guid: ac52ce9d4548cf94f88956df4ac9cc12, type: 3}
-      propertyPath: allWords.Array.data[9].grantedAtStart
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6425235086595999068, guid: ac52ce9d4548cf94f88956df4ac9cc12, type: 3}
-      propertyPath: allWords.Array.data[10].grantedAtStart
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6425235086595999068, guid: ac52ce9d4548cf94f88956df4ac9cc12, type: 3}
-      propertyPath: allWords.Array.data[14].grantedAtStart
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6425235086595999068, guid: ac52ce9d4548cf94f88956df4ac9cc12, type: 3}
-      propertyPath: allWords.Array.data[15].grantedAtStart
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6425235086595999068, guid: ac52ce9d4548cf94f88956df4ac9cc12, type: 3}
-      propertyPath: allWords.Array.data[18].grantedAtStart
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6425235086595999068, guid: ac52ce9d4548cf94f88956df4ac9cc12, type: 3}
-      propertyPath: allWords.Array.data[20].grantedAtStart
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6425235086595999068, guid: ac52ce9d4548cf94f88956df4ac9cc12, type: 3}
-      propertyPath: allWords.Array.data[24].grantedAtStart
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6425235086595999068, guid: ac52ce9d4548cf94f88956df4ac9cc12, type: 3}
-      propertyPath: allWords.Array.data[25].grantedAtStart
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6425235086595999068, guid: ac52ce9d4548cf94f88956df4ac9cc12, type: 3}
-      propertyPath: allWords.Array.data[26].grantedAtStart
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6425235086595999068, guid: ac52ce9d4548cf94f88956df4ac9cc12, type: 3}
-      propertyPath: allWords.Array.data[27].grantedAtStart
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 7697621616458114506, guid: ac52ce9d4548cf94f88956df4ac9cc12, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -11703,18 +11655,6 @@ PrefabInstance:
       propertyPath: player
       value: 
       objectReference: {fileID: 108802000}
-    - target: {fileID: 7217245384885635992, guid: 647c8c5bc8e6f574ba1dc06e3989673f, type: 3}
-      propertyPath: cardsCard
-      value: 
-      objectReference: {fileID: 11400000, guid: 9f14a6c85e2b71d4c8360be79a4d2f13, type: 2}
-    - target: {fileID: 7217245384885635992, guid: 647c8c5bc8e6f574ba1dc06e3989673f, type: 3}
-      propertyPath: retryCard
-      value: 
-      objectReference: {fileID: 11400000, guid: 63287ea83e14c384cbe1dcc2247727a4, type: 2}
-    - target: {fileID: 7217245384885635992, guid: 647c8c5bc8e6f574ba1dc06e3989673f, type: 3}
-      propertyPath: titleCard
-      value: 
-      objectReference: {fileID: 11400000, guid: 5d92b8f0c473ea24d8175f9ec3a06b71, type: 2}
     - target: {fileID: 7217245384885635992, guid: 647c8c5bc8e6f574ba1dc06e3989673f, type: 3}
       propertyPath: inputManager
       value: 

@@ -23,17 +23,20 @@ public class ResultInputHandler : CommandWordReceiver
     [SerializeField] private BattleManager battleManager;
     [SerializeField] private StageManager stageManager;
 
-    [Header("명령 카드")]
-    [Tooltip("재도전할 카드. 04_Data/Cards/Commands/Retry")]
-    [SerializeField] private CommandCardData retryCard;
+    [Header("명령 카드 (CardLocalization.json의 id)")]
+    [Tooltip("재도전할 카드의 id.")]
+    [SerializeField] private string retryCardId = "retry";
 
-    [Tooltip("보유 카드 목록을 열 카드. PauseManager.cardsCard와 같은 " +
-             "04_Data/Cards/Commands/Cards 에셋을 그대로 연결하면 된다.")]
-    [SerializeField] private CommandCardData cardsCard;
+    [Tooltip("보유 카드 목록을 열 카드의 id. PauseManager와 같은 id를 그대로 쓰면 된다.")]
+    [SerializeField] private string cardsCardId = "cards";
 
-    [Tooltip("타이틀로 나갈 카드. PauseManager.titleCard와 같은 04_Data/Cards/Commands/Title " +
-             "에셋을 그대로 연결해도 된다 - 같은 행동이라 단어를 새로 만들 이유가 없다.")]
-    [SerializeField] private CommandCardData titleCard;
+    [Tooltip("타이틀로 나갈 카드의 id. PauseManager와 같은 id를 그대로 써도 된다 - " +
+             "같은 행동이라 단어를 새로 만들 이유가 없다.")]
+    [SerializeField] private string titleCardId = "title";
+
+    private CommandCardData retryCard;
+    private CommandCardData cardsCard;
+    private CommandCardData titleCard;
 
     [Tooltip("\"카드\"를 쳤을 때 열 보유 카드 목록. PauseManager가 쓰는 것과 같은 인스턴스를 " +
              "연결한다. 비워두면 카드 명령이 통째로 사라진다 - 열 창이 없는데 단어만 남으면 " +
@@ -167,6 +170,11 @@ public class ResultInputHandler : CommandWordReceiver
 
         if (stageManager == null)
             Debug.LogWarning("ResultInputHandler: stageManager가 연결되지 않아 스테이지를 넘길 수 없습니다.", this);
+
+        // 명령 카드는 여기서 한 번만 꺼낸다(PauseManager와 같은 이유 - Targets는 글자마다 불린다).
+        retryCard = CardDatabase.Get<CommandCardData>(retryCardId, this, nameof(retryCardId));
+        cardsCard = CardDatabase.Get<CommandCardData>(cardsCardId, this, nameof(cardsCardId));
+        titleCard = CardDatabase.Get<CommandCardData>(titleCardId, this, nameof(titleCardId));
 
         if (retryCard == null)
             Debug.LogWarning("ResultInputHandler: retryCard가 연결되지 않아 재도전할 단어가 없습니다.", this);

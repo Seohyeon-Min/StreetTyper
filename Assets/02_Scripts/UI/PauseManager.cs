@@ -76,18 +76,24 @@ public class PauseManager : CommandWordReceiver
              "있어서, 그 위에 같은 자리를 쓰는 일시정지 메뉴가 겹치면 안 된다.")]
     [SerializeField] private BattleManager battleManager;
 
-    // 명령 단어는 CommandCardData 에셋이다 - 단어(한/영)와 카드 겉모습이 한 곳에 모여 있고,
-    // 화면에 카드로 그대로 뜨므로 안내 문구가 따로 필요 없다. 씬 오브젝트가 아니라 에셋 참조라
-    // 프리팹에 그대로 저장된다(이 프로젝트에서 드문 경우다).
-    [Header("명령 카드")]
-    [Tooltip("일시정지를 풀 카드. 04_Data/Cards/Commands/Resume")]
-    [SerializeField] private CommandCardData resumeCard;
+    // 명령 단어는 CardLocalization.json의 카드 행이다 - 단어 5개국어와 카드 겉모습이 한 곳에
+    // 모여 있고, 화면에 카드로 그대로 뜨므로 안내 문구가 따로 필요 없다.
+    //
+    // ⚠️ 에셋 드래그가 아니라 id 문자열이라 오타가 곧 "그 명령이 사라짐"이다. Awake에서 한 번
+    // 꺼내며 CardDatabase가 못 찾으면 경고를 남기고, OnValidate가 편집 중에도 미리 알린다.
+    [Header("명령 카드 (CardLocalization.json의 id)")]
+    [Tooltip("일시정지를 풀 카드의 id.")]
+    [SerializeField] private string resumeCardId = "resume";
 
-    [Tooltip("보유 카드 목록을 열 카드. 04_Data/Cards/Commands/Cards")]
-    [SerializeField] private CommandCardData cardsCard;
+    [Tooltip("보유 카드 목록을 열 카드의 id. 비워두면 '카드' 명령이 통째로 사라진다.")]
+    [SerializeField] private string cardsCardId = "cards";
 
-    [Tooltip("타이틀로 나갈 카드. 04_Data/Cards/Commands/Title")]
-    [SerializeField] private CommandCardData titleCard;
+    [Tooltip("타이틀로 나갈 카드의 id.")]
+    [SerializeField] private string titleCardId = "title";
+
+    private CommandCardData resumeCard;
+    private CommandCardData cardsCard;
+    private CommandCardData titleCard;
 
     private bool _isPaused;
     private bool _inputWasEnabled;
@@ -176,6 +182,12 @@ public class PauseManager : CommandWordReceiver
         Time.timeScale = 1f;
 
         ResolveBattleManager();
+
+        // 명령 카드는 여기서 한 번만 꺼낸다 - Targets는 타이핑 경로에서 글자마다 불리므로
+        // 그때마다 사전을 두드리지 않는다.
+        resumeCard = CardDatabase.Get<CommandCardData>(resumeCardId, this, nameof(resumeCardId));
+        cardsCard = CardDatabase.Get<CommandCardData>(cardsCardId, this, nameof(cardsCardId));
+        titleCard = CardDatabase.Get<CommandCardData>(titleCardId, this, nameof(titleCardId));
 
         if (pausePanel != null)
             pausePanel.SetActive(false);

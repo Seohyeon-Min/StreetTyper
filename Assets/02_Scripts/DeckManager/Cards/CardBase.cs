@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 
 public enum CardCategory
 {
@@ -23,26 +22,36 @@ public enum TurnScalingSource
     ModifiersThisTurn,
 }
 
-public abstract class CardBase : ScriptableObject
+/// <summary>
+/// 카드 한 장. <b>ScriptableObject가 아니라 평범한 C# 객체</b>이고,
+/// <see cref="CardDatabase"/>가 <c>CardLocalization.json</c>의 한 행으로 만들어 준다.
+///
+/// ⚠️ <b>에셋으로 되돌리지 말 것.</b> 예전에는 카드 한 장이 <c>.asset</c>(수치) + JSON(문구)
+/// 두 곳에 나뉘어 있었고, 그래서 어퍼컷의 설명이 에셋엔 "15의 피해" JSON엔 "4의 피해"로
+/// 남아 있는 식의 어긋남이 생겼다. 시작 단어도 프리팹 기본값과 씬 인스턴스 오버라이드에
+/// 따로 저장되어 실제 값이 무엇인지 파일만 봐서는 알 수 없었다. 지금은 카드 한 장이
+/// JSON 한 행에만 존재한다.
+///
+/// 표시 문자열은 하나도 들고 있지 않다 - <see cref="CardId"/>로 그때그때 JSON에서 꺼내므로
+/// 언어를 바꾸면 별도 갱신 없이 따라온다.
+/// </summary>
+public abstract class CardBase
 {
-    [Header("카드 식별자 (JSON ID)")]
-    [Tooltip("CardLocalization.json 파일에 적힌 id 값과 일치해야 합니다. (기존 영어 이름 유지)")]
-    [SerializeField] private string cardNameEn;
+    /// <summary>JSON 행의 id. 코드와 인스펙터가 카드를 가리키는 유일한 키다.</summary>
+    public string CardId { get; }
 
-    [Header("공통")]
-    [SerializeField] private Sprite icon;
+    protected CardBase(CardDefinition definition)
+    {
+        CardId = definition.id;
+    }
 
-    // JSON과 매칭할 고유 ID
-    public string CardId => cardNameEn;
-
-    // JSON 파서를 통해 다국어 텍스트 반환
+    /// <summary>표시 이름이자 <b>타이핑 매칭 키</b>. 한국어가 아닌 언어에서는 영어 대문자로
+    /// 고정된다(<see cref="LanguageSettings.PickCardText"/>).</summary>
     public string CardName => LanguageSettings.PickCardText(CardId, "name");
 
     public virtual string Description => RawDescription;
     protected string RawDescription => LanguageSettings.PickCardText(CardId, "desc");
     public virtual string StatsLabel => LanguageSettings.PickCardText(CardId, "label");
-
-    public Sprite Icon => icon;
 
     public abstract CardCategory Category { get; }
 

@@ -90,7 +90,14 @@ public class CardSlotManager : MonoBehaviour
             }
             // [추가] 럭키 카드가 이번 스테이지에서 소멸(사용)되었다면 덱에서 다시 뽑습니다.
             // 무한 루프 방지를 위해 safetyCount를 체크합니다.
-            while (card != null && card.name == "Lucky" && SkillResolver.LuckyUsedThisStage && safetyCount < 20);
+            //
+            // ⚠️ 예전엔 에셋 이름(card.name == "Lucky")으로 봤는데, 카드가 ScriptableObject가
+            // 아니게 되면서 그 이름 자체가 없어졌다. 효과로 보는 편이 원래 더 맞기도 하다 -
+            // 럭키인지 아닌지는 이름이 아니라 LootBonusOnKill이 정한다.
+            while (card is ModifierCardData lucky
+                   && lucky.EffectType == ModifierEffectType.LootBonusOnKill
+                   && SkillResolver.LuckyUsedThisStage
+                   && safetyCount < 20);
         }
 
         // 사전이 아직 비어 있다면 빈 슬롯을 그대로 두고 이벤트도 쏘지 않는다.

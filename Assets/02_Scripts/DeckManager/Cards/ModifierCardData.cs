@@ -4,8 +4,7 @@ using UnityEngine;
 // 어썸 -> ScalingStatBonus, 퀵 -> TimerBonus, 럭키 -> LootBonusOnKill,
 // 퍼펙트 -> TurnScalingStatBonus
 //
-// ⚠️ 순서를 바꾸거나 중간에 끼워 넣지 말 것 - 직렬화되는 건 인덱스라서 기존 카드 에셋이
-// 조용히 다른 효과로 바뀐다(AttributeEffectType과 같은 이유). 새 값은 반드시 맨 뒤에 붙인다.
+// JSON에 이름으로 적히므로 순서를 바꿔도 안전하다(AttributeEffectType과 같다).
 public enum ModifierEffectType
 {
     StatBonus,
@@ -19,35 +18,41 @@ public enum ModifierEffectType
     TurnScalingStatBonus
 }
 
-[CreateAssetMenu(fileName = "New Modifier Card", menuName = "Deck Manager/Cards/Modifier Card")]
+/// <summary>수치를 올리거나 시간을 바꾸는 수식어 단어. 값은 <c>CardLocalization.json</c>의 한 행에서 온다.</summary>
 public class ModifierCardData : CardBase
 {
-    [SerializeField] private ModifierEffectType effectType;
-    [SerializeField] private float value;
+    private readonly ModifierEffectType effectType;
+    private readonly float value;
 
-    [Tooltip("effectType이 Turn Scaling Stat Bonus일 때만 씁니다(퍼펙트). 이번 턴의 무엇을 셀지 " +
-             "고르고, 1단위당 더할 값은 위 value입니다.")]
-    [SerializeField] private TurnScalingSource scalingSource;
+    // effectType이 TurnScalingStatBonus일 때만 쓴다(퍼펙트). 이번 턴의 무엇을 셀지 고르고,
+    // 1단위당 더할 값은 위 value다.
+    private readonly TurnScalingSource scalingSource;
 
-    [Header("럭키 - 확률")]
-    [Tooltip("effectType이 Loot Bonus On Kill일 때만 씁니다(럭키). 이번 런에서 처음 쓸 때의 확률(%). " +
-             "쓸수록 아래 값만큼 올라간다.")]
-    [SerializeField] private float chancePercent = 10f;
+    // 아래 셋은 effectType이 LootBonusOnKill일 때만 쓴다(럭키) - 이번 스테이지에서 처음 쓸 때의
+    // 확률(%), 한 번 쓸 때마다 오르는 폭(%p), 아무리 써도 넘지 않는 상한(%).
+    private readonly float chancePercent;
+    private readonly float chanceGainPerUse;
+    private readonly float maxChancePercent;
 
-    [Tooltip("럭키를 한 번 쓸 때마다 확률이 오르는 폭(%p).")]
-    [SerializeField] private float chanceGainPerUse = 10f;
+    public ModifierCardData(CardDefinition definition) : base(definition)
+    {
+        effectType = CardDatabase.ParseEnum<ModifierEffectType>(definition.effectType, definition.id, nameof(definition.effectType));
+        value = definition.value;
+        scalingSource = CardDatabase.ParseEnum<TurnScalingSource>(definition.scalingSource, definition.id, nameof(definition.scalingSource));
+        chancePercent = definition.chancePercent;
+        chanceGainPerUse = definition.chanceGainPerUse;
+        maxChancePercent = definition.maxChancePercent;
+    }
 
-    [Tooltip("확률 상한(%). 아무리 써도 이 값을 넘지 않는다.")]
-    [SerializeField] private float maxChancePercent = 50f;
-
-    [Header("럭키 - 보상이 쌓였을 때")]
-    [Tooltip("effectType이 Loot Bonus On Kill일 때만 씁니다(럭키). 럭키로 얻은 보상 라운드가 아직 " +
-             "남아 있는 동안 수치 칸에 statsLabel 대신 띄울 문구입니다. 비워두면 statsLabel 그대로 " +
-             "나옵니다. 칸이 좁으니(42pt) 짧게 적을 것.")]
-    [SerializeField] private string lootPendingStatsLabel;
-
-    [Tooltip("위 문구의 영어판. 비워두면 한국어로 대체되고 경고가 남습니다.")]
-    [SerializeField] private string lootPendingStatsLabelEn;
+    /// <summary>럭키로 얻은 보상 라운드가 아직 남아 있는 동안 수치 칸에 <see cref="StatsLabel"/>
+    /// 대신 띄울 문구(보상 -> 보상됨). 다른 카드 텍스트와 같이 CardLocalization.json에서 오며,
+    /// 그 카드에 <c>koLabelPending</c> 계열 칸이 없으면 비어 돌아온다 - 지금 이 칸을 가진 건
+    /// 럭키 하나뿐이다.
+    ///
+    /// ⚠️ 예전에는 이 두 문구만 에셋에 <c>lootPendingStatsLabel</c>/<c>…En</c>으로 직렬화되어
+    /// <b>한/영 두 벌뿐이었다.</b> 언어가 다섯으로 늘면서 프랑스어·스페인어·일본어 모드에서
+    /// 럭키만 영어 "LOOTED"로 튀었다 - 카드 라벨 중 유일하게 JSON을 안 타던 예외였다.</summary>
+    private string PendingStatsLabel => LanguageSettings.PickCardText(CardId, "labelPending");
 
     public ModifierEffectType EffectType => effectType;
     public float Value => value;
@@ -128,13 +133,16 @@ public class ModifierCardData : CardBase
             // 갈아끼우는 유일한 케이스라, 가드에 걸리면(statsLabel에 {0}이 없다) 여기까지 오지 못한다.
             //
             // 보상이 쌓였다/아니다는 이분법이라 포맷 대신 완성된 문구를 따로 둔다 - "{0}"에 넣을
-            // "됨"/"ED" 같은 조각을 코드에 박으면 인스펙터에서 문구를 못 바꾸게 된다.
+            // "됨"/"ED" 같은 조각을 코드에 박으면 JSON에서 문구를 못 바꾸게 된다.
             if (effectType == ModifierEffectType.LootBonusOnKill
-                && SkillResolver.LootBonusRounds > 0
-                && !string.IsNullOrEmpty(lootPendingStatsLabel))
+                && SkillResolver.LootBonusRounds > 0)
             {
-                return LanguageSettings.Pick(
-                    lootPendingStatsLabel, lootPendingStatsLabelEn, this, nameof(lootPendingStatsLabelEn));
+                var pending = PendingStatsLabel;
+
+                // JSON에 이 칸이 없는 카드는 평소 라벨 그대로 둔다 - 비어 있는 수치 칸이
+                // 뜨는 것보다 낫고, 럭키 말고는 애초에 이 칸을 쓰지 않는다.
+                if (!string.IsNullOrEmpty(pending))
+                    return pending;
             }
 
             if (string.IsNullOrEmpty(label) || !label.Contains("{0}"))

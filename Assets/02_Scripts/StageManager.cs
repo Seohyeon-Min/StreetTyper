@@ -172,6 +172,9 @@ public class StageManager : MonoBehaviour
     /// <summary>True only while the run is on its first battle stage.</summary>
     public bool IsFirstStage => currentBattleIndex == 0;
 
+    /// <summary>Zero-based battle index for UI and tutorial gating.</summary>
+    public int CurrentBattleIndex => currentBattleIndex;
+
     // 지금 스테이지에 스폰된 적이 마더 드래곤인가. 보상에 "지우기" 카드를 놓을지 판단하는 데 쓴다.
     private bool stageWasMotherDragon;
     private GameObject currentEnemyObject;

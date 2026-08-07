@@ -15,6 +15,8 @@ public class InputFieldDisplay : MonoBehaviour
     [SerializeField] private InputManager inputManager;
     [SerializeField] private StageManager stageManager;
     [SerializeField] private RewardInputHandler rewardInputHandler;
+    [SerializeField] private DeckManager deckManager;
+    [SerializeField] private TimerManager timerManager;
 
     [Tooltip("타이핑한 글자를 비출 TMP 라벨. 입력 필드가 아니라 그냥 텍스트여야 한다.")]
     [SerializeField] private TextMeshProUGUI text;
@@ -38,6 +40,13 @@ public class InputFieldDisplay : MonoBehaviour
     [SerializeField] private string rewardHintSpanish = "Escribe una carta...";
     [SerializeField] private string rewardHintJapanese = "カードを入力してください…";
 
+    [Header("Ctrl Tutorial Localization")]
+    [SerializeField] private string ctrlHintKorean = "Ctrl로 빨리감기";
+    [SerializeField] private string ctrlHintEnglish = "Hold Ctrl to skip";
+    [SerializeField] private string ctrlHintFrench = "Ctrl pour avancer";
+    [SerializeField] private string ctrlHintSpanish = "Ctrl para avanzar";
+    [SerializeField] private string ctrlHintJapanese = "Ctrlで早送り";
+
     [Header("Language Fonts")]
     [SerializeField] private TMP_FontAsset koreanFont;
     [SerializeField] private TMP_FontAsset englishFont;
@@ -52,6 +61,8 @@ public class InputFieldDisplay : MonoBehaviour
     private TMP_FontAsset _defaultFont;
     private bool _wasRewardSelecting;
     private bool _firstRewardCompleted;
+    private bool _showingCtrlHint;
+    private bool _ctrlTutorialCompleted;
 
     private void OnEnable()
     {
@@ -66,6 +77,7 @@ public class InputFieldDisplay : MonoBehaviour
         inputManager.OnBackspace += Refresh;
         inputManager.OnCompositionChanged += HandleCompositionChanged;
         inputManager.OnInputCleared += Refresh;
+        inputManager.OnBurnTime += HandleBurnTimeUsed;
         LanguageSettings.OnChanged += HandleLanguageChanged;
         if (rewardInputHandler != null)
             rewardInputHandler.OnSelectionFinished += HandleFirstRewardCompleted;
@@ -90,6 +102,7 @@ public class InputFieldDisplay : MonoBehaviour
         inputManager.OnBackspace -= Refresh;
         inputManager.OnCompositionChanged -= HandleCompositionChanged;
         inputManager.OnInputCleared -= Refresh;
+        inputManager.OnBurnTime -= HandleBurnTimeUsed;
         LanguageSettings.OnChanged -= HandleLanguageChanged;
         if (rewardInputHandler != null)
             rewardInputHandler.OnSelectionFinished -= HandleFirstRewardCompleted;
@@ -116,8 +129,7 @@ public class InputFieldDisplay : MonoBehaviour
 
     private void Update()
     {
-        if (inputManager == null || text == null || stageManager == null ||
-            !stageManager.IsFirstStage || _firstRewardCompleted || !inputManager.IsInputEnabled)
+        if (inputManager == null || text == null || stageManager == null)
         {
             ResetIdleHint();
             return;
@@ -129,23 +141,43 @@ public class InputFieldDisplay : MonoBehaviour
 
         _wasRewardSelecting = rewardSelecting;
 
-        if (!string.IsNullOrEmpty(inputManager.CurrentInput) ||
-            !string.IsNullOrEmpty(inputManager.Composition))
+        bool hasInput = !string.IsNullOrEmpty(inputManager.CurrentInput) ||
+                        !string.IsNullOrEmpty(inputManager.Composition);
+
+        if (stageManager.IsFirstStage)
+        {
+            if (_firstRewardCompleted || !inputManager.IsInputEnabled || hasInput)
+            {
+                ResetIdleHint();
+                return;
+            }
+
+            if (rewardSelecting)
+            {
+                UpdateHint(GetLocalizedRewardHint(), idleHintDelay);
+                return;
+            }
+
+            if (IsPlayerInputTurn())
+            {
+                UpdateHint(GetLocalizedIdleHint(), idleHintDelay);
+                return;
+            }
+
+            ResetIdleHint();
+            return;
+        }
+
+        if (_ctrlTutorialCompleted || hasInput || !IsPlayerInputTurn())
         {
             ResetIdleHint();
             return;
         }
 
-        if (rewardSelecting)
-        {
-            UpdateHint(GetLocalizedRewardHint(), idleHintDelay);
-            return;
-        }
-
-        UpdateHint(GetLocalizedIdleHint(), idleHintDelay);
+        UpdateHint(GetLocalizedCtrlHint(), idleHintDelay, true);
     }
 
-    private void UpdateHint(string hint, float delay)
+    private void UpdateHint(string hint, float delay, bool isCtrlHint = false)
     {
         _idleTime += Time.unscaledDeltaTime;
         if (_idleTime < delay)
@@ -154,6 +186,7 @@ public class InputFieldDisplay : MonoBehaviour
         if (!_showingIdleHint)
         {
             _showingIdleHint = true;
+            _showingCtrlHint = isCtrlHint;
             text.text = hint;
         }
 
@@ -177,6 +210,7 @@ public class InputFieldDisplay : MonoBehaviour
             text.text = string.Empty;
 
         _showingIdleHint = false;
+        _showingCtrlHint = false;
     }
 
     private void HandleLanguageChanged()
@@ -184,7 +218,9 @@ public class InputFieldDisplay : MonoBehaviour
         ApplyLanguageFont();
 
         if (_showingIdleHint)
-            text.text = _wasRewardSelecting ? GetLocalizedRewardHint() : GetLocalizedIdleHint();
+            text.text = _showingCtrlHint
+                ? GetLocalizedCtrlHint()
+                : (_wasRewardSelecting ? GetLocalizedRewardHint() : GetLocalizedIdleHint());
     }
 
     private string GetLocalizedIdleHint()
@@ -209,6 +245,39 @@ public class InputFieldDisplay : MonoBehaviour
             case GameLanguage.Japanese: return rewardHintJapanese;
             default: return rewardHintEnglish;
         }
+    }
+
+    private string GetLocalizedCtrlHint()
+    {
+        switch (LanguageSettings.Current)
+        {
+            case GameLanguage.Korean: return ctrlHintKorean;
+            case GameLanguage.French: return ctrlHintFrench;
+            case GameLanguage.Spanish: return ctrlHintSpanish;
+            case GameLanguage.Japanese: return ctrlHintJapanese;
+            default: return ctrlHintEnglish;
+        }
+    }
+
+    private bool IsPlayerInputTurn()
+    {
+        return inputManager.IsInputEnabled &&
+               inputManager.ActiveReceiver is CardInputHandler &&
+               deckManager != null &&
+               deckManager.CurrentPhase == DeckManager.TurnPhase.PlayerInput &&
+               timerManager != null &&
+               timerManager.IsRunning &&
+               (rewardInputHandler == null || !rewardInputHandler.IsSelecting) &&
+               !stageManager.IsAdvancingAutomatically;
+    }
+
+    private void HandleBurnTimeUsed()
+    {
+        if (stageManager == null || !IsPlayerInputTurn())
+            return;
+
+        _ctrlTutorialCompleted = true;
+        ResetIdleHint();
     }
 
     private void HandleFirstRewardCompleted()

@@ -113,13 +113,8 @@ public class StageManager : MonoBehaviour
     [Tooltip("인사 대사 한 줄이 화면에 떠 있는 시간(초). 다음 줄로 넘어가기 전 대기 시간도 같다.")]
     public float bossGreetingLineDuration = 1.8f;
 
-    [Tooltip("데미가 먼저 건네는 인사 대사.")]
-    public string demiGreetingLine = "엄마!";
-    public string demiGreetingLineEn = "Mom!";
-
-    [Tooltip("마더 드래곤의 답변 대사.")]
-    public string motherGreetingLine = "어디 실력좀 볼까?";
-    public string motherGreetingLineEn = "Let's see what you've got.";
+    // 보스 등장 인사 두 줄은 DialogueLocalization.json에 있다(id: boss.demiGreeting / boss.motherGreeting).
+    // 5개국어를 인스펙터에 두면 필드가 10칸이 되고, 값이 프리팹과 씬 오버라이드로 흩어진다.
 
     public TMPro.TextMeshProUGUI currentStageText;
 
@@ -554,7 +549,7 @@ public class StageManager : MonoBehaviour
 
         if (SpeechBubbleManager.Instance != null && player != null)
         {
-            string demiLine = LanguageSettings.Pick(demiGreetingLine, demiGreetingLineEn, this, nameof(demiGreetingLine));
+            string demiLine = DialogueDatabase.Line(DialogueIds.DemiGreeting);
             SpeechBubbleManager.Instance.ShowMotherDragonBubble(
                 demiLine, player.BubblePosition, true, bossGreetingLineDuration);
         }
@@ -565,7 +560,7 @@ public class StageManager : MonoBehaviour
         {
             var enemyBase = currentEnemyObject.GetComponent<EnemyBase>();
             Vector3 motherPos = enemyBase != null ? enemyBase.BubblePosition : currentEnemyObject.transform.position;
-            string motherLine = LanguageSettings.Pick(motherGreetingLine, motherGreetingLineEn, this, nameof(motherGreetingLine));
+            string motherLine = DialogueDatabase.Line(DialogueIds.MotherGreeting);
             if (enemyBase != null)
                 enemyBase.PlaySpeakAnimation();
             SpeechBubbleManager.Instance.ShowMotherDragonBubble(

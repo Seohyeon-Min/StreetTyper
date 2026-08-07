@@ -8767,6 +8767,10 @@ PrefabInstance:
       propertyPath: m_Material
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 5187228316682228826, guid: d02f9976646da324a8d83ac92acf41d1, type: 3}
+      propertyPath: m_fontSizeMin
+      value: 14
+      objectReference: {fileID: 0}
     - target: {fileID: 6085058037630412005, guid: d02f9976646da324a8d83ac92acf41d1, type: 3}
       propertyPath: m_Name
       value: GameClearPanel
@@ -11333,25 +11337,9 @@ PrefabInstance:
       value: 32
       objectReference: {fileID: 0}
     - target: {fileID: 3646585726638328726, guid: 901dbc30fed772744b05a85b656746eb, type: 3}
-      propertyPath: 'endingEventLines.Array.data[0]'
-      value: "\uC815\uB9D0 \uC7A5\uD558\uAD6C\uB098!"
-      objectReference: {fileID: 0}
-    - target: {fileID: 3646585726638328726, guid: 901dbc30fed772744b05a85b656746eb, type: 3}
-      propertyPath: 'endingEventLines.Array.data[1]'
-      value: "\uC624\uB298\uC740 \uB9DB\uC788\uB294 \uAC78 \uBA39\uC790\uAFB8\uB098."
-      objectReference: {fileID: 0}
-    - target: {fileID: 3646585726638328726, guid: 901dbc30fed772744b05a85b656746eb, type: 3}
       propertyPath: motherDragonSpeechBubblePrefab
       value: 
       objectReference: {fileID: 2888076677979763702, guid: 9227fafe4b7dc0d48b74f200c0f74325, type: 3}
-    - target: {fileID: 3646585726638328726, guid: 901dbc30fed772744b05a85b656746eb, type: 3}
-      propertyPath: 'endingEventLinesEn.Array.data[0]'
-      value: "You\u2019ve done me proud!"
-      objectReference: {fileID: 0}
-    - target: {fileID: 3646585726638328726, guid: 901dbc30fed772744b05a85b656746eb, type: 3}
-      propertyPath: 'endingEventLinesEn.Array.data[1]'
-      value: "Let\u2019s celebrate with something special tonight."
-      objectReference: {fileID: 0}
     - target: {fileID: 3646585726638328726, guid: 901dbc30fed772744b05a85b656746eb, type: 3}
       propertyPath: motherEventDragonTextStyle.fontSize
       value: 20

@@ -55,23 +55,17 @@ public class EventManager : MonoBehaviour
     [Min(0f)] public float endingBackgroundScrollSpeed = 0.8f;
     public AnimationCurve endingExitCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-    [Header("Dialogues (Inspector에서 변경 가능)")]
-    public string[] normalEventLines = { "새로운 단어 카드를 획득했다!", "placeholder1", "placeholder2" };
-    public string[] dragonEventLines = { "placeholder0", "placeholder1", "placeholder2" };
-
-    [Header("Dialogues - Ending")]
-    public string[] endingEventLines = { "플레이스홀더텍스트0", "플레이스홀더텍스트1" };
-    [Tooltip("영어 모드에서 사용할 엔딩 대사. 비어 있으면 한국어 엔딩 대사를 사용합니다.")]
-    public string[] endingEventLinesEn = { "Placeholder text 0", "Placeholder text 1" };
+    // 대사는 DialogueLocalization.json에 있다(DialogueIds.NormalEvent / DragonEvent / EndingEvent).
+    //
+    // ⚠️ 예전에는 한국어·영어 배열 6개가 여기 인스펙터 필드로 있었는데, 값이 프리팹 기본값과
+    // 씬 인스턴스 오버라이드로 흩어져 <b>화면에 실제로 나오는 값이 무엇인지 파일만 봐서는 알 수
+    // 없었다</b> - 엔딩 대사의 진짜 문구가 씬 오버라이드에 숨어, 프리팹의 "플레이스홀더텍스트0"이
+    // 나오는 것처럼 보였다. 언어가 다섯이 되면서 배열이 5벌씩 필요해지기도 해서 JSON으로 옮겼다.
+    //
+    // ⚠️ 언어별 줄 수가 어긋나면 그 언어에서만 스페이스로 넘기는 횟수가 달라져 이벤트가 끝나지
+    // 않고, ShowResult가 불리지 않아 결과 화면도 클리어 보상도 나오지 않는다(실제로 겪은 회귀다).
+    // 지금은 DialogueDatabase가 로드 시점에 그 불일치를 에러로 잡는다.
     private bool _isEndingEvent = false;
-
-    // ⚠️ 기본값을 비워 둔다. EventManager.prefab의 한국어 배열이 둘 다 빈 배열이라서,
-    // 여기에 대사를 채우면 영어 모드에서만 대사가 생겨 스페이스를 여러 번 눌러야 넘어가게 된다.
-    // 그 사이 ShowResult가 불리지 않아 결과 화면도 클리어 보상도 나오지 않는다 - 실제로 겪은 회귀다.
-    // 한국어 대사를 채우게 되면 이쪽도 같은 개수로 함께 채울 것.
-    [Header("Dialogues - English")]
-    public string[] normalEventLinesEn = { };
-    public string[] dragonEventLinesEn = { };
 
     private GameObject dialogueBubbleObj;
     private SpeechBubble dialogueBubbleScript;
@@ -141,26 +135,6 @@ public class EventManager : MonoBehaviour
         }
     }
 
-    private string[] GetEndingLines()
-    {
-        if (!LanguageSettings.IsEnglish || endingEventLinesEn == null || endingEventLinesEn.Length == 0)
-            return endingEventLines;
-
-        int koreanCount = endingEventLines != null ? endingEventLines.Length : 0;
-        int count = Mathf.Max(koreanCount, endingEventLinesEn.Length);
-        string[] localized = new string[count];
-
-        for (int i = 0; i < count; i++)
-        {
-            bool hasEnglish = i < endingEventLinesEn.Length && !string.IsNullOrEmpty(endingEventLinesEn[i]);
-            localized[i] = hasEnglish
-                ? endingEventLinesEn[i]
-                : (i < koreanCount ? endingEventLines[i] : string.Empty);
-        }
-
-        return localized;
-    }
-
     public void StartEvent(bool isMotherDragon, int healAmount = 0, bool isEnding = false) // [수정] isEnding 매개변수 추가
     {
         isEventActive = true;
@@ -174,20 +148,12 @@ public class EventManager : MonoBehaviour
         ResolveBubbleAnchor();
         activeDialogueLines.Clear();
 
-        string[] linesToUse;
-        if (isEnding)
-        {
-            linesToUse = GetEndingLines();
-        }
-        else if (LanguageSettings.IsEnglish)
-        {
-            var en = isMotherDragon ? dragonEventLinesEn : normalEventLinesEn;
-            linesToUse = en != null && en.Length > 0 ? en : (isMotherDragon ? dragonEventLines : normalEventLines);
-        }
-        else
-        {
-            linesToUse = isMotherDragon ? dragonEventLines : normalEventLines;
-        }
+        // 어느 대사 묶음인지만 고르면 된다 - 언어 선택과 폴백은 DialogueDatabase가 한다.
+        var dialogueId = isEnding ? DialogueIds.EndingEvent
+            : isMotherDragon ? DialogueIds.DragonEvent
+            : DialogueIds.NormalEvent;
+
+        string[] linesToUse = DialogueDatabase.Lines(dialogueId);
 
         foreach (string line in linesToUse)
         {

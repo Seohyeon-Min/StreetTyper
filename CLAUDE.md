@@ -36,6 +36,17 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 
     ⚠️ **`<<<<<<< HEAD` 쪽이 비어 있다고 "상대가 추가했다"로 읽지 말 것.** **"HEAD가 지웠다"일 수도 있고 git은 둘을 구분해 보여주지 않는다.** 반드시 base와 대조할 것 — 실제로 이 저장소에서 그걸 착각해 `theirs`를 통째로 받았다가, 지워둔 컴포넌트를 되살린 적이 있다. base에 있고 한쪽이 지웠으면 **삭제가 이긴다**(상대가 안 건드렸다면).
 
+  - ### ⭐ 씬 YAML에서 **"지금 실제로 쓰이는 값"**을 찾을 때의 함정
+
+    한 필드의 값이 **① C# 필드 초기화자 → ② 프리팹 → ③ 씬 인스턴스 오버라이드** 순으로 덮인다. **③까지 안 보면 틀린 값을 읽는다** — 실제로 엔딩 대사가 프리팹엔 `플레이스홀더텍스트0`인데 씬 오버라이드에 진짜 문구(`정말 장하구나!`)가 있어서, "플레이스홀더가 화면에 뜬다"고 잘못 결론 낸 적이 있다.
+
+    grep으로 찾을 때 놓치기 쉬운 두 가지:
+
+    - ⚠️ **배열 인덱스가 든 `propertyPath`는 작은따옴표로 감싸인다** — `propertyPath: 'endingEventLines.Array.data[0]'`. `propertyPath: endingEventLines`로 찾으면 **0건**이 나와 "오버라이드 없음"으로 오독한다.
+    - ⚠️ **중첩 직렬화 구조체는 들여쓰기가 깊다** — `ScreenPresentation.titleKorean`은 `^  ` 가 아니라 `^    `다. `^  키:` 패턴으로만 훑으면 통째로 빠진다.
+
+    반대로 **프리팹에 키가 아예 없으면** 그건 "빈 값"이 아니라 **"C# 초기화자를 쓴다"**는 뜻이다(`grep -c`가 0을 돌려줘도 대사가 멀쩡히 나오는 이유다).
+
   - ⚠️ **머지 직후에도 같은 이유로 반드시 에디터를 한 번 열어야 한다.** 브랜치 4개(`main`/`SYLEE`/`SeohyeonMin`/`seungju`)가 같은 씬·프리팹을 건드려서 `SampleScene.unity`가 상시 충돌 대상이고, YAML을 손으로 해소하면 컴파일은 통과해도 **연결이 조용히 빠진 상태**가 나온다. 머지 후 확인 순서는 "에디터 콘솔 컴파일 → `TitleScene`부터 Play → 손패·HP·상태 아이콘·적 인텐트가 다 뜨는지"다.
 - **테스트**: `com.unity.test-framework`는 설치되어 있으나 **테스트 어셈블리가 하나도 없다.** 여기서 "테스트"란 Play Mode 수동 확인이며, 보통 `Debug.Log` 출력을 읽는 것이다(`DeckManager.logDebugEvents`, `WordChainManager.logDebugEvents`, `WordUnlockManager.logDebugEvents`, `PendingActionManager.logDebugEvents`).
   - **Play는 `TitleScene`부터 시작해야 실제 흐름과 같다.** `SampleScene`을 직접 Play해도 전투는 돌지만, 일시정지에서 "타이틀"을 치면 `TitleScene`으로 넘어가므로 씬 전환 경로를 확인할 수 없다.
@@ -235,13 +246,33 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
 - **`labelPending`은 수치 칸이 이분법으로 갈리는 카드용**이고 지금은 **럭키 하나뿐**이다(`보상` → `보상됨`). JSON에 그 칸이 없는 카드는 빈 값이 돌아오고 평소 라벨이 그대로 나온다. ⚠️ 이건 예전에 `ModifierCardData`의 `lootPendingStatsLabel`/`…En`으로 **에셋에 한/영 두 벌만** 있던 자리다 — 카드 라벨 중 유일하게 JSON을 안 타서 불/스/일 모드에서 럭키만 한국어로 튀었고, 그래서 JSON으로 옮겼다. **되돌리지 말 것.**
 - 에셋 YAML에 `cardName`/`description*`/`statsLabel*` 같은 옛 키가 남아 있으면 그건 **아무도 안 읽는 고아 키**다(수치가 JSON과 어긋난 채 남아 있어 읽는 사람을 헷갈리게 한다). 34장 전부에서 이미 걷어냈다.
 
+#### ⭐ 대사도 JSON이다 — **`Assets/04_Data/Resources/DialogueLocalization.json`**
+
+마더 드래곤과의 대화 전체(등장 인사 → 턴별 대사 → 처치 후 → 엔딩)가 여기 있고 **5개국어를 다 든다.** 읽는 창구는 **`DialogueDatabase`**(`02_Scripts/DialogueDatabase.cs`)로, `CardDatabase`를 그대로 본뜬 static 지연 로드 클래스다.
+
+- API: `Lines(id)` · `Line(id, index)` · `Count(id)`. 그 언어 칸이 **없으면**(null) 영어 → 한국어로 넘어가고, **빈 배열은 폴백하지 않는다**(그건 "대사 없음"이라는 정상 설정이다 — `event.normal`이 그렇다).
+- id는 코드에 문자열로 적지 말고 **`DialogueIds` 상수**를 쓴다(`GameScenes`와 같은 이유). 지금 6개: `DemiGreeting`/`MotherGreeting`/`MotherDragonTurn`/`NormalEvent`/`DragonEvent`/`EndingEvent`.
+- ⭐ **`DialogueDatabase`가 로드 시점에 언어별 줄 수가 다르면 `Debug.LogError`를 낸다.** 이건 장식이 아니라 **실제로 겪은 회귀를 막는 장치**다 — 대사는 스페이스로 한 줄씩 넘기는데 언어마다 줄 수가 다르면 그 언어에서만 넘기는 횟수가 어긋나 이벤트가 끝나지 않고, `ShowResult`가 안 불려 **결과 화면도 클리어 보상도 통째로 안 나온다.** 화면이 잠긴 것처럼 보이는데 원인이 번역 파일이라 추적이 매우 어렵다.
+- `event.dragon`의 둘째 줄에는 `{0}`(회복량)이 들어간다 — `EventManager`가 `string.Format`을 태우므로 **5개국어 전부에 `{0}`이 살아 있어야 한다.**
+- ⚠️ **`event.normal`은 일부러 0줄이다.** 일반 적을 처치할 때마다 이 경로를 지나가지만 대사 없이 곧바로 승리 처리로 넘어간다. **줄을 채우면 스페이스로 넘기는 단계가 생긴다.**
+
+⚠️ **대사를 인스펙터 필드로 되돌리지 말 것.** 언어가 다섯이라 배열이 5벌씩 필요하고, 그러면 값이 프리팹 기본값과 씬 인스턴스 오버라이드로 흩어져 **화면에 실제로 나오는 값이 무엇인지 파일만 봐서는 알 수 없게 된다** — 실제로 엔딩 대사의 진짜 문구가 씬 오버라이드에 숨어 프리팹의 `플레이스홀더텍스트0`이 나오는 것처럼 보였다.
+
 #### 카드 밖 문구 — 아직 `Pick`(한/영 두 벌)이다
 
 ⚠️ **`Pick`은 영어 자리가 비면 한국어로 폴백하되 조용히 넘어가지 않고 경고를 남긴다.** 영어 모드는 라틴 문자만 받으므로, 한글 이름이 그대로 손패에 뜨면 **그 카드는 영영 칠 수 없어 턴이 잠긴다.** 화면에 나오기 전에 알아야 하는 종류의 누락이라 일부러 시끄럽게 만들어 뒀다. 다만 `Pick`은 매칭 경로에서 글자마다 불리므로 **경고는 `owner.fieldName`별로 한 번만** 낸다(`SoundManager`가 버스 경고를 경로별로 한 번만 남기는 것과 같은 이유).
 
 ⚠️ **`Pick`은 두 벌뿐이라 불어·스페인어·일본어에서는 영어가 나온다** — "한국어 모드면 한국어, 그 외엔 영어"라서 다섯 언어가 실질적으로 둘로 접힌다. 즉 **카드는 5개국어, 그 밖의 문구는 한/영 2개국어**가 지금 상태다. 아래 표의 항목을 5개국어로 만들려면 카드처럼 JSON 쪽으로 옮기는 게 맞다.
 
-⚠️ **`IsEnglish`는 "영어인가"이지 "라틴 입력 모드인가"가 아니다.** 언어가 다섯이 되면서 이 둘이 갈렸다 — `IsEnglish`로 갈라 쓰는 곳(`CommandWordReceiver`의 안내 꼬리말, `BattleManager.motherDragonLines`, `EventManager`)은 **불/스/일에서 한국어 쪽으로 떨어진다.** "라틴 문자를 받는가"를 묻고 싶으면 `Current != GameLanguage.Korean`으로 쓸 것(`InputManager.HandleTextInput`·`ApplyImeMode`가 그렇게 한다).
+⚠️ **`IsEnglish`는 "영어인가"이지 "라틴 입력 모드인가"도 "한국어가 아닌가"도 아니다.** 언어가 다섯이 되면서 셋이 갈렸다.
+
+| 묻고 싶은 것 | 쓸 것 |
+|---|---|
+| 지금이 영어인가 | `IsEnglish` |
+| 한국어면 A, 아니면 B | **`IsKorean`** |
+| 라틴 문자를 받는 모드인가 | `Current != GameLanguage.Korean` (`InputManager.HandleTextInput`·`ApplyImeMode`) |
+
+`IsEnglish`로 "한국어가 아닌가"를 물으면 **불/스/일이 한국어 쪽으로 떨어진다.** `CommandWordReceiver`의 안내 꼬리말이 그 예였고 지금은 `IsKorean`으로 고쳤다.
 
 한/영 두 벌을 들고 있는 곳:
 
@@ -252,11 +283,12 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
 | `CommandWordReceiver` | `hintSuffix`/`hintSuffixEn` — 안내 꼬리말(`을 입력해주세요!`) |
 | 보상·목록 화면 제목 | **`ScreenPresentation`**(`titleKorean`/`titleEnglish` + 이미지 + 글자색). `RewardCardView.presentation`, `CardCollectionPanel`/`CardDeletePanel`의 `presentation`. ⚠️ **결과 화면은 이제 안 쓴다** — 아래 `BattleManager` 참조 |
 | 결과 통계 라벨 | **`ResultStatsView`**의 라벨 5쌍(`highestStageLabelText`/`…En` 등) — `LanguageSettings.OnChanged`를 직접 구독해 갱신한다 |
-| `BattleManager` | `motherDragonLines`/`motherDragonLinesEn`(마더 드래곤 대사 — **인스펙터 배열로 나왔다**). ⚠️ 옛 `statsFormat`/`statsFormatEn`(통계 문구 한 덩어리)은 **삭제됐다** — `ResultStatsView`가 라벨과 숫자를 따로 그린다 |
-| `OptionsPanel` | `closeKorean`/`closeEnglish` |
+| `BattleManager` | ⚠️ 옛 `motherDragonLines`/`…En`(마더 드래곤 대사)은 **삭제됐다** — 위 대사 JSON(`DialogueIds.MotherDragonTurn`)으로 옮겼다. 옛 `statsFormat`/`statsFormatEn`(통계 문구 한 덩어리)도 **삭제됐다**(`ResultStatsView`가 라벨과 숫자를 따로 그린다) |
+| `StageManager` | ⚠️ 옛 `demiGreetingLine`/`motherGreetingLine`(+`…En`)은 **삭제됐다** — 위 대사 JSON(`DemiGreeting`/`MotherGreeting`)으로 옮겼다 |
+| `OptionsPanel` | `closeKorean`/`closeEnglish`, 그리고 불/스/일 3칸 — **이미 5개국어다**(`switch (LanguageSettings.Current)`) |
 | `TitleMenu` | 버튼 라벨 3개 |
 | `StatusEffectManager` | `GetDisplayName`(`화상`/`BURN` 등)과 `DevilDisplayName` — 코드에 직접 박혀 있다 |
-| `EventManager` | `normalEventLines`/`normalEventLinesEn`, `dragonEventLines`/`dragonEventLinesEn` — ⚠️ **영문 배열 둘 다 비어 있어 영어 모드에서도 한국어 대사가 나온다** |
+| `EventManager` | ⚠️ 대사 배열 6개가 전부 **삭제됐다** — 위 대사 JSON(`NormalEvent`/`DragonEvent`/`EndingEvent`)으로 옮겼고 5개국어가 된다 |
 | `CardCollectionPanel` | `presentation`(제목) + `closeCommand`(`닫기`/`close`) |
 
 ⚠️ **두 벌을 들지 않아 언어를 안 타는 화면 문구가 아직 있다** — `StageManager`의 `stageLabelFormat`/`bossStageLabel`은 인스펙터로 나왔지만 **한 벌뿐**이고(스테이지 등장 배너는 아예 오브젝트가 문구를 갖는다), `IntroManager.slides`의 대사도 인스펙터에 있지만 **한 벌뿐**이다. 위 표에 없는 문구를 발견하면 새로 만든 게 아니라 이 부류일 가능성이 높다.
@@ -595,7 +627,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
   - ⚠️ 셋 다 나머지 프로젝트의 인스펙터 배선 컨벤션과 어긋나는 `public` 필드 + 싱글턴 스타일이다(컨벤션 절 참조). **새 코드를 이 패턴으로 확장하지 말 것.**
 - **`StatisticsManager`** (`02_Scripts/`) — 런 통계 수집기. **싱글턴**이고 `Awake`에서 중복 인스턴스를 스스로 `Destroy`한다. `totalPlayTime`(`StartTracking`/`StopTracking` 사이 `Time.deltaTime` 누적) · `totalTypedCharacters` · `validWordsUsed` · `totalDamageDealt` · `totalDamageTaken` · `highestStageReached`, 그리고 `GetCPM()`(분당 타수).
   - 수집 지점이 시스템 곳곳에 흩어져 있다: `CardInputHandler`(매칭 성공 → `AddValidWord`) · `CombatManager`(`AddDamageDealt`) · `EnemyManager`(`AddDamageTaken`) · `StageManager`(`StartTracking`/`UpdateHighestStage`) · `BattleManager`(`StopTracking` + 결과 표시). 전부 `Instance != null` 가드가 있다.
-  - 결과는 `BattleManager.ShowStatisticsUI(...)`가 `resultPanel`(`End Canvas > ResultPanel`) 안의 **`ResultStatsView.SetStats(...)`**에 넘긴다. 라벨 문구는 코드 리터럴이 아니라 그 뷰의 인스펙터에 한/영 두 벌로 있고, 스테이지 분모는 `stageManager.totalStages`에서 읽는다.
+  - 결과는 `BattleManager.ShowStatisticsUI(...)`가 `resultPanel`(`End Canvas > ResultPanel`) 안의 **`ResultStatsView.SetStats(...)`**에 넘긴다. 라벨 문구는 코드 리터럴이 아니라 그 뷰의 인스펙터에 한/영 두 벌로 있고, 스테이지 분모는 `stageManager.TotalStages`(계산 프로퍼티)에서 읽는다.
   - ⚠️ **저장되지 않는다.** 씬을 넘어가면 사라지고(`DontDestroyOnLoad` 없음) `PlayerPrefs`에도 안 들어간다 — 한 판짜리 통계다.
 - **`EventManager`** — 스테이지 클리어 시 끼어드는 대화 이벤트(마더 드래곤). `StartEvent(isMotherDragon, healAmount)` → 대사를 순서대로 보여주고, **스페이스키**로 넘긴다. 대사는 인스펙터 배열(`normalEventLines`/`dragonEventLines`)이고 `string.Format`으로 `healAmount`가 들어간다.
   - 종료 시 회복을 적용한 뒤 `battleManager.ShowResult(...)`를 직접 호출해 승리 화면을 띄운다. 회복은 `CharacterStats.Heal`이 아니라 `currentHP`를 직접 더하고 `maxHP`로 클램프한다.
@@ -608,12 +640,14 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
   - **일반 스테이지는 `enemyPrefabs`(현재 씬에서 `Dragon1~6.prefab` 6종) 중 하나를 랜덤으로 스폰한다.** `enemyPrefabs.Count == 1`이면 그대로 `[0]`을 쓰지만, 지금처럼 여러 장이면 **직전 스테이지와 같은 프리팹이 다시 뽑히지 않을 때까지**(`lastNormalEnemyPrefab`, 최대 20회 재시도) 다시 굴린다. `currentBattleIndex`가 4 또는 9면 보스전으로 보고 `motherDragonPrefab`을 스폰한다 — 이건 그대로다.
   - 난이도는 프리팹이 아니라 **`EnemyBase.ApplyScaling(displayStage - 1)`**로 준다(스폰 직후 호출). 보스전은 표시 스테이지 번호에서 제외되므로(`displayStage` 보정) 보스를 지나도 스케일링 단계가 밀리지 않는다.
   - **스테이지 표시가 둘로 갈린다.**
-    - `currentStageText`(상시 표시) — 문구가 인스펙터의 **`stageLabelFormat`**(`"STAGE {0}"`)과 **`bossStageLabel`**(`"MOMMY"`)에서 나온다. 코드에 박혀 있던 걸 걷어낸 자리다.
+    - `currentStageText`(상시 표시) — 문구가 인스펙터의 **`stageLabelFormat`**(`"STAGE {0}"`)과 **`bossStageLabel`**(씬에서 `"MAMA"`로 덮여 있다)에서 나온다. 코드에 박혀 있던 걸 걷어낸 자리다.
     - **`stageStartObject`**(등장 배너) — 이제 코드가 문구를 쓰지 않는다. `LoadStage`가 `SetActive(true)`로 켜기만 하고, **무엇이 적혀 있는지는 그 오브젝트(프리팹/애니메이션)가 통째로 갖는다.** 옛 `stageStartText`(TMP 라벨에 문구를 대입하던 것)는 삭제됐다.
     - 끄는 건 `BeginStageAfterDelay`가 `stageStartDelay` 뒤에 한다 — **`stageStartEffect`(`StageStartEffect`)가 있으면 축소·페이드아웃 퇴장 연출을 맡기고**(백그라운드로 흘러가며 턴 시작을 늦추지 않는다), 없으면 그냥 끈다. 등장 연출은 `StageStartEffect.OnEnable`이 알아서 재생하므로 켜기만 하면 된다.
     - ⚠️ 전체 클리어로 빠질 때도 이 배너를 꺼야 한다(`LoadStage`의 클리어 분기). 거기서는 퇴장 연출 없이 즉시 끈다 — 결과 창이 곧바로 덮으므로 축소되는 걸 볼 이유가 없다.
   - **BGM도 여기서 고른다** — `LoadStage`가 `isBossBattle`이면 `PlayBossBGM()`, 아니면 `PlayBattleBGM()`을 부른다. ⚠️ 코드 주석은 "이미 재생 중이면 알아서 무시됨"이라고 하지만 **실제로는 매 스테이지 처음부터 다시 재생된다**(아래 "알려진 이슈"의 `PlayBGM` 항목).
-  - **게임 클리어 판정은 `currentBattleIndex >= totalBattles`(private, 10) 하나뿐이다.** 예전엔 보스 판정 뒤에 `>= totalStages` 검사가 하나 더 있어서 인덱스 8에서 게임이 끝나고 인덱스 9의 두 번째 보스전이 죽은 코드였는데, 그 검사는 없어졌다. **`totalStages`(public, 현재 12)는 이제 스폰 로직이 아니라 결과 화면의 "최고 도달 스테이지" 분모로만 쓰인다** — ⚠️ **두 값이 서로 맞을 의무가 없어 지금도 어긋나 있다**(전투 10회 = 일반 8 + 보스 2인데 분모는 12). 전투 수를 바꾸면 두 값을 같이 볼 것.
+  - **스테이지 구성이 인스펙터 두 칸으로 정해진다** — `totalBattles`(현재 **13**, 보스 포함한 총 전투 수)와 `bossBattleIndices`(현재 `{4, 9}`). 게임 클리어 판정은 `currentBattleIndex >= totalBattles` 하나뿐이다.
+    - ⭐ **마지막 전투(`totalBattles - 1`, 지금은 인덱스 12)는 `bossBattleIndices`에 없어도 자동으로 엔딩 대결이 된다.** `EnemyBase.isEndingBoss`가 서고, `LoadStage`가 **전투를 아예 건너뛰고** 엔딩 이벤트(`DialogueIds.EndingEvent`)를 재생한 뒤 게임 클리어로 넘어간다.
+    - **결과 화면의 "최고 도달 스테이지" 분모는 이제 계산 프로퍼티 `TotalStages`다**(보스를 뺀 일반 스테이지 수). ⚠️ 예전엔 인스펙터에 손으로 적는 값이라 분자와 조용히 어긋났고 실제로 `11 / 12`가 뜬 적이 있다 — **다시 필드로 되돌리지 말 것.**
   - ⚠️ **`HandleBattleEnded`는 `battleManager.IsFinalResult`면 보상을 열지 않는다.** 전체 클리어는 플레이어가 살아 있어서 `player.currentHP <= 0` 검사에 안 걸리는데, 그대로 두면 **결과 화면이 뜬 뒤에 보상 창이 한 번 더 올라온다**(더 갈 스테이지가 없어 고른 카드를 쓸 곳도 없다). 마지막 스테이지의 보상은 그 직전 `Victory`에서 이미 받는다 — `OnBattleEnded`가 kind가 바뀔 때도 나가게 되면서 생긴 경로다.
   - **보상은 `NextStage()`가 아니라 `battleManager.OnBattleEnded`를 구독해 연다.** 적 HP가 0이 되는 순간(= 결과 화면이 뜨는 순간) `BeginRewardRound()`가 돌아 후보를 뽑고 `RewardCardView`로 펼치며 `RewardInputHandler.BeginSelection`을 연다. 패배(`player.currentHP <= 0`)에는 보상이 없다.
     - **한 라운드가 끝나면**(`OnSelectionFinished`) `TryConsumeBonusRound()`로 럭키 라운드가 남았는지 보고, 남았으면 `BeginRewardRound()`로 한 번 더 연다. 다 끝나면 `FinishReward()`가 **퇴장 연출**(`rewardCardView.PlayExit(keepIndex, …)`)을 걸고, 그게 끝난 뒤 `BeginAdvanceAfterReward()`가 **`rewardAdvanceDelay`(기본 0.6초) 뒤 `NextStage()`를 부르는 코루틴을 건다.** 연출 뒤에도 대기를 한 번 더 두는 건 "방금 얻은 카드를 볼 짧은 여유"라는 원래 의도를 유지하기 위해서다.
@@ -752,9 +786,12 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
   | 결과 통계의 라벨·숫자 | **`ResultStatsView`** — 라벨과 값을 각각 다른 `TMP_Text`로 받으므로 배치·폰트를 따로 디자인해도 코드를 안 고친다 |
   | 카드 프레임·배지 스프라이트 | `Card.prefab`의 `CardView` 인스펙터(`actionFrame`/`defaultFrame`/`commandFrame`/배지 3종) — **한 곳만 고치면 손패·보상·일시정지·목록에 동시에 적용된다** |
   | 카드 이름·설명·수치 칸 | ⭐ **`04_Data/Resources/CardLocalization.json`** (5개 언어 × 34장). 에셋이 아니라 여기다 — 에셋에 남은 텍스트 키는 죽은 값이다. 수치가 들어가는 칸은 JSON 쪽 문구를 **포맷 문자열**로 쓰고 런타임 값을 끼운다(아래) |
+  | 대사(마더 드래곤과의 대화 전체) | ⭐ **`04_Data/Resources/DialogueLocalization.json`** (5개 언어 × 6묶음). 읽는 창구는 `DialogueDatabase`, id는 `DialogueIds` 상수 |
   | 그 외 라벨 | `[SerializeField]` 한/영 두 벌 + `LanguageSettings.Pick(...)` |
 
   **하면 안 되는 것**: 화면에 나갈 문자열을 코드에 박기, 포맷 조각(`"됨"`·`"ED"` 같은 접미사)만 코드에 두기, 스프라이트를 코드에서 `Resources.Load`로 집기.
+
+  ⚠️ **카드와 대사의 JSON은 이 규칙의 위반이 아니라 의도된 예외다.** 이 규칙의 목적은 "문구 하나 고치려고 코드를 열고 컴파일을 기다리지 않기"인데 JSON은 그걸 그대로 만족한다 — 텍스트 파일이라 컴파일이 필요 없고 기획·번역 담당이 코드를 몰라도 고친다. **언어가 다섯이라 인스펙터 방식이면 칸이 5벌씩 필요**하고, 그러면 값이 프리팹 기본값과 씬 오버라이드로 흩어져 **실제로 화면에 나오는 값을 파일만 봐서는 알 수 없게 된다**(엔딩 대사와 카드 시작 단어에서 실제로 겪었다). 번역가에게 파일 하나로 넘길 수 있다는 이점도 크다.
 
   ⚠️ **아직 이 규칙을 반만 지키는 곳**(고칠 때 같이 정리할 것): `StageManager.stageLabelFormat`/`bossStageLabel`과 `IntroManager.slides`는 인스펙터에 있지만 **한 벌뿐이라 언어를 안 탄다.**
 
@@ -783,7 +820,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
   - `Assets/_Recovery/`의 크래시 복구 씬 두 개(`0.unity`, `0 (1).unity`)가 커밋되어 있다. 죽은 에셋의 마지막 참조가 여기 남아 "아직 쓰인다"고 착각하게 만든다.
   - `Assets/03_Prefabs/Actions.prefab`은 **아무 씬·프리팹도 참조하지 않는다**(대체품은 `ThinkingBubble.prefab`). 같이 죽어 있던 `StatusEffectView.cs`는 삭제했다.
   - `StageManager.prefab`의 `enemyPrefabs` 기본값(3칸) 중 2번째 항목이 삭제된 `strongEnemy`의 **깨진 GUID**다(씬 인스턴스가 배열 크기를 6으로 덮어써 `Dragon1~6.prefab`으로 대체되어 있어 가려져 있다).
-  - `EventManager`의 `normalEventLinesEn`/`dragonEventLinesEn`이 비어 있어 **영어 모드에서도 이벤트 대사만 한국어로 나온다.** `normalEventLines`의 2·3번째 항목도 `placeholder1`/`placeholder2` 그대로다.
+  - ~~`EventManager`의 영문 대사 배열이 비어 있다~~ — **해결됨.** 대사가 전부 `DialogueLocalization.json`으로 옮겨져 5개국어가 된다. 프리팹에 있던 `플레이스홀더텍스트0/1`도 같이 사라졌다(그건 **씬 오버라이드에 가려 화면에 나온 적이 없던** 값이다).
   - 저장소 루트에 `MERGE_NOTES.md`와 `SYLEE_머지시_변경사항.md`가 커밋되어 있다. 특정 머지 시점의 메모라 **지금 코드 상태와는 어긋날 수 있다** — 판단 근거로 삼지 말 것.
   - ⚠️ **`AGENTS.md`는 이 파일(`CLAUDE.md`)의 복사본인데 이미 갈라져 있다.** 헤더 두 줄만 다르게 만든 사본이라 내용이 780줄 그대로 겹치지만, `CLAUDE.md`만 갱신되어 `Dragon1~6`·`enemyPrefabs` 같은 대목이 `AGENTS.md`에서는 옛 상태(`enemy.prefab`, 배열 크기 1)로 남아 있다. **둘 중 하나만 고치면 다음 사람이 옛 쪽을 읽는다** — 이 파일을 고쳤으면 `AGENTS.md`도 같이 맞추거나, 아예 한쪽을 지울 것.
   - ⚠️ 저장소 루트에 **`BackgroundScroller.dll`**(300KB)이 커밋되어 있다(`c596a74 Merge complete`). `Assets/` 밖이라 Unity가 읽지도 않는 빌드 잔재이며, 같은 이름의 실제 스크립트는 `Assets/02_Scripts/BackgroundScroller.cs`다. 이 DLL을 코드 출처로 착각하지 말 것.

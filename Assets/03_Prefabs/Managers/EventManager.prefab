@@ -80,16 +80,3 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  normalEventLines: []
-  dragonEventLines:
-  - "\uC5EC\uAE30\uAE4C\uC9C0 \uD558\uC790\uAFB8\uB098!"
-  - "\uCCB4\uB825\uC774 \uD68C\uBCF5\uB410\uC5B4! (+{0})"
-  dragonEventLinesEn:
-  - "That's enough for today!"
-  - "You've been healed! (+{0})"
-  endingEventLines:
-  - "\uD50C\uB808\uC774\uC2A4\uD640\uB354\uD14D\uC2A4\uD2B80"
-  - "\uD50C\uB808\uC774\uC2A4\uD640\uB354\uD14D\uC2A4\uD2B81"
-  endingEventLinesEn:
-  - Placeholder text 0
-  - Placeholder text 1

@@ -31,7 +31,16 @@ public static class LanguageSettings
     /// 이 필드에 캐시해 둔다.</summary>
     public static GameLanguage Current => _current;
 
+    /// <summary>지금 언어가 <b>영어인가</b>. 다섯 언어 중 하나를 콕 집어 묻는 것이라,
+    /// ⚠️ <b>"라틴 문자를 받는 모드인가"로 쓰면 안 된다</b> - 불어·스페인어·일본어도 라틴 입력이지만
+    /// 여기서는 false다. 그 질문은 <see cref="IsKorean"/>의 부정(<c>!IsKorean</c>)이며,
+    /// <see cref="InputManager.HandleTextInput"/>·<c>ApplyImeMode</c>가 그렇게 쓴다.</summary>
     public static bool IsEnglish => _current == GameLanguage.English;
+
+    /// <summary>지금 언어가 <b>한국어인가</b>. "한국어면 이것, 아니면 저것"으로 갈리는 자리에서 쓴다 -
+    /// 언어가 둘이던 시절에는 <see cref="IsEnglish"/>로 갈라도 결과가 같았지만, 다섯이 되면서
+    /// 그 둘은 다른 질문이 됐다(<c>IsEnglish</c>로 갈리면 불/스/일이 한국어 쪽으로 떨어진다).</summary>
+    public static bool IsKorean => _current == GameLanguage.Korean;
 
     /// <summary>언어가 바뀐 순간 화면에 붙은 라벨들이 스스로 갱신하도록 알린다.</summary>
     public static event Action OnChanged;

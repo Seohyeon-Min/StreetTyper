@@ -24,8 +24,10 @@ public static class LanguageSettings
 {
     // 기존 볼륨 설정과 같은 계열의 키를 쓴다(option.volume.master 등).
     private const string PrefsKey = "option.language";
+    private const string DefaultVersionKey = "option.language.default-version";
+    private const int DefaultVersion = 1;
 
-    private static GameLanguage _current = GameLanguage.Korean;
+    private static GameLanguage _current = GameLanguage.English;
 
     /// <summary>지금 언어. 타이핑 매칭 경로에서 글자마다 불리므로 PlayerPrefs를 매번 읽지 않고
     /// 이 필드에 캐시해 둔다.</summary>
@@ -54,7 +56,17 @@ public static class LanguageSettings
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Load()
     {
-        _current = (GameLanguage)PlayerPrefs.GetInt(PrefsKey, (int)GameLanguage.Korean);
+        if (PlayerPrefs.GetInt(DefaultVersionKey, 0) < DefaultVersion)
+        {
+            _current = GameLanguage.English;
+            PlayerPrefs.SetInt(PrefsKey, (int)_current);
+            PlayerPrefs.SetInt(DefaultVersionKey, DefaultVersion);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            _current = (GameLanguage)PlayerPrefs.GetInt(PrefsKey, (int)GameLanguage.English);
+        }
         _warnedFields.Clear();
     }
 

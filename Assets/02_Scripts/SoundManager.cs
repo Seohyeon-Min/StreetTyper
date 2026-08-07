@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 using FMODUnity;
 using FMOD.Studio;
@@ -45,6 +46,8 @@ public class SoundManager : MonoBehaviour
     private float _sfxVolume = 1f;
 
     private EventReference currentBGM;
+    private EventReference pendingBGM;
+    private Coroutine bankLoadRoutine;
 
     // 경로별로 첫 실패만 경고한다. 볼륨을 움직일 때마다 불리므로 그대로 두면 폭주한다.
     private readonly HashSet<string> _warnedBuses = new HashSet<string>();
@@ -126,7 +129,7 @@ public class SoundManager : MonoBehaviour
     private void Start()
     {
         // 옵션 창을 한 번도 열지 않아도 지난 실행의 설정이 그대로 적용되어야 한다.
-        ApplyAllVolumes();
+        EnsureBanksReady();
     }
 
     // ── 볼륨 ────────────────────────────────────────────────────────────────
@@ -223,16 +226,24 @@ public class SoundManager : MonoBehaviour
     {
         if (bgmEvent.IsNull) return;
 
-        StopBGM();
+        pendingBGM = bgmEvent;
 
+        if (!RuntimeManager.HaveAllBanksLoaded)
+        {
+            EnsureBanksReady();
+            return;
+        }
+
+        PlayBGMNow(bgmEvent);
+    }
+
+    private void PlayBGMNow(EventReference bgmEvent)
+    {
         if (currentBGM.Guid == bgmEvent.Guid && bgmInstance.isValid())
         {
-            FMOD.Studio.PLAYBACK_STATE state;
-            bgmInstance.getPlaybackState(out state);
-            if (state == FMOD.Studio.PLAYBACK_STATE.PLAYING || state == FMOD.Studio.PLAYBACK_STATE.STARTING)
-            {
+            bgmInstance.getPlaybackState(out var state);
+            if (state == PLAYBACK_STATE.PLAYING || state == PLAYBACK_STATE.STARTING)
                 return;
-            }
         }
 
         StopBGM();
@@ -241,6 +252,24 @@ public class SoundManager : MonoBehaviour
 
         bgmInstance = RuntimeManager.CreateInstance(bgmEvent);
         bgmInstance.start();
+    }
+
+    private void EnsureBanksReady()
+    {
+        if (bankLoadRoutine == null)
+            bankLoadRoutine = StartCoroutine(WaitForBanks());
+    }
+
+    private IEnumerator WaitForBanks()
+    {
+        while (!RuntimeManager.HaveAllBanksLoaded)
+            yield return null;
+
+        bankLoadRoutine = null;
+        ApplyAllVolumes();
+
+        if (!pendingBGM.IsNull)
+            PlayBGMNow(pendingBGM);
     }
 
     public void StopBGM()

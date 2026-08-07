@@ -54,11 +54,24 @@ public class InputManager : MonoBehaviour
     // 직전 백스페이스를 눌렀을 때의 조합 문자열. 눌러도 값이 그대로면 IME가 받지 않은 것이라
     // 미러가 낡았다고 판단한다(IsCompositionStale 참조).
     private string _lastBackspaceComposition;
+    private readonly DubeolsikHangulComposer _webHangul = new DubeolsikHangulComposer();
 
     /// <summary>지금 타이핑을 받고 있는지. 일시정지가 멈추기 전 상태를 기억했다가 재개할 때
     /// 그대로 되돌리기 위해 필요하다 - 턴 전환 대기처럼 원래 잠겨 있던 중에 멈췄다면
     /// 재개하면서 켜면 안 된다.</summary>
     public bool IsInputEnabled => _inputEnabled;
+
+    public bool UsesSyntheticHangul
+    {
+        get
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return LanguageSettings.Current == GameLanguage.Korean;
+#else
+            return false;
+#endif
+        }
+    }
 
     // 타이핑을 가져갈 수 있는 대상들. 우선순위 내림차순으로 꽂아 두므로 Dispatch는 앞에서부터
     // 훑기만 하면 된다. 각 수신자가 OnEnable에서 스스로 등록한다 - 인스펙터로 주입받은
@@ -277,6 +290,7 @@ public class InputManager : MonoBehaviour
 
     public void ClearInput()
     {
+        _webHangul.Clear();
         CurrentInput = string.Empty;
 
         // 조합 중인 글자로 단어가 완성된 경우(퀵/잽/훅 등 한 음절 단어, 또는 "펀치"의 마지막 "치")
@@ -377,6 +391,28 @@ public class InputManager : MonoBehaviour
 
     private void HandleTextInput(char character)
     {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        if (LanguageSettings.Current == GameLanguage.Korean)
+        {
+            if (!_webHangul.TryAppend(character))
+                return;
+
+            var composed = _webHangul.Text;
+            if (composed.Length > Mathf.Max(1, maxInputLength))
+            {
+                _webHangul.Backspace();
+                return;
+            }
+
+            CurrentInput = composed.Length > 0 ? composed.Substring(0, composed.Length - 1) : string.Empty;
+            Composition = composed.Length > 0 ? composed.Substring(composed.Length - 1) : string.Empty;
+            OnCharacterEntered?.Invoke(character);
+            OnCompositionChanged?.Invoke(Composition);
+            DispatchToReceiver(CurrentInput, Composition);
+            return;
+        }
+#endif
+
         // [수정] 한국어가 아닌 모든 언어(영어, 프랑스어, 스페인어)는 알파벳 입력을 받습니다.
         if (LanguageSettings.Current != GameLanguage.Korean)
         {
@@ -507,6 +543,22 @@ public class InputManager : MonoBehaviour
 
     private void HandleBackspace()
     {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        if (LanguageSettings.Current == GameLanguage.Korean)
+        {
+            if (!_webHangul.Backspace())
+                return;
+
+            var composed = _webHangul.Text;
+            CurrentInput = composed.Length > 0 ? composed.Substring(0, composed.Length - 1) : string.Empty;
+            Composition = composed.Length > 0 ? composed.Substring(composed.Length - 1) : string.Empty;
+            OnBackspace?.Invoke();
+            OnCompositionChanged?.Invoke(Composition);
+            DispatchToReceiver(CurrentInput, Composition);
+            return;
+        }
+#endif
+
         if (CurrentInput.Length == 0)
             return;
 

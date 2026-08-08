@@ -6,8 +6,14 @@ using UnityEngine;
 // ResolvedAction.TimerChange를 체인 완성 시점에 넘겨준다.
 public class TimerManager : MonoBehaviour
 {
-    [Tooltip("GDD의 기본 타이머(예: 10초). RestartTurn()이 매번 이 값으로 되돌아간다.")]
+    [Tooltip("한국어 모드의 기본 타이머(GDD 기준 10초). RestartTurn()이 매번 이 값으로 되돌아간다.")]
     [SerializeField] private float baseDuration = 10f;
+
+    [Tooltip("한국어가 아닌 모드(영어·프랑스어·스페인어·일본어)의 기본 타이머(초). " +
+             "같은 카드라도 라틴 표기가 훨씬 길어서(어퍼컷 3글자 vs UPPERCUT 8글자) 한국어와 " +
+             "같은 시간을 주면 조합을 완성할 수가 없다. 언어별로 더 나누고 싶어지면 이 칸을 " +
+             "쪼개는 게 아니라 BaseDuration의 분기를 늘릴 것.")]
+    [SerializeField] private float nonKoreanBaseDuration = 15f;
 
     private bool _running;
     private bool _expiredFired;
@@ -18,9 +24,14 @@ public class TimerManager : MonoBehaviour
     /// 마비 같은 효과로 늘어난 턴에는 BaseDuration보다 커진다.</summary>
     public float Duration { get; private set; }
 
-    /// <summary>보너스가 붙지 않은 기본 제한 시간. UI가 "이번 턴이 평소보다 긴가"를
-    /// 판단해 바 길이를 늘릴 때 기준으로 쓴다.</summary>
-    public float BaseDuration => baseDuration;
+    /// <summary>보너스가 붙지 않은 <b>지금 언어의</b> 기본 제한 시간. UI가 "이번 턴이 평소보다
+    /// 긴가"를 판단해 바 길이를 늘릴 때 기준으로 쓴다.
+    ///
+    /// ⚠️ 값을 캐시하지 않고 부를 때마다 언어를 본다. 언어 전환은 타이틀에서만 가능하고
+    /// (LanguageSettings 참조) 그때 전투 씬은 아예 없으므로, 런 도중에 이 값이 바뀔 일은 없다 -
+    /// 캐시해 두면 "어느 시점에 잡힌 값인가"를 신경 써야 하는데 그럴 이유가 없다.
+    /// 카드 이름(CardBase.CardName)이 static LanguageSettings를 매번 읽는 것과 같은 결이다.</summary>
+    public float BaseDuration => LanguageSettings.IsKorean ? baseDuration : nonKoreanBaseDuration;
 
     /// <summary>카운트다운이 실제로 도는 중인가. 턴 사이 대기·결과 화면·보상 화면에서는 false다.
     /// "이번 턴에 몇 초가 흘렀는가"를 읽는 쪽(SkillResolver)이 턴 밖의 값을 읽지 않으려면
@@ -58,7 +69,7 @@ public class TimerManager : MonoBehaviour
     /// 늘려주는 효과가 넘긴다 - Duration이 늘어난 값으로 잡히므로 슬라이더 최대치도 함께 커진다.</summary>
     public void RestartTurn(float bonusSeconds = 0f)
     {
-        StartTimer(baseDuration + Mathf.Max(0f, bonusSeconds));
+        StartTimer(BaseDuration + Mathf.Max(0f, bonusSeconds));
     }
 
     /// <summary>게이지를 최대치로 되돌리되 카운트다운은 시작하지 않는다. 턴 전환·스테이지 시작
@@ -68,8 +79,11 @@ public class TimerManager : MonoBehaviour
     /// 여기서 쏘면 대기에 들어갈 때마다 TimerView가 초록색으로 반짝인다.</summary>
     public void ResetToFull()
     {
-        Duration = baseDuration;
-        RemainingTime = baseDuration;
+        // ⚠️ baseDuration이 아니라 BaseDuration이다 - 비한국어 모드에서 여기만 10초로 채우면
+        // 대기 동안 게이지가 10초짜리로 보이다가 RestartTurn에서 15초로 늘어난다.
+        var duration = BaseDuration;
+        Duration = duration;
+        RemainingTime = duration;
         _running = false;
         _expiredFired = false;
         OnTimeChanged?.Invoke(RemainingTime);

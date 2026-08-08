@@ -1,7 +1,14 @@
 using System.Collections.Generic;
 using System.Text;
 
-/// <summary>WebGL에서 영문 키 입력을 표준 두벌식 한글로 조합한다.</summary>
+/// <summary>영문 키 입력을 표준 두벌식 한글로 조합한다.
+///
+/// 한국어 모드에서는 <b>플랫폼과 무관하게</b> 이 조합기가 한글을 만든다(예전에는 WebGL 전용이었다) -
+/// OS IME를 쓰지 않으므로 한/영 상태가 어느 쪽이든 결과가 같다. 자세한 경위는
+/// <see cref="InputManager.UsesSyntheticHangul"/> 참조.
+///
+/// ⚠️ 대문자는 쌍자음·이중모음으로 읽는다('R'→ㄲ). 그래서 CapsLock으로 올라간 대문자는
+/// 넘기기 전에 소문자로 되돌려야 한다(<c>InputManager.NormalizeCapsLock</c>).</summary>
 public sealed class DubeolsikHangulComposer
 {
     private readonly StringBuilder keys = new StringBuilder();

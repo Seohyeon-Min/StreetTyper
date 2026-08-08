@@ -38,7 +38,7 @@ public class InputManager : MonoBehaviour
     [Tooltip("Ctrl을 계속 누르고 있을 때 시간이 깎이는 간격(초).")]
     [SerializeField] private float ctrlRepeatInterval = 0.1f;
 
-    [Tooltip("한글 모드 강제를 다시 걸기까지의 최소 간격(초). 영문이 연타로 들어와도 IMM32 호출이 폭주하지 않게 한다.")]
+    [Tooltip("영문 모드 강제를 다시 걸기까지의 최소 간격(초). 한글이 연타로 들어와도 IMM32 호출이 폭주하지 않게 한다.")]
     [SerializeField] private float imeForceCooldown = 0.2f;
 
     [Tooltip("입력창에 쌓아둘 수 있는 최대 글자 수. 오타가 나도 입력을 지우지 않고 플레이어가 " +
@@ -54,24 +54,31 @@ public class InputManager : MonoBehaviour
     // 직전 백스페이스를 눌렀을 때의 조합 문자열. 눌러도 값이 그대로면 IME가 받지 않은 것이라
     // 미러가 낡았다고 판단한다(IsCompositionStale 참조).
     private string _lastBackspaceComposition;
-    private readonly DubeolsikHangulComposer _webHangul = new DubeolsikHangulComposer();
+    private readonly DubeolsikHangulComposer _hangulComposer = new DubeolsikHangulComposer();
+
+    // 합성 조합이 시작될 때 이미 커밋되어 있던 글자. 조합기는 자기가 만든 글자만 알기 때문에,
+    // 앞에 붙어 있던 것(OS IME 폴백으로 들어온 글자 등)을 여기 따로 들고 있어야 한다.
+    // 조합기가 비어 있는 상태에서 첫 자모가 들어올 때마다 다시 잡는다.
+    private string _syntheticBase = string.Empty;
 
     /// <summary>지금 타이핑을 받고 있는지. 일시정지가 멈추기 전 상태를 기억했다가 재개할 때
     /// 그대로 되돌리기 위해 필요하다 - 턴 전환 대기처럼 원래 잠겨 있던 중에 멈췄다면
     /// 재개하면서 켜면 안 된다.</summary>
     public bool IsInputEnabled => _inputEnabled;
 
-    public bool UsesSyntheticHangul
-    {
-        get
-        {
-#if UNITY_WEBGL && !UNITY_EDITOR
-            return LanguageSettings.Current == GameLanguage.Korean;
-#else
-            return false;
-#endif
-        }
-    }
+    /// <summary>
+    /// 지금 한글을 <b>우리가 직접</b> 조합하고 있는가(<see cref="DubeolsikHangulComposer"/>).
+    ///
+    /// 한국어 모드면 플랫폼과 무관하게 언제나 그렇다. 예전에는 WebGL에서만 그랬고 데스크톱은
+    /// OS IME(IMM32로 한글 모드 강제)에 맡겼는데, <b>두 방식이 요구하는 한/영 상태가 정반대라</b>
+    /// (합성 조합은 영문, OS IME는 한글) 어느 쪽이든 어긋나면 입력이 통째로 죽었다. 웹은 브라우저
+    /// IME를 강제할 수단이 없어 더 심했다. 지금은 한 경로로 통일하고 IME는 어느 언어에서도 영문으로
+    /// 고정하므로(<see cref="ApplyImeMode"/>) 한/영이 어느 상태든 결과가 같다.
+    ///
+    /// ⚠️ 플랫폼 분기(<c>#if UNITY_WEBGL</c>)로 되돌리지 말 것. 그러면 에디터 Play에서 실제
+    /// 플레이 경로를 한 줄도 밟지 않게 되어 웹에서만 나는 버그가 생긴다.
+    /// </summary>
+    public bool UsesSyntheticHangul => LanguageSettings.IsKorean;
 
     // 타이핑을 가져갈 수 있는 대상들. 우선순위 내림차순으로 꽂아 두므로 Dispatch는 앞에서부터
     // 훑기만 하면 된다. 각 수신자가 OnEnable에서 스스로 등록한다 - 인스펙터로 주입받은
@@ -290,7 +297,8 @@ public class InputManager : MonoBehaviour
 
     public void ClearInput()
     {
-        _webHangul.Clear();
+        _hangulComposer.Clear();
+        _syntheticBase = string.Empty;
         CurrentInput = string.Empty;
 
         // 조합 중인 글자로 단어가 완성된 경우(퀵/잽/훅 등 한 음절 단어, 또는 "펀치"의 마지막 "치")
@@ -331,13 +339,14 @@ public class InputManager : MonoBehaviour
         if (!_inputEnabled)
             return;
 
-        // 한글 조합 중에는 백스페이스를 IME가 먼저 가져가 자모를 지우고, 그 결과가
+        // OS IME가 조합 중이라면 백스페이스를 IME가 먼저 가져가 자모를 지우고, 그 결과가
         // onIMECompositionChange로 들어온다. 여기서 CurrentInput까지 지우면 한 번에 두 글자가 날아간다.
         //
-        // 영어 모드에서는 이 가드를 걸지 않는다. 조합 단계가 없어서 걸 이유가 없고, IME가 한글로
-        // 빠져 조합 문자열이 남아 있을 때 백스페이스까지 막아버리면 플레이어가 입력을 지울
-        // 방법이 사라진다(위 HandleCompositionChange 참조 - 그쪽이 근본 원인을 막고 여기는 이중 방어다).
-        var isComposing = !LanguageSettings.IsEnglish && !string.IsNullOrEmpty(Composition);
+        // ⚠️ 합성 조합(UsesSyntheticHangul)에서는 반드시 꺼야 한다. 그쪽 Composition은 IME가 아니라
+        // 우리 조합기가 만든 마지막 음절이라 <b>글자가 있는 동안 항상 채워져 있고</b>, 이 가드가 켜지면
+        // IsCompositionStale()이 첫 번째 누름을 IME에게 양보해버려 <b>백스페이스를 두 번 눌러야 한 글자가
+        // 지워진다</b>(실제로 웹에서 났던 버그다).
+        var isComposing = !UsesSyntheticHangul && !string.IsNullOrEmpty(Composition);
 
         if (Keyboard.current.backspaceKey.wasPressedThisFrame)
         {
@@ -391,51 +400,28 @@ public class InputManager : MonoBehaviour
 
     private void HandleTextInput(char character)
     {
-#if UNITY_WEBGL && !UNITY_EDITOR
-        if (LanguageSettings.Current == GameLanguage.Korean)
+        if (UsesSyntheticHangul)
         {
-            if (!_webHangul.TryAppend(character))
-                return;
-
-            var composed = _webHangul.Text;
-            if (composed.Length > Mathf.Max(1, maxInputLength))
-            {
-                _webHangul.Backspace();
-                return;
-            }
-
-            CurrentInput = composed.Length > 0 ? composed.Substring(0, composed.Length - 1) : string.Empty;
-            Composition = composed.Length > 0 ? composed.Substring(composed.Length - 1) : string.Empty;
-            OnCharacterEntered?.Invoke(character);
-            OnCompositionChanged?.Invoke(Composition);
-            DispatchToReceiver(CurrentInput, Composition);
+            HandleKoreanTextInput(character);
             return;
         }
-#endif
 
-        // [수정] 한국어가 아닌 모든 언어(영어, 프랑스어, 스페인어)는 알파벳 입력을 받습니다.
-        if (LanguageSettings.Current != GameLanguage.Korean)
+        // 여기부터는 한국어가 아닌 언어(영어·프랑스어·스페인어·일본어)뿐이다 - 한국어는 위에서
+        // 합성 조합 경로로 빠졌다. 넷 다 라틴 알파벳으로 친다.
+        if (!IsLatinLetter(character))
         {
-            if (!IsLatinLetter(character))
-            {
-                if (IsHangul(character))
-                    ApplyImeMode();
-
-                return;
-            }
-
-            // 대문자로 정규화한다. 카드 영문 이름도 LanguageSettings.PickCardText에서 대문자로
-            // 나오므로, CapsLock/Shift와 무관하게 매칭되고 비교하는 쪽은 Ordinal 그대로 둘 수 있다.
-            // ⚠️ 이 둘은 반드시 같이 움직여야 한다 - 한쪽만 바꾸면 매칭이 통째로 깨진다.
-            character = char.ToUpperInvariant(character);
-        }
-        else if (!IsHangul(character))
-        {
-            if (IsLatinLetter(character))
+            // 한글이 들어왔다 = IME가 한글 모드로 빠졌다는 신호다. 영문으로 되돌린다
+            // (숫자·기호는 한글 모드에서도 그대로 들어오므로 신호로 삼지 않는다).
+            if (IsHangul(character))
                 ApplyImeMode();
 
             return;
         }
+
+        // 대문자로 정규화한다. 카드 영문 이름도 LanguageSettings.PickCardText에서 대문자로
+        // 나오므로, CapsLock/Shift와 무관하게 매칭되고 비교하는 쪽은 Ordinal 그대로 둘 수 있다.
+        // ⚠️ 이 둘은 반드시 같이 움직여야 한다 - 한쪽만 바꾸면 매칭이 통째로 깨진다.
+        character = char.ToUpperInvariant(character);
 
         if (CurrentInput.Length >= Mathf.Max(1, maxInputLength))
             return;
@@ -449,6 +435,110 @@ public class InputManager : MonoBehaviour
         OnCharacterEntered?.Invoke(character);
 
         DispatchToReceiver(CurrentInput, string.Empty);
+    }
+
+    /// <summary>
+    /// 한국어 모드의 글자 입력. 라틴 키를 두벌식으로 조합해 한글을 만든다
+    /// (<see cref="UsesSyntheticHangul"/> 참조 - 한/영이 어느 상태든 결과가 같아야 한다).
+    ///
+    /// 조합기가 만든 문자열의 <b>마지막 한 글자를 Composition, 앞부분을 CurrentInput</b>으로 나눠
+    /// 싣는다. 그래야 매칭(TypingReceiver)·손패 들림(CardSlotView)이 OS IME 시절과 똑같은 모양의
+    /// 입력을 보게 되어, 그쪽 코드를 하나도 고치지 않아도 된다.
+    /// </summary>
+    private void HandleKoreanTextInput(char character)
+    {
+        // IME가 한글 모드로 남아 이미 조합된 한글이 들어온 경우. 우리 조합기는 라틴 키를 받으므로
+        // 그대로 두면 통째로 버려진다 - 영문으로 되돌리되, 그 글자는 커밋된 글자로 받아둔다.
+        // 브라우저 IME처럼 강제가 통하지 않는 환경에서 아무것도 안 쳐지는 것보다는 낫다.
+        if (IsHangul(character))
+        {
+            ApplyImeMode();
+            FlushSynthetic();
+
+            if (CurrentInput.Length >= Mathf.Max(1, maxInputLength))
+                return;
+
+            if (StatisticsManager.Instance != null)
+                StatisticsManager.Instance.AddTypedCharacter();
+
+            CurrentInput += character;
+            OnCharacterEntered?.Invoke(character);
+            OnCompositionChanged?.Invoke(Composition);
+            DispatchToReceiver(CurrentInput, Composition);
+            return;
+        }
+
+        character = NormalizeCapsLock(character);
+
+        // 조합기가 비어 있다면 지금 화면에 있는 글자가 이번 조합의 접두사다. OS IME가 만든 조합
+        // 글자가 남아 있으면(위 폴백 경로) 그것까지 확정해 접두사로 삼는다.
+        if (_hangulComposer.KeyCount == 0)
+            _syntheticBase = CurrentInput + Composition;
+
+        // 숫자·기호는 두벌식 표에 없어 여기서 버려진다 - 띄어쓰기 없이 잇는 게 규칙이라
+        // 버퍼에 들어가면 매칭이 어긋난다(비한국어 경로가 라틴만 받는 것과 같은 이유).
+        if (!_hangulComposer.TryAppend(character))
+            return;
+
+        var composed = _hangulComposer.Text;
+        if (_syntheticBase.Length + composed.Length > Mathf.Max(1, maxInputLength))
+        {
+            _hangulComposer.Backspace();
+            return;
+        }
+
+        // 실제로 버퍼에 들어간 글자만 센다. ⚠️ 예전 WebGL 경로는 이 호출이 빠져 있어
+        // 한국어 플레이의 CPM이 통째로 0이었다.
+        if (StatisticsManager.Instance != null)
+            StatisticsManager.Instance.AddTypedCharacter();
+
+        ApplySyntheticText(composed);
+        OnCharacterEntered?.Invoke(character);
+        OnCompositionChanged?.Invoke(Composition);
+        DispatchToReceiver(CurrentInput, Composition);
+    }
+
+    // 조합기가 만든 문자열을 입력창 두 칸(커밋 + 조합 중 한 글자)으로 나눠 싣는다.
+    private void ApplySyntheticText(string composed)
+    {
+        if (composed.Length == 0)
+        {
+            CurrentInput = _syntheticBase;
+            Composition = string.Empty;
+            return;
+        }
+
+        CurrentInput = _syntheticBase + composed.Substring(0, composed.Length - 1);
+        Composition = composed.Substring(composed.Length - 1);
+    }
+
+    // 조합기가 들고 있던 글자를 커밋된 글자로 확정하고 조합기를 비운다. 합성 조합과 OS IME가
+    // 한 버퍼에 섞이는 지점(위 폴백 경로)에서 앞의 것을 먼저 못 박아두는 용도다.
+    private void FlushSynthetic()
+    {
+        if (_hangulComposer.KeyCount > 0)
+            CurrentInput = _syntheticBase + _hangulComposer.Text;
+
+        Composition = string.Empty;
+        _hangulComposer.Clear();
+        _syntheticBase = string.Empty;
+    }
+
+    /// <summary>CapsLock으로 올라간 대문자를 소문자로 되돌린다.
+    ///
+    /// 두벌식 조합기는 대문자를 쌍자음·이중모음으로 읽으므로('R'→ㄲ), CapsLock이 켜져 있으면
+    /// <b>모든 자음이 쌍자음이 되어</b> 아무 단어도 칠 수 없다. Shift를 실제로 누르고 있다면
+    /// 플레이어가 의도한 쌍자음이므로 그대로 둔다 - onTextInput이 주는 글자만으로는 둘을
+    /// 구분할 수 없어 키보드 상태를 직접 본다.</summary>
+    private static char NormalizeCapsLock(char character)
+    {
+        if (!char.IsUpper(character))
+            return character;
+
+        var keyboard = Keyboard.current;
+        var shiftHeld = keyboard != null && keyboard.shiftKey.isPressed;
+
+        return shiftHeld ? character : char.ToLowerInvariant(character);
     }
 
     // IME 컨텍스트가 창에 붙은 뒤에 조합을 버리고 변환 모드를 맞춘다. 이 두 가지 모두
@@ -475,19 +565,26 @@ public class InputManager : MonoBehaviour
         ApplyImeMode();
     }
 
-    // IME 변환 모드를 지금 언어에 맞춘다. 한국어면 한글, 영어면 영문이다.
-    // 한쪽만 강제하면 반대 언어로 바꿨을 때 IME가 이전 상태로 남아 입력이 통째로 사라진다.
+    /// <summary>
+    /// IME 변환 모드를 <b>언제나 영문</b>으로 맞춘다. 한국어를 포함해 어느 언어에서도 OS IME로
+    /// 한글을 조합하지 않기 때문이다 - 한글은 우리가 만든다(<see cref="UsesSyntheticHangul"/>).
+    ///
+    /// ⚠️ 예전처럼 한국어에서 한글 모드를 강제하는 코드로 되돌리지 말 것. 그러면 합성 조합기가
+    /// 받아야 할 라틴 키가 IME에게 먼저 잡혀 한글 입력이 통째로 죽는다.
+    /// </summary>
     private void ApplyImeMode()
     {
-        ClearComposition();
+        // 합성 조합 중이라면 Composition은 IME가 아니라 우리 조합기가 소유한 글자다.
+        // 여기서 지우면 조합기에는 그대로 남은 채 화면만 어긋난다.
+        if (_hangulComposer.KeyCount == 0)
+            ClearComposition();
 
         if (Time.unscaledTime - _lastImeForceTime < imeForceCooldown)
             return;
 
         _lastImeForceTime = Time.unscaledTime;
 
-        // [수정] 현재 언어가 한국어일 때만 한글 IME를 강제하고, 나머지는 영문 모드로 강제합니다.
-        HangulImeMode.SetHangul(LanguageSettings.Current == GameLanguage.Korean);
+        HangulImeMode.SetAlphanumeric();
     }
 
     // 조합 미러만 비운다. CurrentInput(커밋된 글자)은 건드리지 않는다 - 플레이어가 지금까지
@@ -509,6 +606,11 @@ public class InputManager : MonoBehaviour
     /// 조합 도중에 한/영을 누르고 곧바로 백스페이스를 치는 경우가 여기 걸린다. 그 경로에는
     /// 모드를 되돌릴 입력이 없어서 ApplyImeMode가 불리지 않고, 그대로 두면 그 턴 내내
     /// 지울 수도 칠 수도 없다.
+    ///
+    /// ⚠️ <b>지금 구조에서는 도달하지 않는다.</b> OS 조합을 어느 언어에서도 받지 않게 되면서
+    /// (<see cref="HandleCompositionChange"/>) <see cref="Composition"/>은 합성 조합기 전용 칸이
+    /// 됐고, 그래서 Update의 isComposing 가드가 항상 false다. 강제가 통하지 않는 환경을 위한
+    /// 안전망으로만 남겨둔 것이니 <b>살아 있는 경로로 읽지 말 것.</b>
     /// </summary>
     private bool IsCompositionStale()
     {
@@ -523,41 +625,41 @@ public class InputManager : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// OS IME가 조합을 시작했다 = 변환 모드가 어긋났다는 신호다. <b>어느 언어에서도 받지 않고</b>
+    /// 영문으로 되돌린다 - 한국어는 우리 조합기가, 나머지는 라틴 입력이 담당하므로 OS 조합이
+    /// 끼어들 자리가 없다. <see cref="Composition"/>은 이제 합성 조합기 전용 칸이다.
+    ///
+    /// 조합이 시작되는 <b>그 순간</b> 되돌리는 게 중요하다. 커밋 시점까지 기다리면 한글은 다음
+    /// 글자를 칠 때까지 커밋되지 않아 그동안 조합 문자열이 남고, 그러면 지울 수도 칠 수도 없는
+    /// 상태가 된다(실제로 났던 버그다).
+    /// </summary>
     private void HandleCompositionChange(IMECompositionString composition)
     {
-        var text = composition.ToString();
-
-        // [수정] 한국어가 아닐 때 한글 조합이 들어오면 무시하고 영문 모드로 돌립니다.
-        if (LanguageSettings.Current != GameLanguage.Korean && !string.IsNullOrEmpty(text))
-        {
-            ApplyImeMode();
+        if (composition.Count == 0)
             return;
-        }
 
-        Composition = text;
-        _lastBackspaceComposition = null;
-        OnCompositionChanged?.Invoke(Composition);
-
-        DispatchToReceiver(CurrentInput, Composition);
+        ApplyImeMode();
     }
 
     private void HandleBackspace()
     {
-#if UNITY_WEBGL && !UNITY_EDITOR
-        if (LanguageSettings.Current == GameLanguage.Korean)
+        // 합성 조합 중이면 자모 하나씩 지운다(한글 입력의 일반적인 동작). 조합기가 비면 아래
+        // 평범한 경로로 내려가 그 앞에 커밋되어 있던 글자를 지운다.
+        //
+        // ⚠️ 여기서 DispatchToReceiver를 부르지 않는 것은 아래 경로와 같은 이유다 - 지우는 도중에
+        // 평가하면 "펀치가"에서 한 글자를 지운 순간 "펀치"가 매칭되어 카드가 소비된다.
+        // (예전 WebGL 경로는 이걸 부르고 있었다.) 화면은 CardSlotView가 매 프레임 폴링하므로
+        // 디스패치 없이도 손패 들림은 그대로 따라온다.
+        if (UsesSyntheticHangul && _hangulComposer.KeyCount > 0)
         {
-            if (!_webHangul.Backspace())
-                return;
+            _hangulComposer.Backspace();
+            ApplySyntheticText(_hangulComposer.Text);
 
-            var composed = _webHangul.Text;
-            CurrentInput = composed.Length > 0 ? composed.Substring(0, composed.Length - 1) : string.Empty;
-            Composition = composed.Length > 0 ? composed.Substring(composed.Length - 1) : string.Empty;
             OnBackspace?.Invoke();
             OnCompositionChanged?.Invoke(Composition);
-            DispatchToReceiver(CurrentInput, Composition);
             return;
         }
-#endif
 
         if (CurrentInput.Length == 0)
             return;

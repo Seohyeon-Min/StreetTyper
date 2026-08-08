@@ -604,25 +604,25 @@ public class BattleManager : MonoBehaviour
                     healAmount = savedMDDamage;
                 }
 
+                // 일반 적은 대사가 없다 - 사망 연출이 끝나면 곧바로 승리 처리로 넘어간다.
                 if (!isMD)
                 {
                     StartCoroutine(FinishEnemyDeathAfterEffect(enemyManager.currentEnemy));
                     return;
                 }
 
-                // 마더 드래곤은 자기 작별 대사를 하는 동안 화면에 남아 있어야 한다 - 여기서 끄면
-                // 정작 본인은 사라진 채 말풍선만 뜬다. 대사가 끝나면 EventManager가 끈다.
-                // (일반 적과 이벤트가 없는 경우는 예전처럼 그 자리에서 끈다.)
-                if (!isMD || eventManager == null)
-                    enemyManager.currentEnemy.gameObject.SetActive(false);
-
+                // 여기부터는 마더 드래곤뿐이다. 자기 작별 대사를 하는 동안 화면에 남아 있어야
+                // 하므로 여기서 끄지 않는다 - 끄면 정작 본인은 사라진 채 말풍선만 뜬다.
+                // 대사가 끝나면 EventManager가 끈다.
                 if (eventManager != null)
                 {
-                    eventManager.StartEvent(isMD, healAmount);
+                    eventManager.StartEvent(true, healAmount);
                 }
                 else
                 {
-                    // 곧바로 승리 처리 (이후 StageManager가 보상 라운드를 엽니다)
+                    // 이벤트 매니저가 없으면 대사를 건너뛰고 일반 적과 같은 처리로 떨어진다.
+                    enemyManager.currentEnemy.gameObject.SetActive(false);
+                    UpdateUI();
                     ShowResult(ResultKind.Victory);
                 }
             }
@@ -637,6 +637,15 @@ public class BattleManager : MonoBehaviour
         ShowResult(ResultKind.Defeat);
     }
 
+    /// <summary>
+    /// 일반 적을 처치했을 때. 사망 애니메이션이 끝나기를 기다렸다가 적을 끄고 승리 처리로 넘긴다.
+    ///
+    /// ⚠️ <b>EventManager를 거치지 않는다.</b> 예전에는 대사 0줄짜리 <c>event.normal</c> 이벤트를
+    /// 열었는데, 그건 말풍선을 하나 만들어 켰다 끄고 곧바로 <c>EventManager.EndEvent</c>로 빠지는
+    /// 통과 경로일 뿐이었다(같은 프레임에 끝나 화면에는 아무것도 안 나왔다). 실제로 하던 일은
+    /// 여기 두 줄 - <c>UpdateUI()</c>와 <c>ShowResult</c> - 뿐이라 그대로 옮겼다.
+    /// 대사가 필요해지면 그때 EventManager 쪽에 붙일 것.
+    /// </summary>
     private IEnumerator FinishEnemyDeathAfterEffect(EnemyBase enemy)
     {
         while (enemy != null && !enemy.IsDeathAnimationComplete)
@@ -645,10 +654,12 @@ public class BattleManager : MonoBehaviour
         if (enemy != null)
             enemy.gameObject.SetActive(false);
 
-        if (eventManager != null)
-            eventManager.StartEvent(false, 0);
-        else
-            ShowResult(ResultKind.Victory);
+        // ⚠️ ShowResult는 UpdateUI를 부르지 않는다. 여기서 한 번 갱신해야 방금 죽은 적의
+        // HP 바와 인텐트 말풍선이 결과·보상 화면까지 남지 않는다(옛 EndEvent가 하던 일이다).
+        UpdateUI();
+
+        // 이후 StageManager가 OnBattleEnded를 받아 보상 라운드를 연다.
+        ShowResult(ResultKind.Victory);
     }
 
     /// <summary>

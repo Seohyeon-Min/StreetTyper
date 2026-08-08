@@ -97,6 +97,12 @@ public class MenuKeyboardNavigator : MonoBehaviour
     [Tooltip("창을 닫는 키. cancelTarget이 연결되어 있어야 의미가 있다.")]
     [SerializeField] private Key[] cancelKeys = { Key.Escape, Key.X };
 
+    [Header("입력 차단")]
+    [Tooltip("이 메뉴가 켜진 뒤 키를 받지 않는 시간(초). 씬이 바뀐 직후의 무의식적인 Enter가 " +
+             "첫 항목을 눌러버리는 것을 막는다 - 전투에서 \"타이틀\"을 치고 나온 플레이어가 습관적으로 " +
+             "Enter를 눌러 곧바로 게임이 시작되는 일이 있었다. 포인터 배치는 이 시간에도 계속 갱신된다.")]
+    [SerializeField] private float inputBlockDelay = 0.5f;
+
     [Header("키 반복")]
     [Tooltip("키를 누르고 있을 때 반복이 시작되기까지의 시간(초). InputManager의 백스페이스 반복과 같은 방식.")]
     [SerializeField] private float repeatDelay = 0.4f;
@@ -111,9 +117,13 @@ public class MenuKeyboardNavigator : MonoBehaviour
     private int _heldVertical;
     private int _heldHorizontal;
 
-    // 켜진 그 프레임에는 키를 읽지 않는다. 옵션 창을 여는 Space가 같은 프레임에 옵션 쪽
-    // 내비게이터에까지 닿아 첫 항목을 곧바로 눌러버리는 것을 막는다(닫을 때도 같다).
-    private int _enabledFrame = -1;
+    // 이 시각까지는 키를 읽지 않는다. 옵션 창을 여는 Space가 같은 프레임에 옵션 쪽 내비게이터에까지
+    // 닿아 첫 항목을 곧바로 눌러버리는 것을 막고(닫을 때도 같다), 씬이 바뀐 직후의 무의식적인
+    // Enter도 같이 걸러낸다(inputBlockDelay 참조).
+    //
+    // unscaledTime인 이유는 아래 포인터 보간과 같다 - 이 컴포넌트는 일시정지 메뉴(timeScale 0)에도
+    // 붙을 수 있어야 한다.
+    private float _inputBlockUntil;
 
     // 포인터가 아직 한 번도 놓인 적이 없으면 미끄러지지 않고 그 자리에 바로 찍는다 -
     // 메뉴가 열릴 때마다 포인터가 화면 밖에서 날아오면 어색하다.
@@ -131,7 +141,7 @@ public class MenuKeyboardNavigator : MonoBehaviour
 
     private void OnEnable()
     {
-        _enabledFrame = Time.frameCount;
+        _inputBlockUntil = Time.unscaledTime + Mathf.Max(0f, inputBlockDelay);
         _repeatTimer = 0f;
         _heldVertical = 0;
         _heldHorizontal = 0;
@@ -173,9 +183,12 @@ public class MenuKeyboardNavigator : MonoBehaviour
         // 선택 오브젝트가 비활성이 된 경우) 우리가 기억하는 자리로 되돌린다.
         SyncWithEventSystem();
 
-        // 키는 켜진 첫 프레임만 건너뛰고, 포인터는 그 프레임에도 놓는다 - 한 프레임이라도
+        // 키는 차단 시간이 지난 뒤부터 읽고, 포인터는 그 동안에도 놓는다 - 한 프레임이라도
         // 엉뚱한 자리에 떠 있으면 눈에 띈다.
-        if (Time.frameCount != _enabledFrame)
+        //
+        // wasPressedThisFrame 기반이라 키를 누른 채로 씬을 넘어와도 차단이 풀리는 순간
+        // 발동하지 않는다. 풀린 뒤에 새로 누른 것만 먹는다.
+        if (Time.unscaledTime >= _inputBlockUntil)
             HandleKeys();
 
         UpdatePointer();

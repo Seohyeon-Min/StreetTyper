@@ -55,7 +55,7 @@ public class EventManager : MonoBehaviour
     [Min(0f)] public float endingBackgroundScrollSpeed = 0.8f;
     public AnimationCurve endingExitCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-    // 대사는 DialogueLocalization.json에 있다(DialogueIds.NormalEvent / DragonEvent / EndingEvent).
+    // 대사는 DialogueLocalization.json에 있다(DialogueIds.DragonEvent / EndingEvent).
     //
     // ⚠️ 예전에는 한국어·영어 배열 6개가 여기 인스펙터 필드로 있었는데, 값이 프리팹 기본값과
     // 씬 인스턴스 오버라이드로 흩어져 <b>화면에 실제로 나오는 값이 무엇인지 파일만 봐서는 알 수
@@ -107,12 +107,10 @@ public class EventManager : MonoBehaviour
 
     private void OnEnable()
     {
+        // 지금 남은 이벤트 둘은 시간 기반이라 이 구독이 없어도 동작한다(HandleAdvance 참조).
+        // 앞으로 스페이스로 넘기는 대사를 붙일 때를 위해 구독은 유지하되, 없다고 경고하지는 않는다.
         if (inputManager != null)
             inputManager.OnAdvance += HandleAdvance;
-        else
-            Debug.LogWarning("EventManager: inputManager가 연결되지 않았습니다. normalEventLines(스페이스로 " +
-                             "넘기는 경로)가 막힙니다 - 마더 드래곤 아웃로는 시간 기반이라 영향받지 않습니다. " +
-                             "씬 인스턴스에서 연결하세요.", this);
     }
 
     private void OnDisable()
@@ -149,9 +147,12 @@ public class EventManager : MonoBehaviour
         activeDialogueLines.Clear();
 
         // 어느 대사 묶음인지만 고르면 된다 - 언어 선택과 폴백은 DialogueDatabase가 한다.
-        var dialogueId = isEnding ? DialogueIds.EndingEvent
-            : isMotherDragon ? DialogueIds.DragonEvent
-            : DialogueIds.NormalEvent;
+        //
+        // ⚠️ 지금 이 메서드에 도달하는 경로는 <b>마더 드래곤과 엔딩 둘뿐</b>이다. 일반 적 처치는
+        // 대사가 없어 BattleManager가 EventManager를 거치지 않고 곧바로 승리 처리로 간다
+        // (옛 event.normal은 0줄짜리 통과 경로라 정리했다). 그래서 isMotherDragon은 사실상
+        // 항상 true다 - 시그니처는 앞으로 대사 id를 직접 받는 형태로 일반화할 때 같이 손본다.
+        var dialogueId = isEnding ? DialogueIds.EndingEvent : DialogueIds.DragonEvent;
 
         string[] linesToUse = DialogueDatabase.Lines(dialogueId);
 
@@ -163,13 +164,12 @@ public class EventManager : MonoBehaviour
         if (motherDragonVisual != null) motherDragonVisual.SetActive(true);
         if (dialogueBubbleObj != null) dialogueBubbleObj.SetActive(true);
 
-        // [수정] 엔딩 전용 코루틴 분기 추가
+        // 둘 다 시간으로 저절로 넘어가는 연출이다. 스페이스로 넘기는 경로(ShowNextDialogue)는
+        // 지금 아무도 타지 않는다 - 아래 HandleAdvance 주석 참조.
         if (isEnding)
             StartCoroutine(PlayEndingRoutine());
-        else if (isMotherDragon)
-            StartCoroutine(PlayMotherDragonOutroRoutine());
         else
-            ShowNextDialogue();
+            StartCoroutine(PlayMotherDragonOutroRoutine());
     }
 
     private void CreateDialogueBubble(bool isMotherDragon, bool fromPlayer)
@@ -313,8 +313,15 @@ public class EventManager : MonoBehaviour
                              "battleManager 연결을 확인하세요.", this);
     }
 
-    // 스페이스는 InputManager가 준다. 마더 드래곤 아웃로는 PlayMotherDragonOutroRoutine이
-    // 시간으로 진행시키므로 이 경로를 타지 않는다.
+    // 스페이스로 대사를 한 줄씩 넘기는 경로. 스페이스는 InputManager가 준다.
+    //
+    // ⚠️ <b>지금은 아무도 여기까지 오지 않는다.</b> 남아 있는 이벤트 둘(마더 드래곤 아웃로·엔딩)이
+    // 전부 시간으로 저절로 넘어가는 코루틴이라 wasMotherDragon이 항상 true다. 유일하게 이 경로를
+    // 쓰던 게 일반 적 처치(event.normal)였는데 대사가 0줄이라 정리했다.
+    //
+    // 지우지 않고 두는 이유: 대사 id를 직접 받는 StartEvent로 일반화할 때 "스페이스로 넘기는
+    // 대사"가 다시 필요해진다. 그때까지는 죽은 경로이니 <b>여기에 무언가를 붙이기 전에 호출자가
+    // 실제로 있는지부터 확인할 것.</b>
     private void HandleAdvance()
     {
         if (isEventActive && !wasMotherDragon)
@@ -378,9 +385,9 @@ public class EventManager : MonoBehaviour
         }
     }
 
-    // normalEventLines 전용 경로(스페이스로 한 줄씩 넘긴다). 지금은 실제로 호출하는 곳이
-    // 없지만(StartEvent가 isMotherDragon:false로 불리는 곳이 없다), 나중에 쓰이게 되어도
-    // 마더 드래곤 아웃로의 시간 기반 진행과 섞이지 않도록 구조를 남겨 둔다.
+    // 스페이스로 한 줄씩 넘기는 경로. 지금은 HandleAdvance에서만 불리고, 그 HandleAdvance도
+    // 조건을 통과하는 호출자가 없어 실질적으로 죽어 있다(그쪽 주석 참조). 마더 드래곤 아웃로·엔딩의
+    // 시간 기반 진행과 섞이지 않도록 구조만 남겨 둔다.
     private void ShowNextDialogue()
     {
         if (currentLineIndex < activeDialogueLines.Count)

@@ -45,38 +45,83 @@ public class DeckManager : MonoBehaviour
     [SerializeField] private YourTurnBanner yourTurnBannerPrefab;
 
     private YourTurnBanner yourTurnBannerInstance;
+    private bool _bannerWarned;
 
     private void ShowYourTurnBanner()
     {
-        if (yourTurnBannerInstance == null)
+        var banner = GetYourTurnBanner();
+        if (banner != null)
+            banner.Play();
+    }
+
+    // 배너 인스턴스를 만들어 두고 재사용한다. YOUR TURN과 3-2-1 카운트다운이 같은 인스턴스를
+    // 쓴다 - 따로 만들면 Input Canvas 탐색과 배선이 한 벌 더 늘고 둘의 위치·폰트가 어긋난다.
+    private YourTurnBanner GetYourTurnBanner()
+    {
+        if (yourTurnBannerInstance != null)
+            return yourTurnBannerInstance;
+
+        if (yourTurnBannerPrefab == null)
         {
-            if (yourTurnBannerPrefab == null)
+            // 턴마다 두 번(카운트다운 길이 계산 + 표시) 지나가므로 경고는 한 번만 남긴다.
+            if (!_bannerWarned)
             {
+                _bannerWarned = true;
                 Debug.LogWarning("DeckManager: yourTurnBannerPrefab이 연결되지 않았습니다.", this);
-                return;
             }
 
-            Canvas inputCanvas = null;
-            var canvases = FindObjectsOfType<Canvas>(true);
-            foreach (var canvas in canvases)
-            {
-                if (canvas != null && canvas.name == "Input Canvas")
-                {
-                    inputCanvas = canvas;
-                    break;
-                }
-            }
-
-            if (inputCanvas == null)
-            {
-                Debug.LogWarning("DeckManager: YOUR TURN 배너를 배치할 Input Canvas를 찾지 못했습니다.", this);
-                return;
-            }
-
-            yourTurnBannerInstance = Instantiate(yourTurnBannerPrefab, inputCanvas.transform, false);
+            return null;
         }
 
-        yourTurnBannerInstance.Play();
+        Canvas inputCanvas = null;
+        var canvases = FindObjectsOfType<Canvas>(true);
+        foreach (var canvas in canvases)
+        {
+            if (canvas != null && canvas.name == "Input Canvas")
+            {
+                inputCanvas = canvas;
+                break;
+            }
+        }
+
+        if (inputCanvas == null)
+        {
+            Debug.LogWarning("DeckManager: YOUR TURN 배너를 배치할 Input Canvas를 찾지 못했습니다.", this);
+            return null;
+        }
+
+        yourTurnBannerInstance = Instantiate(yourTurnBannerPrefab, inputCanvas.transform, false);
+        return yourTurnBannerInstance;
+    }
+
+    /// <summary>
+    /// 플레이어 턴이 열리기 직전의 3-2-1. <b>비어 있던 대기를 채우는 것이지 시간을 더하는 게 아니다</b> -
+    /// 부르는 쪽이 postAttackDelay에서 이 길이만큼을 미리 떼어낸다(RunTurnTransition 참조).
+    ///
+    /// ⚠️ 도는 동안에도 매 숫자마다 판이 끝났는지·대사창이 열렸는지 확인한다. 마더 드래곤은
+    /// 이 구간(옛 postAttackDelay) 도중에 FinishMotherDragonBattle이 터져 대사창을 여는데,
+    /// 그대로 두면 대사 위에서 숫자가 세어진다.
+    /// </summary>
+    private IEnumerator PlayTurnCountdown()
+    {
+        var banner = GetYourTurnBanner();
+        if (banner == null)
+            yield break;
+
+        // 배너의 코루틴을 직접 돌린다(StartCoroutine에 넘기지 않는다) - 숫자와 숫자 <b>사이</b>마다
+        // 아래 검사를 끼워 넣기 위해서다. 배너가 yield하는 것은 숫자 하나짜리 연출 코루틴이라
+        // 그대로 yield하면 Unity가 중첩 코루틴으로 끝까지 돌려준다.
+        var countdown = banner.PlayCountdownRoutine();
+        while (countdown.MoveNext())
+        {
+            if (battleManager != null && (battleManager.IsGameOver || battleManager.IsEventActive))
+            {
+                banner.HideImmediate();
+                yield break;
+            }
+
+            yield return countdown.Current;
+        }
     }
 
     /// <summary>
@@ -407,8 +452,23 @@ public class DeckManager : MonoBehaviour
             yield break;
 
         // 공격당한 여운을 두고 나서 플레이어 턴을 다시 연다.
+        //
+        // 이 대기의 뒷부분은 3-2-1 카운트다운이 채운다 - 원래 비어 있던 자리를 쓰는 것이라
+        // 턴 간격이 늘지 않는다. 카운트다운이 postAttackDelay보다 길면 앞의 여운이 0이 되고
+        // 그만큼만 턴 시작이 늦어진다(YourTurnBanner.countdownStepDuration 툴팁 참조).
         SetPhase(TurnPhase.PostAttackRest);
-        yield return new WaitForSeconds(postAttackDelay);
+
+        var banner = GetYourTurnBanner();
+        var countdownDuration = banner != null ? banner.CountdownDuration : 0f;
+
+        yield return new WaitForSeconds(Mathf.Max(0f, postAttackDelay - countdownDuration));
+
+        // ⚠️ 카운트다운을 시작하기 전에도 한 번 봐야 한다. 아래(카운트다운 뒤) 검사만 남기면
+        // 대사창이 열린 뒤에 숫자가 세어지기 시작한다 - 그 경위는 아래 주석 참조.
+        if (battleManager.IsGameOver || battleManager.IsEventActive)
+            yield break;
+
+        yield return PlayTurnCountdown();
 
         // ⚠️ 대기 중에 이벤트 대화가 열렸을 수 있다. 마더 드래곤이 그렇다 - 3턴째 적 턴이
         // Invoke로 1.5초 뒤 FinishMotherDragonBattle을 걸고, 그게 위 postAttackDelay(2초)

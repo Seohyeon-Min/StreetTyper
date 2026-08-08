@@ -44,9 +44,10 @@ public static class DialogueIds
     /// <summary>마더 드래곤이 턴마다 하는 말. 순서가 정해져 있다(0=시작 … 3=마무리).</summary>
     public const string MotherDragonTurn = "boss.motherDragonTurn";
 
-    /// <summary>일반 적을 처치했을 때. ⚠️ 지금은 <b>일부러 0줄</b>이라 아무것도 안 뜨고
-    /// 곧바로 승리 처리로 넘어간다 - 줄을 채우면 스페이스로 넘기는 단계가 생긴다.</summary>
-    public const string NormalEvent = "event.normal";
+    // ⚠️ 옛 NormalEvent("event.normal")는 삭제했다. 일반 적 처치용이었는데 5개 언어가 전부
+    // 0줄이라, 말풍선을 만들어 켰다 끄고 곧바로 EndEvent로 빠지는 통과 경로일 뿐이었다.
+    // 지금은 BattleManager가 EventManager를 거치지 않고 바로 승리 처리로 간다.
+    // 일반 적에게 대사를 주고 싶어지면 id를 다시 만들되, 그때는 5개 언어 줄 수를 맞출 것.
 
     /// <summary>마더 드래곤을 처치했을 때(보스 스테이지). 둘째 줄의 <c>{0}</c>에 회복량이 들어간다.</summary>
     public const string DragonEvent = "event.dragon";
@@ -100,7 +101,7 @@ public static class DialogueDatabase
 
         var lines = ForCurrentLanguage(entry);
 
-        // ⚠️ 빈 배열도 정상 설정이다(event.normal이 그렇다) - 그때는 폴백하지 않고 그대로 0줄을
+        // ⚠️ 빈 배열도 정상 설정일 수 있다("대사 없음") - 그때는 폴백하지 않고 그대로 0줄을
         // 돌려줘야 한다. 폴백은 "이 언어 칸을 아직 안 채웠다"일 때만 의미가 있는데, 그건
         // 아래 로드 시점 검사가 이미 에러로 잡는다.
         return lines ?? _empty;

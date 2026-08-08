@@ -11,8 +11,14 @@ public class StageManager : MonoBehaviour
     public GameObject motherDragonPrefab;
     public Transform enemySpawnPoint;
 
-    [Tooltip("스테이지가 열리고 플레이어가 타이핑을 시작할 수 있을 때까지의 대기 시간(초)")]
+    [Tooltip("스테이지가 열리고 플레이어가 타이핑을 시작할 수 있을 때까지의 대기 시간(초). " +
+             "스페이스로 남은 시간을 건너뛸 수 있다(stageStartSkipDelay 참조).")]
     public float stageStartDelay = 2f;
+
+    [Tooltip("스테이지 시작 배너를 스페이스로 넘길 수 있게 되기까지의 시간(초). 직전 이벤트 대사를 " +
+             "스페이스로 넘기고 온 플레이어의 연타가 배너를 한 프레임 만에 지우는 것을 막는다. " +
+             "0이면 뜨자마자 넘길 수 있다.")]
+    public float stageStartSkipDelay = 0.25f;
 
     [Header("적 체력 스케일링")]
     [Tooltip("첫 스테이지 일반 적의 최대 체력.")]
@@ -191,6 +197,12 @@ public class StageManager : MonoBehaviour
     /// 단어를 안내하면 플레이어만 헷갈린다.</summary>
     public bool IsAdvancingAutomatically => _advancingAfterReward;
 
+    // 스테이지 시작 배너 대기 중인가. HandleAdvance가 이 동안에만 넘기기를 받는다 -
+    // 없으면 전투 중에 누른 스페이스(타이핑에서는 버려지는 키다)가 플래그에 남아 다음 스테이지
+    // 배너를 뜨자마자 지운다.
+    private bool _waitingForStageStart;
+    private bool _skipStageStartRequested;
+
     private void OnEnable()
     {
         if (battleManager != null)
@@ -198,6 +210,9 @@ public class StageManager : MonoBehaviour
 
         if (rewardInputHandler != null)
             rewardInputHandler.OnSelectionFinished += HandleRewardSelectionFinished;
+
+        if (inputManager != null)
+            inputManager.OnAdvance += HandleAdvance;
     }
 
     private void OnDisable()
@@ -207,6 +222,47 @@ public class StageManager : MonoBehaviour
 
         if (rewardInputHandler != null)
             rewardInputHandler.OnSelectionFinished -= HandleRewardSelectionFinished;
+
+        if (inputManager != null)
+            inputManager.OnAdvance -= HandleAdvance;
+    }
+
+    /// <summary>스페이스로 스테이지 시작 배너의 남은 대기를 건너뛴다.
+    ///
+    /// ⚠️ OnAdvance는 ESC(OnCancel)처럼 <b>구독자 전원에게 간다.</b> 이벤트 대사가 열려 있으면
+    /// 그 스페이스는 대사를 넘기려는 것이므로 여기서는 받지 않는다.</summary>
+    private void HandleAdvance()
+    {
+        if (!_waitingForStageStart)
+            return;
+
+        if (battleManager != null && battleManager.IsEventActive)
+            return;
+
+        _skipStageStartRequested = true;
+    }
+
+    /// <summary>스페이스로 끊을 수 있는 대기. <see cref="WaitForSeconds"/>와 같은
+    /// <see cref="Time.deltaTime"/> 기준이라 일시정지(timeScale 0)에서 함께 멈춘다.</summary>
+    private IEnumerator WaitOrSkip(float seconds)
+    {
+        _skipStageStartRequested = false;
+        _waitingForStageStart = true;
+
+        var elapsed = 0f;
+        while (elapsed < seconds)
+        {
+            elapsed += Time.deltaTime;
+
+            // 뜨자마자 지워지지 않도록 처음 잠깐은 넘기기를 받지 않는다.
+            if (_skipStageStartRequested && elapsed >= stageStartSkipDelay)
+                break;
+
+            yield return null;
+        }
+
+        _waitingForStageStart = false;
+        _skipStageStartRequested = false;
     }
 
     void Start()
@@ -476,6 +532,11 @@ public class StageManager : MonoBehaviour
         if (startRoutine != null)
             StopCoroutine(startRoutine);
 
+        // 배너 대기 도중에 스테이지가 갈릴 수 있다(코루틴이 끊기면 WaitOrSkip의 정리 코드가
+        // 돌지 않는다). 남겨두면 다음 배너를 넘길 의도가 아닌 스페이스를 받아버린다.
+        _waitingForStageStart = false;
+        _skipStageStartRequested = false;
+
         // 자동 진행 대기 중에 플레이어가 "다음"을 쳐서 먼저 넘어왔을 수 있다. 그대로 두면
         // 남은 코루틴이 뒤늦게 NextStage()를 한 번 더 불러 스테이지를 하나 건너뛴다.
         if (advanceRoutine != null)
@@ -705,9 +766,11 @@ public class StageManager : MonoBehaviour
     }
 
     // 적이 등장한 뒤 잠깐 두었다가 플레이어 턴을 연다 - 적 턴 이후의 대기와 같은 목적이다.
+    // 스페이스로 남은 대기를 건너뛸 수 있다(WaitOrSkip). 건너뛰는 것은 대기뿐이고, 아래
+    // 스테이지 시작 절차(배너 퇴장 -> 손패 리롤 -> 입력·타이머 오픈)는 그대로 지나간다.
     private IEnumerator BeginStageAfterDelay()
     {
-        yield return new WaitForSeconds(stageStartDelay);
+        yield return WaitOrSkip(stageStartDelay);
 
         // stageStartEffect가 있으면 축소하며 페이드아웃하는 연출을 맡기고(백그라운드로 흘러가며,
         // 턴 시작을 더 늦추지는 않는다), 없으면 예전처럼 바로 끈다.

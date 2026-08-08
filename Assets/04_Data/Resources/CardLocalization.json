@@ -505,7 +505,7 @@
       "jaDesc": "このターンに経過した時間（秒）1につき、次のアクションの威力が{0}増加します。",
       "jaLabel": "{0}",
       "effectType": "TurnScalingStatBonus",
-      "value": 1,
+      "value": 2,
       "scalingSource": "SecondsSpentThisTurn",
       "chancePercent": 10,
       "chanceGainPerUse": 10,

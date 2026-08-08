@@ -113,13 +113,8 @@ public class StageManager : MonoBehaviour
     [Tooltip("인사 대사 한 줄이 화면에 떠 있는 시간(초). 다음 줄로 넘어가기 전 대기 시간도 같다.")]
     public float bossGreetingLineDuration = 1.8f;
 
-    [Tooltip("데미가 먼저 건네는 인사 대사.")]
-    public string demiGreetingLine = "엄마!";
-    public string demiGreetingLineEn = "Mom!";
-
-    [Tooltip("마더 드래곤의 답변 대사.")]
-    public string motherGreetingLine = "어디 실력좀 볼까?";
-    public string motherGreetingLineEn = "Let's see what you've got.";
+    // 보스 등장 인사 두 줄은 DialogueLocalization.json에 있다(id: boss.demiGreeting / boss.motherGreeting).
+    // 5개국어를 인스펙터에 두면 필드가 10칸이 되고, 값이 프리팹과 씬 오버라이드로 흩어진다.
 
     public TMPro.TextMeshProUGUI currentStageText;
 
@@ -173,6 +168,12 @@ public class StageManager : MonoBehaviour
     public int[] bossBattleIndices = { 4, 9 };
 
     private int currentBattleIndex = 0;
+
+    /// <summary>True only while the run is on its first battle stage.</summary>
+    public bool IsFirstStage => currentBattleIndex == 0;
+
+    /// <summary>Zero-based battle index for UI and tutorial gating.</summary>
+    public int CurrentBattleIndex => currentBattleIndex;
 
     // 지금 스테이지에 스폰된 적이 마더 드래곤인가. 보상에 "지우기" 카드를 놓을지 판단하는 데 쓴다.
     private bool stageWasMotherDragon;
@@ -268,6 +269,12 @@ public class StageManager : MonoBehaviour
             battleManager.ShowGameClear();
             return;
         }
+
+        // 새 적은 화면 밖에서 생성된다. 이전 전투의 PlayerInput 상태가 남아 있는 동안
+        // ResetBattle/UpdateUI가 먼저 실행되면 첫 인텐트가 화면 밖 좌표에서 켜질 수 있으므로,
+        // 적을 만들기 전에 준비 상태부터 잠근다.
+        if (battleManager != null)
+            battleManager.BeginStagePreparation();
 
 
         // 보스전 인덱스는 IsBossBattle 한 곳에서만 정한다 - 스폰 분기와 스탯 공식(체력·공격력·
@@ -428,8 +435,6 @@ public class StageManager : MonoBehaviour
 
         // ⚠️ ResetBattle 뒤에 불러야 한다 - 그 안의 UpdateUI()가 낡은 페이즈(PlayerInput)를 보고
         // 적 인텐트 말풍선을 이미 켰을 수 있고, 그대로 두면 등장 배너·보스 인트로 내내 떠 있는다.
-        battleManager.BeginStagePreparation();
-
         if (timerManager != null)
             timerManager.ResetToFull();
 
@@ -550,7 +555,7 @@ public class StageManager : MonoBehaviour
 
         if (SpeechBubbleManager.Instance != null && player != null)
         {
-            string demiLine = LanguageSettings.Pick(demiGreetingLine, demiGreetingLineEn, this, nameof(demiGreetingLine));
+            string demiLine = DialogueDatabase.Line(DialogueIds.DemiGreeting);
             SpeechBubbleManager.Instance.ShowMotherDragonBubble(
                 demiLine, player.BubblePosition, true, bossGreetingLineDuration);
         }
@@ -561,7 +566,9 @@ public class StageManager : MonoBehaviour
         {
             var enemyBase = currentEnemyObject.GetComponent<EnemyBase>();
             Vector3 motherPos = enemyBase != null ? enemyBase.BubblePosition : currentEnemyObject.transform.position;
-            string motherLine = LanguageSettings.Pick(motherGreetingLine, motherGreetingLineEn, this, nameof(motherGreetingLine));
+            string motherLine = DialogueDatabase.Line(DialogueIds.MotherGreeting);
+            if (enemyBase != null)
+                enemyBase.PlaySpeakAnimation();
             SpeechBubbleManager.Instance.ShowMotherDragonBubble(
                 motherLine, motherPos, false, bossGreetingLineDuration);
         }
@@ -685,6 +692,7 @@ public class StageManager : MonoBehaviour
     {
         if (player != null)
         {
+            player.ResetVisualState();
             player.currentHP = player.maxHP;
             player.defense = 0;
             player.gameObject.SetActive(true);
@@ -898,7 +906,8 @@ public class StageManager : MonoBehaviour
         if (player != null)
         {
             PlayerBattleVisuals visuals = player.GetComponent<PlayerBattleVisuals>();
-            if (visuals != null) visuals.PlayDashAnimation(1.5f); // 살짝 배속을 주어 다급하게 달리는 느낌
+            if (visuals != null)
+                visuals.PlayStageTransitionJump(transitionDuration, 1.5f);
         }
 
         // 4. 달려가는 연출 시간 동안 대기

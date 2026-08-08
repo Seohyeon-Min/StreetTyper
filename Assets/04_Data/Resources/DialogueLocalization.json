@@ -1,0 +1,107 @@
+{
+  "dialogues": [
+    {
+      "id": "boss.demiGreeting",
+      "ko": ["엄마!"],
+      "en": ["Mom!"],
+      "fr": ["Maman !"],
+      "es": ["¡Mamá!"],
+      "ja": ["ママ！"]
+    },
+    {
+      "id": "boss.motherGreeting",
+      "ko": ["어디 실력좀 볼까?"],
+      "en": ["Let's see what you've got."],
+      "fr": ["Voyons ce que tu sais faire."],
+      "es": ["A ver qué sabes hacer."],
+      "ja": ["どれ、腕前を見せてもらおうか。"]
+    },
+    {
+      "id": "boss.motherDragonTurn",
+      "ko": [
+        "한번 공격해 보렴!",
+        "제법이구나!",
+        "조금 더 힘을 끌어내 보거라!",
+        "훌륭하다. 여기까지 하마!"
+      ],
+      "en": [
+        "Go on, try attacking me!",
+        "Not bad!",
+        "Draw out more of your power!",
+        "Splendid. That will do."
+      ],
+      "fr": [
+        "Vas-y, essaie de m'attaquer !",
+        "Pas mal du tout !",
+        "Puise davantage dans ta force !",
+        "Magnifique. Nous en resterons là."
+      ],
+      "es": [
+        "¡Vamos, intenta atacarme!",
+        "¡Nada mal!",
+        "¡Saca más de tu poder!",
+        "Espléndido. Lo dejaremos aquí."
+      ],
+      "ja": [
+        "さあ、攻撃してごらん！",
+        "なかなかやるではないか！",
+        "もっと力を引き出してみせよ！",
+        "見事だ。ここまでにしよう。"
+      ]
+    },
+    {
+      "id": "event.normal",
+      "ko": [],
+      "en": [],
+      "fr": [],
+      "es": [],
+      "ja": []
+    },
+    {
+      "id": "event.dragon",
+      "ko": [
+        "여기까지 하자꾸나!",
+        "체력이 회복됐어! (+{0})"
+      ],
+      "en": [
+        "That's enough for today!",
+        "You've been healed! (+{0})"
+      ],
+      "fr": [
+        "Cela suffira pour aujourd'hui !",
+        "Te voilà soignée ! (+{0})"
+      ],
+      "es": [
+        "¡Ya basta por hoy!",
+        "¡Te has curado! (+{0})"
+      ],
+      "ja": [
+        "今日はここまでにしよう！",
+        "体力が回復した！ (+{0})"
+      ]
+    },
+    {
+      "id": "event.ending",
+      "ko": [
+        "정말 장하구나!",
+        "오늘은 맛있는 걸 먹자꾸나."
+      ],
+      "en": [
+        "You've done me proud!",
+        "Let's celebrate with something special tonight."
+      ],
+      "fr": [
+        "Tu m'as rendue si fière !",
+        "Ce soir, offrons-nous quelque chose de bon."
+      ],
+      "es": [
+        "¡Estoy muy orgullosa de ti!",
+        "Esta noche celebrémoslo con algo especial."
+      ],
+      "ja": [
+        "本当によくやった！",
+        "今日はごちそうを食べよう。"
+      ]
+    }
+  ]
+}

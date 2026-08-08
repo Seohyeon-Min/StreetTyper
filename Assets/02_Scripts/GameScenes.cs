@@ -2,6 +2,7 @@
 /// 씬 전환은 전부 여기를 거치게 해서 문자열 오타가 런타임에야 드러나는 일을 막는다.</summary>
 public static class GameScenes
 {
+    public const string Splash = "LogoSplashScene";
     public const string Title = "TitleScene";
     public const string Battle = "SampleScene";
     public const string Intro = "IntroScene";

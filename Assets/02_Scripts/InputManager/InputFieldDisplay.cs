@@ -13,9 +13,56 @@ using UnityEngine.InputSystem;
 public class InputFieldDisplay : MonoBehaviour
 {
     [SerializeField] private InputManager inputManager;
+    [SerializeField] private StageManager stageManager;
+    [SerializeField] private RewardInputHandler rewardInputHandler;
+    [SerializeField] private DeckManager deckManager;
+    [SerializeField] private TimerManager timerManager;
 
     [Tooltip("타이핑한 글자를 비출 TMP 라벨. 입력 필드가 아니라 그냥 텍스트여야 한다.")]
     [SerializeField] private TextMeshProUGUI text;
+
+    [Header("Idle Hint")]
+    [SerializeField, Min(0f)] private float idleHintDelay = 2f;
+    [SerializeField, Min(0f)] private float idleHintFadeDuration = 0.35f;
+    [SerializeField] private Color idleHintColor = new Color(0.6666667f, 0.6666667f, 0.6666667f, 0.7058824f);
+
+    [Header("Idle Hint Localization")]
+    [SerializeField] private string idleHintKorean = "타이핑을 시작하세요...";
+    [SerializeField] private string idleHintEnglish = "Start typing...";
+    [SerializeField] private string idleHintFrench = "Commencez à taper...";
+    [SerializeField] private string idleHintSpanish = "Empieza a escribir...";
+    [SerializeField] private string idleHintJapanese = "入力を始めよう…";
+
+    [Header("First Reward Hint Localization")]
+    [SerializeField] private string rewardHintKorean = "카드를 입력하세요...";
+    [SerializeField] private string rewardHintEnglish = "Type a card...";
+    [SerializeField] private string rewardHintFrench = "Tapez une carte...";
+    [SerializeField] private string rewardHintSpanish = "Escribe una carta...";
+    [SerializeField] private string rewardHintJapanese = "カードを入力してください…";
+
+    [Header("Ctrl Tutorial Localization")]
+    [SerializeField] private string ctrlHintKorean = "Ctrl로 빨리감기";
+    [SerializeField] private string ctrlHintEnglish = "Hold Ctrl to skip";
+    [SerializeField] private string ctrlHintFrench = "Ctrl pour avancer";
+    [SerializeField] private string ctrlHintSpanish = "Ctrl para avanzar";
+    [SerializeField] private string ctrlHintJapanese = "Ctrlで早送り";
+
+    [Header("Language Fonts")]
+    [SerializeField] private TMP_FontAsset koreanFont;
+    [SerializeField] private TMP_FontAsset englishFont;
+    [SerializeField] private TMP_FontAsset frenchFont;
+    [SerializeField] private TMP_FontAsset spanishFont;
+    [SerializeField] private TMP_FontAsset japaneseFont;
+
+    private Color _inputColor;
+    private float _idleTime;
+    private bool _showingIdleHint;
+    private bool _hasInputColor;
+    private TMP_FontAsset _defaultFont;
+    private bool _wasRewardSelecting;
+    private bool _firstRewardCompleted;
+    private bool _showingCtrlHint;
+    private bool _ctrlTutorialCompleted;
 
     private void OnEnable()
     {
@@ -30,6 +77,20 @@ public class InputFieldDisplay : MonoBehaviour
         inputManager.OnBackspace += Refresh;
         inputManager.OnCompositionChanged += HandleCompositionChanged;
         inputManager.OnInputCleared += Refresh;
+        inputManager.OnBurnTime += HandleBurnTimeUsed;
+        LanguageSettings.OnChanged += HandleLanguageChanged;
+        if (rewardInputHandler != null)
+            rewardInputHandler.OnSelectionFinished += HandleFirstRewardCompleted;
+
+        if (!_hasInputColor)
+        {
+            _inputColor = text.color;
+            _defaultFont = text.font;
+            _hasInputColor = true;
+        }
+
+        ApplyLanguageFont();
+        ResetIdleHint();
     }
 
     private void OnDisable()
@@ -41,22 +102,209 @@ public class InputFieldDisplay : MonoBehaviour
         inputManager.OnBackspace -= Refresh;
         inputManager.OnCompositionChanged -= HandleCompositionChanged;
         inputManager.OnInputCleared -= Refresh;
+        inputManager.OnBurnTime -= HandleBurnTimeUsed;
+        LanguageSettings.OnChanged -= HandleLanguageChanged;
+        if (rewardInputHandler != null)
+            rewardInputHandler.OnSelectionFinished -= HandleFirstRewardCompleted;
     }
 
     private void HandleCharacterEntered(char _)
     {
+        ResetIdleHint();
         Refresh();
     }
 
     private void HandleCompositionChanged(string _)
     {
+        ResetIdleHint();
         Refresh();
     }
 
     private void Refresh()
     {
+        ResetIdleHint();
         text.text = inputManager.CurrentInput + inputManager.Composition;
         UpdateImeCursorPosition();
+    }
+
+    private void Update()
+    {
+        if (inputManager == null || text == null || stageManager == null)
+        {
+            ResetIdleHint();
+            return;
+        }
+
+        bool rewardSelecting = rewardInputHandler != null && rewardInputHandler.IsSelecting;
+        if (rewardSelecting && !_wasRewardSelecting)
+            ResetIdleHint();
+
+        _wasRewardSelecting = rewardSelecting;
+
+        bool hasInput = !string.IsNullOrEmpty(inputManager.CurrentInput) ||
+                        !string.IsNullOrEmpty(inputManager.Composition);
+
+        if (stageManager.IsFirstStage)
+        {
+            if (_firstRewardCompleted || !inputManager.IsInputEnabled || hasInput)
+            {
+                ResetIdleHint();
+                return;
+            }
+
+            if (rewardSelecting)
+            {
+                UpdateHint(GetLocalizedRewardHint(), idleHintDelay);
+                return;
+            }
+
+            if (IsPlayerInputTurn())
+            {
+                UpdateHint(GetLocalizedIdleHint(), idleHintDelay);
+                return;
+            }
+
+            ResetIdleHint();
+            return;
+        }
+
+        if (_ctrlTutorialCompleted || hasInput || !IsPlayerInputTurn())
+        {
+            ResetIdleHint();
+            return;
+        }
+
+        UpdateHint(GetLocalizedCtrlHint(), idleHintDelay, true);
+    }
+
+    private void UpdateHint(string hint, float delay, bool isCtrlHint = false)
+    {
+        _idleTime += Time.unscaledDeltaTime;
+        if (_idleTime < delay)
+            return;
+
+        if (!_showingIdleHint)
+        {
+            _showingIdleHint = true;
+            _showingCtrlHint = isCtrlHint;
+            text.text = hint;
+        }
+
+        float fade = idleHintFadeDuration <= 0f
+            ? 1f
+            : Mathf.Clamp01((_idleTime - delay) / idleHintFadeDuration);
+        var transparentHintColor = idleHintColor;
+        transparentHintColor.a = 0f;
+        text.color = Color.Lerp(transparentHintColor, idleHintColor, fade);
+    }
+
+    private void ResetIdleHint()
+    {
+        _idleTime = 0f;
+
+        if (!_hasInputColor || text == null)
+            return;
+
+        text.color = _inputColor;
+        if (_showingIdleHint)
+            text.text = string.Empty;
+
+        _showingIdleHint = false;
+        _showingCtrlHint = false;
+    }
+
+    private void HandleLanguageChanged()
+    {
+        ApplyLanguageFont();
+
+        if (_showingIdleHint)
+            text.text = _showingCtrlHint
+                ? GetLocalizedCtrlHint()
+                : (_wasRewardSelecting ? GetLocalizedRewardHint() : GetLocalizedIdleHint());
+    }
+
+    private string GetLocalizedIdleHint()
+    {
+        switch (LanguageSettings.Current)
+        {
+            case GameLanguage.Korean: return idleHintKorean;
+            case GameLanguage.French: return idleHintFrench;
+            case GameLanguage.Spanish: return idleHintSpanish;
+            case GameLanguage.Japanese: return idleHintJapanese;
+            default: return idleHintEnglish;
+        }
+    }
+
+    private string GetLocalizedRewardHint()
+    {
+        switch (LanguageSettings.Current)
+        {
+            case GameLanguage.Korean: return rewardHintKorean;
+            case GameLanguage.French: return rewardHintFrench;
+            case GameLanguage.Spanish: return rewardHintSpanish;
+            case GameLanguage.Japanese: return rewardHintJapanese;
+            default: return rewardHintEnglish;
+        }
+    }
+
+    private string GetLocalizedCtrlHint()
+    {
+        switch (LanguageSettings.Current)
+        {
+            case GameLanguage.Korean: return ctrlHintKorean;
+            case GameLanguage.French: return ctrlHintFrench;
+            case GameLanguage.Spanish: return ctrlHintSpanish;
+            case GameLanguage.Japanese: return ctrlHintJapanese;
+            default: return ctrlHintEnglish;
+        }
+    }
+
+    private bool IsPlayerInputTurn()
+    {
+        return inputManager.IsInputEnabled &&
+               inputManager.ActiveReceiver is CardInputHandler &&
+               deckManager != null &&
+               deckManager.CurrentPhase == DeckManager.TurnPhase.PlayerInput &&
+               timerManager != null &&
+               timerManager.IsRunning &&
+               (rewardInputHandler == null || !rewardInputHandler.IsSelecting) &&
+               !stageManager.IsAdvancingAutomatically;
+    }
+
+    private void HandleBurnTimeUsed()
+    {
+        if (stageManager == null || !IsPlayerInputTurn())
+            return;
+
+        _ctrlTutorialCompleted = true;
+        ResetIdleHint();
+    }
+
+    private void HandleFirstRewardCompleted()
+    {
+        if (stageManager == null || !stageManager.IsFirstStage)
+            return;
+
+        _firstRewardCompleted = true;
+        ResetIdleHint();
+    }
+
+    private void ApplyLanguageFont()
+    {
+        if (text == null)
+            return;
+
+        TMP_FontAsset selectedFont;
+        switch (LanguageSettings.Current)
+        {
+            case GameLanguage.Korean: selectedFont = koreanFont; break;
+            case GameLanguage.French: selectedFont = frenchFont; break;
+            case GameLanguage.Spanish: selectedFont = spanishFont; break;
+            case GameLanguage.Japanese: selectedFont = japaneseFont; break;
+            default: selectedFont = englishFont; break;
+        }
+
+        text.font = selectedFont != null ? selectedFont : _defaultFont;
     }
 
     // Tells the OS where our text ends so the native IME composition overlay

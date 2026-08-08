@@ -2,6 +2,7 @@
   "cards": [
     {
       "id": "awesome",
+      "type": "Modifier",
       "koName": "어썸",
       "koDesc": "이번 게임에서 '어썸'을 사용한 횟수만큼 다음 액션의 위력이 증가합니다.",
       "koLabel": "+{0}",
@@ -16,10 +17,17 @@
       "esLabel": "+{0}",
       "jaName": "awesome",
       "jaDesc": "今回のゲームで「オーサム」を使用した回数分、次のアクションの威力が上がります。",
-      "jaLabel": "+{0}"
+      "jaLabel": "+{0}",
+      "effectType": "ScalingStatBonus",
+      "value": 1,
+      "scalingSource": "None",
+      "chancePercent": 10,
+      "chanceGainPerUse": 10,
+      "maxChancePercent": 50
     },
     {
       "id": "chop",
+      "type": "Action",
       "koName": "촙",
       "koDesc": "적에게 1의 피해를 줍니다. 이번 턴에 사용한 액션 카드 한 장당 피해량이 1 증가합니다.",
       "koLabel": "{0}",
@@ -34,10 +42,22 @@
       "esLabel": "{0}",
       "jaName": "chop",
       "jaDesc": "敵に1のダメージを与えます。このターンに使用したアクションカード1枚につきダメージが1増加します。",
-      "jaLabel": "{0}"
+      "jaLabel": "{0}",
+      "actionKind": "Attack",
+      "strengthBonus": 0,
+      "timerDelta": 0,
+      "ignoresDefense": false,
+      "breaksEnemyDefense": false,
+      "isComboAttack": false,
+      "comboChancePercent": 0,
+      "comboMinHits": 0,
+      "comboMaxHits": 0,
+      "scalingSource": "ActionsThisTurn",
+      "scalingPerUnit": 1
     },
     {
       "id": "colorful",
+      "type": "Attribute",
       "koName": "컬러풀",
       "koDesc": "다음 액션 발동 시 각각 {0}% 확률로 적에게 3턴 동안 지속되는 화상, 마비, 빙결을 부여합니다.",
       "koLabel": "랜덤",
@@ -52,10 +72,15 @@
       "esLabel": "ALEATORIO",
       "jaName": "colorful",
       "jaDesc": "次のアクション発動時、それぞれ{0}%の確率で敵に3ターンの間持続する火傷、麻痺、氷結を付与します。",
-      "jaLabel": "ランダム"
+      "jaLabel": "ランダム",
+      "effectType": "StatusChanceAll",
+      "statusEffect": "None",
+      "chancePercent": 10,
+      "value": 0
     },
     {
       "id": "dempsey",
+      "type": "Action",
       "koName": "뎀프시롤",
       "koDesc": "적에게 1의 피해를 {0}에서 {1}회 연속으로 줍니다. {2}% 확률로 1회 추가 타격합니다.",
       "koLabel": "연타",
@@ -70,10 +95,22 @@
       "esLabel": "COMBO",
       "jaName": "dempsey",
       "jaDesc": "敵に1のダメージを{0}〜{1}回連続で与えます。{2}%の確率で1回追加攻撃します。",
-      "jaLabel": "連撃"
+      "jaLabel": "連撃",
+      "actionKind": "Attack",
+      "strengthBonus": 0,
+      "timerDelta": 0,
+      "ignoresDefense": false,
+      "breaksEnemyDefense": false,
+      "isComboAttack": true,
+      "comboChancePercent": 50,
+      "comboMinHits": 2,
+      "comboMaxHits": 5,
+      "scalingSource": "None",
+      "scalingPerUnit": 0
     },
     {
       "id": "devil",
+      "type": "Attribute",
       "koName": "데빌",
       "koDesc": "3턴 동안 적에게 받는 피해가 {1}% 감소합니다.",
       "koLabel": "경감",
@@ -88,10 +125,15 @@
       "esLabel": "-25%",
       "jaName": "devil",
       "jaDesc": "3ターンの間、敵から受けるダメージが{1}%減少します。",
-      "jaLabel": "軽減"
+      "jaLabel": "軽減",
+      "effectType": "DamageReduction",
+      "statusEffect": "None",
+      "chancePercent": 0,
+      "value": 25
     },
     {
       "id": "double",
+      "type": "Attribute",
       "koName": "더블",
       "koDesc": "다음 액션이 {1}번 연속으로 발동합니다.",
       "koLabel": "2회",
@@ -106,10 +148,15 @@
       "esLabel": "x2",
       "jaName": "double",
       "jaDesc": "次のアクションが{1}回連続で発動します。",
-      "jaLabel": "x2"
+      "jaLabel": "x2",
+      "effectType": "RepeatAction",
+      "statusEffect": "None",
+      "chancePercent": 0,
+      "value": 2
     },
     {
       "id": "drain",
+      "type": "Attribute",
       "koName": "드레인",
       "koDesc": "다음 액션 발동 시 피해량의 {1}%만큼 체력을 회복합니다.",
       "koLabel": "흡혈",
@@ -124,10 +171,15 @@
       "esLabel": "VIDA",
       "jaName": "drain",
       "jaDesc": "次のアクション発動時、ダメージの{1}%だけHPを回復します。",
-      "jaLabel": "吸収"
+      "jaLabel": "吸収",
+      "effectType": "LifeDrain",
+      "statusEffect": "None",
+      "chancePercent": 0,
+      "value": 20
     },
     {
       "id": "fire",
+      "type": "Attribute",
       "koName": "파이어",
       "koDesc": "다음 액션 발동 시 {0}% 확률로 적에게 3턴 동안 지속되는 화상을 부여합니다.",
       "koLabel": "화상",
@@ -142,10 +194,16 @@
       "esLabel": "QUEMADURA",
       "jaName": "fire",
       "jaDesc": "次のアクション発動時、{0}%の確率で敵に3ターンの間持続する火傷を付与します。",
-      "jaLabel": "火傷"
+      "jaLabel": "火傷",
+      "effectType": "StatusChanceSingle",
+      "statusEffect": "Burn",
+      "chancePercent": 20,
+      "value": 0
     },
     {
       "id": "guard",
+      "type": "Action",
+      "grantedAtStart": true,
       "koName": "가드",
       "koDesc": "방어도를 3 얻습니다.",
       "koLabel": "방어",
@@ -160,10 +218,22 @@
       "esLabel": "BLOQUEO",
       "jaName": "guard",
       "jaDesc": "ブロックを3獲得します。",
-      "jaLabel": "ガード"
+      "jaLabel": "ガード",
+      "actionKind": "Defense",
+      "strengthBonus": 2,
+      "timerDelta": 0,
+      "ignoresDefense": false,
+      "breaksEnemyDefense": false,
+      "isComboAttack": false,
+      "comboChancePercent": 0,
+      "comboMinHits": 0,
+      "comboMaxHits": 0,
+      "scalingSource": "None",
+      "scalingPerUnit": 0
     },
     {
       "id": "headbutt",
+      "type": "Action",
       "koName": "박치기",
       "koDesc": "적에게 1의 피해를 줍니다. 이번 턴에 사용한 시너지 카드 한 장당 피해량이 1 증가합니다.",
       "koLabel": "{0}",
@@ -178,10 +248,23 @@
       "esLabel": "{0}",
       "jaName": "headbutt",
       "jaDesc": "敵に1のダメージを与えます。このターンに使用したシナジーカード1枚につきダメージが1増加します。",
-      "jaLabel": "{0}"
+      "jaLabel": "{0}",
+      "actionKind": "Attack",
+      "strengthBonus": 0,
+      "timerDelta": 0,
+      "ignoresDefense": false,
+      "breaksEnemyDefense": false,
+      "isComboAttack": false,
+      "comboChancePercent": 0,
+      "comboMinHits": 0,
+      "comboMaxHits": 0,
+      "scalingSource": "ModifiersThisTurn",
+      "scalingPerUnit": 1
     },
     {
       "id": "hook",
+      "type": "Action",
+      "grantedAtStart": true,
       "koName": "훅",
       "koDesc": "적에게 4의 피해를 줍니다. 타이머에서 1초가 차감됩니다.",
       "koLabel": "+3",
@@ -196,10 +279,22 @@
       "esLabel": "+3",
       "jaName": "hook",
       "jaDesc": "敵に4のダメージを与えます。タイマーから1秒減らします。",
-      "jaLabel": "+3"
+      "jaLabel": "+3",
+      "actionKind": "Attack",
+      "strengthBonus": 3,
+      "timerDelta": -1,
+      "ignoresDefense": false,
+      "breaksEnemyDefense": false,
+      "isComboAttack": false,
+      "comboChancePercent": 0,
+      "comboMinHits": 0,
+      "comboMaxHits": 0,
+      "scalingSource": "None",
+      "scalingPerUnit": 0
     },
     {
       "id": "hyper",
+      "type": "Modifier",
       "koName": "하이퍼",
       "koDesc": "다음 액션의 위력을 3 증가시킵니다.",
       "koLabel": "+3",
@@ -214,10 +309,17 @@
       "esLabel": "+3",
       "jaName": "hyper",
       "jaDesc": "次のアクションの威力を3増加させます。",
-      "jaLabel": "+3"
+      "jaLabel": "+3",
+      "effectType": "StatBonus",
+      "value": 3,
+      "scalingSource": "None",
+      "chancePercent": 10,
+      "chanceGainPerUse": 10,
+      "maxChancePercent": 50
     },
     {
       "id": "ice",
+      "type": "Attribute",
       "koName": "아이스",
       "koDesc": "다음 액션 발동 시 {0}% 확률로 적을 3턴 동안 빙결 상태로 만듭니다.",
       "koLabel": "얼음",
@@ -232,10 +334,15 @@
       "esLabel": "CONGELAR",
       "jaName": "ice",
       "jaDesc": "次のアクション発動時、{0}%の確率で敵を3ターンの間氷結状態にします。",
-      "jaLabel": "氷結"
+      "jaLabel": "氷結",
+      "effectType": "StatusChanceSingle",
+      "statusEffect": "Freeze",
+      "chancePercent": 20,
+      "value": 0
     },
     {
       "id": "jab",
+      "type": "Action",
       "koName": "잽",
       "koDesc": "적에게 1의 피해를 줍니다. 타이머에 1초를 추가합니다.",
       "koLabel": "+1초",
@@ -250,10 +357,22 @@
       "esLabel": "+1s",
       "jaName": "jab",
       "jaDesc": "敵に1のダメージを与えます。タイマーに1秒追加します。",
-      "jaLabel": "+1s"
+      "jaLabel": "+1s",
+      "actionKind": "Attack",
+      "strengthBonus": 0,
+      "timerDelta": 1,
+      "ignoresDefense": false,
+      "breaksEnemyDefense": false,
+      "isComboAttack": false,
+      "comboChancePercent": 0,
+      "comboMinHits": 0,
+      "comboMaxHits": 0,
+      "scalingSource": "None",
+      "scalingPerUnit": 0
     },
     {
       "id": "kick",
+      "type": "Action",
       "koName": "킥",
       "koDesc": "적의 방어도를 무시하고 1의 피해를 줍니다.",
       "koLabel": "관통",
@@ -268,10 +387,22 @@
       "esLabel": "PERFORAR",
       "jaName": "kick",
       "jaDesc": "敵のブロックを無視して1のダメージを与えます。",
-      "jaLabel": "貫通"
+      "jaLabel": "貫通",
+      "actionKind": "Attack",
+      "strengthBonus": 0,
+      "timerDelta": 0,
+      "ignoresDefense": true,
+      "breaksEnemyDefense": false,
+      "isComboAttack": false,
+      "comboChancePercent": 0,
+      "comboMinHits": 0,
+      "comboMaxHits": 0,
+      "scalingSource": "None",
+      "scalingPerUnit": 0
     },
     {
       "id": "kneekick",
+      "type": "Action",
       "koName": "니킥",
       "koDesc": "적에게 6의 피해를 줍니다. 이번 턴에 사용한 액션 카드 한 장당 피해량이 1씩 감소합니다.",
       "koLabel": "{0}",
@@ -286,10 +417,23 @@
       "esLabel": "{0}",
       "jaName": "knee",
       "jaDesc": "敵に6のダメージを与えます。このターンに使用したアクションカード1枚につきダメージが1減少します。",
-      "jaLabel": "{0}"
+      "jaLabel": "{0}",
+      "actionKind": "Attack",
+      "strengthBonus": 5,
+      "timerDelta": 0,
+      "ignoresDefense": false,
+      "breaksEnemyDefense": false,
+      "isComboAttack": false,
+      "comboChancePercent": 0,
+      "comboMinHits": 0,
+      "comboMaxHits": 0,
+      "scalingSource": "ActionsThisTurn",
+      "scalingPerUnit": -1
     },
     {
       "id": "lucky",
+      "type": "Modifier",
+      "grantedAtStart": true,
       "koName": "럭키",
       "koDesc": "{0}% 확률로 스테이지 클리어 시 보상을 추가로 1회 획득합니다.",
       "koLabel": "보상",
@@ -304,10 +448,22 @@
       "esLabel": "BOTÍN",
       "jaName": "lucky",
       "jaDesc": "{0}%の確率でステージクリア時に報酬を追加で1回獲得します。",
-      "jaLabel": "幸運"
+      "jaLabel": "幸運",
+      "koLabelPending": "보상됨",
+      "enLabelPending": "LOOTED",
+      "frLabelPending": "OBTENU",
+      "esLabelPending": "GANADO",
+      "jaLabelPending": "獲得済",
+      "effectType": "LootBonusOnKill",
+      "value": 0,
+      "scalingSource": "None",
+      "chancePercent": 20,
+      "chanceGainPerUse": 20,
+      "maxChancePercent": 100
     },
     {
       "id": "megaton",
+      "type": "Modifier",
       "koName": "메가톤",
       "koDesc": "다음 액션의 위력을 4 증가시킵니다.",
       "koLabel": "+4",
@@ -322,10 +478,17 @@
       "esLabel": "+4",
       "jaName": "megaton",
       "jaDesc": "次のアクションの威力を4増加させます。",
-      "jaLabel": "+4"
+      "jaLabel": "+4",
+      "effectType": "StatBonus",
+      "value": 4,
+      "scalingSource": "None",
+      "chancePercent": 10,
+      "chanceGainPerUse": 10,
+      "maxChancePercent": 50
     },
     {
       "id": "perfect",
+      "type": "Modifier",
       "koName": "퍼펙트",
       "koDesc": "이번 턴에 흘러간 시간(초) 1당 다음 액션의 위력이 {0} 증가합니다.",
       "koLabel": "{0}",
@@ -340,10 +503,17 @@
       "esLabel": "{0}",
       "jaName": "perfect",
       "jaDesc": "このターンに経過した時間（秒）1につき、次のアクションの威力が{0}増加します。",
-      "jaLabel": "{0}"
+      "jaLabel": "{0}",
+      "effectType": "TurnScalingStatBonus",
+      "value": 1,
+      "scalingSource": "SecondsSpentThisTurn",
+      "chancePercent": 10,
+      "chanceGainPerUse": 10,
+      "maxChancePercent": 50
     },
     {
       "id": "power",
+      "type": "Modifier",
       "koName": "파워",
       "koDesc": "다른 시너지 카드들이 제공하는 위력 증가량을 각각 1씩 높입니다.",
       "koLabel": "강화",
@@ -358,10 +528,18 @@
       "esLabel": "POTENCIAR",
       "jaName": "power",
       "jaDesc": "他のシナジーカードが提供する威力増加量をそれぞれ1ずつ高めます。",
-      "jaLabel": "強化"
+      "jaLabel": "強化",
+      "effectType": "AmplifyNextStatBonus",
+      "value": 1,
+      "scalingSource": "None",
+      "chancePercent": 10,
+      "chanceGainPerUse": 10,
+      "maxChancePercent": 50
     },
     {
       "id": "punch",
+      "type": "Action",
+      "grantedAtStart": true,
       "koName": "펀치",
       "koDesc": "적에게 3의 피해를 줍니다.",
       "koLabel": "+2",
@@ -376,10 +554,22 @@
       "esLabel": "+2",
       "jaName": "punch",
       "jaDesc": "敵に3のダメージを与えます。",
-      "jaLabel": "+2"
+      "jaLabel": "+2",
+      "actionKind": "Attack",
+      "strengthBonus": 2,
+      "timerDelta": 0,
+      "ignoresDefense": false,
+      "breaksEnemyDefense": false,
+      "isComboAttack": false,
+      "comboChancePercent": 0,
+      "comboMinHits": 0,
+      "comboMaxHits": 0,
+      "scalingSource": "None",
+      "scalingPerUnit": 0
     },
     {
       "id": "quick",
+      "type": "Modifier",
       "koName": "퀵",
       "koDesc": "타이머에 1초를 추가합니다.",
       "koLabel": "+1초",
@@ -394,10 +584,17 @@
       "esLabel": "+1s",
       "jaName": "quick",
       "jaDesc": "タイマーに1秒追加します。",
-      "jaLabel": "+1s"
+      "jaLabel": "+1s",
+      "effectType": "TimerBonus",
+      "value": 1,
+      "scalingSource": "None",
+      "chancePercent": 10,
+      "chanceGainPerUse": 10,
+      "maxChancePercent": 50
     },
     {
       "id": "smart",
+      "type": "Attribute",
       "koName": "스마트",
       "koDesc": "다음 액션 시 {0}% 확률로 대성공하여 피해량이 {1}배가 됩니다.",
       "koLabel": "치명",
@@ -412,10 +609,16 @@
       "esLabel": "CRÍTICO",
       "jaName": "smart",
       "jaDesc": "次のアクション時、{0}%の確率でクリティカルが発生し、ダメージが{1}倍になります。",
-      "jaLabel": "クリティカル"
+      "jaLabel": "クリティカル",
+      "effectType": "CritMultiplier",
+      "statusEffect": "None",
+      "chancePercent": 50,
+      "value": 2
     },
     {
       "id": "super",
+      "type": "Modifier",
+      "grantedAtStart": true,
       "koName": "슈퍼",
       "koDesc": "다음 액션의 위력을 1 증가시킵니다.",
       "koLabel": "+1",
@@ -430,10 +633,17 @@
       "esLabel": "+1",
       "jaName": "super",
       "jaDesc": "次のアクションの威力を1増加させます。",
-      "jaLabel": "+1"
+      "jaLabel": "+1",
+      "effectType": "StatBonus",
+      "value": 1,
+      "scalingSource": "None",
+      "chancePercent": 10,
+      "chanceGainPerUse": 10,
+      "maxChancePercent": 50
     },
     {
       "id": "thunder",
+      "type": "Attribute",
       "koName": "썬더",
       "koDesc": "다음 액션 발동 시 {0}% 확률로 적을 3턴 동안 마비시킵니다.",
       "koLabel": "마비",
@@ -448,10 +658,15 @@
       "esLabel": "PARÁLISIS",
       "jaName": "thunder",
       "jaDesc": "次のアクション発動時、{0}%の確率で敵を3ターンの間麻痺させます。",
-      "jaLabel": "麻痺"
+      "jaLabel": "麻痺",
+      "effectType": "StatusChanceSingle",
+      "statusEffect": "Paralysis",
+      "chancePercent": 20,
+      "value": 0
     },
     {
       "id": "triple",
+      "type": "Attribute",
       "koName": "트리플",
       "koDesc": "다음 액션이 {1}번 연속으로 발동합니다.",
       "koLabel": "3회",
@@ -466,10 +681,15 @@
       "esLabel": "x3",
       "jaName": "triple",
       "jaDesc": "次のアクションが{1}回連続で発動します。",
-      "jaLabel": "x3"
+      "jaLabel": "x3",
+      "effectType": "RepeatAction",
+      "statusEffect": "None",
+      "chancePercent": 0,
+      "value": 3
     },
     {
       "id": "ultra",
+      "type": "Modifier",
       "koName": "울트라",
       "koDesc": "다음 액션의 위력을 2 증가시킵니다.",
       "koLabel": "+2",
@@ -484,10 +704,17 @@
       "esLabel": "+2",
       "jaName": "ultra",
       "jaDesc": "次のアクションの威力を2増加させます。",
-      "jaLabel": "+2"
+      "jaLabel": "+2",
+      "effectType": "StatBonus",
+      "value": 2,
+      "scalingSource": "None",
+      "chancePercent": 10,
+      "chanceGainPerUse": 10,
+      "maxChancePercent": 50
     },
     {
       "id": "uppercut",
+      "type": "Action",
       "koName": "어퍼컷",
       "koDesc": "적의 방어도를 파괴하고 4의 피해를 줍니다.",
       "koLabel": "파괴",
@@ -502,10 +729,22 @@
       "esLabel": "ROMPER",
       "jaName": "uppercut",
       "jaDesc": "敵のブロックを破壊し、4のダメージを与えます。",
-      "jaLabel": "破壊"
+      "jaLabel": "破壊",
+      "actionKind": "Attack",
+      "strengthBonus": 3,
+      "timerDelta": -1,
+      "ignoresDefense": false,
+      "breaksEnemyDefense": true,
+      "isComboAttack": false,
+      "comboChancePercent": 0,
+      "comboMinHits": 0,
+      "comboMaxHits": 0,
+      "scalingSource": "None",
+      "scalingPerUnit": 0
     },
     {
       "id": "cards",
+      "type": "Command",
       "koName": "카드",
       "koDesc": "가진 카드를 모두 봅니다",
       "koLabel": "목록",
@@ -524,6 +763,7 @@
     },
     {
       "id": "erase",
+      "type": "Command",
       "koName": "지우기",
       "koDesc": "가진 카드 한 장을 지웁니다",
       "koLabel": "지움",
@@ -542,6 +782,7 @@
     },
     {
       "id": "resume",
+      "type": "Command",
       "koName": "계속",
       "koDesc": "게임으로 돌아갑니다",
       "koLabel": "계속",
@@ -560,6 +801,7 @@
     },
     {
       "id": "retry",
+      "type": "Command",
       "koName": "다시하기",
       "koDesc": "스테이지를 처음부터 다시 도전합니다",
       "koLabel": "재도전",
@@ -578,6 +820,7 @@
     },
     {
       "id": "skip",
+      "type": "Command",
       "koName": "넘기기",
       "koDesc": "보상을 받지 않고 넘어갑니다",
       "koLabel": "넘김",
@@ -596,6 +839,7 @@
     },
     {
       "id": "title",
+      "type": "Command",
       "koName": "타이틀",
       "koDesc": "타이틀 화면으로 나갑니다",
       "koLabel": "나감",

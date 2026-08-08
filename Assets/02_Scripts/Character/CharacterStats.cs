@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class CharacterStats : MonoBehaviour
@@ -10,6 +11,19 @@ public class CharacterStats : MonoBehaviour
 
     [Tooltip("받는 피해 배율. 데빌 같은 감소 효과가 1 미만으로 낮춘다(25% 감소면 0.75).")]
     public float damageTakenMultiplier = 1f;
+
+    [Header("Death Effect")]
+    [SerializeField, Min(0.05f)] private float deathBounceDuration = 0.3f;
+    [SerializeField, Min(0f)] private float deathPauseDuration = 0.18f;
+    [SerializeField, Min(0.05f)] private float deathFallDuration = 0.14f;
+    [SerializeField, Min(0f)] private float deathBounceHeight = 0.55f;
+
+    private bool _deathAnimationStarted;
+    private Coroutine _deathRoutine;
+    private Vector3 _initialPosition;
+    private Vector3 _initialScale;
+    private Quaternion _initialRotation;
+    public bool IsDeathAnimationComplete { get; private set; }
 
     [Header("말풍선")]
     [Tooltip("말풍선(대사·의도·화상 등)이 뜰 위치. 비워두면 오브젝트 자신의 위치를 쓴다. " +
@@ -27,6 +41,13 @@ public class CharacterStats : MonoBehaviour
 
             return bubbleAnchor != null ? bubbleAnchor.position : transform.position;
         }
+    }
+
+    protected virtual void Awake()
+    {
+        _initialPosition = transform.position;
+        _initialScale = transform.localScale;
+        _initialRotation = transform.localRotation;
     }
 
     protected virtual void Start()
@@ -110,6 +131,77 @@ public class CharacterStats : MonoBehaviour
     void Die()
     {
         Debug.Log(gameObject.name + " died!");
-        Destroy(gameObject);
+        if (_deathAnimationStarted || this is MotherDragon)
+            return;
+
+        _deathAnimationStarted = true;
+        _deathRoutine = StartCoroutine(DeathEffectRoutine());
+    }
+
+    public void ResetVisualState()
+    {
+        if (_deathRoutine != null)
+        {
+            StopCoroutine(_deathRoutine);
+            _deathRoutine = null;
+        }
+
+        transform.position = _initialPosition;
+        transform.localScale = _initialScale;
+        transform.localRotation = _initialRotation;
+        _deathAnimationStarted = false;
+        IsDeathAnimationComplete = false;
+    }
+
+    private IEnumerator DeathEffectRoutine()
+    {
+        Vector3 startPosition = transform.position;
+        Vector3 startScale = transform.localScale;
+        Quaternion startRotation = transform.localRotation;
+        float bounceDuration = Mathf.Max(0.05f, deathBounceDuration);
+        float elapsed = 0f;
+
+        while (elapsed < bounceDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / bounceDuration);
+            float bounce = Mathf.Sin(t * Mathf.PI);
+            transform.position = startPosition + Vector3.up * (bounce * deathBounceHeight);
+            transform.localScale = new Vector3(
+                startScale.x * Mathf.Lerp(1f, 0.82f, bounce),
+                startScale.y * Mathf.Lerp(1f, 1.2f, bounce),
+                startScale.z);
+            yield return null;
+        }
+
+        transform.position = startPosition;
+        transform.localScale = startScale;
+        transform.localRotation = startRotation;
+
+        if (deathPauseDuration > 0f)
+            yield return new WaitForSeconds(deathPauseDuration);
+
+        Vector3 fallStart = transform.position;
+        Vector3 fallTarget = startPosition + Vector3.down * 0.18f;
+        Vector3 crushedScale = new Vector3(startScale.x * 1.12f, 0f, startScale.z);
+        float fallDuration = Mathf.Max(0.05f, deathFallDuration);
+        elapsed = 0f;
+
+        while (elapsed < fallDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / fallDuration);
+            float eased = 1f - Mathf.Pow(1f - t, 3f);
+            transform.position = Vector3.LerpUnclamped(fallStart, fallTarget, eased);
+            transform.localRotation = startRotation;
+            transform.localScale = Vector3.LerpUnclamped(startScale, crushedScale, eased);
+            yield return null;
+        }
+
+        transform.position = fallTarget;
+        transform.localRotation = startRotation;
+        transform.localScale = crushedScale;
+        IsDeathAnimationComplete = true;
+        _deathRoutine = null;
     }
 }

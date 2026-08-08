@@ -98,6 +98,9 @@ public class CardCollectionPanel : CommandWordReceiver
     private CanvasGroup _panelCanvasGroup;
     private Coroutine _fadeRoutine;
 
+    public event Action Opened;
+    public event Action Closed;
+
     /// <summary>목록이 지금 떠 있는가. PauseManager가 ESC를 "목록만 닫기"로 돌리는 데 쓴다.</summary>
     public bool IsOpen => _isOpen;
 
@@ -169,6 +172,7 @@ public class CardCollectionPanel : CommandWordReceiver
             return;
 
         _isOpen = true;
+        Opened?.Invoke();
 
         // 가리는 UI를 비켜나게 한다(실제 이동은 LateUpdate가 이어서 한다).
         _displacement.MarkDirty();
@@ -196,6 +200,7 @@ public class CardCollectionPanel : CommandWordReceiver
         // ⚠️ ClearInput보다 먼저 내려야 한다. ClearInput은 "비었다"를 수신자에게도 디스패치하는데,
         // 그때 아직 열린 상태면 이쪽이 그 신호를 가로채 일시정지 메뉴의 오타 상태가 안 풀린다.
         _isOpen = false;
+        Closed?.Invoke();
 
         // 비켜났던 UI를 제자리로 돌린다. 일시정지가 그대로 풀려 이 창이 꺼져도 이 컴포넌트는
         // Pause Canvas에 붙어 계속 살아 있으므로 복귀는 끝까지 재생된다.

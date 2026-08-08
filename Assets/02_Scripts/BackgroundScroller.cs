@@ -41,6 +41,25 @@ public class BackgroundScroller : MonoBehaviour
         _speedCoroutine = StartCoroutine(RunRoutine(actualAccel));
     }
 
+    public void StartConstantScroll(float speed)
+    {
+        if (_speedCoroutine != null)
+            StopCoroutine(_speedCoroutine);
+
+        _currentSpeed = Mathf.Max(0f, speed);
+        _totalMoved = 0f;
+        _speedCoroutine = StartCoroutine(ConstantScrollRoutine());
+    }
+
+    private IEnumerator ConstantScrollRoutine()
+    {
+        while (true)
+        {
+            ApplyMovement(_currentSpeed * Time.deltaTime);
+            yield return null;
+        }
+    }
+
     private IEnumerator RunRoutine(float actualAccel)
     {
         float elapsed = 0f;

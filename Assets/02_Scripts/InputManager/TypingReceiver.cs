@@ -158,7 +158,8 @@ public abstract class TypingReceiver : MonoBehaviour
             if (string.IsNullOrEmpty(targets[i]) || targets[i] != typed)
                 continue;
 
-            var wasComposing = composing.Length > 0;
+            // WebGL의 직접 두벌식 조합은 OS IME 메아리가 없으므로 커밋된 입력처럼 처리한다.
+            var wasComposing = composing.Length > 0 && !inputManager.UsesSyntheticHangul;
             _notProgressing = false;
 
             inputManager.ClearInput();

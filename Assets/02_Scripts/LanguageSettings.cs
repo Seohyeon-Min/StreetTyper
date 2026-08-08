@@ -11,23 +11,6 @@ public enum GameLanguage
     Japanese
 }
 
-[Serializable]
-public class CardTranslation
-{
-    public string id;
-    public string koName, koDesc, koLabel;
-    public string enName, enDesc, enLabel;
-    public string frName, frDesc, frLabel;
-    public string esName, esDesc, esLabel;
-    public string jaName, jaDesc, jaLabel;
-}
-
-[Serializable]
-public class CardLocalizationData
-{
-    public List<CardTranslation> cards;
-}
-
 /// <summary>
 /// 게임 표시 언어. 값 하나와 PlayerPrefs가 전부라 MonoBehaviour가 필요 없어 GameScenes처럼
 /// static 클래스로 둔다 - 씬 오브젝트도 DontDestroyOnLoad도 없으니 인스펙터 배선이 늘지 않는다.
@@ -41,48 +24,50 @@ public static class LanguageSettings
 {
     // 기존 볼륨 설정과 같은 계열의 키를 쓴다(option.volume.master 등).
     private const string PrefsKey = "option.language";
+    private const string DefaultVersionKey = "option.language.default-version";
+    private const int DefaultVersion = 1;
 
-    private static GameLanguage _current = GameLanguage.Korean;
+    private static GameLanguage _current = GameLanguage.English;
 
     /// <summary>지금 언어. 타이핑 매칭 경로에서 글자마다 불리므로 PlayerPrefs를 매번 읽지 않고
     /// 이 필드에 캐시해 둔다.</summary>
     public static GameLanguage Current => _current;
 
+    /// <summary>지금 언어가 <b>영어인가</b>. 다섯 언어 중 하나를 콕 집어 묻는 것이라,
+    /// ⚠️ <b>"라틴 문자를 받는 모드인가"로 쓰면 안 된다</b> - 불어·스페인어·일본어도 라틴 입력이지만
+    /// 여기서는 false다. 그 질문은 <see cref="IsKorean"/>의 부정(<c>!IsKorean</c>)이며,
+    /// <see cref="InputManager.HandleTextInput"/>·<c>ApplyImeMode</c>가 그렇게 쓴다.</summary>
     public static bool IsEnglish => _current == GameLanguage.English;
+
+    /// <summary>지금 언어가 <b>한국어인가</b>. "한국어면 이것, 아니면 저것"으로 갈리는 자리에서 쓴다 -
+    /// 언어가 둘이던 시절에는 <see cref="IsEnglish"/>로 갈라도 결과가 같았지만, 다섯이 되면서
+    /// 그 둘은 다른 질문이 됐다(<c>IsEnglish</c>로 갈리면 불/스/일이 한국어 쪽으로 떨어진다).</summary>
+    public static bool IsKorean => _current == GameLanguage.Korean;
 
     /// <summary>언어가 바뀐 순간 화면에 붙은 라벨들이 스스로 갱신하도록 알린다.</summary>
     public static event Action OnChanged;
 
-    // [추가] 번역 데이터를 담아둘 딕셔너리
-    private static Dictionary<string, CardTranslation> _cardDict = new Dictionary<string, CardTranslation>();
-
     // 도메인 리로드 설정과 무관하게 실행마다 한 번은 확실히 읽어 오게 한다.
     // static 필드는 Play를 멈춰도 남을 수 있어서 초기화 지점을 명시해 두는 편이 안전하다.
+    //
+    // ⚠️ 카드 JSON은 여기서 읽지 않는다 - 그건 CardDatabase가 소유하고, 이 클래스는 그 행에서
+    // "지금 언어의 칸"을 고르기만 한다(PickCardText). 예전엔 여기서 따로 파싱했는데, 카드가
+    // 수치까지 JSON으로 옮겨오면서 같은 파일을 두 곳에서 읽을 이유가 없어졌다.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Load()
     {
-        _current = (GameLanguage)PlayerPrefs.GetInt(PrefsKey, (int)GameLanguage.Korean);
-        _warnedFields.Clear();
-
-        // [추가] 게임 시작 시 Resources 폴더에서 JSON 로드
-        LoadJsonData();
-    }
-
-    private static void LoadJsonData()
-    {
-        TextAsset jsonAsset = Resources.Load<TextAsset>("CardLocalization");
-        if (jsonAsset != null)
+        if (PlayerPrefs.GetInt(DefaultVersionKey, 0) < DefaultVersion)
         {
-            CardLocalizationData data = JsonUtility.FromJson<CardLocalizationData>(jsonAsset.text);
-            foreach (var card in data.cards)
-            {
-                _cardDict[card.id] = card;
-            }
+            _current = GameLanguage.English;
+            PlayerPrefs.SetInt(PrefsKey, (int)_current);
+            PlayerPrefs.SetInt(DefaultVersionKey, DefaultVersion);
+            PlayerPrefs.Save();
         }
         else
         {
-            Debug.LogError("CardLocalization.json 파일을 Resources 폴더에서 찾을 수 없습니다.");
+            _current = (GameLanguage)PlayerPrefs.GetInt(PrefsKey, (int)GameLanguage.English);
         }
+        _warnedFields.Clear();
     }
 
     /// <summary>언어를 바꾸고 디스크에 저장한다. 값이 그대로면 아무 일도 하지 않는다.</summary>
@@ -146,11 +131,21 @@ public static class LanguageSettings
                          "손패에 떠도 영영 칠 수 없습니다.", owner);
     }
 
+    /// <summary>카드 한 장의 표시 문자열을 지금 언어로 고른다. 원본 행은
+    /// <see cref="CardDatabase"/>가 들고 있고 여기서는 어느 칸을 읽을지만 정한다.
+    ///
+    /// <paramref name="textType"/>은 <c>"name"</c>(이름 = 타이핑 매칭 키) · <c>"desc"</c>(설명) ·
+    /// <c>"label"</c>(수치 칸) · <c>"labelPending"</c>(수치 칸의 반대 상태 - 지금은 럭키뿐) 넷이다.
+    ///
+    /// ⚠️ 타이핑 매칭 경로에서 <b>글자마다</b> 불린다. 여기에 문자열 조립이나 로그를 넣지 말 것.</summary>
     public static string PickCardText(string cardId, string textType)
     {
-        if (!_cardDict.TryGetValue(cardId, out var trans))
+        var trans = CardDatabase.Definition(cardId);
+        if (trans == null)
         {
-            return "MISSING_ID"; // JSON에 해당 카드가 없을 때
+            // 이름이 통째로 "MISSING_ID"가 되므로 화면에서 바로 보인다. 그런 카드가 둘 이상이면
+            // 이름이 같아져 타이핑 매칭까지 겹치니, CardDatabase.Get이 내는 경고를 확인할 것.
+            return "MISSING_ID";
         }
 
         switch (_current)
@@ -159,29 +154,34 @@ public static class LanguageSettings
                 if (textType == "name") return trans.koName;
                 if (textType == "desc") return trans.koDesc;
                 if (textType == "label") return trans.koLabel;
+                if (textType == "labelPending") return trans.koLabelPending;
                 break;
             case GameLanguage.English:
                 if (textType == "name") return UpperName(trans.enName);
                 if (textType == "desc") return trans.enDesc;
                 if (textType == "label") return trans.enLabel;
+                if (textType == "labelPending") return trans.enLabelPending;
                 break;
             case GameLanguage.French:
                 // [핵심] 프랑스어일 때 '이름(타이핑 타겟)'은 무조건 영어를 반환!
                 if (textType == "name") return UpperName(trans.enName);
                 if (textType == "desc") return trans.frDesc;
                 if (textType == "label") return trans.frLabel;
+                if (textType == "labelPending") return trans.frLabelPending;
                 break;
             case GameLanguage.Spanish:
                 // [핵심] 스페인어일 때 '이름(타이핑 타겟)'은 무조건 영어를 반환!
                 if (textType == "name") return UpperName(trans.enName);
                 if (textType == "desc") return trans.esDesc;
                 if (textType == "label") return trans.esLabel;
+                if (textType == "labelPending") return trans.esLabelPending;
                 break;
             case GameLanguage.Japanese:
                 // [핵심] 일본어일 때도 '이름(타이핑 타겟)'은 무조건 영어를 반환!
                 if (textType == "name") return UpperName(trans.enName);
                 if (textType == "desc") return trans.jaDesc;
                 if (textType == "label") return trans.jaLabel;
+                if (textType == "labelPending") return trans.jaLabelPending;
                 break;
         }
         return "";

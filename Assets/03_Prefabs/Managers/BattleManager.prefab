@@ -52,6 +52,14 @@ MonoBehaviour:
   player: {fileID: 0}
   playerHealthBar: {fileID: 0}
   enemyHealthBar: {fileID: 0}
+  gameClearConfettiColors:
+  - {r: 1, g: 0.18, b: 0.48, a: 1}
+  - {r: 1, g: 0.78, b: 0.08, a: 1}
+  - {r: 0.15, g: 0.82, b: 1, a: 1}
+  - {r: 0.5, g: 0.25, b: 1, a: 1}
+  - {r: 0.22, g: 1, b: 0.5, a: 1}
+  - {r: 1, g: 1, b: 1, a: 1}
+  gameClearSparkleSprite: {fileID: 0}
   resultText: {fileID: 0}
   actionBubbleDuration: 1
   attackSound:

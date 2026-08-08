@@ -235,7 +235,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -256,6 +256,11 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!4 &1422169083 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5347591421664650812, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+  m_PrefabInstance: {fileID: 7550203506998107668}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1702392248
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -412,6 +417,55 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1933689708
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1933689709}
+  - component: {fileID: 1933689710}
+  m_Layer: 0
+  m_Name: IntroVolume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1933689709
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1933689708}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1422169083}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1933689710
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1933689708}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
+  m_IsGlobal: 1
+  priority: 0
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: d520ceac0fed7054494f4632a2c8ae6f, type: 2}
 --- !u!1001 &7550203506998107668
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -473,8 +527,24 @@ PrefabInstance:
       value: 32
       objectReference: {fileID: 0}
     - target: {fileID: 3401648919478757586, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: m_fontColor.b
+      value: 0.9882353
+      objectReference: {fileID: 0}
+    - target: {fileID: 3401648919478757586, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: m_fontColor.g
+      value: 0.9764706
+      objectReference: {fileID: 0}
+    - target: {fileID: 3401648919478757586, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: m_fontColor.r
+      value: 0.96862745
+      objectReference: {fileID: 0}
+    - target: {fileID: 3401648919478757586, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: m_fontSizeBase
       value: 32
+      objectReference: {fileID: 0}
+    - target: {fileID: 3401648919478757586, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4294769143
       objectReference: {fileID: 0}
     - target: {fileID: 4134216062047745073, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: m_text
@@ -501,6 +571,18 @@ PrefabInstance:
       value: 0.40392157
       objectReference: {fileID: 0}
     - target: {fileID: 4134216062047745073, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: m_fontColor.b
+      value: 0.9882353
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134216062047745073, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: m_fontColor.g
+      value: 0.9764706
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134216062047745073, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: m_fontColor.r
+      value: 0.96862745
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134216062047745073, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: m_fontSizeMax
       value: 18
       objectReference: {fileID: 0}
@@ -514,7 +596,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4134216062047745073, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: m_fontColor32.rgba
-      value: 1744830463
+      value: 1744632311
       objectReference: {fileID: 0}
     - target: {fileID: 4134216062047745073, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: m_HorizontalAlignment
@@ -569,6 +651,10 @@ PrefabInstance:
       value: 2.9000244
       objectReference: {fileID: 0}
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: japaneseFont
+      value: 
+      objectReference: {fileID: 11400000, guid: e9d4322394cd84547bb0f7ded0f04ba7, type: 2}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: skipHoldTime
       value: 1.5
       objectReference: {fileID: 0}
@@ -599,7 +685,7 @@ PrefabInstance:
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: slides.Array.data[0].image
       value: 
-      objectReference: {fileID: -613363052048103786, guid: 75591239215447948ba5673335675010, type: 3}
+      objectReference: {fileID: -7790544929387226549, guid: ccb8b6ac551891848b66a24a3c541979, type: 3}
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: slides.Array.data[1].image
       value: 
@@ -658,24 +744,108 @@ PrefabInstance:
         \uC9C0\uAE08 \uC2DC\uC791\uB41C\uB2E4!"
       objectReference: {fileID: 0}
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[0].frenchText
+      value: "\xC9lev\xE9e par Magna Mater, l'immense dragonne de la for\xEAt, Demi
+        \xE9tait une enfant humaine."
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[1].frenchText
+      value: "\xAB Maman, moi aussi, je veux te prouver que je suis devenue adulte
+        ! \xBB"
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[2].frenchText
+      value: "\xAB Alors terrasse dix dragons de ton \xE2ge et reviens-moi. \xBB"
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[3].frenchText
+      value: "Pour devenir digne du nom de \xAB Mater \xBB,"
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[4].frenchText
+      value: "Demi, la jeune humaine, part maintenant tous les d\xE9fier !"
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[0].englishText
+      value: Raised by Magna Mater, the great dragon of the forest, Demi was a human
+        child.
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[0].spanishText
+      value: "Criada por Magna Mater, la gran dragona del bosque, Demi era una ni\xF1a
+        humana."
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[1].englishText
+      value: '"Mom, I want to prove that I''m all grown up, too!"'
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[1].spanishText
+      value: "\xABMam\xE1, \xA1quiero demostrarte que yo tambi\xE9n ya soy adulta!\xBB"
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[2].englishText
+      value: '"Then defeat ten dragons your age and return to me."'
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[2].spanishText
+      value: "\xABEntonces derrota a diez dragones de tu edad y regresa.\xBB"
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[3].englishText
+      value: To become someone worthy of the name 'Mater,'
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[3].spanishText
+      value: "Para convertirse en alguien digna del nombre de \xABMater\xBB,"
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[4].englishText
+      value: the human girl Demi now sets out to challenge them all!
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[4].spanishText
+      value: "\xA1la joven humana Demi parte ahora para desafiarlos a todos!"
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: slides.Array.data[0].sentences.Array.data[0].autoPlayTime
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[0].japaneseText
+      value: "\u68EE\u306E\u5DE8\u5927\u306A\u7ADC\u300E\u30DE\u30B0\u30CA\u30FB\u30DE\u30FC\u30C6\u30EB\u300F\u306B\u80B2\u3066\u3089\u308C\u305F\u3001\u4EBA\u9593\u306E\u5C11\u5973\u30C7\u30DF\u3002"
       objectReference: {fileID: 0}
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: slides.Array.data[0].sentences.Array.data[1].autoPlayTime
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[1].japaneseText
+      value: "\u300C\u304A\u6BCD\u3055\u3093\u3001\u79C1\u3082\u3082\u3046\u4E00\u4EBA\u524D\u3060\u3063\u3066\u8A8D\u3081\u3066\u307B\u3057\u3044\uFF01\u300D"
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: slides.Array.data[0].sentences.Array.data[2].autoPlayTime
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[2].japaneseText
+      value: "\u300C\u306A\u3089\u3070\u3001\u540C\u3058\u5E74\u9803\u306E\u7ADC\u3092\u5341\u982D\u3059\u3079\u3066\u5012\u3057\u3066\u623B\u3063\u3066\u304D\u306A\u3055\u3044\u3002\u300D"
       objectReference: {fileID: 0}
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: slides.Array.data[0].sentences.Array.data[3].autoPlayTime
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[3].japaneseText
+      value: "\u300E\u30DE\u30FC\u30C6\u30EB\u300F\u306E\u540D\u306B\u6065\u3058\u306C\u8005\u3068\u306A\u308B\u305F\u3081\u3001"
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: slides.Array.data[0].sentences.Array.data[4].autoPlayTime
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4928418273388315765, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: slides.Array.data[0].sentences.Array.data[4].japaneseText
+      value: "\u4EBA\u9593\u306E\u5C11\u5973\u30C7\u30DF\u306E\u9053\u5834\u7834\u308A\u304C\u3001\u4ECA\u59CB\u307E\u308B\uFF01"
       objectReference: {fileID: 0}
     - target: {fileID: 5347591421664650812, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: m_LocalPosition.x
@@ -721,6 +891,14 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: -2413806693520163455, guid: ebe73ca9363db456bacf42c025bb4847, type: 3}
+    - target: {fileID: 8386088619232940320, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: m_Camera
+      value: 
+      objectReference: {fileID: 331883741}
+    - target: {fileID: 8386088619232940320, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      propertyPath: m_RenderMode
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8503883228798855287, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
       propertyPath: m_UiScaleMode
       value: 1
@@ -743,7 +921,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 5347591421664650812, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1933689709}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cfdb8fb844c13094d9d0fe33a2ec9bfe, type: 3}
 --- !u!1660057539 &9223372036854775807

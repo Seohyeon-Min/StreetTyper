@@ -146,6 +146,8 @@ public class EnemyManager : MonoBehaviour
             case ActionType.Defend:
                 Debug.Log(data.enemyName + " Action: DEFEND!");
                 currentEnemy.AddDefense(currentEnemy.defensePower);
+                if (HealEffectManager.Instance != null)
+                    HealEffectManager.Instance.PlayGuardEffect(currentEnemy.GetComponent<SpriteRenderer>());
                 break;
             case ActionType.Buff:
                 Debug.Log(data.enemyName + " Action: BUFF POWER!");

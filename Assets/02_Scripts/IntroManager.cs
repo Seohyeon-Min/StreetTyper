@@ -9,6 +9,10 @@ using System.Collections;
 public class StorySentence
 {
     [TextArea(2, 4)] public string text;
+    [TextArea(2, 4)] public string englishText;
+    [TextArea(2, 4)] public string frenchText;
+    [TextArea(2, 4)] public string spanishText;
+    [TextArea(2, 4)] public string japaneseText;
     [Min(0f)]
     [Tooltip("이 문장이 전부 출력된 뒤 다음 문장으로 자동 진행하기까지의 시간")]
     public float autoPlayTime = 2f;
@@ -31,6 +35,22 @@ public class IntroManager : MonoBehaviour
     public Image storyImage;
     public TextMeshProUGUI storyText;
     public Image skipGaugeFill;
+    public TextMeshProUGUI skipHintText;
+
+    [Header("스킵 안내 다국어")]
+    [SerializeField] private string skipHintKorean = "ESC 키를 꾹 눌러서 스킵";
+    [SerializeField] private string skipHintEnglish = "HOLD ESC TO SKIP";
+    [SerializeField] private string skipHintFrench = "MAINTENEZ ÉCHAP POUR PASSER";
+    [SerializeField] private string skipHintSpanish = "MANTÉN ESC PARA OMITIR";
+    [SerializeField] private string skipHintJapanese = "ESCキー長押しでスキップ";
+
+    [Header("언어별 폰트")]
+    [Tooltip("비어 있는 언어 슬롯은 Story Text에 현재 연결된 폰트를 그대로 사용합니다.")]
+    public TMP_FontAsset koreanFont;
+    public TMP_FontAsset englishFont;
+    public TMP_FontAsset frenchFont;
+    public TMP_FontAsset spanishFont;
+    public TMP_FontAsset japaneseFont;
 
     [Header("스토리 설정")]
     public StorySlide[] slides;
@@ -54,6 +74,9 @@ public class IntroManager : MonoBehaviour
     void Start()
     {
         if (skipGaugeFill != null) skipGaugeFill.fillAmount = 0f;
+
+        ApplyLanguageFont();
+        ApplyLocalizedSkipHint();
 
         if (SoundManager.Instance != null)
         {
@@ -115,7 +138,7 @@ public class IntroManager : MonoBehaviour
                 _isTyping = true;
                 _forceShowLineText = false;
 
-                string currentLine = sentences[sentenceIndex].text ?? string.Empty;
+                string currentLine = GetLocalizedText(sentences[sentenceIndex]);
 
                 for (int j = 0; j < currentLine.Length; j++)
                 {
@@ -193,6 +216,56 @@ public class IntroManager : MonoBehaviour
         }
 
         return converted;
+    }
+
+    private static string GetLocalizedText(StorySentence sentence)
+    {
+        string localized;
+        switch (LanguageSettings.Current)
+        {
+            case GameLanguage.English: localized = sentence.englishText; break;
+            case GameLanguage.French: localized = sentence.frenchText; break;
+            case GameLanguage.Spanish: localized = sentence.spanishText; break;
+            case GameLanguage.Japanese: localized = sentence.japaneseText; break;
+            default: localized = sentence.text; break;
+        }
+
+        // 번역이 비어 있는 새 문장은 한국어 원문을 안전한 기본값으로 사용한다.
+        return string.IsNullOrEmpty(localized) ? sentence.text ?? string.Empty : localized;
+    }
+
+    private void ApplyLanguageFont()
+    {
+        if (storyText == null)
+            return;
+
+        TMP_FontAsset selectedFont = null;
+        switch (LanguageSettings.Current)
+        {
+            case GameLanguage.Korean: selectedFont = koreanFont; break;
+            case GameLanguage.English: selectedFont = englishFont; break;
+            case GameLanguage.French: selectedFont = frenchFont; break;
+            case GameLanguage.Spanish: selectedFont = spanishFont; break;
+            case GameLanguage.Japanese: selectedFont = japaneseFont; break;
+        }
+
+        if (selectedFont != null)
+            storyText.font = selectedFont;
+    }
+
+    private void ApplyLocalizedSkipHint()
+    {
+        if (skipHintText == null)
+            return;
+
+        switch (LanguageSettings.Current)
+        {
+            case GameLanguage.English: skipHintText.text = skipHintEnglish; break;
+            case GameLanguage.French: skipHintText.text = skipHintFrench; break;
+            case GameLanguage.Spanish: skipHintText.text = skipHintSpanish; break;
+            case GameLanguage.Japanese: skipHintText.text = skipHintJapanese; break;
+            default: skipHintText.text = skipHintKorean; break;
+        }
     }
 
     private bool IsNextInputPressed()

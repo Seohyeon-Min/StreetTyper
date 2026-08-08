@@ -76,9 +76,12 @@ public abstract class CommandWordReceiver : TypingReceiver
             return string.Empty;
 
         // ⚠️ 여기는 LanguageSettings.Pick을 쓰지 않는다. 꼬리말("을 입력해주세요!")은 조사 때문에
-        // 있는 것이라 영어에서는 비워두는 게 정상 설정인데, Pick은 그걸 번역 누락으로 보고
-        // 한국어를 되돌리면서 경고까지 낸다. 여기서는 빈 값이 곧 "꼬리말 없음"이다.
-        var suffix = LanguageSettings.IsEnglish ? hintSuffixEn : hintSuffix;
+        // 있는 것이라 한국어가 아닌 언어에서는 비워두는 게 정상 설정인데, Pick은 그걸 번역
+        // 누락으로 보고 한국어를 되돌리면서 경고까지 낸다. 여기서는 빈 값이 곧 "꼬리말 없음"이다.
+        //
+        // ⚠️ IsEnglish가 아니라 IsKorean으로 가른다. 언어가 둘이던 시절에는 결과가 같았지만,
+        // 다섯이 된 지금 IsEnglish로 가르면 불어·스페인어·일본어에 한국어 조사가 따라붙는다.
+        var suffix = LanguageSettings.IsKorean ? hintSuffix : hintSuffixEn;
         if (!string.IsNullOrEmpty(suffix))
             builder.Append(suffix);
 

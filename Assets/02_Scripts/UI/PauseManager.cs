@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -32,6 +33,18 @@ public class PauseManager : CommandWordReceiver
     [Tooltip("퍼즈 Canvas보다 한 단계 더 위로 올릴 입력창 Canvas. 비우면 InputFieldDisplay를 찾아 자동 연결한다.")]
     [SerializeField] private Canvas inputCanvas;
 
+    [Tooltip("퍼즈 중 PauseHand 위치에 맞춰 올릴 입력 패널. 비우면 InputFieldDisplay를 자동으로 찾는다.")]
+    [SerializeField] private RectTransform inputPanel;
+
+    [Tooltip("퍼즈가 열렸을 때 입력 패널의 anchoredPosition. 보상 선택 중 내려가 있던 입력창도 이 위치로 올라온다.")]
+    [SerializeField] private Vector2 pauseInputPosition = new Vector2(0f, 415f);
+
+    [Tooltip("보상 위치와 퍼즈 위치 사이를 이동하는 시간(초).")]
+    [SerializeField] private float inputPanelMoveDuration = 0.25f;
+
+    [Tooltip("입력 패널 위치 이동에 적용할 애니메이션 커브.")]
+    [SerializeField] private AnimationCurve inputPanelMoveCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
     [Header("References")]
     [Tooltip("평소 손패를 그리는 HandFanLayout(Card Canvas 쪽). 일시정지 중엔 5장을 전부 숨긴다.")]
     [SerializeField] private HandFanLayout handFanLayout;
@@ -51,6 +64,9 @@ public class PauseManager : CommandWordReceiver
              "사라지고, 새 명령 카드는 그 자리에서 떠오르듯 나타난다(재개할 땐 반대).")]
     [SerializeField] private float commandCardTransitionHeight = 80f;
 
+    [Tooltip("카드 목록을 열 때 명령 카드들이 아래로 떨어지는 거리(px).")]
+    [SerializeField] private float collectionCardTransitionHeight = 600f;
+
     [Tooltip("\"카드\"를 쳤을 때 열 보유 카드 목록. 비워두면 카드 명령이 안내에도 뜨지 않고 " +
              "명령 카드도 만들어지지 않는다 - 열 창이 없는데 단어만 남으면 쳐도 아무 일이 안 일어난다.")]
     [SerializeField] private CardCollectionPanel cardCollectionPanel;
@@ -60,18 +76,24 @@ public class PauseManager : CommandWordReceiver
              "있어서, 그 위에 같은 자리를 쓰는 일시정지 메뉴가 겹치면 안 된다.")]
     [SerializeField] private BattleManager battleManager;
 
-    // 명령 단어는 CommandCardData 에셋이다 - 단어(한/영)와 카드 겉모습이 한 곳에 모여 있고,
-    // 화면에 카드로 그대로 뜨므로 안내 문구가 따로 필요 없다. 씬 오브젝트가 아니라 에셋 참조라
-    // 프리팹에 그대로 저장된다(이 프로젝트에서 드문 경우다).
-    [Header("명령 카드")]
-    [Tooltip("일시정지를 풀 카드. 04_Data/Cards/Commands/Resume")]
-    [SerializeField] private CommandCardData resumeCard;
+    // 명령 단어는 CardLocalization.json의 카드 행이다 - 단어 5개국어와 카드 겉모습이 한 곳에
+    // 모여 있고, 화면에 카드로 그대로 뜨므로 안내 문구가 따로 필요 없다.
+    //
+    // ⚠️ 에셋 드래그가 아니라 id 문자열이라 오타가 곧 "그 명령이 사라짐"이다. Awake에서 한 번
+    // 꺼내며 CardDatabase가 못 찾으면 경고를 남기고, OnValidate가 편집 중에도 미리 알린다.
+    [Header("명령 카드 (CardLocalization.json의 id)")]
+    [Tooltip("일시정지를 풀 카드의 id.")]
+    [SerializeField] private string resumeCardId = "resume";
 
-    [Tooltip("보유 카드 목록을 열 카드. 04_Data/Cards/Commands/Cards")]
-    [SerializeField] private CommandCardData cardsCard;
+    [Tooltip("보유 카드 목록을 열 카드의 id. 비워두면 '카드' 명령이 통째로 사라진다.")]
+    [SerializeField] private string cardsCardId = "cards";
 
-    [Tooltip("타이틀로 나갈 카드. 04_Data/Cards/Commands/Title")]
-    [SerializeField] private CommandCardData titleCard;
+    [Tooltip("타이틀로 나갈 카드의 id.")]
+    [SerializeField] private string titleCardId = "title";
+
+    private CommandCardData resumeCard;
+    private CommandCardData cardsCard;
+    private CommandCardData titleCard;
 
     private bool _isPaused;
     private bool _inputWasEnabled;
@@ -80,6 +102,9 @@ public class PauseManager : CommandWordReceiver
     private int _inputCanvasOriginalOrder;
     private bool _pauseCanvasOriginalOverrideSorting;
     private bool _inputCanvasOriginalOverrideSorting;
+    private bool _inputPanelPositionSaved;
+    private Vector2 _inputPanelPositionBeforePause;
+    private Coroutine _inputPanelMoveRoutine;
 
     // 명령 단어를 담아둘 버퍼. 글자마다 Targets가 불리므로 매번 새로 만들지 않는다.
     // 순서가 곧 OnCommandMatched의 index이자 화면에 놓이는 카드 순서다.
@@ -156,6 +181,14 @@ public class PauseManager : CommandWordReceiver
         // 이전 플레이에서 멈춘 채로 씬을 다시 불러왔을 수 있다.
         Time.timeScale = 1f;
 
+        ResolveBattleManager();
+
+        // 명령 카드는 여기서 한 번만 꺼낸다 - Targets는 타이핑 경로에서 글자마다 불리므로
+        // 그때마다 사전을 두드리지 않는다.
+        resumeCard = CardDatabase.Get<CommandCardData>(resumeCardId, this, nameof(resumeCardId));
+        cardsCard = CardDatabase.Get<CommandCardData>(cardsCardId, this, nameof(cardsCardId));
+        titleCard = CardDatabase.Get<CommandCardData>(titleCardId, this, nameof(titleCardId));
+
         if (pausePanel != null)
             pausePanel.SetActive(false);
         else
@@ -176,6 +209,12 @@ public class PauseManager : CommandWordReceiver
 
         if (inputManager != null)
             inputManager.OnCancel += HandleCancel;
+
+        if (cardCollectionPanel != null)
+        {
+            cardCollectionPanel.Opened += HandleCollectionOpened;
+            cardCollectionPanel.Closed += HandleCollectionClosed;
+        }
     }
 
     protected override void OnDisable()
@@ -185,7 +224,46 @@ public class PauseManager : CommandWordReceiver
         if (inputManager != null)
             inputManager.OnCancel -= HandleCancel;
 
+        if (cardCollectionPanel != null)
+        {
+            cardCollectionPanel.Opened -= HandleCollectionOpened;
+            cardCollectionPanel.Closed -= HandleCollectionClosed;
+        }
+
         RestorePauseCanvases();
+    }
+
+    private void HandleCollectionOpened()
+    {
+        // Pause를 연 직후 곧바로 "카드"를 입력하면 입력 패널의 Pause 위치 이동과
+        // CardCollectionPanel의 아래 이동이 동시에 실행된다. 남아 있는 상승 코루틴이
+        // 마지막 프레임에 Y=415를 다시 써서 목록 위를 가리지 않도록 여기서 끝낸다.
+        if (_inputPanelMoveRoutine != null)
+        {
+            StopCoroutine(_inputPanelMoveRoutine);
+            _inputPanelMoveRoutine = null;
+        }
+
+        if (inputPanel != null)
+            inputPanel.anchoredPosition = pauseInputPosition;
+
+        foreach (var card in _commandCardInstances)
+        {
+            if (card != null)
+                card.PlayExit(-collectionCardTransitionHeight, () => card.gameObject.SetActive(false));
+        }
+    }
+
+    private void HandleCollectionClosed()
+    {
+        if (!_isPaused)
+            return;
+
+        foreach (var card in _commandCardInstances)
+        {
+            if (card != null)
+                card.PlayEnter(-collectionCardTransitionHeight);
+        }
     }
 
     // ESC는 InputManager가 준다. 그쪽에서 입력 잠금(_inputEnabled)보다 위에서 읽으므로
@@ -215,7 +293,7 @@ public class PauseManager : CommandWordReceiver
         //
         // 일반 스테이지 클리어(보상 선택 중)는 여기 걸리지 않는다 - 그때는 게임이 이어지고
         // 있어서 멈출 수 있어야 한다(IsGameOver가 아니라 IsFinalResult를 보는 이유다).
-        if (battleManager != null && battleManager.IsFinalResult)
+        if (ShouldKeepBattleHandHidden())
             return;
 
         Pause();
@@ -223,12 +301,13 @@ public class PauseManager : CommandWordReceiver
 
     public void Pause()
     {
-        if (_isPaused)
+        if (_isPaused || ShouldKeepBattleHandHidden())
             return;
 
         _isPaused = true;
 
         RaisePauseCanvases();
+        MoveInputPanelToPausePosition();
 
         // 멈추기 전 입력 상태를 기억해 뒀다가 재개할 때 그대로 되돌린다.
         _inputWasEnabled = inputManager != null && inputManager.IsInputEnabled;
@@ -266,6 +345,7 @@ public class PauseManager : CommandWordReceiver
 
         _isPaused = false;
         Time.timeScale = 1f;
+        RestoreInputPanelPosition();
 
         // 목록을 띄운 채로 재개(또는 목록 위에서 ESC 두 번)했을 수 있다. 남겨두면 전투 화면
         // 위에 카드 목록이 그대로 덮인다.
@@ -373,11 +453,20 @@ public class PauseManager : CommandWordReceiver
         }
         _commandCardInstances.Clear();
 
-        // 기존 손패는 반대로 떠오르며 되돌아온다.
+        // 패배/전체 클리어가 확정된 뒤에는 무너졌거나 가라앉은 손패를 되살리지 않는다.
+        // Pause가 열린 상태에서 사망한 경우에도 Resume이 이 경로를 지나므로 여기서 다시 확인한다.
+        bool restoreBattleHand = !ShouldKeepBattleHandHidden();
+
         foreach (var card in _pausedHandCards)
         {
             if (card == null)
                 continue;
+
+            if (!restoreBattleHand)
+            {
+                card.gameObject.SetActive(false);
+                continue;
+            }
 
             // 리스트 순서가 아니라 카드 자신이 기억하고 있는 원래 슬롯 인덱스로 되돌린다 -
             // HandFanLayout이 가운데 카드를 맨 위로 그리려고(centerOnTop) 형제 순서를 바꾸면
@@ -387,6 +476,87 @@ public class PauseManager : CommandWordReceiver
         }
 
         _pausedHandCards.Clear();
+    }
+
+    private void ResolveBattleManager()
+    {
+        if (battleManager == null)
+            battleManager = FindFirstObjectByType<BattleManager>();
+    }
+
+    private void MoveInputPanelToPausePosition()
+    {
+        ResolveInputPanel();
+        if (inputPanel == null)
+            return;
+
+        _inputPanelPositionBeforePause = inputPanel.anchoredPosition;
+        _inputPanelPositionSaved = true;
+        AnimateInputPanelTo(pauseInputPosition);
+    }
+
+    private void RestoreInputPanelPosition()
+    {
+        if (!_inputPanelPositionSaved || inputPanel == null)
+            return;
+
+        var restorePosition = _inputPanelPositionBeforePause;
+        _inputPanelPositionSaved = false;
+        AnimateInputPanelTo(restorePosition);
+    }
+
+    private void ResolveInputPanel()
+    {
+        if (inputPanel != null)
+            return;
+
+        var display = FindFirstObjectByType<InputFieldDisplay>();
+        if (display != null)
+            inputPanel = display.transform as RectTransform;
+    }
+
+    private void AnimateInputPanelTo(Vector2 targetPosition)
+    {
+        if (inputPanel == null)
+            return;
+
+        if (_inputPanelMoveRoutine != null)
+            StopCoroutine(_inputPanelMoveRoutine);
+
+        _inputPanelMoveRoutine = StartCoroutine(AnimateInputPanelRoutine(targetPosition));
+    }
+
+    private IEnumerator AnimateInputPanelRoutine(Vector2 targetPosition)
+    {
+        var startPosition = inputPanel.anchoredPosition;
+        var elapsed = 0f;
+
+        if (inputPanelMoveDuration <= 0f)
+        {
+            inputPanel.anchoredPosition = targetPosition;
+            _inputPanelMoveRoutine = null;
+            yield break;
+        }
+
+        while (elapsed < inputPanelMoveDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            var progress = Mathf.Clamp01(elapsed / inputPanelMoveDuration);
+            var curvedProgress = inputPanelMoveCurve != null
+                ? inputPanelMoveCurve.Evaluate(progress)
+                : progress;
+            inputPanel.anchoredPosition = Vector2.LerpUnclamped(startPosition, targetPosition, curvedProgress);
+            yield return null;
+        }
+
+        inputPanel.anchoredPosition = targetPosition;
+        _inputPanelMoveRoutine = null;
+    }
+
+    private bool ShouldKeepBattleHandHidden()
+    {
+        ResolveBattleManager();
+        return battleManager != null && battleManager.ShouldKeepBattleHandHidden;
     }
 
     public void ReturnToTitle()
@@ -442,6 +612,8 @@ public class PauseManager : CommandWordReceiver
 
     private void RestorePauseCanvases()
     {
+        RestoreInputPanelPosition();
+
         if (!_canvasOrderRaised)
             return;
 

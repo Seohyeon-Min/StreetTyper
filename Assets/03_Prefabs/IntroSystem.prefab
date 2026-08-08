@@ -184,6 +184,12 @@ MonoBehaviour:
   storyImage: {fileID: 1965840287405439430}
   storyText: {fileID: 3401648919478757586}
   skipGaugeFill: {fileID: 6085535749935712191}
+  skipHintText: {fileID: 4134216062047745073}
+  skipHintKorean: ESC 키를 꾹 눌러서 스킵
+  skipHintEnglish: HOLD ESC TO SKIP
+  skipHintFrench: MAINTENEZ ÉCHAP POUR PASSER
+  skipHintSpanish: MANTÉN ESC PARA OMITIR
+  skipHintJapanese: ESCキー長押しでスキップ
   slides: []
   skipHoldTime: 3
   whiteFadeDuration: 0.45

@@ -33,32 +33,29 @@ public class BattleManager : MonoBehaviour
     [Tooltip("모든 스테이지를 클리어했을 때 띄울 결과 창 한 벌.")]
     [SerializeField] private ResultPanelView gameClearResult;
 
-    [Header("마더 드래곤 대사")]
-    [Tooltip("스파링 연출이라 순서가 정해져 있다. 0=시작, 1=1턴 뒤, 2=2턴 뒤, 3=마무리")]
-    [SerializeField]
-    private string[] motherDragonLines =
+    [Header("Game Clear Confetti")]
+    [Tooltip("게임 클리어 축하 파티클 색상. 각 파티클은 이 목록에서 무작위 색을 사용합니다.")]
+    [SerializeField] private Color[] gameClearConfettiColors =
     {
-        "어디 한번 실력을 보여보거라!",
-        "제법이구나!",
-        "조금 더 힘을 끌어내 보거라!",
-        "훌륭하다. 여기까지 하마!"
+        new Color(1f, 0.18f, 0.48f),
+        new Color(1f, 0.78f, 0.08f),
+        new Color(0.15f, 0.82f, 1f),
+        new Color(0.5f, 0.25f, 1f),
+        new Color(0.22f, 1f, 0.5f),
+        Color.white
     };
+    [Tooltip("화면 가장자리에서 반짝일 이미지. 비워두면 45도 회전한 기본 사각형을 사용합니다.")]
+    [SerializeField] private Sprite gameClearSparkleSprite;
 
-    [Tooltip("영어 대사. 한국어와 같은 개수로 채울 것 - 비어 있으면 한국어가 그대로 나온다.")]
-    [SerializeField]
-    private string[] motherDragonLinesEn =
-    {
-        "Come, show me what you can do!",
-        "Not bad!",
-        "Draw out more of your power!",
-        "Splendid. That will do."
-    };
+    // 마더 드래곤이 턴마다 하는 말은 DialogueLocalization.json에 있다(id: boss.motherDragonTurn).
+    // 스파링 연출이라 순서가 정해져 있다 - 0=시작, 1=1턴 뒤, 2=2턴 뒤, 3=마무리.
 
     [Header("Duration")]
     public float actionBubbleDuration = 1.0f;
 
     private bool isGameOver = false;
     private bool isEventTriggered = false;
+    private bool isResolvingDeath = false;
 
     // 마지막으로 띄운 결과 종류. 보상 선택이 끝난 뒤 같은 화면을 다시 그리려면 필요하다.
     private ResultKind lastResultKind = ResultKind.Victory;
@@ -87,25 +84,21 @@ public class BattleManager : MonoBehaviour
     // 나중에 적용되므로, 인스펙터 배열을 거기서 읽으면 항상 비어 있다. Start와 ResetBattle에서 채운다.
     private string mdIntentString = string.Empty;
 
-    // 마더 드래곤이 턴마다 하는 말. 인스펙터 배열에서 꺼내며, 영어 배열이 짧거나 비어 있으면
-    // 한국어로 넘어간다 - 대사는 타이핑 대상이 아니라 읽기만 하므로 진행이 막히지는 않는다.
+    // 마더 드래곤이 턴마다 하는 말. 지금 언어에 맞는 줄을 DialogueDatabase가 골라 준다 -
+    // 대사는 타이핑 대상이 아니라 읽기만 하므로, 비어 있어도 진행이 막히지는 않는다.
     private string MotherDragonLine(int index)
     {
-        var lines = motherDragonLines;
+        var count = DialogueDatabase.Count(DialogueIds.MotherDragonTurn);
 
-        if (LanguageSettings.IsEnglish && motherDragonLinesEn != null && index < motherDragonLinesEn.Length &&
-            !string.IsNullOrEmpty(motherDragonLinesEn[index]))
+        if (count == 0)
         {
-            lines = motherDragonLinesEn;
-        }
-
-        if (lines == null || lines.Length == 0)
-        {
-            Debug.LogWarning("BattleManager: motherDragonLines가 비어 있어 마더 드래곤 대사가 나오지 않습니다.", this);
+            Debug.LogWarning($"BattleManager: '{DialogueIds.MotherDragonTurn}' 대사가 비어 있어 " +
+                             "마더 드래곤 대사가 나오지 않습니다.", this);
             return string.Empty;
         }
 
-        return lines[Mathf.Clamp(index, 0, lines.Length - 1)];
+        // 턴이 대사 수보다 길어지면 마지막 줄을 계속 쓴다(예전 동작 그대로).
+        return DialogueDatabase.Line(DialogueIds.MotherDragonTurn, Mathf.Clamp(index, 0, count - 1));
     }
 
     //   추가: 대기열 상태 확인용 변수
@@ -225,8 +218,46 @@ public class BattleManager : MonoBehaviour
             deckManager.OnTurnPhaseChanged -= HandleTurnPhaseChanged;
     }
 
-    // 내 턴(PlayerInput)이 아니면(공격 애니메이션 재생 중, 적 턴 등) 적 인텐트 말풍선을 숨긴다.
-    // 다시 내 턴이 되면 UpdateUI()가 적이 살아있는지부터 다시 판단해서 알아서 켠다.
+    /// <summary>
+    /// 적 인텐트 말풍선을 <b>지금</b> 띄워야 하는가. 판정은 여기 하나뿐이어야 한다 —
+    /// <see cref="UpdateUI"/>와 <see cref="HandleTurnPhaseChanged"/>가 같이 쓴다.
+    ///
+    /// ⚠️ 예전엔 페이즈 전환 쪽이 "PlayerInput이 아니면 무조건 끈다"는 <b>자기만의 규칙</b>을
+    /// 들고 있었다. 그래서 마더 드래곤 대사를 적 턴부터 띄우도록 UpdateUI만 고쳤을 때,
+    /// 적 턴에 떴다가 → PostAttackRest로 넘어가며 꺼지고 → 내 턴에 다시 뜨는
+    /// <b>깜빡임</b>이 났다. 판정을 둘로 나눠 두지 말 것.
+    /// </summary>
+    private bool ShouldShowEnemyIntentBubble(EnemyBase enemy)
+    {
+        if (isStagePreparing || enemy == null)
+            return false;
+
+        // 엔딩 보스 스테이지는 전투 없이 대사만 오가므로(StageManager가 곧바로 StartEvent를
+        // 부른다) 전투 인텐트를 띄울 일이 없다.
+        if (enemy.isEndingBoss)
+            return false;
+
+        var phase = deckManager != null ? deckManager.CurrentPhase : DeckManager.TurnPhase.PlayerInput;
+
+        if (phase == DeckManager.TurnPhase.PlayerInput)
+            return true;
+
+        // ⭐ 마더 드래곤만은 적 턴부터 띄운다. 대사는 ExecuteEnemyTurnCoroutine이 Speak
+        // 애니메이션(PlaySpeakAnimation)과 <b>같은 순간</b>에 세팅하는데, PlayerInput까지
+        // 기다리면 말풍선이 "말하는 모습이 다 끝난 뒤 내 턴이 시작하면서" 뒤늦게 뜬다 -
+        // 말하는 연출과 대사가 어긋나 보이는 원인이었다. 적 턴에 켜서 내 턴까지 그대로 둔다.
+        //
+        // ⚠️ ResolvingPlayerActions(내 공격 재생)와 TurnChangeRest는 일부러 제외한다.
+        // 전자는 그 구간의 UpdateUI()가 펀치마다 불려서 포함시키면 원래 막으려던 깜빡임이
+        // 그대로 돌아오고, 후자는 <b>대사가 아직 지난 턴 것</b>이라 켜봤자 옛 대사를 다시
+        // 보여줄 뿐이다. EnemyTurn에서 새 대사와 Speak가 함께 시작되게 두는 편이 깔끔하다.
+        return enemy is MotherDragon &&
+               (phase == DeckManager.TurnPhase.EnemyTurn ||
+                phase == DeckManager.TurnPhase.PostAttackRest);
+    }
+
+    // 페이즈가 바뀌면 말풍선을 다시 판단한다. 내 턴이면 UpdateUI()가 내용까지 새로 채우고,
+    // 그 밖의 페이즈에서는 켜져 있으면 안 되는 경우에만 끈다.
     private void HandleTurnPhaseChanged(DeckManager.TurnPhase phase)
     {
         if (phase == DeckManager.TurnPhase.PlayerInput)
@@ -235,7 +266,9 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        if (enemyIntentBubbleObj != null)
+        // ⚠️ 무조건 끄면 안 된다 - 마더 드래곤은 적 턴부터 말풍선을 띄우기 때문이다.
+        var enemy = enemyManager != null ? enemyManager.currentEnemy : null;
+        if (enemyIntentBubbleObj != null && !ShouldShowEnemyIntentBubble(enemy))
             enemyIntentBubbleObj.SetActive(false);
     }
 
@@ -333,10 +366,15 @@ public class BattleManager : MonoBehaviour
     /// </summary>
     public bool IsFinalResult => isGameOver && lastResultKind != ResultKind.Victory;
 
+    /// <summary>사망 연출이 시작된 순간부터 결과 화면 동안에는 전투 손패를 다시 표시하지 않는다.</summary>
+    public bool ShouldKeepBattleHandHidden =>
+        isResolvingDeath || IsFinalResult || player == null || player.currentHP <= 0;
+
     public void ResetBattle()
     {
         isGameOver = false;
         isEventTriggered = false;
+        isResolvingDeath = false;
         mdTurnCount = 0;
         mdIntentString = MotherDragonLine(0);
         savedMDDamage = 0;
@@ -362,6 +400,9 @@ public class BattleManager : MonoBehaviour
     /// 이 시점엔 페이즈 변화가 없어 UpdateUI가 저절로 불리지 않으므로 여기서 직접 부른다.</summary>
     public void EndStagePreparation()
     {
+        if (deckManager != null)
+            deckManager.BeginNewStagePlayerInput();
+
         isStagePreparing = false;
         UpdateUI();
     }
@@ -403,38 +444,27 @@ public class BattleManager : MonoBehaviour
                 }
             }
 
-            // 내 턴(PlayerInput)일 때만 인텐트 말풍선을 보여준다. UpdateUI()는 펀치 한 번마다
-            // (PlayPendingActions 안에서) HP 갱신용으로 계속 호출되므로, 여기서 페이즈를 안 보면
-            // 애니메이션 재생 중에도 펀치마다 말풍선이 다시 켜졌다 꺼졌다 한다.
-            var isPlayerInputPhase = !isStagePreparing &&
-                                     (deckManager == null || deckManager.CurrentPhase == DeckManager.TurnPhase.PlayerInput);
+            var showsIntentBubble = ShouldShowEnemyIntentBubble(enemy);
 
-           if (enemyIntentBubbleObj != null && enemyIntentBubble != null && isPlayerInputPhase)
+            if (enemyIntentBubbleObj != null && enemyIntentBubble != null && showsIntentBubble)
             {
-                // 엔딩 보스 스테이지는 전투 없이 대사만 오가므로(StageManager가 곧바로
-                // StartEvent를 부른다) 전투 인텐트를 띄울 일이 없다.
-                if (enemy.isEndingBoss)
-                {
-                    enemyIntentBubbleObj.SetActive(false);
-                }
+                enemyIntentBubbleObj.SetActive(true);
+
+                // 마더 드래곤은 대사(텍스트)를 그대로 쓰고, 일반 적은 아이콘 + ActionType별 색이
+                // 입혀진 텍스트를 같이 보여준다. 마더 드래곤의 대사가 두 번 나오지 않게 하는 건
+                // 여기서 끄는 게 아니라 적 턴 쪽에서 일시적 말풍선을 안 띄우는 것으로 해결한다
+                // (ExecuteEnemyTurnCoroutine 참조) - 여기서 끄면 내 턴 내내 말풍선이 빈다.
+                if (isMotherDragon)
+                    enemyIntentBubble.Setup(mdIntentString);
                 else
-                {
-                    enemyIntentBubbleObj.SetActive(true);
+                    enemyIntentBubble.SetupIntent(enemyManager.GetIntentIcon(), enemyManager.GetIntentString(), enemyManager.GetIntentColor());
 
-                    // 마더 드래곤은 대사(텍스트)를 그대로 쓰고, 일반 적은 아이콘 + ActionType별 색이
-                    // 입혀진 텍스트를 같이 보여준다. 마더 드래곤의 대사가 두 번 나오지 않게 하는 건
-                    // 여기서 끄는 게 아니라 적 턴 쪽에서 일시적 말풍선을 안 띄우는 것으로 해결한다
-                    // (ExecuteEnemyTurnCoroutine 참조) - 여기서 끄면 내 턴 내내 말풍선이 빈다.
-                    if (isMotherDragon)
-                        enemyIntentBubble.Setup(mdIntentString);
-                    else
-                        enemyIntentBubble.SetupIntent(enemyManager.GetIntentIcon(), enemyManager.GetIntentString(), enemyManager.GetIntentColor());
+                UpdateEnemyIntentBubblePosition();
 
-                    // 위치는 여기서 한 번 잡지 않고 LateUpdate가 매 프레임 갱신한다 - 적이
-                    // 돌진했다 복귀하는 동안에도 말풍선이 따라가야 하기 때문이다.
-                }
+                // 위치는 여기서 한 번 잡지 않고 LateUpdate가 매 프레임 갱신한다 - 적이
+                // 돌진했다 복귀하는 동안에도 말풍선이 따라가야 하기 때문이다.
             }
-            else if (enemyIntentBubbleObj != null && !isPlayerInputPhase)
+            else if (enemyIntentBubbleObj != null && !showsIntentBubble)
             {
                 enemyIntentBubbleObj.SetActive(false);
             }
@@ -527,20 +557,33 @@ public class BattleManager : MonoBehaviour
         {
             if (enemyManager != null && enemyManager.currentEnemy != null)
             {
-                if (SpeechBubbleManager.Instance != null)
-                {
-                    enemyIntentBubbleObj.GetComponent<RectTransform>().position =
-                        SpeechBubbleManager.Instance.GetBubbleScreenPosition(enemyManager.currentEnemy.BubblePosition, false);
-                }
+                UpdateEnemyIntentBubblePosition();
             }
         }
+    }
+
+    private void UpdateEnemyIntentBubblePosition()
+    {
+        if (enemyIntentBubbleObj == null || enemyManager == null || enemyManager.currentEnemy == null)
+            return;
+
+        var manager = SpeechBubbleManager.Instance;
+        var rect = enemyIntentBubbleObj.GetComponent<RectTransform>();
+        if (manager == null || rect == null)
+            return;
+
+        rect.position = manager.GetBubbleScreenPosition(enemyManager.currentEnemy.BubblePosition, false);
     }
 
     void CheckGameState()
     {
         if (player == null || player.currentHP <= 0)
         {
-            if (!isGameOver) ShowResult(ResultKind.Defeat);
+            if (!isGameOver && !isResolvingDeath)
+            {
+                isResolvingDeath = true;
+                StartCoroutine(ShowDefeatAfterDeathEffect());
+            }
         }
         else if (enemyManager != null && enemyManager.currentEnemy != null && enemyManager.currentEnemy.currentHP <= 0)
         {
@@ -561,6 +604,12 @@ public class BattleManager : MonoBehaviour
                     healAmount = savedMDDamage;
                 }
 
+                if (!isMD)
+                {
+                    StartCoroutine(FinishEnemyDeathAfterEffect(enemyManager.currentEnemy));
+                    return;
+                }
+
                 // 마더 드래곤은 자기 작별 대사를 하는 동안 화면에 남아 있어야 한다 - 여기서 끄면
                 // 정작 본인은 사라진 채 말풍선만 뜬다. 대사가 끝나면 EventManager가 끈다.
                 // (일반 적과 이벤트가 없는 경우는 예전처럼 그 자리에서 끈다.)
@@ -578,6 +627,28 @@ public class BattleManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    private IEnumerator ShowDefeatAfterDeathEffect()
+    {
+        while (player != null && !player.IsDeathAnimationComplete)
+            yield return null;
+
+        ShowResult(ResultKind.Defeat);
+    }
+
+    private IEnumerator FinishEnemyDeathAfterEffect(EnemyBase enemy)
+    {
+        while (enemy != null && !enemy.IsDeathAnimationComplete)
+            yield return null;
+
+        if (enemy != null)
+            enemy.gameObject.SetActive(false);
+
+        if (eventManager != null)
+            eventManager.StartEvent(false, 0);
+        else
+            ShowResult(ResultKind.Victory);
     }
 
     /// <summary>
@@ -649,7 +720,7 @@ public class BattleManager : MonoBehaviour
         // 분모를 리터럴로 박으면 스테이지 수를 바꿨을 때 조용히 어긋난다.
         var totalStages = stageManager != null ? stageManager.TotalStages : 0;
 
-        view.Show(
+        var wasJustShown = view.Show(
             stats != null ? stats.highestStageReached : 0,
             totalStages,
             stats != null ? Mathf.RoundToInt(stats.GetCPM()) : 0,
@@ -658,6 +729,9 @@ public class BattleManager : MonoBehaviour
             stats != null ? stats.totalDamageTaken : 0,
             this,
             FieldNameFor(kind));
+
+        if (kind == ResultKind.GameClear && wasJustShown)
+            view.PlayConfetti(gameClearConfettiColors, gameClearSparkleSprite);
     }
 
     /// <summary>결과 종류에 맞는 화면. Victory는 결과를 띄우지 않으므로 여기 오지 않는다

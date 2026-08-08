@@ -1,33 +1,45 @@
-using UnityEngine;
-
 public enum ActionKind
 {
     Attack,
     Defense
 }
 
-[CreateAssetMenu(fileName = "New Action Card", menuName = "Deck Manager/Cards/Action Card")]
+/// <summary>조합을 완성시키는 액션 카드(펀치/가드/킥/어퍼컷/뎀프시롤/니킥/촙/박치기 …).
+/// 값은 <c>CardLocalization.json</c>의 한 행에서 온다 - <see cref="CardDatabase"/> 참조.</summary>
 public class ActionCardData : CardBase
 {
-    [SerializeField] private ActionKind actionKind;
-    [SerializeField] private int strengthBonus;
-    [SerializeField] private int timerDelta;
-    [SerializeField] private bool ignoresDefense;      // 페인트: 적 방어도 무시
-    [SerializeField] private bool breaksEnemyDefense;   // 어퍼컷: 적 방어도를 0으로
-    [SerializeField] private bool isComboAttack;        // 뎀프시롤: 재사용 콤보
-    [SerializeField] private float comboChancePercent;
-    [SerializeField] private int comboMinHits;
-    [SerializeField] private int comboMaxHits;
+    private readonly ActionKind actionKind;
+    private readonly int strengthBonus;
+    private readonly int timerDelta;
+    private readonly bool ignoresDefense;      // 킥: 적 방어도 무시
+    private readonly bool breaksEnemyDefense;  // 어퍼컷: 적 방어도를 0으로
+    private readonly bool isComboAttack;       // 뎀프시롤: 재사용 콤보
+    private readonly float comboChancePercent;
+    private readonly int comboMinHits;
+    private readonly int comboMaxHits;
 
-    [Header("이번 턴 스케일링")]
-    [Tooltip("위력이 이번 턴 진행 상황에 따라 변하는 카드만 설정합니다(니킥/춉/박치기). " +
-             "None이면 기존 카드와 똑같이 동작합니다.")]
-    [SerializeField] private TurnScalingSource scalingSource;
+    // 위력이 이번 턴 진행 상황에 따라 변하는 카드만 쓴다(니킥/촙/박치기). None이면 나머지와 똑같다.
+    private readonly TurnScalingSource scalingSource;
 
-    [Tooltip("위 항목 1단위당 더할 위력. 음수를 넣으면 깎입니다(니킥은 -1). " +
-             "힘 + 위력 보너스에 더해지며, 파워(AmplifyNextStatBonus)의 영향은 받지 않습니다 - " +
-             "수식어 효과가 아니라 액션 카드 자신의 값이라 펀치의 +3과 같은 취급입니다.")]
-    [SerializeField] private int scalingPerUnit;
+    // 위 항목 1단위당 더할 위력. 음수면 깎인다(니킥은 -1). 힘 + 위력 보너스에 더해지며
+    // 파워(AmplifyNextStatBonus)의 영향은 받지 않는다 - 수식어 효과가 아니라 액션 카드
+    // 자신의 값이라 펀치의 +2와 같은 취급이다.
+    private readonly int scalingPerUnit;
+
+    public ActionCardData(CardDefinition definition) : base(definition)
+    {
+        actionKind = CardDatabase.ParseEnum<ActionKind>(definition.actionKind, definition.id, nameof(definition.actionKind));
+        strengthBonus = definition.strengthBonus;
+        timerDelta = definition.timerDelta;
+        ignoresDefense = definition.ignoresDefense;
+        breaksEnemyDefense = definition.breaksEnemyDefense;
+        isComboAttack = definition.isComboAttack;
+        comboChancePercent = definition.comboChancePercent;
+        comboMinHits = definition.comboMinHits;
+        comboMaxHits = definition.comboMaxHits;
+        scalingSource = CardDatabase.ParseEnum<TurnScalingSource>(definition.scalingSource, definition.id, nameof(definition.scalingSource));
+        scalingPerUnit = definition.scalingPerUnit;
+    }
 
     public ActionKind ActionKind => actionKind;
     public int StrengthBonus => strengthBonus;
@@ -61,7 +73,7 @@ public class ActionCardData : CardBase
     /// <summary>
     /// 니킥/춉/박치기처럼 이번 턴 상황에 따라 위력이 변하는 카드는 지금 수치를 그대로
     /// 보여준다 - 어썸과 같은 이유다(고정 문구로는 지금 얼마인지 알 수가 없다).
-    /// 인스펙터의 statsLabel을 포맷("{0}")으로 쓰고 {0} 자리에 현재 위력 보너스를 끼워 넣는다.
+    /// JSON의 수치 칸을 포맷("{0}")으로 쓰고 {0} 자리에 현재 위력 보너스를 끼워 넣는다.
     ///
     /// 부호를 붙여 넣으므로 포맷에 +를 따로 적지 말 것 - 니킥은 액션을 많이 하면 음수까지 내려간다
     /// ("+-2"가 되지 않게 여기서 +2 / -2 / 0 세 가지로 나눠 쓴다).

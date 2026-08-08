@@ -12,6 +12,14 @@ public class StatisticsManager : MonoBehaviour
     public int totalDamageTaken;
     public int highestStageReached;
 
+    /// <summary>이 런을 시작할 때 고른 난이도. 쉬움 10/10과 어려움 10/10을 결과 화면에서
+    /// 구분하기 위한 값이다.
+    ///
+    /// 다른 수치처럼 <c>Add*</c>로 쌓이지 않고 <b>시작 시점에 한 번 정해진다</b> - 난이도는
+    /// 타이틀에서만 바뀌고(DifficultySettings 참조) 전투 씬은 런당 한 번 로드되므로,
+    /// Awake에서 읽어두면 새 호출부를 만들 필요가 없다.</summary>
+    public GameDifficulty runDifficulty { get; private set; }
+
     private bool isTrackingTime = false;
 
     private void Awake()
@@ -23,7 +31,10 @@ public class StatisticsManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
+            return;
         }
+
+        runDifficulty = DifficultySettings.Current;
     }
 
     private void Update()

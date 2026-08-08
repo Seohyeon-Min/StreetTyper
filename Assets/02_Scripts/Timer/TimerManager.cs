@@ -15,6 +15,11 @@ public class TimerManager : MonoBehaviour
              "쪼개는 게 아니라 BaseDuration의 분기를 늘릴 것.")]
     [SerializeField] private float nonKoreanBaseDuration = 15f;
 
+    [Tooltip("난이도가 한 단계 어려워질 때마다 줄어드는 제한 시간(초). 쉬움은 같은 만큼 늘어난다.\n" +
+             "⚠️ 위 언어별 기준 <b>위에</b> 얹힌다 - 3초면 한국어가 13/10/7초, 그 외가 18/15/12초다. " +
+             "한국어 어려움이 꽤 빡빡하니 실제로 쳐보고 조정할 것.")]
+    [SerializeField] private float secondsLostPerDifficultyStep = 3f;
+
     private bool _running;
     private bool _expiredFired;
 
@@ -24,14 +29,28 @@ public class TimerManager : MonoBehaviour
     /// 마비 같은 효과로 늘어난 턴에는 BaseDuration보다 커진다.</summary>
     public float Duration { get; private set; }
 
-    /// <summary>보너스가 붙지 않은 <b>지금 언어의</b> 기본 제한 시간. UI가 "이번 턴이 평소보다
-    /// 긴가"를 판단해 바 길이를 늘릴 때 기준으로 쓴다.
+    /// <summary>보너스가 붙지 않은 <b>지금 언어·난이도의</b> 기본 제한 시간. UI가 "이번 턴이
+    /// 평소보다 긴가"를 판단해 바 길이를 늘릴 때 기준으로 쓴다.
     ///
-    /// ⚠️ 값을 캐시하지 않고 부를 때마다 언어를 본다. 언어 전환은 타이틀에서만 가능하고
-    /// (LanguageSettings 참조) 그때 전투 씬은 아예 없으므로, 런 도중에 이 값이 바뀔 일은 없다 -
+    /// 언어가 기준을 정하고(한국어 10초 / 그 외 15초 - 라틴 표기가 길다) 난이도가 그 위에서
+    /// 더하고 뺀다. 순서를 뒤집으면 안 된다 - 난이도를 먼저 적용하고 언어로 갈아치우면
+    /// 난이도 항이 통째로 사라진다.
+    ///
+    /// ⚠️ 값을 캐시하지 않고 부를 때마다 읽는다. 언어도 난이도도 타이틀에서만 바뀌고
+    /// (각 Settings 참조) 그때 전투 씬은 아예 없으므로, 런 도중에 이 값이 바뀔 일은 없다 -
     /// 캐시해 두면 "어느 시점에 잡힌 값인가"를 신경 써야 하는데 그럴 이유가 없다.
     /// 카드 이름(CardBase.CardName)이 static LanguageSettings를 매번 읽는 것과 같은 결이다.</summary>
-    public float BaseDuration => LanguageSettings.IsKorean ? baseDuration : nonKoreanBaseDuration;
+    public float BaseDuration
+    {
+        get
+        {
+            var byLanguage = LanguageSettings.IsKorean ? baseDuration : nonKoreanBaseDuration;
+            var byDifficulty = byLanguage - DifficultySettings.Step * secondsLostPerDifficultyStep;
+
+            // 스텝을 크게 잡으면 0초나 음수가 나와 턴이 시작하자마자 끝난다.
+            return Mathf.Max(1f, byDifficulty);
+        }
+    }
 
     /// <summary>카운트다운이 실제로 도는 중인가. 턴 사이 대기·결과 화면·보상 화면에서는 false다.
     /// "이번 턴에 몇 초가 흘렀는가"를 읽는 쪽(SkillResolver)이 턴 밖의 값을 읽지 않으려면

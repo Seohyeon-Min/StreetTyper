@@ -3,11 +3,41 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
+/// <summary>
+/// 난이도 하나에 대한 시작 카드 보정. JSON의 <c>grantedAtStart</c>를 기준선으로 두고 여기서
+/// 빼거나 더한다.
+///
+/// ⚠️ <b>카드 이름이 아니라 id를 적는다</b>(<c>"lucky"</c>). 이름은 언어마다 달라지므로
+/// (<c>LanguageSettings.PickCardText</c>) 이름으로 적으면 한국어에서만 걸리고 나머지 네 언어에서는
+/// 조용히 아무 일도 일어나지 않는다.
+/// </summary>
+[Serializable]
+public class StartingCardOverride
+{
+    public GameDifficulty difficulty;
+
+    [Tooltip("이 난이도에서 시작 카드에서 뺄 카드 id들.")]
+    public string[] removeIds;
+
+    [Tooltip("이 난이도에서만 추가로 줄 카드 id들. JSON에서 grantedAtStart가 꺼져 있어도 들어간다.")]
+    public string[] addIds;
+}
+
 // 게임에 존재하는 전체 단어 목록을 들고 있고, 언제 무엇을 사전에 넣어줄지 결정한다.
 // 사전(WordDictionary)은 "지금 쓸 수 있는 단어"만 알 뿐 전체 목록은 모른다 - 그 구분이 이 둘의 역할 분담이다.
 public class WordUnlockManager : MonoBehaviour
 {
     [SerializeField] private WordDictionary wordDictionary;
+
+    [Tooltip("난이도별 시작 카드 보정. 비워두면 모든 난이도가 JSON의 grantedAtStart 그대로다.\n" +
+             "⚠️ 카드 이름이 아니라 id를 적을 것 - 이름은 언어마다 달라진다.")]
+    [SerializeField]
+    private StartingCardOverride[] startingCardOverrides =
+    {
+        // 어려움은 럭키를 처음부터 주지 않는다. 보상 후보로는 그대로 나오므로 "못 얻는" 게
+        // 아니라 "직접 골라야 하는" 카드가 된다.
+        new StartingCardOverride { difficulty = GameDifficulty.Hard, removeIds = new[] { "lucky" } }
+    };
 
     [Tooltip("스테이지 클리어 시 보여줄 후보 단어 개수. 플레이어는 이 중 하나만 고른다.")]
     [SerializeField] private int wordsPerReward = 3;
@@ -70,6 +100,8 @@ public class WordUnlockManager : MonoBehaviour
             _granted.Add(card);
         }
 
+        ApplyDifficultyOverride();
+
         if (_granted.Count == 0)
         {
             Debug.LogWarning("WordUnlockManager: grantedAtStart가 켜진 카드가 없어 사전이 빈 채로 시작합니다. " +
@@ -81,6 +113,84 @@ public class WordUnlockManager : MonoBehaviour
 
         if (logDebugEvents)
             Debug.Log($"WordUnlock: 시작 단어 {_granted.Count}개 지급 - {JoinNames(_granted)}", this);
+    }
+
+    /// <summary>
+    /// JSON으로 만든 시작 카드 목록(<c>_granted</c>)에 지금 난이도의 보정을 얹는다.
+    ///
+    /// ⚠️ <b>난이도를 CardLocalization.json에 넣지 않은 이유가 이 구조다.</b> 그 파일은 "이 카드가
+    /// 무엇인가"의 단일 출처이고 런 구성은 다른 축이라, JSON을 기준선으로 두고 여기서 델타만
+    /// 얹어야 카드를 추가할 때 난이도를 신경 쓰지 않아도 된다.
+    /// </summary>
+    private void ApplyDifficultyOverride()
+    {
+        var rule = FindOverride(DifficultySettings.Current);
+        if (rule == null)
+            return;
+
+        if (rule.removeIds != null)
+        {
+            for (var i = 0; i < rule.removeIds.Length; i++)
+            {
+                var id = rule.removeIds[i];
+                if (string.IsNullOrEmpty(id))
+                    continue;
+
+                // id로 지운다 - CardName은 언어마다 달라 비교 대상으로 쓸 수 없다.
+                _granted.RemoveAll(card => card != null && card.CardId == id);
+            }
+        }
+
+        if (rule.addIds != null)
+        {
+            for (var i = 0; i < rule.addIds.Length; i++)
+            {
+                var id = rule.addIds[i];
+                if (string.IsNullOrEmpty(id))
+                    continue;
+
+                var card = CardDatabase.Get<CardBase>(id, this, nameof(startingCardOverrides));
+                if (card == null || card.Category == CardCategory.Command)
+                    continue;
+
+                if (!_granted.Contains(card))
+                    _granted.Add(card);
+            }
+        }
+
+        // ⚠️ 액션 단어로만 체인이 완성된다 - 하나도 없으면 어떤 조합도 못 만들어 런이 잠긴다.
+        // 지금 설정(럭키 제외)은 수식어를 빼는 것이라 안전하지만, 이 목록은 범용이라 막아둔다.
+        var hasAction = false;
+        for (var i = 0; i < _granted.Count; i++)
+        {
+            if (_granted[i] != null && _granted[i].Category == CardCategory.Action)
+            {
+                hasAction = true;
+                break;
+            }
+        }
+
+        if (!hasAction)
+            Debug.LogError($"WordUnlockManager: {DifficultySettings.Current} 보정을 적용하니 시작 카드에 " +
+                           "액션 단어가 하나도 없습니다. 액션 단어로만 조합이 완성되므로 이대로면 " +
+                           $"공격이 영영 불가능합니다 - {nameof(startingCardOverrides)}를 확인하세요.", this);
+
+        if (logDebugEvents)
+            Debug.Log($"WordUnlock: 난이도 {DifficultySettings.Current} 보정 적용", this);
+    }
+
+    private StartingCardOverride FindOverride(GameDifficulty difficulty)
+    {
+        if (startingCardOverrides == null)
+            return null;
+
+        for (var i = 0; i < startingCardOverrides.Length; i++)
+        {
+            if (startingCardOverrides[i] != null && startingCardOverrides[i].difficulty == difficulty)
+                return startingCardOverrides[i];
+        }
+
+        return null;
     }
 
     /// <summary>

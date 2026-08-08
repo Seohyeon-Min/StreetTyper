@@ -738,6 +738,8 @@ public class BattleManager : MonoBehaviour
             stats != null ? stats.validWordsUsed : 0,
             stats != null ? stats.totalDamageDealt : 0,
             stats != null ? stats.totalDamageTaken : 0,
+            // 통계 매니저가 없으면 지금 설정값으로 떨어진다 - 난이도는 런 도중 안 바뀌므로 같은 값이다.
+            stats != null ? stats.runDifficulty : DifficultySettings.Current,
             this,
             FieldNameFor(kind));
 

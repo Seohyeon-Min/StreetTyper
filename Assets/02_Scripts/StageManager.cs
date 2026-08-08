@@ -56,6 +56,17 @@ public class StageManager : MonoBehaviour
              "0이면 비율이 끝까지 일정하다.")]
     public float enemyDefenseGainPercentIncreaseAfterBoss = 0f;
 
+    [Header("난이도 스케일링")]
+    [Tooltip("난이도가 한 단계 어려워질 때마다 적 최대 체력에 곱해지는 비율(%). 20이면 " +
+             "쉬움 x0.8 / 보통 x1.0 / 어려움 x1.2다.\n" +
+             "곱셈이라 위 체력 곡선의 <b>모양은 그대로 두고 높이만</b> 바뀐다.")]
+    public float enemyHPPercentPerDifficultyStep = 20f;
+
+    [Tooltip("난이도가 한 단계 어려워질 때마다 위 공격력·방어력 <b>증가 비율(%)</b>에 더해지는 값(%p). " +
+             "5면 쉬움 15% / 보통 20% / 어려움 25%다.\n" +
+             "증가율을 건드리므로 <b>첫 스테이지는 세 난이도가 똑같고</b> 뒤로 갈수록 벌어진다.")]
+    public float enemyGrowthPercentPerDifficultyStep = 5f;
+
     [Header("References")]
     public BattleManager battleManager;
     public EnemyManager enemyManager;
@@ -438,11 +449,19 @@ public class StageManager : MonoBehaviour
 
         if (!isBossBattle)
         {
-            scaledHP = ComputeEnemyMaxHP(currentBattleIndex);
+            // 난이도는 여기 세 줄에만 얹힌다. 보스는 이 분기 밖이라 자동으로 제외된다 -
+            // 3턴 버티는 스파링이라 체력 공식을 태우면 아웃로 이벤트가 깨진다(위 주석 참조).
+            //
+            // 체력은 곡선 <b>높이</b>를 곱으로 바꾸고, 공격력·방어력은 <b>증가율 자체</b>에 더한다.
+            // 그래서 첫 스테이지는 세 난이도의 공격력이 같고 뒤로 갈수록 벌어진다.
+            var growthStep = DifficultySettings.Step * enemyGrowthPercentPerDifficultyStep;
+
+            scaledHP = Mathf.Max(1, Mathf.RoundToInt(
+                ComputeEnemyMaxHP(currentBattleIndex) * DifficultyHPMultiplier));
             scaledPower = Mathf.Max(1, Mathf.RoundToInt(enemyBasePower *
-                ComputeGrowthMultiplier(currentBattleIndex, enemyPowerGainPercentPerStage, enemyPowerGainPercentIncreaseAfterBoss)));
+                ComputeGrowthMultiplier(currentBattleIndex, enemyPowerGainPercentPerStage + growthStep, enemyPowerGainPercentIncreaseAfterBoss)));
             scaledDefense = Mathf.Max(1, Mathf.RoundToInt(enemyBaseDefensePower *
-                ComputeGrowthMultiplier(currentBattleIndex, enemyDefenseGainPercentPerStage, enemyDefenseGainPercentIncreaseAfterBoss)));
+                ComputeGrowthMultiplier(currentBattleIndex, enemyDefenseGainPercentPerStage + growthStep, enemyDefenseGainPercentIncreaseAfterBoss)));
         }
 
         newEnemyBase.ApplyScaling(scaledHP, scaledPower, scaledDefense);
@@ -685,6 +704,11 @@ public class StageManager : MonoBehaviour
     ///
     /// <para>⚠️ 보스전 자체는 이 값을 쓰지 않는다(LoadStage가 0을 넘긴다). 보스는 체력이 아니라
     /// 턴 수로 끝나는 스파링이다.</para></summary>
+    /// <summary>난이도가 적 최대 체력에 거는 배수. 쉬움 0.8 / 보통 1.0 / 어려움 1.2(기본값 기준).
+    /// 0 이하로는 내려가지 않게 막는다 - 스텝을 100 이상으로 잡으면 체력이 0이나 음수가 된다.</summary>
+    private float DifficultyHPMultiplier =>
+        Mathf.Max(0.01f, 1f + DifficultySettings.Step * enemyHPPercentPerDifficultyStep / 100f);
+
     private int ComputeEnemyMaxHP(int battleIndex)
     {
         var hp = enemyBaseMaxHP;

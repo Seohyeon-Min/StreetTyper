@@ -230,6 +230,31 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - **`BackgroundScroller`** (`02_Scripts/`) — 배경 한 겹을 왼쪽으로 흘리고 `leftBound`를 넘으면 `loopJumpDistance`만큼 되돌려 무한 스크롤한다. `StartScroll()` / `StopScroll(duration)`. `StageManager.backgroundScrollers`에 씬의 겹들을 전부 연결해 두고, 보상 뒤 다음 스테이지로 넘어갈 때 `transitionDuration` 동안 달리는 연출을 만든다(새 적은 `spawnOffScreenX` 밖에서 `enemySlideInDuration` 동안 미끄러져 들어온다).
 - **`FloatBob`** (`02_Scripts/`) — 붙은 오브젝트를 사인파로 위아래로 흔드는 12줄짜리 컴포넌트(`amplitude`/`speed`/`useUnscaledTime`). `Animator`가 없는 스프라이트·UI에 최소한의 생동감을 주는 용도이고, 지금은 씬 하나 + `Pause Panel.prefab` + `ResultPanel.prefab`에 붙어 있다. ⚠️ **`OnEnable`에서 `localPosition`을 원점으로 기억하므로, 다른 스크립트가 같은 오브젝트의 `localPosition`을 쓰면 서로 덮어쓴다.** 멈춘 화면 위(일시정지·결과)에 놓을 때만 `useUnscaledTime`을 켤 것.
 
+### 난이도 — 3단계 (`DifficultySettings.cs`)
+
+**`LanguageSettings`와 똑같은 static 클래스다** — 값 하나와 `PlayerPrefs`(`option.difficulty`, 볼륨·언어와 같은 계열)가 전부라 MonoBehaviour도 씬 오브젝트도 없고 **인스펙터 배선이 늘지 않는다.** `enum GameDifficulty { Easy, Normal, Hard }`, 기본값 **Normal = 지금까지의 밸런스 그대로**.
+
+⭐ **핵심은 `Step`이다** — `Easy = -1 / Normal = 0 / Hard = +1`. **난이도별 수치를 여기 모아두지 않는다.** 각 값은 그것을 쓰는 매니저가 **"보통 기준값 + `Step` × 1단계분"**으로 계산하고, **1단계분만 자기 인스펙터에 든다.** 3벌씩 들면 `StageManager`에만 칸이 9개 생기고 곡선을 손볼 때마다 세 벌을 같이 고쳐야 한다.
+
+| 축 | 어디에 | 1단계분 필드 | 쉬움 / 보통 / 어려움 |
+|---|---|---|---|
+| 타이머 | `TimerManager.BaseDuration` | `secondsLostPerDifficultyStep`(3) | 한국어 13/10/7 · 그 외 18/15/12 |
+| 적 HP | `StageManager.DifficultyHPMultiplier` | `enemyHPPercentPerDifficultyStep`(20) | ×0.8 / ×1.0 / ×1.2 |
+| 적 공격력·방어도 | `StageManager.LoadStage`가 넘기는 **증가율** | `enemyGrowthPercentPerDifficultyStep`(5) | 15% / 20% / 25% |
+| 럭키 기본 확률 | `SkillResolver.LuckyChance` | `luckyChanceLostPerDifficultyStep`(10) | 30% / 20% / 10% |
+| 시작 카드 | `WordUnlockManager.startingCardOverrides` | (id 목록) | 어려움만 `lucky` 제외 |
+
+- **필드 이름이 방향을 말한다**(`...Lost...` / `...Percent...`). 인스펙터에 음수를 넣게 만들면 읽는 쪽이 부호를 두 번 뒤집어 생각해야 한다.
+- **표시 이름은 `DifficultyLabels`**(`[Serializable]` 값 묶음, `DifficultySettings.cs`에 같이 있다)**를 쓰는 쪽이 필드로 든다** — `OptionsPanel.difficultyLabels`, `ResultStatsView.difficultyLabels`. ⚠️ **static 클래스에 박지 말 것** — 실제로 그렇게 만들었다가 인스펙터에서 못 고쳐서 되돌렸다(⭐ "화면에 나가는 글자는 예외 없이 인스펙터에서" 규칙).
+- ⚠️ **전환은 타이틀에서만.** 런 도중에 바뀌면 이미 스폰된 적과 다음 적의 기준이 달라지고 시작 카드는 이미 지급된 뒤다(언어와 완전히 같은 이유). 옵션 창이 타이틀에만 있어 자동으로 성립하지만 **일시정지 메뉴에 붙이지 말 것.**
+- ⚠️ **언어와 달리 순환하지 않는다** — `ChangeDifficulty`가 `Clamp`한다. HARD에서 한 번 더 눌러도 안 바뀌는 게 정상이다.
+- ⚠️ **적 스케일링은 보스에 안 걸린다.** `LoadStage`의 `if (!isBossBattle)` 안쪽에만 얹혀 있어 마더 드래곤은 자동으로 빠진다(3턴 스파링이라 체력 공식을 태우면 아웃로가 깨진다).
+- ⚠️ **럭키는 `LuckyChance` 한 곳에서 갈린다.** 카드의 `chancePercent`가 JSON에서 온 `readonly` 필드라 카드를 바꿀 수 없는데, 그 함수가 **굴리는 쪽과 표시하는 쪽(카드 수치 칸·보상 화면 라벨)이 모두 지나가는 단일 관문**이라 거기 한 줄이면 화면 숫자와 실제 확률이 같이 움직인다. **출발점만 옮기고 증가폭·상한은 건드리지 않는다.**
+  - `SkillResolver`는 씬 컴포넌트인데 `LuckyChance`는 static이라, 인스펙터 값을 `Awake`에서 static 필드로 밀어 넣는다(`timerManager` → `_timer`와 같은 패턴).
+- ⚠️ **시작 카드 제외는 카드 `id`로 지정한다**(`"lucky"`). `CardName`은 언어마다 달라지므로 이름으로 적으면 **한국어에서만 걸리고 나머지 네 언어에서 조용히 실패한다.** `CardLocalization.json`에 난이도를 넣지 말 것 — JSON은 "카드가 무엇인가"의 단일 출처이고 난이도는 그 위에 얹는 델타다.
+  - 적용 후 **액션 카드가 0장이면 `LogError`**를 낸다. 액션 단어로만 체인이 완성되므로 전부 빠지면 런이 잠긴다.
+  - 어려움에서도 **럭키는 보상 후보로는 그대로 나온다**(처음부터 안 줄 뿐 못 얻는 건 아니다).
+
 ### 언어 — 5개국어 (`LanguageSettings.cs`)
 
 **`LanguageSettings`는 `static` 클래스다**(`GameScenes`와 같은 결). 값 하나와 `PlayerPrefs`, 그리고 아래 JSON 사전이 전부라 MonoBehaviour가 필요 없고, 씬 오브젝트도 `DontDestroyOnLoad`도 없으니 **인스펙터 배선이 늘지 않는다.** 새로 언어를 참조할 때 매니저를 만들어 끼우지 말 것.
@@ -294,7 +319,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
 | 안내 문구가 붙는 명령 단어 | **`TypedCommand`** 한 덩어리(`korean`/`english` + `hintKorean`/`hintEnglish`). 지금은 **`CardCollectionPanel.closeCommand` 하나뿐**이다 — 결과 화면도 카드 줄로 바뀌면서 `ResultInputHandler`가 이 방식을 떠났다 |
 | `CommandWordReceiver` | `hintSuffix`/`hintSuffixEn` — 안내 꼬리말(`을 입력해주세요!`) |
 | 보상·목록 화면 제목 | **`ScreenPresentation`**(`titleKorean`/`titleEnglish` + 이미지 + 글자색). `RewardCardView.presentation`, `CardCollectionPanel`/`CardDeletePanel`의 `presentation`. ⚠️ **결과 화면은 이제 안 쓴다** — 아래 `BattleManager` 참조 |
-| 결과 통계 라벨 | **`ResultStatsView`**의 라벨 5쌍(`highestStageLabelText`/`…En` 등) — `LanguageSettings.OnChanged`를 직접 구독해 갱신한다 |
+| 결과 통계 라벨 | **`ResultStatsView`**의 라벨 6쌍(`highestStageLabelText`/`…En` 등) — `LanguageSettings.OnChanged`를 직접 구독해 갱신한다. ⚠️ **난이도 줄은 라벨만 번역되고 값(`EASY`/`NORMAL`/`HARD`)은 고정**이다 |
 | `BattleManager` | ⚠️ 옛 `motherDragonLines`/`…En`(마더 드래곤 대사)은 **삭제됐다** — 위 대사 JSON(`DialogueIds.MotherDragonTurn`)으로 옮겼다. 옛 `statsFormat`/`statsFormatEn`(통계 문구 한 덩어리)도 **삭제됐다**(`ResultStatsView`가 라벨과 숫자를 따로 그린다) |
 | `StageManager` | ⚠️ 옛 `demiGreetingLine`/`motherGreetingLine`(+`…En`)은 **삭제됐다** — 위 대사 JSON(`DemiGreeting`/`MotherGreeting`)으로 옮겼다 |
 | `OptionsPanel` | `closeKorean`/`closeEnglish`, 그리고 불/스/일 3칸 — **이미 5개국어다**(`switch (LanguageSettings.Current)`) |
@@ -304,6 +329,10 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
 | `CardCollectionPanel` | `presentation`(제목) + `closeCommand`(`닫기`/`close`) |
 
 ⚠️ **두 벌을 들지 않아 언어를 안 타는 화면 문구가 아직 있다** — `StageManager`의 `stageLabelFormat`/`bossStageLabel`은 인스펙터로 나왔지만 **한 벌뿐**이고(스테이지 등장 배너는 아예 오브젝트가 문구를 갖는다), `IntroManager.slides`의 대사도 인스펙터에 있지만 **한 벌뿐**이다. 위 표에 없는 문구를 발견하면 새로 만든 게 아니라 이 부류일 가능성이 높다.
+
+⚠️ 다만 **"아직 안 한 것"과 "의도적으로 안 하는 것"을 구분할 것.** 짧은 라틴 대문자 라벨은 다국어로 만들지 **않는 게** 이 게임의 화면 언어다 — `YourTurnBanner.message`(`YOUR TURN!`), `StageManager.stageLabelFormat`(`STAGE {0}`)·`bossStageLabel`(`MOMMY`), **`DifficultyLabels`(`EASY`/`NORMAL`/`HARD`)**, 그리고 불·스·일에서 카드 이름을 영어 대문자로 고정하는 규칙이 같은 부류다. 언어를 바꿔도 그 글자가 안 변하는 건 버그가 아니다.
+
+⚠️ **하지만 "언어를 안 탄다"가 "코드에 박아도 된다"는 뜻은 아니다.** 위 넷 다 인스펙터(또는 JSON)에 있다. 난이도 이름을 `DifficultySettings`에 static으로 박았다가 **인스펙터에서 고칠 수가 없어 되돌린 적이 있다** — 언어를 안 타는 문구도 문구다.
 
 ⚠️ **`CommandWordReceiver.JoinHints`의 꼬리말만 `Pick`을 쓰지 않는다.** 꼬리말은 한국어 조사(`을 입력해주세요!`) 때문에 있는 것이라 **영어에서 비워두는 게 정상 설정**인데, `Pick`은 그걸 번역 누락으로 보고 한국어를 되돌리며 경고까지 낸다. 여기서는 빈 값이 곧 "꼬리말 없음"이다. 같은 성격의 필드를 추가할 때도 `Pick`에 넘기지 말 것.
 
@@ -422,10 +451,12 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
   - `GetRandomWord()`와 `GetRandomWord(CardBase exclude)` 두 오버로드가 있다. 후자는 거절 샘플링(다를 때까지 다시 뽑기) 대신 **인덱스를 건너뛰어 남은 n-1개에 균등하게** 뽑는다. 보유 단어가 하나뿐이거나 `exclude`가 사전에 없으면 평소대로 뽑는다 — 이 폴백이 없으면 단어가 하나일 때 슬롯이 null이 되어 카드가 사라진다.
   - `AddWords`(배치)는 이벤트를 마지막에 **한 번만** 쏜다. `OnWordsChanged`는 현재 구독자가 없지만(손패를 뽑는 시점은 `CardSlotManager`가 따로 정한다), 사전 UI 같은 게 붙을 때를 대비해 배치 단위로 유지한다.
 - **`WordUnlockManager`** — 지급 로직. **단어 목록을 들고 있지 않다** — `CardDatabase.All`을 훑고 명령 카드만 걸러낸다. ⚠️ 옛 `allWords`(인스펙터 28행 + `WordEntry { card, grantedAtStart }`)는 **삭제됐다**: 프리팹 기본값과 씬 인스턴스 오버라이드에 시작 단어가 따로 저장돼 파일만 봐서는 실제 값을 알 수 없었다(실제로 프리팹은 잽·럭키, 씬은 가드·훅·럭키·펀치·슈퍼였다). 지금 시작 단어의 유일한 출처는 **JSON의 `grantedAtStart`**다.
-  - `GrantStartingWords()` — 런 시작. 사전을 비우고 `grantedAtStart` 전부 지급. 럭키 라운드 누적도 여기서 비운다(지난 런이 이월되지 않게).
+  - `GrantStartingWords()` — 런 시작. 사전을 비우고 `grantedAtStart` 전부 지급한 뒤 **난이도 보정(`ApplyDifficultyOverride`)을 얹는다.** 럭키 라운드 누적도 여기서 비운다(지난 런이 이월되지 않게).
+    - 보정은 `startingCardOverrides`(난이도별 `removeIds`/`addIds`)이고 지금 설정은 **어려움에서 `lucky` 제외** 하나뿐이다. ⚠️ **카드 `id`로 적는다** — `CardName`은 언어마다 달라 이름으로 적으면 한국어에서만 걸린다. 액션 카드가 0장이 되면 `LogError`가 난다(런이 잠긴다).
   - ⚠️ **뽑기와 확정이 두 메서드로 갈려 있다.** `RollRewardCandidates()`가 미보유 중 랜덤 `wordsPerReward`개(기본 3)를 **뽑기만 하고 사전에는 넣지 않으며**, 플레이어가 고른 한 장을 `ConfirmReward(card)`가 넣는다. 옛 `GrantStageClearReward()`는 둘을 한 메서드에서 같이 해서 "뽑았지만 아직 확정 안 함"이라는 상태가 없었고, 그래서 선택제가 성립하지 않았다. **다시 합치지 말 것.**
   - 후보 목록(`_offered`)은 시작 단어용 재사용 리스트(`_granted`)와 **따로 둔다** — 선택제에서는 플레이어가 고를 때까지 여러 프레임에 걸쳐 들고 있어야 한다.
-  - **럭키는 이제 확률로 걸린다** — 기본 `chancePercent`(10%)에서 시작해 **쓸 때마다** `chanceGainPerUse`(10%p)씩 올라 `maxChancePercent`(50%)에서 멈춘다. 셋 다 `ModifierCardData` 인스펙터에 있다.
+  - **럭키는 이제 확률로 걸린다** — 기본 `chancePercent`에서 시작해 **쓸 때마다** `chanceGainPerUse`씩 올라 `maxChancePercent`에서 멈춘다. 셋 다 `CardLocalization.json`의 럭키 행에 있다.
+    - ⚠️ **난이도가 출발점을 옮긴다** — `LuckyChance` 안에서 `luckyChanceLostPerDifficultyStep`만큼 더하고 뺀다(쉬움 +10 / 어려움 -10). **증가폭과 상한은 건드리지 않는다** — "쓸수록 오른다"는 규칙 자체는 난이도와 무관하다.
     - 누적은 `SkillResolver.LuckyUses`(static, **스테이지 단위** — `ResetStage`가 되돌리므로 스테이지가 바뀌면 기본 확률로 돌아간다. ⚠️ 런 단위인 어썸과 범위가 다르다)이고, 확률 계산과 카드 표시가 **`SkillResolver.LuckyChance(base, gain, max)` 하나를 같이 쓴다** — 카드에 뜬 숫자와 실제 확률이 어긋나면 그게 곧 버그로 보인다(`ScalingBonus`와 같은 규칙).
     - ⚠️ **성공했는지가 아니라 "썼는지"로 센다.** 실패해도 다음 확률은 올라가야 한다 — 안 그러면 운이 나쁠수록 계속 나빠진다. 증가 시점은 `Resolve` 맨 끝이라 **첫 사용은 기본 확률로 굴린다**(어썸이 "이전에 성공한 횟수"만 세는 것과 같다).
     - ⚠️ 굴리기는 카드를 다 훑은 **뒤에 한 번만** 한다. 손패 중복으로 럭키가 두 장 들어와도 체인당 보상 라운드는 하나다.
@@ -462,7 +493,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
     - **카드 내용은 `CardView.SetCard` 하나로 그린다.** 예전엔 `GetComponentInChildren<TMP_Text>()`/`<Image>()`로 계층 **첫 번째** 컴포넌트를 집어 이름과 아이콘을 직접 넣었는데, 자식 순서에 의존하는 구조라 `Badge`를 추가하는 순간 깨질 참이었다. 그 방식으로 되돌리지 말 것.
     - `CardSlotView`는 꺼서 손패 이벤트에 반응하지 않게 한다. 그리기는 `CardView`가 따로 하므로 꺼도 카드 내용은 정상적으로 나온다.
     - `localRotation`을 초기화하는 줄이 있는데 **지금은 사실상 방어용이다.** `Card.prefab` 루트 회전은 항등이고, 기울기는 `NameText` 자식에 7도가 따로 박혀 있다(아트 의도라 그대로 둔다). 손패에서 카드가 기우는 건 `HandFanLayout`이 매 프레임 루트를 돌리기 때문이다.
-  - **시작 단어는 현재 5장이다: 가드 · 훅 · 럭키 · 펀치 · 슈퍼.** 바꾸려면 `CardLocalization.json`에서 그 카드 행의 `"grantedAtStart": true`를 켜고 끄면 된다 — 씬도 프리팹도 건드리지 않는다.
+  - **시작 단어는 현재 5장이다: 가드 · 훅 · 럭키 · 펀치 · 슈퍼**(어려움에서는 럭키가 빠져 4장). 바꾸려면 `CardLocalization.json`에서 그 카드 행의 `"grantedAtStart": true`를 켜고 끄면 된다 — 씬도 프리팹도 건드리지 않는다. **난이도별로 다르게 하고 싶으면** JSON이 아니라 `WordUnlockManager.startingCardOverrides`를 쓴다(위 참조).
   - 액션 단어(`Category == Action`)가 시작 목록에 최소 하나는 있어야 한다. 액션 단어로만 체인이 완성되므로, 전부 빼면 **어떤 조합도 완성할 수 없어 공격이 영원히 불가능해진다.**
 - **`CardSlotManager`** — 5슬롯(`CurrentCards`/`SlotCount`/`OnSlotChanged`/`ConsumeSlot`/`RefillAll`). 사전에서 균등 랜덤으로 뽑으며 **슬롯 간 중복은 의도된 동작**(중복 방지 버전을 만들었다가 요청으로 되돌린 이력이 있으니 확인 없이 "고치지" 말 것).
   - **단, 한 슬롯이 직전에 들고 있던 카드는 제외한다.** `FillSlot(index, excludeCurrent)`의 플래그로 갈리며, `ConsumeSlot`은 `true`(타이핑으로 방금 쓴 카드가 같은 자리에 곧바로 다시 오지 않게), `RefillAll`은 `false`(완전 랜덤)를 넘긴다. 제외 자체는 `WordDictionary.GetRandomWord(exclude)`가 담당한다. **슬롯 간 중복과 혼동하지 말 것** — 막는 건 *한 칸의 연속 재등장*뿐이다.
@@ -603,7 +634,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
       - 옛 `ScreenPresentation` 세 벌(`victory`/`defeat`/`gameClearPresentation`)과 `resultImage`는 **삭제됐다** — 그 제목이 들어갈 `ResultStatsView.titleText`가 프리팹에서 연결조차 되어 있지 않아 **화면에 나간 적이 없었다.** 채워도 안 보이는 죽은 값이라 문구가 아니라 프리팹 단위로 가르는 쪽으로 바꿨다. 코드에 문구를 되돌리지 말 것.
       - ⚠️ **`HideResultUI()`는 둘 다 끈다.** 하나만 끄면 결과 종류가 바뀌는 경로(마지막 스테이지의 `Victory`→`GameClear`, 패배 후 `다시하기`)에서 반대쪽이 켜진 채 남는다. `ApplyResult`도 새 패널을 켜기 전에 이걸 먼저 부른다.
     - ⚠️ **일반 스테이지 승리(`ResultKind.Victory`)는 결과를 아예 띄우지 않는다** — `ApplyResult`가 곧바로 `HideResultUI()`로 빠진다(이유는 위 `04_UI` 절). `ShowStatisticsUI`가 도는 건 **패배·전체 클리어뿐**이다.
-    - **통계는 `ResultStatsView`가 그린다** — 각 패널 안의 라벨 5개 + 값 5개를 각각의 `TMP_Text`로 받는다. 라벨 문구는 한/영 두 벌이 이 뷰의 인스펙터에 있고 언어가 바뀔 때만, 값은 결과가 뜰 때마다 갱신된다. **라벨과 숫자를 따로 디자인·배치해도 스크립트를 안 고쳐도 된다는 게 요점**이고, 그래서 옛 `statsText`(한 줄) + `statsFormat`(문자열 한 덩어리) 구조는 삭제됐다. ⚠️ `panel`이 비면 **폴백 없이 경고만 남기고 리턴한다**(엉뚱한 화면이 뜬 채 넘어가는 것보다 낫다). 반대로 `stats`는 **선택**이라 비어 있으면 수치만 건너뛰고 패널은 정상적으로 켜진다 — 통계를 안 보여주는 결과 화면도 만들 수 있게 한 것이다.
+    - **통계는 `ResultStatsView`가 그린다** — 각 패널 안의 라벨 6개 + 값 6개를 각각의 `TMP_Text`로 받는다(최고 스테이지·CPM·단어 수·가한 피해·받은 피해·**난이도**). ⚠️ **결과 창 프리팹이 둘이라 두 벌 다 배선해야 한다** — 한쪽만 하면 반대쪽 결과에서 그 줄만 조용히 빈다. 라벨 문구는 한/영 두 벌이 이 뷰의 인스펙터에 있고 언어가 바뀔 때만, 값은 결과가 뜰 때마다 갱신된다. **라벨과 숫자를 따로 디자인·배치해도 스크립트를 안 고쳐도 된다는 게 요점**이고, 그래서 옛 `statsText`(한 줄) + `statsFormat`(문자열 한 덩어리) 구조는 삭제됐다. ⚠️ `panel`이 비면 **폴백 없이 경고만 남기고 리턴한다**(엉뚱한 화면이 뜬 채 넘어가는 것보다 낫다). 반대로 `stats`는 **선택**이라 비어 있으면 수치만 건너뛰고 패널은 정상적으로 켜진다 — 통계를 안 보여주는 결과 화면도 만들 수 있게 한 것이다.
     - **`ResultPanelView.reveals`(`TextGateRevealAnimation[]`)를 패널을 켤 때 재생한다.** 이 컴포넌트는 아무도 `Play()`를 부르지 않으면 마스크가 **닫힌 채(폭 0)** 남으므로, 패널에 게이트 연출을 새로 붙였다면 이 배열에 넣어야 보인다(마스크마다 컴포넌트가 하나씩 따로 필요하다).
       - ⚠️ **꺼짐→켜짐으로 바뀔 때만 재생한다.** `ApplyResult`는 같은 결과로 여러 번 불릴 수 있어서(`RefreshResult`, `CheckGameState`→`ShowResult`), 무조건 재생하면 이미 다 열린 마스크가 처음부터 되감긴다.
     - 무엇을 입력해야 하는지는 `resultInputHandler.BuildHint()`를 제목 뒤에 붙이는 경로가 남아 있으나, **지금 그 값은 빈 문자열이다**(명령이 카드로 뜬다). 안내 문구를 되살리려면 `ResultInputHandler.BuildHint()`부터 고칠 것 — **명령 단어를 소유한 쪽이 안내도 만든다**는 규칙은 그대로다.
@@ -665,7 +696,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
   - 방어도 UI는 **아이콘 오브젝트가 텍스트를 자식으로 품는 구조**다(`PlayerDefIcon > PlayerDef`). 방어도가 0이면 아이콘째 꺼서 둘 다 사라진다. 아이콘 Image엔 아직 스프라이트가 없어 흰 사각형으로 보이는 게 현재 정상이다. 이 켜고 끄는 판단은 이제 `HealthBarUI.UpdateUI`가 한다.
 - **`StageManager`** — `Start()`에서 시작 단어 지급 + `skillResolver.ResetRun()`(어썸 카운터 초기화, 안에서 `ResetStage`까지 이어진다) 후 `LoadStage(0)`. `RestartStage()`(사망 재시작)는 사전을 건드리지 않아 얻은 단어가 유지된다.
   - **일반 스테이지는 `enemyPrefabs`(현재 씬에서 `Dragon1~6.prefab` 6종) 중 하나를 랜덤으로 스폰한다.** `enemyPrefabs.Count == 1`이면 그대로 `[0]`을 쓰지만, 지금처럼 여러 장이면 **직전 스테이지와 같은 프리팹이 다시 뽑히지 않을 때까지**(`lastNormalEnemyPrefab`, 최대 20회 재시도) 다시 굴린다. `currentBattleIndex`가 4 또는 9면 보스전으로 보고 `motherDragonPrefab`을 스폰한다 — 이건 그대로다.
-  - 난이도는 프리팹이 아니라 **`EnemyBase.ApplyScaling(displayStage - 1)`**로 준다(스폰 직후 호출). 보스전은 표시 스테이지 번호에서 제외되므로(`displayStage` 보정) 보스를 지나도 스케일링 단계가 밀리지 않는다.
+  - 적 스탯은 프리팹이 아니라 **`EnemyBase.ApplyScaling(체력, 공격력, 방어도)`**로 준다(스폰 직후 호출). 세 값을 `ComputeEnemyMaxHP` / `ComputeGrowthMultiplier`가 계산하고, **난이도 스텝도 그 자리에서 얹힌다** — 체력은 `DifficultyHPMultiplier`로 곱하고(곡선 모양은 그대로, 높이만) 공격력·방어도는 **증가율에 더한다**(그래서 첫 스테이지는 세 난이도가 같고 뒤로 갈수록 벌어진다). ⚠️ 이 세 줄이 전부 `if (!isBossBattle)` 안이라 **마더 드래곤은 자동으로 제외된다** — 3턴 스파링이라 체력 공식을 태우면 아웃로가 깨진다.
   - **스테이지 표시가 둘로 갈린다.**
     - `currentStageText`(상시 표시) — 문구가 인스펙터의 **`stageLabelFormat`**(`"STAGE {0}"`)과 **`bossStageLabel`**(씬에서 `"MAMA"`로 덮여 있다)에서 나온다. 코드에 박혀 있던 걸 걷어낸 자리다.
     - **`stageStartObject`**(등장 배너) — 이제 코드가 문구를 쓰지 않는다. `LoadStage`가 `SetActive(true)`로 켜기만 하고, **무엇이 적혀 있는지는 그 오브젝트(프리팹/애니메이션)가 통째로 갖는다.** 옛 `stageStartText`(TMP 라벨에 문구를 대입하던 것)는 삭제됐다.
@@ -695,7 +726,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
 
 ### 타이머 (`02_Scripts/Timer/`)
 
-- **`TimerManager`** — `baseDuration`(기본 10초) 카운트다운. 이벤트가 **두 개**인 게 핵심이다:
+- **`TimerManager`** — 카운트다운. **기준 시간은 `BaseDuration` 계산 프로퍼티 하나가 정한다** — **언어가 기준을 잡고**(한국어 `baseDuration` 10초 / 그 외 `nonKoreanBaseDuration` 15초 — 라틴 표기가 길다) **난이도가 그 위에서 더하고 뺀다**(`secondsLostPerDifficultyStep` 3초). ⚠️ 순서를 뒤집어 난이도를 먼저 적용하고 언어로 갈아치우면 **난이도 항이 통째로 사라진다.** `RestartTurn`·`ResetToFull`이 둘 다 이걸 읽으므로 대기 중 게이지와 실제 카운트다운이 어긋나지 않는다. 이벤트가 **두 개**인 게 핵심이다:
   - `OnTimeChanged(remaining)` — 매 프레임(자연 감소 포함). 슬라이더 위치 갱신용.
   - `OnTimeAdjusted(delta)` — `AddTime`/`ReduceTime`로 **효과에 의해** 증감했을 때만. 색 반짝임용.
   - 이 둘을 합치면 정상 카운트다운도 매 프레임 "감소"로 잡혀 반짝임이 끝날 틈 없이 재시작되어 **항상 빨간색으로 고정**된다. 실제로 겪었던 버그다.
@@ -721,7 +752,10 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
     - `wasPressedThisFrame` 기반이라 **키를 누른 채로 씬을 넘어와도 차단이 풀리는 순간 발동하지 않는다.** 풀린 뒤 새로 누른 것만 먹는다.
     - ⚠️ 새로 추가된 필드라 **씬·프리팹에 직렬화된 값이 없어 C# 초기화자(0.5)가 그대로 적용된다** — 인스펙터를 손대지 않아도 동작한다. 값이 거슬리면 `Option.prefab`/`TitleScene` 쪽에서 낮추면 된다.
   - `AdjustSlider`는 **일부러 `SetValueWithoutNotify`가 아니라 `value`로 넣는다** — `onValueChanged`가 돌아야 `OptionsPanel`이 볼륨을 적용하고 `%` 라벨을 갱신한다(`OnEnable`의 되비추기와 반대 방향이니 혼동하지 말 것).
-- **`OptionsPanel`** (`02_Scripts/UI/`) — 타이틀 옵션 창. **순수 뷰**이고 값의 소유자는 `SoundManager`(볼륨)와 `LanguageSettings`(언어)다. 마스터/BGM/SFX 슬라이더 3개(전부 0~1, `Whole Numbers` 끄기)와 선택적 `%` 라벨, **언어 버튼**, 닫기 버튼.
+- **`OptionsPanel`** (`02_Scripts/UI/`) — 타이틀 옵션 창. **순수 뷰**이고 값의 소유자는 `SoundManager`(볼륨)·`LanguageSettings`(언어)·`DifficultySettings`(난이도)다. 마스터/BGM/SFX 슬라이더 3개(전부 0~1, `Whole Numbers` 끄기)와 선택적 `%` 라벨, **언어 버튼**, **난이도 버튼**, 닫기 버튼.
+  - **언어·난이도 버튼은 클릭과 좌우 방향키 둘 다 받는다** — `Update`가 `EventSystem.currentSelectedGameObject`를 보고 지금 포커스된 쪽만 굴린다(`ReadHorizontal` 하나를 공유). ⚠️ 예전엔 `languageButton.gameObject`를 **null 검사 없이** 읽어서 그 배선이 비면 창이 열려 있는 동안 매 프레임 NullReference가 났다 — 지금은 둘 다 막혀 있으니 버튼을 더 추가할 때도 같은 모양을 지킬 것.
+  - ⚠️ **난이도 라벨은 언어를 타지 않는다**(`EASY`/`NORMAL`/`HARD`). 꾸밈만 `difficultyLabelFormat`(`< {0} >`)으로 씌운다.
+  - ⚠️ 새 버튼은 **`MenuKeyboardNavigator.items`에도 넣어야** 키보드로 닿는다(배열 순서 = 화면 위→아래).
   - ⚠️ **`OnEnable`에서 저장값을 슬라이더에 되비출 때 `SetValueWithoutNotify`를 쓴다.** 평범한 `value =` 대입은 `onValueChanged`를 되쏘아 **방금 읽어온 값을 그대로 덮어쓴다.**
   - 구독/해제가 `OnEnable`/`OnDisable`이라 창을 여닫을 때마다 도는데, `OnDisable`에서 `SaveVolumes()`를 부른다 — **드래그 중엔 적용만, 닫을 때 한 번만 디스크에 쓴다.**
   - **언어 버튼은 `LanguageSettings.Toggle()`만 부른다.** 라벨은 "지금 언어"가 아니라 **"누르면 바뀔 언어"**를 보여준다(영어일 때 `한국어`, 한국어일 때 `English`). `languageButtonText`를 비워두면 버튼의 첫 `TMP_Text`를 알아서 찾는다. 닫기 버튼 라벨은 `closeKorean`/`closeEnglish`를 `Pick`으로 고른다.
@@ -781,9 +815,9 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
 
 **컬러풀은 이제 셋을 각각 굴린다.** `ResolvedAction.StatusEffects`가 리스트라 화상·마비·얼음을 `chancePercent`로 **독립적으로** 굴려 걸린 것을 전부 부여한다(셋 다 걸릴 수도, 하나도 안 걸릴 수도 있다). 옛 "화상 하나만" 단순화는 없어졌다. 적용·표시 계층은 원래부터 다중을 지원했다 — `StatusEffectManager._enemyEffects`가 `Dictionary`이고 `StatusIconRow`가 아이콘을 각각 켠다.
 
-**옵션은 볼륨 3종 + 언어뿐이다.** 해상도·키 설정 같은 건 없고, 옵션 창은 **타이틀 씬에만** 있다(일시정지 중에는 열 수 없다 — 언어는 그래야 하는 이유가 따로 있다. 위 `LanguageSettings` 참조).
+**옵션은 볼륨 3종 + 언어 + 난이도뿐이다.** 해상도·키 설정 같은 건 없고, 옵션 창은 **타이틀 씬에만** 있다(일시정지 중에는 열 수 없다 — 언어와 난이도는 그래야 하는 이유가 따로 있다. 위 `LanguageSettings`·`DifficultySettings` 참조).
 
-**저장되는 건 볼륨과 언어뿐이다.** `PlayerPrefs`의 `option.volume.*` 3개와 `option.language` 하나가 전부이고, **런 저장이 없어서 타이틀로 돌아가면 진행이 초기화된다.** 해금한 단어와 스테이지 진행이 전부 사라지고 시작 단어 3장부터 다시 시작한다. 의도된 현재 상태다(`StageManager.RestartStage`만 사전을 유지한다). `StatisticsManager`의 통계도 씬을 넘어가면 사라진다.
+**저장되는 건 볼륨·언어·난이도뿐이다.** `PlayerPrefs`의 `option.volume.*` 3개와 `option.language`·`option.difficulty`가 전부이고, **런 저장이 없어서 타이틀로 돌아가면 진행이 초기화된다.** 해금한 단어와 스테이지 진행이 전부 사라지고 시작 단어 3장부터 다시 시작한다. 의도된 현재 상태다(`StageManager.RestartStage`만 사전을 유지한다). `StatisticsManager`의 통계도 씬을 넘어가면 사라진다.
 
 **연출은 양쪽 다 붙었다.** `PlayerBattleVisuals`가 돌진 → 펀치(`Punch1~4`) → 복귀를 재생하고, 그 사이 쌓인 공격이 하나씩 적용되며 HP가 계단식으로 줄어든다. 여기에 **피해 숫자(`FloatingDamageManager`)·피격 이펙트(`HitEffectManager`)·카메라 흔들림(`CameraShake`, 시퀀스당 한 번)** 이 붙는다. **적 공격도 이제 같은 모양의 돌진→타격→복귀를 한다**(`EnemyBase.MoveToPlayerCoroutine`/`MoveToOriginCoroutine`) — 예전엔 이게 없어 `turnChangeDelay`/`postAttackDelay`가 빈 자리로 남아 있었다. 캐릭터 윤곽선(`SpriteOutline.mat` + `SpriteOutlineUVSync`)도 플레이어와 적 양쪽에 붙어 있다. **스테이지 전환 쪽은 등장 배너(`stageStartObject` + `StageStartEffect`)와 배경 스크롤(`BackgroundScroller`)이 `stageStartDelay`를 채운다.** **보상 화면에는 퇴장 연출**(고른 카드만 남고 나머지는 떨어짐)이, **패배 화면에는 명령 카드 등장 연출**이 있다. 그 밖에 **턴 시작 배너**(`YourTurnBanner`)·**보스 타이틀 카드**(`BossTitleCardView`)·**전체 클리어 축포**(`UIConfettiBurst`)·**흰 화면 씬 전환**(`SceneWhiteFadeIn`)·**가드/힐 파티클**(`HealEffectManager`)이 붙었다 — 자세한 건 위 "연출 컴포넌트들" 참조.
 
@@ -819,6 +853,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
   | 카드 프레임·배지 스프라이트 | `Card.prefab`의 `CardView` 인스펙터(`actionFrame`/`defaultFrame`/`commandFrame`/배지 3종) — **한 곳만 고치면 손패·보상·일시정지·목록에 동시에 적용된다** |
   | 카드 이름·설명·수치 칸 | ⭐ **`04_Data/Resources/CardLocalization.json`** (5개 언어 × 34장). 에셋이 아니라 여기다 — 에셋에 남은 텍스트 키는 죽은 값이다. 수치가 들어가는 칸은 JSON 쪽 문구를 **포맷 문자열**로 쓰고 런타임 값을 끼운다(아래) |
   | 대사(마더 드래곤과의 대화 전체) | ⭐ **`04_Data/Resources/DialogueLocalization.json`** (5개 언어 × 6묶음). 읽는 창구는 `DialogueDatabase`, id는 `DialogueIds` 상수 |
+  | 난이도 이름 | **`DifficultyLabels`**(`[Serializable]` 값 묶음) — 쓰는 쪽이 필드로 든다. 언어를 안 타지만 **그래도 인스펙터에 있어야 한다** |
   | 그 외 라벨 | `[SerializeField]` 한/영 두 벌 + `LanguageSettings.Pick(...)` |
 
   **하면 안 되는 것**: 화면에 나갈 문자열을 코드에 박기, 포맷 조각(`"됨"`·`"ED"` 같은 접미사)만 코드에 두기, 스프라이트를 코드에서 `Resources.Load`로 집기.

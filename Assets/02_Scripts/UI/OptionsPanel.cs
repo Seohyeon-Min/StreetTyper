@@ -30,6 +30,19 @@ public class OptionsPanel : MonoBehaviour
     [Tooltip("언어 버튼에 표시할 글자. 비워두면 버튼 안의 TMP 라벨을 자동으로 찾는다.")]
     [SerializeField] private TMP_Text languageButtonText;
 
+    [Header("난이도")]
+    [Tooltip("누를 때마다 EASY -> NORMAL -> HARD로 한 칸씩 옮깁니다. 언어와 달리 양 끝에서 멈춥니다.")]
+    [SerializeField] private Button difficultyButton;
+
+    [Tooltip("난이도 버튼에 표시할 글자. 비워두면 버튼 안의 TMP 라벨을 자동으로 찾는다.")]
+    [SerializeField] private TMP_Text difficultyButtonText;
+
+    [Tooltip("난이도 이름을 감쌀 꾸밈. {0}에 아래 난이도 이름이 들어간다.")]
+    [SerializeField] private string difficultyLabelFormat = "< {0} >";
+
+    [Tooltip("버튼에 띄울 난이도 이름 세 개. 지금은 다섯 언어 모두 같은 글자를 쓴다.")]
+    [SerializeField] private DifficultyLabels difficultyLabels = new DifficultyLabels();
+
     [Header("언어 표시 텍스트")]
     [Tooltip("현재 한국어일 때 띄울 글자")]
     [SerializeField] private string labelKorean = "< 한국어 >";
@@ -103,34 +116,56 @@ public class OptionsPanel : MonoBehaviour
         else
             Debug.LogWarning("OptionsPanel: languageButton이 연결되지 않아 언어를 바꿀 수 없습니다.", this);
 
+        if (difficultyButton != null)
+            difficultyButton.onClick.AddListener(HandleDifficultyClicked);
+        else
+            Debug.LogWarning("OptionsPanel: difficultyButton이 연결되지 않아 난이도를 바꿀 수 없습니다.", this);
+
         RefreshLanguageButton();
+        RefreshDifficultyButton();
     }
 
-    // 2. Update 메서드 추가 (방향키 감지)
+    // 지금 포커스된 버튼을 좌우 방향키로 굴린다(언어·난이도 둘 다).
+    //
+    // ⚠️ 예전에는 languageButton.gameObject를 null 검사 없이 읽어서, 그 배선이 비면 옵션 창이
+    // 열려 있는 동안 매 프레임 NullReference가 났다. 버튼이 늘어난 김에 둘 다 막았다.
     private void Update()
     {
-        // 언어 버튼이 선택(포커스)된 상태일 때만 방향키 입력을 받습니다.
-        if (UnityEngine.EventSystems.EventSystem.current != null &&
-            UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject == languageButton.gameObject)
+        var eventSystem = UnityEngine.EventSystems.EventSystem.current;
+        var keyboard = UnityEngine.InputSystem.Keyboard.current;
+        if (eventSystem == null || keyboard == null)
+            return;
+
+        var selected = eventSystem.currentSelectedGameObject;
+        if (selected == null)
+            return;
+
+        var direction = ReadHorizontal(keyboard);
+        if (direction == 0)
+            return;
+
+        if (languageButton != null && selected == languageButton.gameObject)
         {
-            if (UnityEngine.InputSystem.Keyboard.current != null)
-            {
-                // 왼쪽 화살표나 A 키: 이전 언어
-                if (UnityEngine.InputSystem.Keyboard.current.leftArrowKey.wasPressedThisFrame ||
-                    UnityEngine.InputSystem.Keyboard.current.aKey.wasPressedThisFrame)
-                {
-                    LanguageSettings.ChangeLanguage(-1);
-                    RefreshLanguageButton();
-                }
-                // 오른쪽 화살표나 D 키: 다음 언어
-                else if (UnityEngine.InputSystem.Keyboard.current.rightArrowKey.wasPressedThisFrame ||
-                         UnityEngine.InputSystem.Keyboard.current.dKey.wasPressedThisFrame)
-                {
-                    LanguageSettings.ChangeLanguage(1);
-                    RefreshLanguageButton();
-                }
-            }
+            LanguageSettings.ChangeLanguage(direction);
+            RefreshLanguageButton();
         }
+        else if (difficultyButton != null && selected == difficultyButton.gameObject)
+        {
+            DifficultySettings.ChangeDifficulty(direction);
+            RefreshDifficultyButton();
+        }
+    }
+
+    // 왼쪽(←/A)이 -1, 오른쪽(→/D)이 +1. 둘 다 눌리면 왼쪽이 이긴다.
+    private static int ReadHorizontal(UnityEngine.InputSystem.Keyboard keyboard)
+    {
+        if (keyboard.leftArrowKey.wasPressedThisFrame || keyboard.aKey.wasPressedThisFrame)
+            return -1;
+
+        if (keyboard.rightArrowKey.wasPressedThisFrame || keyboard.dKey.wasPressedThisFrame)
+            return 1;
+
+        return 0;
     }
 
     private void OnDisable()
@@ -145,6 +180,9 @@ public class OptionsPanel : MonoBehaviour
         if (languageButton != null)
             languageButton.onClick.RemoveListener(HandleLanguageClicked);
 
+        if (difficultyButton != null)
+            difficultyButton.onClick.RemoveListener(HandleDifficultyClicked);
+
         // 드래그 중에는 적용만 하고, 창을 닫을 때 한 번만 디스크에 쓴다.
         if (SoundManager.Instance != null)
             SoundManager.Instance.SaveVolumes();
@@ -155,6 +193,32 @@ public class OptionsPanel : MonoBehaviour
     {
         LanguageSettings.ChangeLanguage(1);
         RefreshLanguageButton();
+    }
+
+    // 난이도도 같은 방식이다 - 값은 DifficultySettings가 갖는다.
+    // ⚠️ 언어와 달리 순환하지 않는다(ChangeDifficulty가 Clamp한다). HARD에서 한 번 더 눌러도
+    // 글자가 그대로인 게 정상 동작이다.
+    private void HandleDifficultyClicked()
+    {
+        DifficultySettings.ChangeDifficulty(1);
+        RefreshDifficultyButton();
+    }
+
+    // ⚠️ 난이도 이름은 언어를 타지 않는다(difficultyLabels 세 칸을 그대로 쓴다). 그래서 이 갱신은
+    // LanguageSettings.OnChanged와 무관하고, 언어를 바꿨을 때 이 글자만 안 변하는 게 정상이다.
+    private void RefreshDifficultyButton()
+    {
+        var label = difficultyButtonText;
+        if (label == null && difficultyButton != null)
+            label = difficultyButton.GetComponentInChildren<TMP_Text>(true);
+
+        if (label == null)
+            return;
+
+        var difficultyName = difficultyLabels.Current;
+        label.text = string.IsNullOrEmpty(difficultyLabelFormat)
+            ? difficultyName
+            : string.Format(difficultyLabelFormat, difficultyName);
     }
 
     // 지금 언어가 아니라 "누르면 바뀔 언어"를 보여준다 - 버튼은 눌렀을 때 무슨 일이 일어나는지를

@@ -16,6 +16,7 @@ public class ResultStatsView : MonoBehaviour
     [SerializeField] private TMP_Text wordsUsedLabel;
     [SerializeField] private TMP_Text damageDealtLabel;
     [SerializeField] private TMP_Text damageTakenLabel;
+    [SerializeField] private TMP_Text difficultyLabel;
 
     [Header("값 (SetStats로 결과 화면이 뜰 때마다 갱신)")]
     [SerializeField] private TMP_Text highestStageValue;
@@ -23,6 +24,10 @@ public class ResultStatsView : MonoBehaviour
     [SerializeField] private TMP_Text wordsUsedValue;
     [SerializeField] private TMP_Text damageDealtValue;
     [SerializeField] private TMP_Text damageTakenValue;
+
+    [Tooltip("난이도 값 칸. 여기 들어갈 글자는 아래 '난이도 이름'에서 온다. ⚠️ 라벨만 번역되고 " +
+             "값은 언어를 타지 않는 게 의도다.")]
+    [SerializeField] private TMP_Text difficultyValue;
 
     [Header("라벨 문구 - 한국어/영어")]
     [SerializeField] private string highestStageLabelText = "최고 도달 스테이지";
@@ -39,6 +44,13 @@ public class ResultStatsView : MonoBehaviour
 
     [SerializeField] private string damageTakenLabelText = "누적 받은 데미지";
     [SerializeField] private string damageTakenLabelTextEn = "Total damage taken";
+
+    [SerializeField] private string difficultyLabelText = "난이도";
+    [SerializeField] private string difficultyLabelTextEn = "Difficulty";
+
+    [Header("난이도 이름 (값 칸에 들어갈 글자)")]
+    [Tooltip("지금은 다섯 언어 모두 같은 글자를 쓴다 - 라벨(위)만 번역되고 값은 고정이다.")]
+    [SerializeField] private DifficultyLabels difficultyLabels = new DifficultyLabels();
 
     private void OnEnable()
     {
@@ -58,6 +70,7 @@ public class ResultStatsView : MonoBehaviour
         SetLabel(wordsUsedLabel, wordsUsedLabelText, wordsUsedLabelTextEn, nameof(wordsUsedLabelTextEn));
         SetLabel(damageDealtLabel, damageDealtLabelText, damageDealtLabelTextEn, nameof(damageDealtLabelTextEn));
         SetLabel(damageTakenLabel, damageTakenLabelText, damageTakenLabelTextEn, nameof(damageTakenLabelTextEn));
+        SetLabel(difficultyLabel, difficultyLabelText, difficultyLabelTextEn, nameof(difficultyLabelTextEn));
     }
 
     private void SetLabel(TMP_Text label, string korean, string english, string fieldName)
@@ -73,12 +86,13 @@ public class ResultStatsView : MonoBehaviour
     /// 자체가 갖는다. 옛 제목 칸은 프리팹에서 연결조차 되어 있지 않아 화면에 나가지 않았고,
     /// 그걸 채우던 `BattleManager`의 `ScreenPresentation` 세 벌과 함께 삭제됐다.</summary>
     public void SetStats(int highestStage, int totalStages,
-        int cpm, int wordsUsed, int damageDealt, int damageTaken)
+        int cpm, int wordsUsed, int damageDealt, int damageTaken, GameDifficulty difficulty)
     {
         if (highestStageValue != null) highestStageValue.text = $"{highestStage} / {totalStages}";
         if (cpmValue != null) cpmValue.text = cpm.ToString();
         if (wordsUsedValue != null) wordsUsedValue.text = wordsUsed.ToString();
         if (damageDealtValue != null) damageDealtValue.text = damageDealt.ToString();
         if (damageTakenValue != null) damageTakenValue.text = damageTaken.ToString();
+        if (difficultyValue != null) difficultyValue.text = difficultyLabels.For(difficulty);
     }
 }

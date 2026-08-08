@@ -53,7 +53,8 @@ public class ResultPanelView
     /// <param name="owner">경고에 찍을 주인. 어느 컴포넌트인지 알려준다.</param>
     /// <param name="fieldName">경고에 찍을 인스펙터 필드 이름(예: defeatResult).</param>
     public bool Show(int highestStage, int totalStages, int cpm, int wordsUsed,
-        int damageDealt, int damageTaken, UnityEngine.Object owner, string fieldName)
+        int damageDealt, int damageTaken, GameDifficulty difficulty,
+        UnityEngine.Object owner, string fieldName)
     {
         // 조용히 폴백하지 않는다 - 폴백할 곳이 있으면 배선이 빠진 걸 못 알아채고
         // 아무것도 안 뜬 채로 넘어간다(프로젝트 컨벤션).
@@ -70,7 +71,7 @@ public class ResultPanelView
         var wasHidden = !panel.activeSelf;
 
         if (stats != null)
-            stats.SetStats(highestStage, totalStages, cpm, wordsUsed, damageDealt, damageTaken);
+            stats.SetStats(highestStage, totalStages, cpm, wordsUsed, damageDealt, damageTaken, difficulty);
 
         panel.SetActive(true);
 

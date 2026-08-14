@@ -1564,11 +1564,13 @@ MonoBehaviour:
   wordsUsedLabel: {fileID: 9146295239919830307}
   damageDealtLabel: {fileID: 3971955169136705911}
   damageTakenLabel: {fileID: 2175530032260552038}
+  difficultyLabel: {fileID: 0}
   highestStageValue: {fileID: 6937364320805469274}
   cpmValue: {fileID: 714838442803323627}
   wordsUsedValue: {fileID: 586386453219887428}
   damageDealtValue: {fileID: 2349473404638238671}
   damageTakenValue: {fileID: 1752685522922655435}
+  difficultyValue: {fileID: 0}
   highestStageLabelText: "\uC2A4\uD14C\uC774\uC9C0"
   highestStageLabelTextEn: Stage
   cpmLabelText: "\uD3C9\uADE0 \uD0C0\uC790 \uC18D\uB3C4"
@@ -1579,6 +1581,12 @@ MonoBehaviour:
   damageDealtLabelTextEn: Total damage dealt
   damageTakenLabelText: "\uB204\uC801 \uBC1B\uC740 \uB370\uBBF8\uC9C0"
   damageTakenLabelTextEn: Total damage taken
+  difficultyLabelText: "\uB09C\uC774\uB3C4"
+  difficultyLabelTextEn: Difficulty
+  difficultyLabels:
+    easy: EASY
+    normal: NORMAL
+    hard: HARD
 --- !u!114 &2635456060886403802
 MonoBehaviour:
   m_ObjectHideFlags: 0

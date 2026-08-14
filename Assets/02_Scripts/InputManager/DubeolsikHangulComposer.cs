@@ -7,8 +7,8 @@ using System.Text;
 /// OS IME를 쓰지 않으므로 한/영 상태가 어느 쪽이든 결과가 같다. 자세한 경위는
 /// <see cref="InputManager.UsesSyntheticHangul"/> 참조.
 ///
-/// ⚠️ 대문자는 쌍자음·이중모음으로 읽는다('R'→ㄲ). 그래서 CapsLock으로 올라간 대문자는
-/// 넘기기 전에 소문자로 되돌려야 한다(<c>InputManager.NormalizeCapsLock</c>).</summary>
+/// ⚠️ 대문자는 쌍자음·이중모음으로 읽는다('R'→ㄲ). 넘기는 쪽
+/// (<c>InputManager.HandleHangulKeyPresses</c>)이 Shift를 실제로 눌렀을 때만 대문자로 올려 준다.</summary>
 public sealed class DubeolsikHangulComposer
 {
     private readonly StringBuilder keys = new StringBuilder();
@@ -34,8 +34,34 @@ public sealed class DubeolsikHangulComposer
         { "ㄹㅎ", 'ㅀ' }, { "ㅂㅅ", 'ㅄ' }
     };
 
-    public string Text => Compose(keys.ToString());
+    public string Text => Compose(keys.ToString(), out _);
     public int KeyCount => keys.Length;
+
+    /// <summary>
+    /// 더는 바뀔 일이 없는 <b>앞쪽 완성 음절</b>을 조합기에서 떼어내 돌려준다(없으면 빈 문자열).
+    /// 부르고 나면 조합기에는 <b>마지막 한 음절</b>만 남는다 - OS IME와 같은 모델이다.
+    ///
+    /// ⭐ 이게 있어야 백스페이스가 "<b>조합 중인 마지막 음절은 자모 하나씩, 그 앞은 음절 통째로</b>"
+    /// 동작한다(<c>InputManager.HandleBackspace</c>). 전부 조합기에 쌓아두면 '엉엉엉'을 지울 때
+    /// 세 음절이 전부 자모 단위로 분해되어 아홉 번을 눌러야 한다.
+    ///
+    /// 뒤에 오는 키가 되돌아가 바꿀 수 있는 건 <b>마지막 음절뿐이다</b> - 겹모음(ㅗ+ㅏ→ㅘ),
+    /// 겹받침(ㄱ+ㅅ→ㄳ), 받침이 다음 음절 초성으로 넘어가는 규칙이 전부 마지막 음절 안에서
+    /// 끝난다. 그래서 그 앞을 떼어내도 조합 결과가 달라지지 않는다.
+    /// </summary>
+    public string TakeCompletedSyllables()
+    {
+        var text = Compose(keys.ToString(), out var lastSyllableStart);
+
+        // 아직 한 음절뿐이면(또는 비었으면) 떼어낼 게 없다.
+        if (lastSyllableStart <= 0)
+            return string.Empty;
+
+        // 키와 자모가 1:1이라(TryAppend가 표에 없는 키를 아예 받지 않는다) 키 인덱스를
+        // 그대로 잘라낼 수 있고, 음절 하나가 글자 하나라 앞부분은 "마지막 글자를 뺀 나머지"다.
+        keys.Remove(0, lastSyllableStart);
+        return text.Substring(0, text.Length - 1);
+    }
 
     public bool TryAppend(char key)
     {
@@ -53,15 +79,23 @@ public sealed class DubeolsikHangulComposer
 
     public void Clear() => keys.Clear();
 
-    private static string Compose(string raw)
+    /// <summary>키 문자열을 한글로 조합한다. <paramref name="lastSyllableStart"/>에는 마지막 음절이
+    /// 시작하는 <b>키 인덱스</b>가 담긴다(<see cref="TakeCompletedSyllables"/>가 자를 지점이다).</summary>
+    private static string Compose(string raw, out int lastSyllableStart)
     {
         var jamo = new List<char>(raw.Length);
         foreach (var key in raw)
             if (TryMap(key, out var mapped)) jamo.Add(mapped);
 
+        lastSyllableStart = 0;
+
         var result = new StringBuilder();
         for (var i = 0; i < jamo.Count;)
         {
+            // 아래 두 갈래 중 어느 쪽으로 가든 결과 글자 하나가 나온다. 그 시작점을 기억해 두면
+            // 루프가 끝났을 때 마지막 글자의 시작 인덱스가 남는다.
+            lastSyllableStart = i;
+
             var lead = IndexOf(Leads, jamo[i]);
             if (lead < 0 || i + 1 >= jamo.Count || IndexOf(Vowels, jamo[i + 1]) < 0)
             {

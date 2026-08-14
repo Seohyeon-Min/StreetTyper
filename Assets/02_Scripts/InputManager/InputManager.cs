@@ -41,6 +41,11 @@ public class InputManager : MonoBehaviour
     [Tooltip("영문 모드 강제를 다시 걸기까지의 최소 간격(초). 한글이 연타로 들어와도 IMM32 호출이 폭주하지 않게 한다.")]
     [SerializeField] private float imeForceCooldown = 0.2f;
 
+    [Tooltip("한국어 모드에서 물리 키를 받은 뒤 이 시간(초) 안에 들어온 한글 문자 입력은 " +
+             "방금 그 키를 IME가 뒤늦게 조합해 보낸 메아리로 보고 버린다. 영문 강제가 통하지 않는 " +
+             "환경(브라우저 IME)에서만 의미가 있는 값이라 넉넉하게 잡아도 된다.")]
+    [SerializeField] private float syntheticKeyEchoWindow = 0.5f;
+
     [Tooltip("입력창에 쌓아둘 수 있는 최대 글자 수. 오타가 나도 입력을 지우지 않고 플레이어가 " +
              "직접 지우는 방식이라, 무한정 길어지지 않게 상한을 둔다. 가장 긴 단어(uppercut, 8자)보다 " +
              "넉넉해야 한다.")]
@@ -55,6 +60,10 @@ public class InputManager : MonoBehaviour
     // 미러가 낡았다고 판단한다(IsCompositionStale 참조).
     private string _lastBackspaceComposition;
     private readonly DubeolsikHangulComposer _hangulComposer = new DubeolsikHangulComposer();
+
+    // 마지막으로 물리 키를 조합기에 넣은 시각. 그 직후에 들어오는 한글 문자 입력은 같은
+    // 키의 메아리라 버려야 한다(HandleKoreanTextInput 참조).
+    private float _lastSyntheticKeyTime = float.NegativeInfinity;
 
     // 합성 조합이 시작될 때 이미 커밋되어 있던 글자. 조합기는 자기가 만든 글자만 알기 때문에,
     // 앞에 붙어 있던 것(OS IME 폴백으로 들어온 글자 등)을 여기 따로 들고 있어야 한다.
@@ -365,7 +374,54 @@ public class InputManager : MonoBehaviour
             }
         }
 
+        // ⚠️ 한국어의 글자 입력은 문자 이벤트가 아니라 여기서 물리 키로 읽는다.
+        if (UsesSyntheticHangul)
+            HandleHangulKeyPresses();
+
         HandleBurnTimeKey();
+    }
+
+    /// <summary>
+    /// 한국어 모드의 글자 입력. <b>문자 이벤트(onTextInput)가 아니라 물리 키를 직접 읽는다.</b>
+    ///
+    /// ⭐ OS IME가 한글 모드면 라틴 문자가 아예 오지 않는다 - IME가 키를 가로채 자기 조합에
+    /// 써버리기 때문이다. 그래서 예전에는 <b>플레이어가 한/영으로 키보드를 영문에 맞춰두어야만
+    /// 입력이 됐다</b>(영문 강제가 실패하거나 쿨다운에 걸린 동안에는 친 글자가 통째로 사라졌다).
+    /// 키는 IME보다 아래(Raw Input)에서 읽히므로 한/영이 어느 쪽이든 결과가 같다 -
+    /// ESC·백스페이스·Ctrl을 읽는 방식과 같고, 이 프로젝트는 이미 그 경로에 의존하고 있다.
+    ///
+    /// 두벌식은 애초에 <b>자판 위치</b>로 정의된 배열이라 물리 키로 읽는 쪽이 오히려 정확하다
+    /// (라틴 모드는 반대다 - 그쪽은 AZERTY 같은 배열에서 글자가 어긋나므로 문자 이벤트를 쓴다).
+    ///
+    /// ⚠️ IME 영문 강제(<see cref="ApplyImeMode"/>)를 같이 없애지 말 것. 강제를 그만두면 OS IME가
+    /// 자기 조합 오버레이를 화면에 겹쳐 그려 유령 글자가 보인다 - 입력은 여기서 받고, 강제는
+    /// 화면을 깨끗하게 유지하는 몫이다.
+    /// </summary>
+    private void HandleHangulKeyPresses()
+    {
+        var keyboard = Keyboard.current;
+
+        // Ctrl은 시간 태우기(HandleBurnTimeKey), Alt는 OS 단축키다. 문자 이벤트는 이런 조합키를
+        // 알아서 걸러 주지만 물리 키에는 그런 필터가 없으니 여기서 막는다.
+        if (keyboard.ctrlKey.isPressed || keyboard.altKey.isPressed)
+            return;
+
+        var shiftHeld = keyboard.shiftKey.isPressed;
+
+        for (var key = Key.A; key <= Key.Z; key++)
+        {
+            var control = keyboard[key];
+            if (control == null || !control.wasPressedThisFrame)
+                continue;
+
+            // 조합기는 대문자를 쌍자음·이중모음으로 읽는다('R'→ㄲ). Shift를 실제로 눌렀는지
+            // 직접 보므로 CapsLock에 속지 않는다 - 예전 NormalizeCapsLock이 하던 보정이
+            // 물리 키를 읽는 것만으로 필요 없어졌다.
+            var character = (char)((shiftHeld ? 'A' : 'a') + (key - Key.A));
+
+            _lastSyntheticKeyTime = Time.unscaledTime;
+            AppendHangulKey(character);
+        }
     }
 
     /// <summary>Ctrl을 누르고 있는 동안 <see cref="OnBurnTime"/>을 반복해서 쏜다.
@@ -438,38 +494,51 @@ public class InputManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 한국어 모드의 글자 입력. 라틴 키를 두벌식으로 조합해 한글을 만든다
-    /// (<see cref="UsesSyntheticHangul"/> 참조 - 한/영이 어느 상태든 결과가 같아야 한다).
+    /// 한국어 모드에 <b>문자 이벤트</b>로 들어온 글자. 글자 입력의 본류는 물리 키
+    /// (<see cref="HandleHangulKeyPresses"/>)이고 여기는 <b>영문 강제가 통하지 않는 환경을 위한
+    /// 폴백</b>이다 - 브라우저 IME처럼 우리가 모드를 바꿀 수 없는 곳에서 이미 조합된 한글이
+    /// 커밋되어 들어오는 경로.
+    /// </summary>
+    private void HandleKoreanTextInput(char character)
+    {
+        // 라틴 문자는 방금 물리 키로 이미 받은 그 키의 문자 이벤트다. 여기서 또 넣으면 한 번
+        // 누른 키가 두 번 들어간다(문자 이벤트가 같은 프레임의 Update보다 먼저 도착하므로
+        // 시간 창으로는 이걸 거를 수 없다 - 아예 받지 않는 게 맞다).
+        if (!IsHangul(character))
+            return;
+
+        // 한글이 들어왔다 = IME가 한글 모드로 빠졌다는 신호다. 되돌려 둔다.
+        ApplyImeMode();
+
+        // 물리 키를 방금 받았다면 이건 그 키를 IME가 뒤늦게 조합해 보낸 메아리다. 우리 조합기가
+        // 이미 같은 글자를 만들어 뒀으므로 버린다(강제가 통하는 환경에서는 여기까지 오지도 않는다).
+        if (Time.unscaledTime - _lastSyntheticKeyTime < syntheticKeyEchoWindow)
+            return;
+
+        // 여기까지 왔으면 물리 키를 못 받고 있다는 뜻이라, 이 글자라도 받아 넣는 게 낫다.
+        FlushSynthetic();
+
+        if (CurrentInput.Length >= Mathf.Max(1, maxInputLength))
+            return;
+
+        if (StatisticsManager.Instance != null)
+            StatisticsManager.Instance.AddTypedCharacter();
+
+        CurrentInput += character;
+        OnCharacterEntered?.Invoke(character);
+        OnCompositionChanged?.Invoke(Composition);
+        DispatchToReceiver(CurrentInput, Composition);
+    }
+
+    /// <summary>
+    /// 두벌식 키 하나를 조합기에 넣고 입력창을 갱신한다.
     ///
     /// 조합기가 만든 문자열의 <b>마지막 한 글자를 Composition, 앞부분을 CurrentInput</b>으로 나눠
     /// 싣는다. 그래야 매칭(TypingReceiver)·손패 들림(CardSlotView)이 OS IME 시절과 똑같은 모양의
     /// 입력을 보게 되어, 그쪽 코드를 하나도 고치지 않아도 된다.
     /// </summary>
-    private void HandleKoreanTextInput(char character)
+    private void AppendHangulKey(char character)
     {
-        // IME가 한글 모드로 남아 이미 조합된 한글이 들어온 경우. 우리 조합기는 라틴 키를 받으므로
-        // 그대로 두면 통째로 버려진다 - 영문으로 되돌리되, 그 글자는 커밋된 글자로 받아둔다.
-        // 브라우저 IME처럼 강제가 통하지 않는 환경에서 아무것도 안 쳐지는 것보다는 낫다.
-        if (IsHangul(character))
-        {
-            ApplyImeMode();
-            FlushSynthetic();
-
-            if (CurrentInput.Length >= Mathf.Max(1, maxInputLength))
-                return;
-
-            if (StatisticsManager.Instance != null)
-                StatisticsManager.Instance.AddTypedCharacter();
-
-            CurrentInput += character;
-            OnCharacterEntered?.Invoke(character);
-            OnCompositionChanged?.Invoke(Composition);
-            DispatchToReceiver(CurrentInput, Composition);
-            return;
-        }
-
-        character = NormalizeCapsLock(character);
-
         // 조합기가 비어 있다면 지금 화면에 있는 글자가 이번 조합의 접두사다. OS IME가 만든 조합
         // 글자가 남아 있으면(위 폴백 경로) 그것까지 확정해 접두사로 삼는다.
         if (_hangulComposer.KeyCount == 0)
@@ -492,7 +561,13 @@ public class InputManager : MonoBehaviour
         if (StatisticsManager.Instance != null)
             StatisticsManager.Instance.AddTypedCharacter();
 
-        ApplySyntheticText(composed);
+        // ⭐ 완성된 앞쪽 음절은 조합기에서 떼어 커밋된 글자로 옮긴다. 조합기에 마지막 한 음절만
+        // 남아야 백스페이스가 "조합 중인 음절은 자모 하나씩, 그 앞은 음절 통째로" 동작한다
+        // (DubeolsikHangulComposer.TakeCompletedSyllables 참조). 화면에 보이는 문자열
+        // (_syntheticBase + 조합기 결과)은 떼어내기 전과 완전히 같다.
+        _syntheticBase += _hangulComposer.TakeCompletedSyllables();
+
+        ApplySyntheticText(_hangulComposer.Text);
         OnCharacterEntered?.Invoke(character);
         OnCompositionChanged?.Invoke(Composition);
         DispatchToReceiver(CurrentInput, Composition);
@@ -522,23 +597,6 @@ public class InputManager : MonoBehaviour
         Composition = string.Empty;
         _hangulComposer.Clear();
         _syntheticBase = string.Empty;
-    }
-
-    /// <summary>CapsLock으로 올라간 대문자를 소문자로 되돌린다.
-    ///
-    /// 두벌식 조합기는 대문자를 쌍자음·이중모음으로 읽으므로('R'→ㄲ), CapsLock이 켜져 있으면
-    /// <b>모든 자음이 쌍자음이 되어</b> 아무 단어도 칠 수 없다. Shift를 실제로 누르고 있다면
-    /// 플레이어가 의도한 쌍자음이므로 그대로 둔다 - onTextInput이 주는 글자만으로는 둘을
-    /// 구분할 수 없어 키보드 상태를 직접 본다.</summary>
-    private static char NormalizeCapsLock(char character)
-    {
-        if (!char.IsUpper(character))
-            return character;
-
-        var keyboard = Keyboard.current;
-        var shiftHeld = keyboard != null && keyboard.shiftKey.isPressed;
-
-        return shiftHeld ? character : char.ToLowerInvariant(character);
     }
 
     // IME 컨텍스트가 창에 붙은 뒤에 조합을 버리고 변환 모드를 맞춘다. 이 두 가지 모두
@@ -644,8 +702,15 @@ public class InputManager : MonoBehaviour
 
     private void HandleBackspace()
     {
-        // 합성 조합 중이면 자모 하나씩 지운다(한글 입력의 일반적인 동작). 조합기가 비면 아래
-        // 평범한 경로로 내려가 그 앞에 커밋되어 있던 글자를 지운다.
+        // ⭐ 한글 지우기는 두 단계다 - <b>조합 중인 마지막 음절은 자모 하나씩</b>, 그게 다 지워지고
+        // 나면 <b>그 앞은 음절 통째로</b>. OS IME와 같은 동작이며 다음과 같이 지워진다:
+        //
+        //     엉엉엉 -> 엉엉어 -> 엉엉ㅇ -> 엉엉 -> 엉 -> (빈 입력)
+        //
+        // 이게 성립하는 건 조합기가 마지막 한 음절만 들고 있기 때문이다(AppendHangulKey가 앞쪽
+        // 완성 음절을 그때그때 커밋된 글자로 떼어낸다). 전부 조합기에 쌓아두면 세 음절이 모두
+        // 자모 단위로 분해되어 아홉 번을 눌러야 한다. 아래 커밋된 글자 경로는 그대로 두고
+        // 떼어내는 쪽만 바꾸면 되는 게 이 구조의 요점이다.
         //
         // ⚠️ 여기서 DispatchToReceiver를 부르지 않는 것은 아래 경로와 같은 이유다 - 지우는 도중에
         // 평가하면 "펀치가"에서 한 글자를 지운 순간 "펀치"가 매칭되어 카드가 소비된다.

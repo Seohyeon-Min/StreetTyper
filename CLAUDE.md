@@ -21,7 +21,8 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
     1. Unity가 생성한 `Assembly-CSharp.csproj`에서 `<HintPath>`(약 330개)와 `<DefineConstants>`를 뽑아 응답 파일(`.rsp`)로 만든다.
     2. 소스는 csproj의 `<Compile Include>` 목록 대신 `Assets/**/*.cs`를 직접 글롭할 것 — **새로 만든 `.cs`는 csproj에 아직 없다.** csproj 밖 소스가 `Assets/03_Prefabs/UI/UIStyle/Runtime/`에도 있다.
        - ⚠️ **글롭한 다음 `Assets/Plugins/`와 경로에 `/Editor/`가 든 것을 빼야 한다.** 전자는 `FMODUnity.asmdef`로 **다른 어셈블리**라 아래 `-r:`과 중복되어 CS0121(모호한 호출)이 무더기로 나고, 후자는 `Assembly-CSharp-Editor` 소속이라 CS0579(중복 특성)가 난다. 둘 다 **내 코드와 무관한 가짜 오류**이니 여기서 시간을 쓰지 말 것. 제대로 걸러내면 소스가 **96개**(2026-08-08 기준)로 줄고 경고만 남는다.
-    3. `-r:Library/ScriptAssemblies/FMODUnity.dll`을 **손으로 추가**해야 한다. FMOD만 csproj에 HintPath가 없다.
+    3. `-r:Library/ScriptAssemblies/FMODUnity.dll`과 `-r:Library/ScriptAssemblies/com.rlabrecque.steamworks.net.dll`을 **손으로 추가**해야 한다. 둘 다 csproj에 HintPath가 없다(FMOD는 asmdef, Steamworks.NET은 UPM 패키지라서다).
+       - Steamworks.NET을 아직 받아오지 않았다면 `-define:DISABLESTEAMWORKS`를 넣으면 Steam을 건드리는 코드가 통째로 빠져 나머지를 검증할 수 있다(`SteamAchievementService`가 그 이름으로 감싸여 있다).
     4. `dotnet "C:/Program Files/dotnet/sdk/<ver>/Roslyn/bincore/csc.dll" @response.rsp` — 옵션은 `-target:library -langversion:9.0 -nostdlib+ -noconfig`.
     5. ⚠️ rsp 안의 경로는 **Windows 형식(`C:/...`)**이어야 한다. Git Bash의 `/c/...`를 넣으면 CS0006이 난다.
     - **컴파일만 검증한다.** 인스펙터 배선 누락·씬 참조·IME 동작은 여전히 에디터 Play와 스탠드얼론 빌드로만 확인된다.
@@ -91,7 +92,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 - `Assets/00_Scenes/TitleScene.unity` — 타이틀 메뉴. `Canvas`(버튼 `GameStart`/`Option`/`Exit`) · `Main Camera` · `EventSystem`.
   - 루트는 `Canvas`(버튼 `GameStart`/`Option`/`Exit`, 그리고 `UI > Option Panel`) · `Main Camera` · `System` · `EventSystem`이다. `TitleMenu` 컴포넌트는 **`03_Prefabs/Managers/TitleManager.prefab`**(구 `TitleMenu.prefab`을 이름만 바꾼 것) 인스턴스로 들어와 있다 — 씬 파일을 스크립트 GUID로 검색하면 0건이 나오는데, 컴포넌트가 프리팹 쪽에 있어서지 없어서가 아니다. **버튼 3개는 정상 동작한다.**
   - `SoundManager` 프리팹 인스턴스도 이 씬에 있다. `OptionsPanel`이 `SoundManager.Instance`로 볼륨을 읽고 쓰므로 **빼면 옵션 창의 슬라이더가 아무것도 하지 않는다**(경고만 뜬다).
-  - **언어 전환 버튼(`Option Panel > Language`)도 여기에만 있다.** `OptionsPanel.languageButton`/`languageButtonText`로 연결되어 있고, 누르면 `LanguageSettings.Toggle()`이 돈다. **전투 씬에는 옵션 창이 없으므로 런 도중에는 언어를 바꿀 수 없고, 그게 의도다**(아래 `LanguageSettings` 참조).
+  - **언어 전환 버튼(`Option Panel > Language`)도 여기에만 있다.** `OptionsPanel.languageButton`/`languageButtonText`로 연결되어 있고, 누르면 `LanguageSettings.ChangeLanguage(1)`이 돈다(다섯 언어를 순환한다). **전투 씬에는 옵션 창이 없으므로 런 도중에는 언어를 바꿀 수 없고, 그게 의도다**(아래 `LanguageSettings` 참조).
   - `Main Camera`를 지우지 말 것. Overlay 캔버스는 카메라 없이도 그려지지만 카메라가 하나도 없으면 "No cameras rendering" 경고가 뜬다.
   - **버튼 3개와 옵션 창은 마우스 없이도 조작된다** — `MenuKeyboardNavigator`가 타이틀 쪽과 옵션 창 쪽에 하나씩 붙어 있다(아래 `MenuKeyboardNavigator` 절). ⚠️ **`EventSystem`의 `Send Navigation Events`를 꺼둔 상태여야 한다.** 켜면 내장 모듈이 같은 방향키·Enter를 같이 처리해 포커스가 두 칸씩 뛴다.
 - `Assets/00_Scenes/IntroScene.unity` — 오프닝 스토리. `IntroSystem.prefab`(`IntroManager`) 인스턴스가 슬라이드를 순서대로 넘긴다. 여기서 나가는 곳은 `SampleScene` 하나뿐이라 **인트로에서 타이틀로 되돌아갈 길이 없다**(ESC도 없다).
@@ -144,7 +145,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - ⚠️ **`Actions.prefab`은 이제 죽은 에셋이다.** `PendingActionView`가 "한 줄에 프리팹 하나"를 찍어내던 구조에서 **말풍선 하나에 줄바꿈으로 이어 붙이는** 구조로 바뀌면서 아무도 참조하지 않게 됐다(`_Recovery`의 백업 씬만 아직 가리킨다). 예전 구조로 되돌리려다 이걸 되살리지 말 것.
   - 구 `PlayerSpeechBubble.prefab`은 **삭제됐다.** `EnemySpeechBubble.prefab`은 GUID가 유지된 채 `SpeechBubble.prefab`으로 이름만 바뀌었다(`ececaf37…`). 예전에 남아 있던 `BattleManager.prefab`의 `playerSpeechBubblePrefab` 깨진 참조는 **정리됐다** — 지금 말풍선 프리팹 필드는 **넷**이다 — `SpeechBubbleManager`의 `speechBubblePrefab`(기본) · **`motherDragonSpeechBubblePrefab`**(`SpeechBubbleMother.prefab`) · **`motherDragonPlayerSpeechBubblePrefab`**(`SpeechBubblePlayer.prefab`), 그리고 `PendingActionView.bubblePrefab`. 마더 드래곤 대화용 두 개는 **비어 있으면 `speechBubblePrefab`으로 폴백**하므로 안 붙였을 때 조용히 평범한 말풍선이 나온다.
   - `strongEnemy.prefab`은 **삭제됐다.** `StageManager.prefab`의 `enemyPrefabs` 기본값(3칸)에는 아직 그 깨진 GUID(`f468762e…`)가 2번째 항목으로 남아 있지만, **`SampleScene.unity`의 씬 인스턴스가 `enemyPrefabs.Array.size`를 6으로 덮어써 `Dragon1~6.prefab`을 전부 유효한 참조로 채운다** — 깨진 항목은 씬에서는 이미 가려져 있다(아래 `StageManager` 참조. 옛 `enemy.prefab`은 이제 `Dragon1.prefab`으로 이름만 바뀌었다).
-- `Assets/03_Prefabs/Managers/` — 매니저 프리팹 **열여덟 개**(`InputManager`/`Deck Manager`/`StageManager`/`BattleManager`/`WordDictionary`/`WordUnlockManager`/`StatusEffectManager`/`SpeechBubbleManager`/`EventManager`/`SoundManager`/`TimerManager`/`ResultInputHandler`/`RewardInputHandler`/`TitleManager`/`FloatingDamageManager`/`HitEffectManager`/**`HealEffectManager`**/`StatisticsManager`). **`TitleManager`만 `TitleScene`용이고 나머지가 `SampleScene`의 `02_SYSTEM`에 들어간다.** 매니저는 전부 프리팹으로 뽑혀 있고 씬에는 인스턴스만 있다. **씬은 이걸 인스턴스로 들고 있고, 매니저끼리와 씬 오브젝트를 향한 인스펙터 연결은 전부 프리팹 인스턴스 오버라이드로 저장된다**(`SampleScene.unity`의 `m_Modifications` 안 `objectReference`). 자세한 주의점은 컨벤션 절 참조.
+- `Assets/03_Prefabs/Managers/` — 매니저 프리팹 **열아홉 개**(`InputManager`/`Deck Manager`/`StageManager`/`BattleManager`/`WordDictionary`/`WordUnlockManager`/`StatusEffectManager`/`SpeechBubbleManager`/`EventManager`/`SoundManager`/`TimerManager`/`ResultInputHandler`/`RewardInputHandler`/`TitleManager`/`FloatingDamageManager`/`HitEffectManager`/**`HealEffectManager`**/`StatisticsManager`/**`AchievementManager`**). **`TitleManager`만 `TitleScene`용이고 나머지가 `SampleScene`의 `02_SYSTEM`에 들어간다.** 매니저는 전부 프리팹으로 뽑혀 있고 씬에는 인스턴스만 있다. **씬은 이걸 인스턴스로 들고 있고, 매니저끼리와 씬 오브젝트를 향한 인스펙터 연결은 전부 프리팹 인스턴스 오버라이드로 저장된다**(`SampleScene.unity`의 `m_Modifications` 안 `objectReference`). 자세한 주의점은 컨벤션 절 참조.
   - ⚠️ **매니저 프리팹은 반드시 이 폴더 하나에만 둘 것.** 머지 중에 `FloatingDamageManager`/`HitEffectManager`가 `03_Prefabs/` 루트에 **GUID가 다른 똑같은 복제본**으로 한 벌 더 생긴 적이 있다. 복제본은 내용이 같아도 GUID가 달라 씬이 어느 쪽을 가리키느냐에 따라 **싱글턴이 두 개 생기거나(둘 다 씬에 들어간 경우) 인스펙터 연결이 통째로 빈다.** 같은 이름의 프리팹이 두 경로에 보이면 그건 머지 사고다.
 - `Assets/_Recovery/` — Unity 크래시 복구가 남긴 씬 덤프(`0.unity`, `0 (1).unity`)가 커밋되어 있다. **프로젝트와 무관한 잔재**이고 빌드 설정에도 없다. 여기를 실제 씬으로 착각하지 말 것 — 죽은 에셋(`Actions.prefab` 등)의 마지막 참조가 여기 남아 있어서 "아직 쓰이는 것처럼" 보이게 만든다.
 - ⭐ `Assets/04_Data/Resources/CardLocalization.json` — **카드 34장이 존재하는 유일한 자리**(단어 28 + 명령 6). 이름·설명·수치 칸을 5개국어로, 그리고 수치·분류·시작 단어 여부까지 한 행에 담는다. `Resources` 폴더에 있는 건 `CardDatabase`가 `Resources.Load`로 읽기 때문이다 — **옮기지 말 것.**
@@ -155,6 +156,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - ⚠️ **명령 카드에 `grantedAtStart`를 켜지 말 것.** 켜면 사전에 들어가 손패에 뜬다. 예전엔 폴더를 나눠 막았지만 지금은 같은 파일에 있으므로, `WordUnlockManager`가 `CardCategory.Command`를 거르는 것이 **유일한 방어선**이다.
   - ⚠️ **수치 칸이 포맷 문자열인 카드가 있다.** 어썸은 `"+{0}"`, 퍼펙트/니킥/촙/박치기는 `"{0}"`이며 `{0}` 자리에 런타임 수치가 들어간다(아래 `SkillResolver` 절). 그 칸을 고정 문구로 바꾸면 **숫자가 사라지고 적어둔 글자만 뜬다** — 조용히 옛 방식으로 되돌아가는 것이라 눈치채기 어렵다.
   - 카드에 `icon`은 없다. 프레임·배지는 카테고리로 정해지고(`CardView`), JSON은 스프라이트 참조를 담을 수 없다 — 카드별 아이콘이 필요해지면 `iconPath` 문자열 + `Resources.Load`로 가야 한다.
+- ⭐ `Assets/04_Data/Resources/AchievementDefinitions.json` — **도전과제 19종이 존재하는 유일한 자리.** 조건 종류·문턱값·Steam API Name을 한 행에 담는다. 읽는 창구는 `AchievementDatabase`이고 카드·대사 JSON과 같은 이유로 `Resources`에 있다 — **옮기지 말 것.**
 - `Assets/04_Data/EnemyTutorial.asset` — 유일한 `EnemyData`.
 - `Assets/05_Sounds/FMOD/StreetTyperFMOD/` — **FMOD Studio 프로젝트 원본이 저장소 안에 있다.** `StreetTyperFMOD.fspro`(에디터로 여는 파일) · `Metadata/`(이벤트·버스·뱅크 정의 XML) · `Build/Desktop/`(빌드된 `.bank` 4개) · `Assets/`(원본 오디오). 사운드 구조를 바꾸려면 Unity가 아니라 여기를 FMOD Studio로 열어야 한다 — 자세한 건 아래 `SoundManager` 절과 "알려진 이슈" 참조.
 - `Assets/InputSystem_Actions.inputactions` — Input System 기본 템플릿. **미사용.** 게임플레이 입력은 의도적으로 이걸 거치지 않는다(아래).
@@ -193,11 +195,13 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 | `StageManager.stageStartDelay` | 2 | 2 | 스테이지 등장 → 플레이어 턴 시작까지 |
 | `BattleManager.actionBubbleDuration` | 1 | 1 | 공격 말풍선이 떠 있는 시간 |
 | `DeckManager.pendingActionInterval` | 0.3 | — | 쌓인 공격이 하나씩 터지는 간격 |
+| `DeckManager.maxTotalPlayTime` | 3.9 | — | 쌓인 공격 재생 **전체의 상한**(넘치면 간격을 압축한다) |
+| `DeckManager.moveDuration` | 0.2 | — | 적 앞으로 돌진 / 원래 자리로 복귀 각각의 시간 |
 | `StageManager.rewardAdvanceDelay` | 0.6 | — | 보상 선택 → 다음 스테이지 자동 진행까지 |
 
 `pendingActionInterval`은 위의 다른 값들과 성격이 다르다 — **자리만 비워둔 값이 아니라 실제로 연출이 일어나는 구간**이다(쌓인 공격이 하나씩 적용되며 HP가 계단식으로 줄어든다). **`postAttackDelay`도 이제 절반쯤 그렇다** — 뒷부분 `YourTurnBanner.CountdownDuration`(기본 3 × 0.35 = 1.05초)만큼을 3-2-1 카운트다운이 쓰고, 앞의 남은 시간만 빈 여운이다. 카운트다운이 이 대기보다 길어지면 앞이 0이 되고 **그만큼 턴 간격이 실제로 늘어난다.**
 
-⚠️ **이 값은 그대로 쓰이지 않는다.** `PlayPendingActions`가 **공격 연출 전체를 3.9초 안에 끝내도록** 간격을 스스로 압축한다(`maxTotalTime` / 돌진·복귀 0.2초씩이 하드코딩되어 있다). 쌓인 공격이 많으면 간격이 줄고 그 비율만큼 `Animator.speed`가 올라가 애니메이션도 같이 빨라진다. 즉 `pendingActionInterval`은 **공격이 적을 때의 기본값**이고 상한은 코드에 박혀 있다.
+⚠️ **이 값은 그대로 쓰이지 않는다.** `PlayPendingActions`가 **공격 연출 전체를 3.9초 안에 끝내도록** 간격을 스스로 압축한다 — 상한은 `maxTotalPlayTime`(3.9), 돌진·복귀는 `moveDuration`(0.2) × 2이고 ⚠️ **둘 다 하드코딩이 아니라 `DeckManager`의 인스펙터 필드다.** 압축 기준은 조합 수가 아니라 **총 타격 수(`totalHits`)**라 더블/트리플로 연타가 늘어도 같은 시간 안에 끝난다. 쌓인 공격이 많으면 간격이 줄고 그 비율만큼 `Animator.speed`가 올라가 애니메이션도 같이 빨라진다. 즉 `pendingActionInterval`은 **공격이 적을 때의 기본값**이고, 상한은 위 두 칸에서 조절한다.
 
 대기 중에는 **입력이 잠기고 타이머도 멈춘다**(`DisableInput` + `StopTimer`). 대기가 끝나는 쪽에서 다시 열어주므로, 새 대기 구간을 추가할 땐 반드시 짝을 맞출 것.
 
@@ -324,7 +328,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
 | `StageManager` | ⚠️ 옛 `demiGreetingLine`/`motherGreetingLine`(+`…En`)은 **삭제됐다** — 위 대사 JSON(`DemiGreeting`/`MotherGreeting`)으로 옮겼다 |
 | `OptionsPanel` | `closeKorean`/`closeEnglish`, 그리고 불/스/일 3칸 — **이미 5개국어다**(`switch (LanguageSettings.Current)`) |
 | `TitleMenu` | 버튼 라벨 3개 |
-| `StatusEffectManager` | `GetDisplayName`(`화상`/`BURN` 등)과 `DevilDisplayName` — 코드에 직접 박혀 있다 |
+| `StatusEffectManager` | `burnBubbleFormat`/`burnBubbleFormatEn`(화상 말풍선 문구). ⚠️ 옛 `GetDisplayName`(`화상`/`BURN`)·`DevilDisplayName`은 **삭제됐다** — 문구가 코드에 박혀 있어 인스펙터에서 못 고쳤고, `StatusIconRow`가 이름 대신 아이콘+숫자로 바뀌며 소비자가 사라졌다 |
 | `EventManager` | ⚠️ 대사 배열 6개가 전부 **삭제됐다** — 위 대사 JSON(`DragonEvent`/`EndingEvent`)으로 옮겼고 5개국어가 된다 |
 | `CardCollectionPanel` | `presentation`(제목) + `closeCommand`(`닫기`/`close`) |
 
@@ -577,7 +581,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
   - **전체 클리어(`battleManager.IsFinalResult`)에는 손패를 `PlaySink()`으로 그냥 아래로 가라앉힌다.** 진 게 아니니 무너뜨리지 않지만, 결과 화면 명령 카드가 같은 아래쪽 자리로 떠오르므로 치워두지 않으면 겹친다. ⚠️ **`IsGameOver`가 아니라 `IsFinalResult`인 게 중요하다** — 일반 스테이지 클리어(보상 선택 중)까지 걸리면 다음 스테이지로 이어지는 판에서 손패가 사라진다. 그 경우 BGM도 손패도 그대로 둔다.
     - ⚠️ **여기서 슬롯 데이터를 비우지 않는다.** `OnSlotChanged(null)`가 나가면 `CardSlotView.PlaySwap`이 다시 불려 **방금 시작한 무너짐 코루틴을 그 자리에서 끊는다.** 데이터는 재시작 시 `LoadStage`가 알아서 비우고 `RefillAll`이 다시 채운다.
   - **`IsEnemyDefeated()`가 "적이 죽었나"의 단일 판정이다** — `currentEnemy == null || !activeInHierarchy || currentHP <= 0` 셋을 함께 본다. `IsGameOver`만으로는 부족한데, **이벤트 스테이지(마더 드래곤)는 대사가 끝날 때까지 `IsGameOver`가 false로 남고** `CheckGameState`가 죽은 적을 `Destroy`가 아니라 `SetActive(false)`로만 끄기 때문이다. `RunTurnTransition`(가짜 적 턴 방지)과 `PlayPendingActions`(죽은 적에게 남은 콤보가 들어가는 것 방지) 양쪽에서 쓴다.
-  - **`DeckManager.TurnPhase`** — `RunTurnTransition`이 어느 구간을 지나는 중인지 다른 시스템이 알 수 있게 노출한 enum이다: `PlayerInput`(입력 열려있고 타이머 도는 중) → `ResolvingPlayerActions`(`PlayPendingActions` — 내가 쌓은 펀치 재생 중) → `TurnChangeRest`(`turnChangeDelay` 대기) → `EnemyTurn`(`ExecuteEnemyTurn` + `OnEnemyTurnEnded` 화상 틱) → `PostAttackRest`(`postAttackDelay` 대기) → 다시 `PlayerInput`. `CurrentPhase` 프로퍼티로 즉시 읽거나 `OnTurnPhaseChanged` 이벤트로 구독할 수 있다. **적 인텐트 말풍선을 내 공격 애니메이션 재생 중(`ResolvingPlayerActions`)엔 숨기고 싶다는 요청으로 추가됐다** — 이런 "지금 연출 중이라 이 UI는 꺼야 한다"류 판단이 필요하면 여기부터 확인할 것.
+  - **`DeckManager.TurnPhase`** — `RunTurnTransition`이 어느 구간을 지나는 중인지 다른 시스템이 알 수 있게 노출한 enum이다: `PlayerInput`(입력 열려있고 타이머 도는 중) → `ResolvingPlayerActions`(`PlayPendingActions` — 내가 쌓은 펀치 재생 중) → `TurnChangeRest`(`turnChangeDelay` 대기) → `EnemyTurn`(`ExecuteEnemyTurnCoroutine` + `OnEnemyTurnEnded` 화상 틱) → `PostAttackRest`(`postAttackDelay` 대기) → 다시 `PlayerInput`. `CurrentPhase` 프로퍼티로 즉시 읽거나 `OnTurnPhaseChanged` 이벤트로 구독할 수 있다. **적 인텐트 말풍선을 내 공격 애니메이션 재생 중(`ResolvingPlayerActions`)엔 숨기고 싶다는 요청으로 추가됐다** — 이런 "지금 연출 중이라 이 UI는 꺼야 한다"류 판단이 필요하면 여기부터 확인할 것.
 
 ### 조합 (`02_Scripts/WordChainManager/`)
 
@@ -608,7 +612,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
   - `OnEnemyTurnEnded()`는 **코루틴**이다 — 화상 피해를 적 공격과 겹치지 않게 잠깐 띄우고 말풍선까지 보여주므로 `DeckManager`가 `yield return`으로 기다린다.
   - ⚠️ **화상 피해는 `TakeDamage`가 아니라 `currentHP`를 직접 깎는다.** `CharacterStats.Die()`가 `Destroy`를 부르는데 `BattleManager.CheckGameState`의 승리 판정은 `currentEnemy != null`을 요구해서, 화상으로 적을 파괴하면 **승리 처리가 통째로 건너뛰어진다.** 직접 깎고 `UpdateUI()`를 부르면 정상적인 `SetActive(false)` 경로를 탄다.
   - **얼음**은 `enemy.power`를 직접 깎고 **실제로 깎은 양을 기억했다가** 그만큼만 복원한다(최소 0 클램프 때문). **데빌**은 `CharacterStats.damageTakenMultiplier`를 0.75로 낮춘다 — 받는 쪽에서 처리해야 `EnemyManager`(다른 작업자 파일)를 고치지 않는다.
-  - 뷰가 읽는 공개 상태는 `EnemyEffects`(`IReadOnlyDictionary<StatusEffectType, int>`) · `DevilTurnsLeft` · `OnEffectsChanged` 이벤트, 그리고 표시 이름 `GetDisplayName(effect)` / `DevilDisplayName`(한/영 분기).
+  - 뷰가 읽는 공개 상태는 `EnemyEffects`(`IReadOnlyDictionary<StatusEffectType, int>`) · `DevilTurnsLeft` · `OnEffectsChanged` 이벤트. 화상 말풍선 문구는 인스펙터의 `burnBubbleFormat`/`burnBubbleFormatEn`이 갖는다. ⚠️ 옛 표시 이름 API(`GetDisplayName`/`DevilDisplayName`)는 **삭제됐다**(호출자가 각각 1곳·0곳이었다).
   - `IsCurrentEnemy(Transform)`으로 "이 대상이 지금 적인가"를 알려준다. `StatusIconRow`가 이걸로 자기가 적용인지 플레이어용인지 판별한다.
   - **`UI/StatusIconRow`** — 화상/마비/냉동/데빌을 **아이콘 + 남은 턴 숫자**로 보여주는 순수 뷰. **`HPBar.prefab` 안에 들어 있어** 캐릭터를 따라다닌다(`[RequireComponent(typeof(WorldAnchoredUI))]`). 같은 오브젝트의 `WorldAnchoredUI.Target`으로 적/플레이어를 **자동 판별**한다 — 예전엔 인스펙터 토글이었는데 그 오버라이드가 Revert되자 플레이어 바가 적 상태이상을 그리는 버그가 났다.
     - **방어(쉴드)는 여기서 다루지 않는다.** 그건 상태이상이 아니라 `CharacterStats.defense` 값이고 `HealthBarUI`의 `defIcon`/`defText`가 담당한다.
@@ -667,7 +671,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
     - `Setup`은 텍스트 색을 **캐시해 둔 프리팹 기본색으로 되돌린다** — 같은 오브젝트를 `SetupIntent`로 물들인 뒤 재사용해도 색이 남지 않게 하기 위한 것이다.
     - ⚠️ **꼬리는 코드가 건드리지 않는다.** 예전 `Setup(message, isPlayer, isNormalTail)`은 앵커·피벗·좌우 반전을 코드에서 뒤집었지만 지금은 프리팹 배치 그대로 쓴다. 생각풍선은 별도 프리팹(`ThinkingBubble.prefab`)이다.
     - 가로 배치(아이콘 → 텍스트 순서)도 코드가 아니라 **프리팹의 `Horizontal Layout Group` + 자식 순서**가 담당한다.
-  - ⚠️ **`BattleManager`가 인텐트 말풍선을 두 곳에서 띄우는데 한쪽만 아이콘화되어 있다.** `UpdateUI()`의 상시 인텐트 표시는 `SetupIntent(...)`를 쓰지만(마더 드래곤만 대사라 `Setup`), **적 행동 직후의 임시 결과 말풍선**(`ExecuteEnemyTurn` 안 `SpeechBubbleManager.ShowBubble(...)`)은 아직 텍스트 그대로다. `ShowBubble`이 문자열만 받기 때문이고, 아이콘화하려면 오버로드를 새로 만들어야 한다.
+  - ⚠️ **`BattleManager`가 인텐트 말풍선을 두 곳에서 띄우는데 한쪽만 아이콘화되어 있다.** `UpdateUI()`의 상시 인텐트 표시는 `SetupIntent(...)`를 쓰지만(마더 드래곤만 대사라 `Setup`), **적 행동 직후의 임시 결과 말풍선**(`ExecuteEnemyTurnCoroutine` 안 `SpeechBubbleManager.ShowBubble(...)`)은 아직 텍스트 그대로다. `ShowBubble`이 문자열만 받기 때문이고, 아이콘화하려면 오버로드를 새로 만들어야 한다.
 - **`WorldAnchoredUI`** (`02_Scripts/UI/`) — 월드 오브젝트를 따라다니는 Overlay UI. HP 바가 이걸로 캐릭터 위에 붙는다. `LateUpdate`에서 `WorldToScreenPoint`로 위치를 잡고 `Camera.main`을 캐시한다.
   - 위치 조정은 **`screenOffset`(참조 해상도 픽셀)** 으로 한다. `worldOffset`도 있지만 위와 같은 이유로 1이 100픽셀을 넘는다.
   - ⚠️ 숨길 때 `SetActive(false)`가 아니라 **`CanvasGroup.alpha`** 를 쓴다 — 오브젝트를 끄면 `LateUpdate`가 멈춰 대상이 다시 나타나도 스스로 되살아나지 못한다. 그래서 `[RequireComponent(typeof(CanvasGroup))]`이 걸려 있다.
@@ -691,10 +695,10 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
   - 볼륨은 `PlayerPrefs`(`option.volume.*`)에 저장된다. `Awake`에서 읽어두고 FMOD 호출은 `Start`로 미루며(뱅크 로드 후라야 안전), 디스크 쓰기는 드래그 중이 아니라 **옵션 창을 닫을 때** `SaveVolumes()` 한 번이다.
 - **타격감 연출 — `CameraShake` / `FloatingDamageManager` / `HitEffectManager`** — 셋 다 `public static Instance` 싱글턴이고 **호출부에 null 가드가 있어 씬에 없어도 조용히 넘어간다**(소리·흔들림·숫자·이펙트가 안 나오면 씬에 오브젝트가 있는지부터 볼 것).
   - `DeckManager.PlayPendingActions`의 타격 루프에서 **셋 다 `Damage > 0`인 조합에만** 붙는다(방어처럼 피해가 0인 조합은 펀치 자체를 재생하지 않는다). **단 카메라 흔들림만 시퀀스당 한 번**이고 나머지 둘은 타격마다다.
-  - 플레이어가 맞을 때는 `EnemyManager.ExecuteEnemyTurn`이 `HitEffectManager`를 부른다(흔들림·피해 숫자는 그쪽에 없다).
+  - 플레이어가 맞을 때는 `EnemyManager.ExecuteEnemyTurnCoroutine`이 `HitEffectManager`를 부른다(흔들림·피해 숫자는 그쪽에 없다).
   - `CameraShake`는 `Main Camera`에 붙어 `OnEnable`에서 원위치를 기억하고 `localPosition`을 흔든다 — **런타임에 카메라를 옮기면 복귀 지점이 어긋난다**(`PlayerBattleVisuals`와 같은 함정). 세기는 인스펙터 `shakeMultiplier`가 전체 배율이고, 호출 인자는 `DeckManager.hitShakeDuration`/`hitShakeMagnitude`에서 온다.
   - `FloatingDamageManager`는 `FloatingDamageText.prefab`을 `damageCanvas` 아래에 찍는다. 위치는 적의 월드 좌표를 `WorldToScreenPoint`로 바꿔 잡고 숫자가 겹치지 않게 살짝 랜덤으로 흩뿌린다. ⚠️ **`Camera.main`을 캐시 없이 매번 부르고 null 검사도 하지 않는다.**
-  - **`HitEffectManager`** (`Combat/`) — 피격 시 대상 `SpriteRenderer`의 `bounds` 안 랜덤 위치에 `hitEffectPrefab`(`03_Prefabs/Effect/HitEffect.prefab`)을 하나 찍는다. **부르는 쪽은 `CharacterStats.TakeDamage`가 아니라 `DeckManager`의 펀치 루프(적 쪽)와 `EnemyManager.ExecuteEnemyTurn`(플레이어 쪽) 두 군데다** — `TakeDamage`에서 부르면 화상 같은 지속 피해에도 이펙트가 튄다.
+  - **`HitEffectManager`** (`Combat/`) — 피격 시 대상 `SpriteRenderer`의 `bounds` 안 랜덤 위치에 `hitEffectPrefab`(`03_Prefabs/Effect/HitEffect.prefab`)을 하나 찍는다. **부르는 쪽은 `CharacterStats.TakeDamage`가 아니라 `DeckManager`의 펀치 루프(적 쪽)와 `EnemyManager.ExecuteEnemyTurnCoroutine`(플레이어 쪽) 두 군데다** — `TakeDamage`에서 부르면 화상 같은 지속 피해에도 이펙트가 튄다.
     - 싱글턴인 이유가 여기 명시돼 있다: 부르는 쪽이 적 프리팹마다 하나씩 붙는 `CharacterStats` 계열이라 인스펙터 연결로 하면 **프리팹 개수만큼 같은 참조를 반복해서 심어야 한다.**
   - **`EffectBase`** (`Combat/`) — 이펙트 프리팹 공통 베이스(`team17_gamejam`에서 그대로 가져옴). 자식 렌더러의 머티리얼에서 `_Progress`(0~1)를 `lifetime` 동안 채우고, `_Duration`이 있으면 **레이어마다 다른 속도**로, `_Seed`가 있으면 스폰 때 랜덤값을 한 번 넣어 매번 다른 모양이 되게 한다. 다 되면 스스로 `Destroy`.
     - `lifetime = -1`은 **"외부에서 파괴할 때까지 무한 재생"**을 뜻하는 약속된 값이다(`OnValidate`가 음수를 -1로 고정한다). 실수로 음수를 넣어 무한 재생이 되지 않게 하는 장치이니 의미를 바꾸지 말 것.
@@ -777,7 +781,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
   - ⚠️ 새 버튼은 **`MenuKeyboardNavigator.items`에도 넣어야** 키보드로 닿는다(배열 순서 = 화면 위→아래).
   - ⚠️ **`OnEnable`에서 저장값을 슬라이더에 되비출 때 `SetValueWithoutNotify`를 쓴다.** 평범한 `value =` 대입은 `onValueChanged`를 되쏘아 **방금 읽어온 값을 그대로 덮어쓴다.**
   - 구독/해제가 `OnEnable`/`OnDisable`이라 창을 여닫을 때마다 도는데, `OnDisable`에서 `SaveVolumes()`를 부른다 — **드래그 중엔 적용만, 닫을 때 한 번만 디스크에 쓴다.**
-  - **언어 버튼은 `LanguageSettings.Toggle()`만 부른다.** 라벨은 "지금 언어"가 아니라 **"누르면 바뀔 언어"**를 보여준다(영어일 때 `한국어`, 한국어일 때 `English`). `languageButtonText`를 비워두면 버튼의 첫 `TMP_Text`를 알아서 찾는다. 닫기 버튼 라벨은 `closeKorean`/`closeEnglish`를 `Pick`으로 고른다.
+  - **언어 버튼은 `LanguageSettings.ChangeLanguage(1)`만 부른다**(클릭 시. 좌우 방향키는 ±1). 라벨은 **"지금 언어"**를 보여주며 5개국어 칸(`labelKorean`/`labelEnglish`/`labelFrench`/`labelSpanish`/`labelJapanese`)에서 `switch`로 고른다. ⚠️ 예전엔 **"누르면 바뀔 언어"**였다가 뒤집혔다 — 코드의 `[수정]` 주석이 그 흔적이고, `RefreshLanguageButton` 위에 달린 주석은 아직 옛 설명이라 **주석을 믿지 말고 `switch`를 볼 것.** `languageButtonText`를 비워두면 버튼의 첫 `TMP_Text`를 알아서 찾는다. 닫기 버튼 라벨도 `Pick`이 아니라 **`switch (LanguageSettings.Current)`로 5개국어**를 고른다(`closeKorean`…`closeJapanese`).
 - **`ResultInputHandler` : `CommandWordReceiver`** — **런이 끝난 결과 화면 전용**이다. `다시하기`/`retry`(→ `StageManager.RestartStage()`) · `카드`/`cards`(→ `CardCollectionPanel.Open()`) · `타이틀`/`title`(→ `ReturnToTitle()`) 세 장을 **손패 자리에 명령 카드로 띄우고** 타이핑으로 받는다. `TypingPriority.Result`, `WantsInput() => battleManager.IsGameOver`.
   - **`PauseManager`의 명령 카드 연출과 같은 구조다** — `resultCardsLayout`(**실제로 `PauseManager`와 같은 `PauseHand`를 가리킨다**, `Card Slot Manager`는 비워둘 것) + `commandCardPrefab`(보통 `Card.prefab`)에 `PlayEnter` + `BindStatic(CommandCardData, input)`. 자리가 비어 있는 건 `DeckManager`가 패배 시 손패를 `PlayCollapse`로 이미 무너뜨렸기 때문이다.
   - **`카드`는 카드를 치우지 않고 목록만 연다** — 닫으면 이 화면으로 돌아와야 하기 때문이다. 목록이 떠 있는 동안은 우선순위(`CardCollection = 30`)가 그쪽으로 넘어가 여기로 입력이 오지 않으므로 **상태를 따로 들 필요가 없다**(`PauseManager`와 같다). `cardCollectionPanel`/`cardsCard`를 비워두면 그 명령이 통째로 사라진다.
@@ -809,9 +813,41 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
   - `Close()`는 **`_isOpen = false`를 `ClearInput()`보다 먼저** 세운다. `ClearInput`은 "비었다"를 수신자에게도 디스패치하는데, 아직 열린 상태면 이쪽이 그 신호를 가로채 일시정지 메뉴의 오타 상태가 안 풀린다.
   - 열 때마다 `Rebuild()`로 새로 그린다(보상으로 카드가 늘어난다). 해금 단어가 늘어 화면을 넘치면 `columns`/`cellSize`/`cardScale`을 같이 줄일 것.
 
+### 도전과제 (`02_Scripts/Achievements/`)
+
+Steam 도전과제 **19종**. ⭐ **무엇이 있고 언제 달성되는지는 전부 `04_Data/Resources/AchievementDefinitions.json`**이고, 코드에는 조건의 **종류**(`AchievementCondition` enum 13개)만 있다. 카드·대사가 JSON으로 간 것과 같은 이유이며, 새 도전과제가 기존 조건 종류로 표현되면 **JSON 한 줄로 끝나고 스크립트를 열 필요가 없다.**
+
+| 파일 | 역할 |
+|---|---|
+| `AchievementDefinition.cs` | JSON 한 행의 스키마 + `AchievementCondition`/`DeckChangeRule` enum. `CardDefinition.cs`와 같은 구조 |
+| `AchievementDatabase.cs` | static 지연 로드 + **로드 시점 검증**. `DialogueDatabase`를 그대로 본떴다 |
+| `SteamAchievementService.cs` | Steam에 올리는 유일한 창구. static |
+| `SteamRuntime.cs` | Steam API의 수명(초기화·콜백 펌프·종료). **직접 만든 것이다** — 아래 참조 |
+| `AchievementManager.cs` | 판정. 매니저 프리팹으로 `02_SYSTEM`에 들어간다 |
+
+- **enum을 이름으로 적는다**(`"condition": "ClearInLanguage"`). 카드 JSON과 같은 규칙이라 enum 순서를 바꿔도 안전하다.
+- ⭐ **로드 시점 검증이 이 시스템의 유일한 안전망이다.** 도전과제는 조건이 맞을 때까지 아무 일도 안 일어나므로 **설정이 틀려도 "아직 못 깬 것"과 구분되지 않는다.** 그래서 `AchievementDatabase`가 id 중복·조건 이름 오타·`threshold` 0·`addedRule` 누락을 전부 **에러**로 낸다(경고가 아니다).
+- **시너지(Synergy) = `Category != Action && != Command`.** `CardView`가 프레임을 액션(분홍)/그 외(남색) 둘로만 가르는 것과 같은 기준이다.
+- **Steam 호출은 `#if !DISABLESTEAMWORKS && (UNITY_STANDALONE || UNITY_EDITOR)` 안에만 있다.** WebGL·패키지 미설치에서는 판정 로직은 그대로 돌고 올리는 것만 no-op이 된다(`HangulImeMode`와 같은 구조). `DISABLESTEAMWORKS`는 Steamworks.NET 자신이 쓰는 이름이다.
+- **`id`는 Steam 파트너 사이트의 API Name과 글자 그대로 같아야 한다.** 다르면 `SetAchievement`가 false를 돌려주는 것 말고는 아무 증상이 없어서, 그 반환값을 반드시 본다.
+
+⚠️ **`SkillResolver.ActionsThisTurn`을 읽어 "한 턴에 액션 n회"를 판정하지 말 것.** 그 값은 `Resolve` 맨 끝에서 증가하는데 `Resolve`를 부르는 `DeckManager.HandleChainCompleted`도 `OnChainCompleted` 구독자다 — **스크립트 실행 순서 설정이 없어** 누가 먼저 불릴지 정해져 있지 않아 값이 1 차이로 흔들린다. `AchievementManager`가 자체 카운터를 센다.
+
+⚠️ **그 카운터는 두 곳에서 리셋해야 한다.** `OnTurnPhaseChanged`(턴 전환)만으로는 구멍이 있다 — `SetPhase`는 **페이즈가 이미 같으면 이벤트를 쏘지 않는데**, 적이 플레이어 턴 도중에 죽으면 페이즈가 `PlayerInput`인 채로 스테이지가 넘어가고 다음 스테이지의 `BeginNewStagePlayerInput()`이 조기 리턴한다. 그러면 **이전 스테이지의 액션 수가 이월되어 두 스테이지에 걸쳐 10단 콤보가 달성된다.** 그래서 `OnStageLoaded`에서도 리셋한다.
+
+⚠️ **Steamworks.NET의 UPM 패키지에는 흔히 쓰이는 `SteamManager.cs`가 <b>없다</b>.** 바인딩 113개만 들어 있고 `SteamManager`는 그쪽 `.unitypackage`에만 있는 별도 파일이다. 그래서 그 역할을 `SteamRuntime`이 직접 한다. **실제로 이걸 착각해 `SteamManager.Initialized`를 부르는 코드를 커밋했다가 어셈블리 전체가 멈춘 적이 있다**(단일 어셈블리라 스크립트가 통째로 인스펙터에서 사라진다 — `CameraShake.cs` 사고와 같은 종류다).
+
+⚠️ **`SteamRuntime`도 지연 초기화다.** `RuntimeInitializeOnLoadMethod`로 부팅하면 `SteamAchievementService`의 초기화 메서드와 순서가 정해지지 않는다(스크립트 실행 순서 설정이 없다). `Initialized`를 처음 읽는 쪽이 부팅시키므로 순서를 기댈 필요가 없다. **두 파일의 `#if` 가드 조건은 반드시 같아야 한다** — 한쪽만 켜지면 컴파일이 깨진다.
+
+**기존 코드에 더한 것은 셋뿐이다** — `WordDictionary.WordsAddedThisRun`/`WordsRemovedThisRun`(런 단위 덱 증감), `BattleManager.LastResultKind`/`OnEnemyDefeated`, `StageManager.OnStageLoaded`.
+
+⭐ **덱 증감을 `WordDictionary`가 스스로 세는 게 핵심이다.** 시작 덱 스냅샷이 필요 없는 이유는 호출부가 이미 갈려 있기 때문이다 — `Clear()`/`AddWords()`는 `GrantStartingWords`(런 시작)만, `AddWord()`는 `ConfirmReward`(보상)만, `RemoveWord()`는 `CardDeletePanel`(지우기)만 부른다. ⚠️ **보상 지급에 `AddWords`를 쓰기 시작하면 이 전제가 깨진다.**
+
+**에디터 도구**: `Tools > Achievements`에 정의 검사 / 전부 달성 / 전부 초기화가 있다. ⚠️ **Steam은 한 번 올린 도전과제를 게임 재실행으로 되돌리지 않아 초기화가 사실상 필수다**(언어별 클리어 5종을 손으로 확인하려면 반복해야 한다). 셋 다 Play 중에만 동작한다 — `SteamRuntime`이 처음 접근할 때 GameObject를 만들며 초기화하므로 에디트 모드에서 건드리면 안 된다.
+
 ### 에디터 도구 — 이제 없다
 
-한때 `02_Scripts/DeckManager/Editor/`에 카드 24장을 손으로 드래그하다 빠뜨리는 사고를 막는 1회성 도구 둘이 있었다(실제로 어퍼컷 11중복 + 3장 누락이 났던 적 있다). **24장이 다 만들어지고 `WordUnlockManager`에 다 들어간 뒤 둘 다 삭제됐고, `Editor/` 폴더 자체가 없다.**
+한때 `02_Scripts/DeckManager/Editor/`에 카드 24장을 손으로 드래그하다 빠뜨리는 사고를 막는 1회성 도구 둘이 있었다(실제로 어퍼컷 11중복 + 3장 누락이 났던 적 있다). **24장이 다 만들어지고 `WordUnlockManager`에 다 들어간 뒤 둘 다 삭제됐고, `02_Scripts/` 밑에는 `Editor/` 폴더가 하나도 없다.** (저장소 전체로는 `03_Prefabs/UI/UIStyle/Editor/`에 UIStyle 패키지의 에디터 스크립트 둘이 남아 있다 — 터미널 컴파일 검증에서 `/Editor/`를 걸러내야 하는 이유가 이것이다.)
 
 - `CardDataSeeder`(`Tools > Deck Manager > Seed Missing Word Cards`) — 카드 `.asset`을 `AssetDatabase`로 생성했다. **지금은 카드가 에셋이 아니라 JSON 행이라 이 도구 자체가 의미가 없다** — 카드를 추가하려면 JSON에 행을 하나 더 적으면 된다.
 - `WordUnlockPopulator`(`Tools > Deck Manager > Populate Word Unlock Manager`) — 씬의 `WordUnlockManager` 목록을 채웠다.
@@ -872,6 +908,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
   | 카드 프레임·배지 스프라이트 | `Card.prefab`의 `CardView` 인스펙터(`actionFrame`/`defaultFrame`/`commandFrame`/배지 3종) — **한 곳만 고치면 손패·보상·일시정지·목록에 동시에 적용된다** |
   | 카드 이름·설명·수치 칸 | ⭐ **`04_Data/Resources/CardLocalization.json`** (5개 언어 × 34장). 에셋이 아니라 여기다 — 에셋에 남은 텍스트 키는 죽은 값이다. 수치가 들어가는 칸은 JSON 쪽 문구를 **포맷 문자열**로 쓰고 런타임 값을 끼운다(아래) |
   | 대사(마더 드래곤과의 대화 전체) | ⭐ **`04_Data/Resources/DialogueLocalization.json`** (5개 언어 × 6묶음). 읽는 창구는 `DialogueDatabase`, id는 `DialogueIds` 상수 |
+  | 도전과제(무엇이 있고 언제 달성되는가) | ⭐ **`04_Data/Resources/AchievementDefinitions.json`** (19행). 조건 **종류**만 `AchievementCondition` enum으로 코드에 있고 나머지는 전부 데이터다 |
   | 난이도 이름 | **`DifficultyLabels`**(`[Serializable]` 값 묶음) — 쓰는 쪽이 필드로 든다. 언어를 안 타지만 **그래도 인스펙터에 있어야 한다** |
   | 그 외 라벨 | `[SerializeField]` 한/영 두 벌 + `LanguageSettings.Pick(...)` |
 
@@ -881,7 +918,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
 
   ⚠️ **아직 이 규칙을 반만 지키는 곳**(고칠 때 같이 정리할 것): `StageManager.stageLabelFormat`/`bossStageLabel`과 `IntroManager.slides`는 인스펙터에 있지만 **한 벌뿐이라 언어를 안 탄다.**
 
-- **표시 문자열에 한글을 직접 박지 말 것.** 두 언어를 다 지나가는 문자열이면 `[SerializeField]` 두 개(`xxx`/`xxxEn`)를 두고 `LanguageSettings.Pick(...)`으로 고르거나, 코드에 박아야 하면 `LanguageSettings.IsEnglish` 삼항으로 갈라 쓴다(`StatusEffectManager.GetDisplayName` 참조). **`Pick`에 `owner`/`fieldName`을 넘겨야 누락 경고가 어느 필드인지 알려준다.**
+- **표시 문자열에 한글을 직접 박지 말 것.** 두 언어를 다 지나가는 문자열이면 `[SerializeField]` 두 개(`xxx`/`xxxEn`)를 두고 `LanguageSettings.Pick(...)`으로 고르거나, 코드에 박아야 하면 `LanguageSettings.IsEnglish` 삼항으로 갈라 쓴다. ⚠️ **예전에 여기 적혀 있던 예시(`StatusEffectManager.GetDisplayName`)는 인용하지 말 것** — 그건 문구가 코드에 박혀 인스펙터에서 못 고친다는 이유로 **삭제된** 사례이고, 대체된 `burnBubbleFormat`처럼 **인스펙터 칸으로 빼내는 쪽이 이 프로젝트의 기본 사양이다.** **`Pick`에 `owner`/`fieldName`을 넘겨야 누락 경고가 어느 필드인지 알려준다.**
 - **수치가 들어가는 문구는 포맷 문자열로 쓴다.** 글자만 고쳐두면 인스펙터에서 값을 바꿨을 때 문구가 옛 숫자로 남고, **카드에 적힌 숫자와 실제 동작이 어긋나는 건 곧 버그로 보인다.**
   - `CardBase.Fill(text, args)`이 공용 헬퍼다 — 포맷 자리(`{`)가 없으면 **원문을 그대로** 돌려주고, 자리 번호가 인자 수를 넘어도 원문으로 떨어진다(카드가 통째로 비어 보이는 것보다 낫다).
   - `AttributeCardData.Description` → `{0}`=`chancePercent`, `{1}`=`value` · `ActionCardData.Description` → `{0}`=`comboMinHits`, `{1}`=`comboMaxHits`, `{2}`=`comboChancePercent` · **`ModifierCardData.Description` → `{0}`=`value`, `{1}`=`CurrentTurnBonus`(퍼펙트)** · `StatsLabel` 쪽은 어썸 `"+{0}"`, 퍼펙트/니킥/촙/박치기 `"{0}"`.
@@ -900,6 +937,7 @@ Description => …("desc")   StatsLabel => …("label")   럭키의 "보상됨" 
 
 ## 알려진 이슈
 
+- ⚠️ **`다시하기`는 새 런이 아니라 같은 런이다.** `StageManager.RestartStage()`는 씬을 다시 로드하지 않고 사전과 `StatisticsManager`를 그대로 둔다(`player`가 null일 때만 씬을 다시 읽는다). 그래서 누적 피해·통계·해금 단어가 전부 이어지고, **한 번 죽고 재시작해 클리어하면 무피해 도전과제(금강불괴)는 뜨지 않는다.** 의도된 동작이지만 버그로 오해되기 쉽다.
 - **컴파일이 한 파일에 걸려 통째로 멈춘 적이 있다 — 해결됨.** `CameraShake.cs`에 `= 1.5 f;`(숫자와 `f` 접미사 사이 공백)가 커밋된 적이 있고(`cfc7957`), 단일 어셈블리라 **그 파일 하나 때문에 모든 스크립트가 컴파일되지 않았다.** CI도 터미널 컴파일 경로도 없어 에디터를 열기 전까지 드러나지 않는 종류의 사고다 — 스크립트를 고친 뒤에는 에디터 콘솔에서 컴파일 통과를 눈으로 확인할 것.
 
 - **머지가 남긴 잔재들.** 브랜치 4개가 같은 씬·프리팹을 건드리다 보니 아래가 쌓였다. 전부 지금 당장 깨지진 않지만, "왜 이게 두 개지?" 싶을 때 여기를 먼저 볼 것.

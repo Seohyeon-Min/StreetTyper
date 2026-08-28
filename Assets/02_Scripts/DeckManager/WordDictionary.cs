@@ -14,6 +14,22 @@ public class WordDictionary : MonoBehaviour
 
     public event Action OnWordsChanged;
 
+    /// <summary>이번 런에서 <b>보상으로 얻은</b> 카드 수. 시작 덱은 세지 않는다.</summary>
+    public int WordsAddedThisRun { get; private set; }
+
+    /// <summary>이번 런에서 <b>"지우기"로 지운</b> 카드 수.</summary>
+    public int WordsRemovedThisRun { get; private set; }
+
+    // ⭐ 이 두 값이 여기 있는 이유: 도전과제(미니멀리스트/수집광의 고집/튜닝의 끝은 순정)가
+    // "덱을 어떻게 바꿨는가"를 물어보는데, 그걸 밖에서 세려면 시작 덱 스냅샷을 들고 비교해야 한다.
+    // 그럴 필요가 없는 건 호출부가 이미 완벽히 갈려 있기 때문이다:
+    //   Clear()      <- GrantStartingWords (런 시작)
+    //   AddWords()   <- GrantStartingWords (시작 덱이라 세지 않는다)
+    //   AddWord()    <- WordUnlockManager.ConfirmReward (보상)
+    //   RemoveWord() <- CardDeletePanel ("지우기")
+    // 즉 덱의 단일 출처가 스스로 자기 변화를 셀 수 있다.
+    // ⚠️ AddWords를 보상 지급에 쓰기 시작하면 이 전제가 깨진다 - 그때는 여기도 같이 고칠 것.
+
     public bool Contains(CardBase card)
     {
         return card != null && _words.Contains(card);
@@ -72,6 +88,7 @@ public class WordDictionary : MonoBehaviour
         if (!AddInternal(card))
             return false;
 
+        WordsAddedThisRun++;
         OnWordsChanged?.Invoke();
         return true;
     }
@@ -104,12 +121,17 @@ public class WordDictionary : MonoBehaviour
         if (card == null || !_words.Remove(card))
             return false;
 
+        WordsRemovedThisRun++;
         OnWordsChanged?.Invoke();
         return true;
     }
 
     public void Clear()
     {
+        // ⚠️ 아래 조기 리턴보다 먼저 비운다 - 런이 시작될 때마다 확실히 0이어야 한다.
+        WordsAddedThisRun = 0;
+        WordsRemovedThisRun = 0;
+
         if (_words.Count == 0)
             return;
 

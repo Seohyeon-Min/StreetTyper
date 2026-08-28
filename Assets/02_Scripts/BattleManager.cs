@@ -106,6 +106,20 @@ public class BattleManager : MonoBehaviour
 
     public event Action OnBattleEnded;
 
+    /// <summary>가장 마지막에 띄운 결과의 종류. <see cref="OnBattleEnded"/>를 받은 자리에서
+    /// 읽으면 이미 최신값이다 - ShowResult가 lastResultKind를 세운 <b>뒤에</b> 이벤트를 쏘기 때문이다.
+    /// 도전과제 판정처럼 "무엇으로 끝났는가"가 필요한 곳이 쓴다.</summary>
+    public ResultKind LastResultKind => lastResultKind;
+
+    /// <summary>
+    /// 적이 쓰러졌다. 인자는 <b>(그 순간 플레이어 HP, 그 적이 마더 드래곤인가)</b>.
+    ///
+    /// 적 하나당 정확히 한 번만 발생한다 - <c>isEventTriggered</c> 안쪽에서 쏘고, 그 플래그는
+    /// 스테이지마다 리셋된다. 사망 <b>연출</b>이 끝나는 시점(FinishEnemyDeathAfterEffect)이
+    /// 아니라 <b>쓰러진 시점</b>이라, 그때의 플레이어 HP를 그대로 실어 보낼 수 있다.
+    /// </summary>
+    public event Action<int, bool> OnEnemyDefeated;
+
     void Start()
     {
         // 인스펙터 배열은 이 시점에 채워져 있다(필드 초기화자와 달리).
@@ -597,6 +611,11 @@ public class BattleManager : MonoBehaviour
                 // 아웃로(작별 대사·회복·데미 웃는 연출)가 통째로 사라진다.
                 bool isMD = enemyManager.currentEnemy is MotherDragon;
                 int healAmount = 0;
+
+                // 아래 분기(마더 드래곤은 대사, 일반 적은 사망 연출)로 갈라지기 전에 알린다 -
+                // 어느 쪽으로 가든 "적이 쓰러졌다"는 사실은 같고, 플레이어 HP도 아직 이 턴 값이다.
+                // 이 분기는 player가 살아 있을 때만 도달한다(위 if가 null/사망을 이미 걸러낸다).
+                OnEnemyDefeated?.Invoke(player.currentHP, isMD);
 
                 if (isMD)
                 {

@@ -125,3 +125,5 @@ Street_Typer_GDD.docx
 fmod_editor.log
 Assets/Plugins/FMOD/**/*.bundle text eol=lf
 Assets/Plugins/FMOD/**/Info.plist text eol=lf
+# Steam App ID (로컬 전용 - 저장소에 올리지 않는다)
+steam_appid.txt

@@ -1,0 +1,173 @@
+{
+  "achievements": [
+    {
+      "id": "ACH_JOURNEY_BEGINS",
+      "condition": "GameLaunched",
+      "koName": "모험의 시작",
+      "koDesc": "게임 실행하기.",
+      "enName": "A Journey Begins",
+      "enDesc": "Launch the game."
+    },
+    {
+      "id": "ACH_FIRST_STRIKE",
+      "condition": "EnemyDefeated",
+      "koName": "첫 번째 펀치",
+      "koDesc": "첫 번째 적 쓰러뜨리기.",
+      "enName": "First Strike",
+      "enDesc": "Defeat your first enemy."
+    },
+    {
+      "id": "ACH_HELICOPTER_MOM",
+      "condition": "BossEncountered",
+      "koName": "헬리콥터맘",
+      "koDesc": "마그마마테르와 대면하기.",
+      "enName": "Helicopter Mom",
+      "enDesc": "Encounter Magmamater."
+    },
+    {
+      "id": "ACH_SUCCEEDING_MAMA",
+      "condition": "BossDefeated",
+      "koName": "패륜아",
+      "koDesc": "엄마를 쓰러뜨렸다! 그런데 왜...?",
+      "enName": "Succeeding you MAMA",
+      "enDesc": "You defeated Mom! But why...?"
+    },
+    {
+      "id": "ACH_CLEAR_KOREAN",
+      "condition": "ClearInLanguage",
+      "language": "Korean",
+      "koName": "세종대왕",
+      "koDesc": "한국어 설정으로 게임 클리어.",
+      "enName": "King Sejong",
+      "enDesc": "Clear the game in Korean."
+    },
+    {
+      "id": "ACH_CLEAR_ENGLISH",
+      "condition": "ClearInLanguage",
+      "language": "English",
+      "koName": "Easy as ABC",
+      "koDesc": "영어 설정으로 게임 클리어.",
+      "enName": "Easy as ABC",
+      "enDesc": "Clear the game in English."
+    },
+    {
+      "id": "ACH_CLEAR_SPANISH",
+      "condition": "ClearInLanguage",
+      "language": "Spanish",
+      "koName": "¡Olé!",
+      "koDesc": "스페인어 설정으로 게임 클리어.",
+      "enName": "¡Olé!",
+      "enDesc": "Clear the game in Spanish."
+    },
+    {
+      "id": "ACH_CLEAR_FRENCH",
+      "condition": "ClearInLanguage",
+      "language": "French",
+      "koName": "C'est la vie",
+      "koDesc": "프랑스어 설정으로 게임 클리어.",
+      "enName": "C'est la vie",
+      "enDesc": "Clear the game in French."
+    },
+    {
+      "id": "ACH_CLEAR_JAPANESE",
+      "condition": "ClearInLanguage",
+      "language": "Japanese",
+      "koName": "一撃必殺",
+      "koDesc": "일본어 설정으로 게임 클리어.",
+      "enName": "Ichigeki Hissatsu",
+      "enDesc": "Clear the game in Japanese."
+    },
+    {
+      "id": "ACH_NO_DAMAGE",
+      "condition": "ClearWithNoDamage",
+      "koName": "금강불괴",
+      "koDesc": "피해를 받지 않고 게임 클리어.",
+      "enName": "Invulnerable",
+      "enDesc": "Clear the game without taking any damage."
+    },
+    {
+      "id": "ACH_DIE_HARD",
+      "condition": "PlayerHPAtKillAtMost",
+      "threshold": 10,
+      "koName": "다이하드",
+      "koDesc": "체력이 10 이하인 상태로 적 쓰러뜨리기.",
+      "enName": "Die Hard",
+      "enDesc": "Defeat an enemy with 10 HP or less remaining."
+    },
+    {
+      "id": "ACH_COMBO_10",
+      "condition": "ActionsInTurnAtLeast",
+      "threshold": 10,
+      "koName": "10단 콤보",
+      "koDesc": "한 턴에 액션 10회 이상 실행하기.",
+      "enName": "10-Hit Combo",
+      "enDesc": "Play 10 or more Action cards in a single turn."
+    },
+    {
+      "id": "ACH_SYNERGY_5",
+      "condition": "SynergiesInChainAtLeast",
+      "threshold": 5,
+      "koName": "궁극의 필살기",
+      "koDesc": "5개 이상의 시너지를 중첩하여 공격 실행하기.",
+      "enName": "Ultimate Finisher",
+      "enDesc": "Execute an attack with 5 or more active Synergies."
+    },
+    {
+      "id": "ACH_FEW_ACTIONS",
+      "condition": "ClearWithActionsAtMost",
+      "threshold": 3,
+      "koName": "선택과 집중",
+      "koDesc": "덱에 액션 카드가 3장 이하인 상태로 게임 클리어.",
+      "enName": "Narrow and Deep",
+      "enDesc": "Clear the game with 3 or fewer Action cards in your deck."
+    },
+    {
+      "id": "ACH_FEW_SYNERGIES",
+      "condition": "ClearWithSynergiesAtMost",
+      "threshold": 3,
+      "koName": "어휘력 부족",
+      "koDesc": "덱에 시너지 카드가 3장 이하인 상태로 게임 클리어.",
+      "enName": "Lost for Words",
+      "enDesc": "Clear the game with 3 or fewer Synergy cards in your deck."
+    },
+    {
+      "id": "ACH_MINIMALIST",
+      "condition": "ClearWithDeckChange",
+      "addedRule": "Zero",
+      "removedRule": "AtLeastOne",
+      "koName": "미니멀리스트",
+      "koDesc": "카드를 1장 이상 제거하고, 새로운 카드는 전혀 추가하지 않은 채 게임 클리어.",
+      "enName": "Minimalist",
+      "enDesc": "Clear the game after removing at least 1 card and adding zero new cards."
+    },
+    {
+      "id": "ACH_HOARDER",
+      "condition": "ClearWithDeckChange",
+      "addedRule": "AtLeastOne",
+      "removedRule": "Zero",
+      "koName": "수집광의 고집",
+      "koDesc": "카드를 1장 이상 추가하고, 어떤 카드도 제거하지 않은 채 게임 클리어.",
+      "enName": "Hoarder's Pride",
+      "enDesc": "Clear the game after adding at least 1 card and removing zero cards."
+    },
+    {
+      "id": "ACH_DECK_15",
+      "condition": "ClearWithDeckSizeAtLeast",
+      "threshold": 15,
+      "koName": "덱이야 사전이야",
+      "koDesc": "덱에 15종류 이상의 카드를 보유한 채로 게임 클리어.",
+      "enName": "Deck or Dictionary?",
+      "enDesc": "Clear the game with 15 or more unique card types in your deck."
+    },
+    {
+      "id": "ACH_STOCK_DECK",
+      "condition": "ClearWithDeckChange",
+      "addedRule": "Zero",
+      "removedRule": "Zero",
+      "koName": "튜닝의 끝은 순정",
+      "koDesc": "기본 덱 구성을 그대로 유지하여 게임 클리어.",
+      "enName": "Stock Standard",
+      "enDesc": "Clear the game maintaining your exact starting deck."
+    }
+  ]
+}

@@ -192,6 +192,17 @@ public class StageManager : MonoBehaviour
     /// <summary>Zero-based battle index for UI and tutorial gating.</summary>
     public int CurrentBattleIndex => currentBattleIndex;
 
+    /// <summary>
+    /// 스테이지를 열었다. 인자는 <b>(전투 인덱스, 보스전인가)</b>.
+    ///
+    /// 보스 여부를 <c>IsBossBattle</c>의 결과 그대로 실어 보내므로 받는 쪽이 인덱스 4·9를
+    /// 하드코딩할 필요가 없다 - <c>bossBattleIndices</c>를 고치면 저절로 따라온다.
+    ///
+    /// ⚠️ <c>System.Action</c>으로 적은 것은 일부러다. 이 파일에는 <c>using System;</c>이 없고,
+    /// 그래야 <c>Random</c>이 언제나 <c>UnityEngine.Random</c>으로 읽힌다(아래 스폰 코드의 주석 참조).
+    /// </summary>
+    public event System.Action<int, bool> OnStageLoaded;
+
     // 지금 스테이지에 스폰된 적이 마더 드래곤인가. 보상에 "지우기" 카드를 놓을지 판단하는 데 쓴다.
     private bool stageWasMotherDragon;
     private GameObject currentEnemyObject;
@@ -347,6 +358,10 @@ public class StageManager : MonoBehaviour
         // 보스전 인덱스는 IsBossBattle 한 곳에서만 정한다 - 스폰 분기와 스탯 공식(체력·공격력·
         // 방어력)이 같은 판단을 써야 엔딩 보스가 일반 적 공식에 휘말리지 않는다.
         bool isBossBattle = IsBossBattle(currentBattleIndex);
+
+        // 적을 스폰하기 전에 알린다 - 받는 쪽(도전과제)이 필요한 건 "보스 스테이지에 들어왔다"는
+        // 사실뿐이고, 스폰 결과에 의존하지 않아야 나중에 스폰 로직이 바뀌어도 영향이 없다.
+        OnStageLoaded?.Invoke(currentBattleIndex, isBossBattle);
 
         if (SoundManager.Instance != null)
         {

@@ -39,6 +39,35 @@ public class SteamRuntime : MonoBehaviour
         }
     }
 
+    /// <summary>Steam 클라이언트에 설정된 이 게임의 언어(API 이름, 예: "koreana"/"english")를
+    /// 읽는다. Steam이 안 붙어 있으면(App ID 미발급·클라이언트 미실행·WebGL) null을 돌려준다 -
+    /// 부르는 쪽(<see cref="LanguageSettings"/>)이 그 경우 조용히 기존 기본값(영어)으로
+    /// 폴백해야 한다. <b>최초 실행 때 기본 언어를 정하는 용도로만 쓸 것</b> - 이미 저장된
+    /// PlayerPrefs 값이 있으면 그걸 덮어쓰면 안 된다(플레이어가 옵션에서 직접 고른 언어가
+    /// 다음 실행에 Steam 언어로 도로 튕기게 된다).</summary>
+    public static string GetGameLanguage()
+    {
+        EnsureBooted();
+
+#if STEAM_ENABLED
+        if (!_initialized)
+            return null;
+
+        try
+        {
+            return SteamApps.GetCurrentGameLanguage();
+        }
+        catch
+        {
+            // Steam이 붙어 있다고 판단했는데도 이 호출이 실패하는 경우까지 방어한다 -
+            // 언어 하나 때문에 부팅을 막을 이유가 없다.
+            return null;
+        }
+#else
+        return null;
+#endif
+    }
+
     private static void EnsureBooted()
     {
         // 한 번 실패하면 다시 시도하지 않는다 - 도전과제 판정이 매 프레임 들어올 수 있어서

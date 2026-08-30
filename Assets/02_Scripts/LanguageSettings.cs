@@ -58,7 +58,10 @@ public static class LanguageSettings
     {
         if (PlayerPrefs.GetInt(DefaultVersionKey, 0) < DefaultVersion)
         {
-            _current = GameLanguage.English;
+            // 최초 실행(아직 아무 언어도 저장된 적 없음)에만 Steam의 게임 언어를 기본값으로
+            // 쓴다 - 그 뒤로는 옵션에서 고른 값이 PrefsKey에 저장되므로 이 분기 자체를 다시
+            // 안 탄다(Steam 언어가 바뀌어도 이미 고른 언어를 덮어쓰지 않는다).
+            _current = ResolveSteamDefaultLanguage();
             PlayerPrefs.SetInt(PrefsKey, (int)_current);
             PlayerPrefs.SetInt(DefaultVersionKey, DefaultVersion);
             PlayerPrefs.Save();
@@ -68,6 +71,26 @@ public static class LanguageSettings
             _current = (GameLanguage)PlayerPrefs.GetInt(PrefsKey, (int)GameLanguage.English);
         }
         _warnedFields.Clear();
+    }
+
+    /// <summary>최초 실행의 기본 언어를 정한다. Steam이 붙어 있으면 <c>ISteamApps::GetCurrentGameLanguage()</c>
+    /// 값을 이 게임이 실제로 지원하는 다섯 언어로 매핑해서 쓰고, Steam이 없거나(에디터·WebGL·
+    /// App ID 미발급) 매핑에 없는 언어(독일어 등)면 English로 폴백한다.</summary>
+    private static GameLanguage ResolveSteamDefaultLanguage()
+    {
+        var steamLanguage = SteamRuntime.GetGameLanguage();
+        if (string.IsNullOrEmpty(steamLanguage))
+            return GameLanguage.English;
+
+        switch (steamLanguage)
+        {
+            case "koreana": return GameLanguage.Korean;
+            case "english": return GameLanguage.English;
+            case "japanese": return GameLanguage.Japanese;
+            case "french": return GameLanguage.French;
+            case "spanish": return GameLanguage.Spanish;
+            default: return GameLanguage.English;
+        }
     }
 
     /// <summary>언어를 바꾸고 디스크에 저장한다. 값이 그대로면 아무 일도 하지 않는다.</summary>

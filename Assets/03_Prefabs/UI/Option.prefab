@@ -1073,6 +1073,10 @@ MonoBehaviour:
   difficultyButton: {fileID: 3702229406491228392}
   difficultyButtonText: {fileID: 7868546951537925057}
   difficultyLabelFormat: < {0} >
+  difficultyLabels:
+    easy: EASY
+    normal: NORMAL
+    hard: HARD
   labelKorean: "< \uD55C\uAD6D\uC5B4 >"
   labelEnglish: < English >
   labelFrench: "< Fran\xE7ais >"

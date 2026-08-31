@@ -20,7 +20,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - **다만 터미널에서 Roslyn으로 미리 걸러낼 수는 있다.** 에디터를 열기 전 문법 오류를 잡는 용도로 실제로 성공한 경로다(빌드 스크립트가 아니라 1회성 검증이다):
     1. Unity가 생성한 `Assembly-CSharp.csproj`에서 `<HintPath>`(약 330개)와 `<DefineConstants>`를 뽑아 응답 파일(`.rsp`)로 만든다.
     2. 소스는 csproj의 `<Compile Include>` 목록 대신 `Assets/**/*.cs`를 직접 글롭할 것 — **새로 만든 `.cs`는 csproj에 아직 없다.** csproj 밖 소스가 `Assets/03_Prefabs/UI/UIStyle/Runtime/`에도 있다.
-       - ⚠️ **글롭한 다음 `Assets/Plugins/`와 경로에 `/Editor/`가 든 것을 빼야 한다.** 전자는 `FMODUnity.asmdef`로 **다른 어셈블리**라 아래 `-r:`과 중복되어 CS0121(모호한 호출)이 무더기로 나고, 후자는 `Assembly-CSharp-Editor` 소속이라 CS0579(중복 특성)가 난다. 둘 다 **내 코드와 무관한 가짜 오류**이니 여기서 시간을 쓰지 말 것. 제대로 걸러내면 소스가 **96개**(2026-08-08 기준)로 줄고 경고만 남는다.
+       - ⚠️ **글롭한 다음 `Assets/Plugins/`와 경로에 `/Editor/`가 든 것을 빼야 한다.** 전자는 `FMODUnity.asmdef`로 **다른 어셈블리**라 아래 `-r:`과 중복되어 CS0121(모호한 호출)이 무더기로 나고, 후자는 `Assembly-CSharp-Editor` 소속이라 CS0579(중복 특성)가 난다. 둘 다 **내 코드와 무관한 가짜 오류**이니 여기서 시간을 쓰지 말 것. 제대로 걸러내면 소스가 **102개**(2026-08-31 기준. 그중 98개가 `02_Scripts/` 밑이다)로 줄고 경고만 남는다.
     3. `-r:Library/ScriptAssemblies/FMODUnity.dll`과 `-r:Library/ScriptAssemblies/com.rlabrecque.steamworks.net.dll`을 **손으로 추가**해야 한다. 둘 다 csproj에 HintPath가 없다(FMOD는 asmdef, Steamworks.NET은 UPM 패키지라서다).
        - Steamworks.NET을 아직 받아오지 않았다면 `-define:DISABLESTEAMWORKS`를 넣으면 Steam을 건드리는 코드가 통째로 빠져 나머지를 검증할 수 있다(`SteamAchievementService`가 그 이름으로 감싸여 있다).
     4. `dotnet "C:/Program Files/dotnet/sdk/<ver>/Roslyn/bincore/csc.dll" @response.rsp` — 옵션은 `-target:library -langversion:9.0 -nostdlib+ -noconfig`.
@@ -53,9 +53,9 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - **Play는 `TitleScene`부터 시작해야 실제 흐름과 같다.** `SampleScene`을 직접 Play해도 전투는 돌지만, 일시정지에서 "타이틀"을 치면 `TitleScene`으로 넘어가므로 씬 전환 경로를 확인할 수 없다.
     - 다만 `게임시작`은 이제 `IntroScene`을 거치므로 **전투에 닿기까지 슬라이드가 다 지나가거나 아무 키나 3초 눌러 스킵해야 한다.** 전투만 반복해서 볼 때는 `SampleScene`을 직접 Play하는 쪽이 낫고, 씬 전환·타이틀 복귀·BGM 전환을 볼 때만 `TitleScene`부터 갈 것.
 - **실행**: 에디터에서 Play. 헤드리스/CLI 실행 경로 없음.
-- **빌드**: `File > Build Profiles`로 Windows 스탠드얼론을 뽑아 `Build/StreetTyper.exe`로 내보내 왔다(`Build/`는 gitignore). CLI 빌드 스크립트는 없다.
+- **빌드**: `File > Build Profiles`로 내보낸다(`Build/`는 gitignore). CLI 빌드 스크립트는 없다. **지금 산출물이 둘이다** — `Build/Window/StreetTyper.exe`(Windows 스탠드얼론)와 **`Build/Web/`(WebGL — `index.html`·`Build/`·`StreamingAssets`·`TemplateData`)**. 옛 문서의 `Build/StreetTyper.exe`는 경로가 바뀌었다.
   - **IME 관련 동작은 에디터 Play만으로 검증하면 안 된다.** 에디터와 빌드가 다르게 동작한 이력이 있어 스탠드얼론에서 재확인해야 한다.
-  - **한글은 OS IME가 아니라 우리가 조합한다**(`DubeolsikHangulComposer`, 아래 입력 파이프라인 절). **플랫폼 분기가 없어 에디터 Play에서 실제 경로가 그대로 돈다** — 예전엔 `#if UNITY_WEBGL && !UNITY_EDITOR`라 웹에서만 도는 코드였다. 그래도 IME 강제(IMM32)는 Windows 전용이므로 **한글 입력을 고쳤으면 WebGL 빌드로도 확인할 것**(브라우저 IME는 강제할 수 없어 폴백 경로를 탄다). 활성 빌드 타깃은 아직 Windows이고 `Build/`에도 `StreetTyper.exe`만 있으니 WebGL 검증에는 타깃 전환이 필요하다.
+  - **한글은 OS IME가 아니라 우리가 조합한다**(`DubeolsikHangulComposer`, 아래 입력 파이프라인 절). **플랫폼 분기가 없어 에디터 Play에서 실제 경로가 그대로 돈다** — 예전엔 `#if UNITY_WEBGL && !UNITY_EDITOR`라 웹에서만 도는 코드였다. 그래도 IME 강제(IMM32)는 Windows 전용이므로 **한글 입력을 고쳤으면 WebGL 빌드로도 확인할 것**(브라우저 IME는 강제할 수 없어 폴백 경로를 탄다). **WebGL은 이제 실제로 뽑혀 있다**(`Build/Web/`) — 다시 뽑으려면 빌드 타깃 전환은 여전히 필요하다. `ProjectSettings`에도 WebGL 칸이 생겼다(텍스처 압축 포맷, `scriptingDefineSymbols.WebGL`).
   - 빌드 런타임 로그: `%USERPROFILE%\AppData\LocalLow\DefaultCompany\StreetTyper\Player.log` (회사/제품명이 `DefaultCompany`/`StreetTyper` 기본값 그대로다). 에디터 로그는 `%LOCALAPPDATA%\Unity\Editor\Editor.log`, 임포트 워커 로그는 저장소의 `Logs/`.
 - **디버그 킬스위치가 `BattleManager.Update`에 있다** — `0`은 플레이어 즉사, `9`는 현재 적 즉사(둘 다 방어 무시). `#if UNITY_EDITOR || DEVELOPMENT_BUILD`로 감싸여 있어 릴리스 빌드에는 안 들어간다. 예전의 `1`/`2`/`3` 키(피해 10 / 방어 +10 / 적 턴 즉시)는 없어졌다.
   - 두 키에는 **결과 화면(`isGameOver`)·일시정지(`timeScale == 0`)·이벤트 대화(`eventManager.IsEventActive`) 가드가 전부 붙어 있다.** 예전에 가드가 없어 일시정지 메뉴 뒤에서 스테이지가 넘어간 적이 있으니, 디버그 키를 더 늘린다면 같은 가드를 함께 붙일 것.
@@ -147,7 +147,7 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
   - `strongEnemy.prefab`은 **삭제됐다.** `StageManager.prefab`의 `enemyPrefabs` 기본값(3칸)에는 아직 그 깨진 GUID(`f468762e…`)가 2번째 항목으로 남아 있지만, **`SampleScene.unity`의 씬 인스턴스가 `enemyPrefabs.Array.size`를 6으로 덮어써 `Dragon1~6.prefab`을 전부 유효한 참조로 채운다** — 깨진 항목은 씬에서는 이미 가려져 있다(아래 `StageManager` 참조. 옛 `enemy.prefab`은 이제 `Dragon1.prefab`으로 이름만 바뀌었다).
 - `Assets/03_Prefabs/Managers/` — 매니저 프리팹 **열아홉 개**(`InputManager`/`Deck Manager`/`StageManager`/`BattleManager`/`WordDictionary`/`WordUnlockManager`/`StatusEffectManager`/`SpeechBubbleManager`/`EventManager`/`SoundManager`/`TimerManager`/`ResultInputHandler`/`RewardInputHandler`/`TitleManager`/`FloatingDamageManager`/`HitEffectManager`/**`HealEffectManager`**/`StatisticsManager`/**`AchievementManager`**). **`TitleManager`만 `TitleScene`용이고 나머지가 `SampleScene`의 `02_SYSTEM`에 들어간다.** 매니저는 전부 프리팹으로 뽑혀 있고 씬에는 인스턴스만 있다. **씬은 이걸 인스턴스로 들고 있고, 매니저끼리와 씬 오브젝트를 향한 인스펙터 연결은 전부 프리팹 인스턴스 오버라이드로 저장된다**(`SampleScene.unity`의 `m_Modifications` 안 `objectReference`). 자세한 주의점은 컨벤션 절 참조.
   - ⚠️ **매니저 프리팹은 반드시 이 폴더 하나에만 둘 것.** 머지 중에 `FloatingDamageManager`/`HitEffectManager`가 `03_Prefabs/` 루트에 **GUID가 다른 똑같은 복제본**으로 한 벌 더 생긴 적이 있다. 복제본은 내용이 같아도 GUID가 달라 씬이 어느 쪽을 가리키느냐에 따라 **싱글턴이 두 개 생기거나(둘 다 씬에 들어간 경우) 인스펙터 연결이 통째로 빈다.** 같은 이름의 프리팹이 두 경로에 보이면 그건 머지 사고다.
-- `Assets/_Recovery/` — Unity 크래시 복구가 남긴 씬 덤프(`0.unity`, `0 (1).unity`)가 커밋되어 있다. **프로젝트와 무관한 잔재**이고 빌드 설정에도 없다. 여기를 실제 씬으로 착각하지 말 것 — 죽은 에셋(`Actions.prefab` 등)의 마지막 참조가 여기 남아 있어서 "아직 쓰이는 것처럼" 보이게 만든다.
+- `Assets/_Recovery/` — Unity 크래시 복구가 남긴 씬 덤프 **4개**(`0.unity`, `0 (1).unity`, `0 (2).unity`, `0 (3).unity`)가 커밋되어 있다(머지·커밋 때마다 늘어난다 — `0 (3)`은 `75d6d79`에서 들어왔다). **프로젝트와 무관한 잔재**이고 빌드 설정에도 없다. 여기를 실제 씬으로 착각하지 말 것 — 죽은 에셋(`Actions.prefab` 등)의 마지막 참조가 여기 남아 있어서 "아직 쓰이는 것처럼" 보이게 만든다.
 - ⭐ `Assets/04_Data/Resources/CardLocalization.json` — **카드 34장이 존재하는 유일한 자리**(단어 28 + 명령 6). 이름·설명·수치 칸을 5개국어로, 그리고 수치·분류·시작 단어 여부까지 한 행에 담는다. `Resources` 폴더에 있는 건 `CardDatabase`가 `Resources.Load`로 읽기 때문이다 — **옮기지 말 것.**
   - ⚠️ **카드 `.asset`은 전부 삭제됐다**(옛 `04_Data/Cards/`와 `Cards/Commands/`). 예전엔 한 장이 에셋(수치) + JSON(문구) 두 곳에 나뉘어 있었고, 그래서 어퍼컷 설명이 에셋엔 "15의 피해" JSON엔 "4의 피해"로 남는 어긋남이 실제로 생겼다. `ScriptableObject`로 되돌리지 말 것.
   - 한 행의 뼈대: `id`(코드·인스펙터가 카드를 가리키는 키) · `type`(`Action`/`Modifier`/`Attribute`/`Command`) · `grantedAtStart`(런 시작 지급) · 언어별 `koName`/`koDesc`/`koLabel`… · 그 종류의 수치 칸. **그 카드에 해당 없는 칸은 아예 적지 않아도 된다**(JsonUtility가 기본값으로 둔다).
@@ -266,7 +266,8 @@ Unity 프로젝트라 터미널에서 돌릴 build/lint/test 스크립트가 없
 **`enum GameLanguage { Korean, English, French, Spanish, Japanese }`** — 다섯이다(예전엔 한/영 둘이었다).
 
 - API: `Current`(캐시된 값 — 타이핑 매칭 경로에서 글자마다 불리므로 `PlayerPrefs`를 매번 읽지 않는다) · `IsEnglish` · `Set` · **`ChangeLanguage(direction)`**(±1로 순환, 옛 `Toggle`은 없다) · `OnChanged` 이벤트 · **`Pick(korean, english, owner, fieldName)`** · **`PickCardText(cardId, textType)`**.
-- 저장은 `PlayerPrefs`의 `option.language`(볼륨의 `option.volume.*`와 같은 계열). 기본값은 **한국어 고정**이며 시스템 언어를 따라가지 않는다 — 한글 IME 경로가 기본이 아닌 실행 환경이 생기면 확인할 경우의 수만 늘어난다.
+- 저장은 `PlayerPrefs`의 `option.language`(볼륨의 `option.volume.*`와 같은 계열). ⭐ **기본값은 이제 Steam의 게임 언어에서 나온다**(`LanguageSettings.ResolveSteamDefaultLanguage` → `SteamRuntime.GetGameLanguage()` = `ISteamApps::GetCurrentGameLanguage`). `koreana`/`english`/`japanese`/`french`/`spanish`만 매핑하고 **그 밖의 언어(독일어 등)와 Steam이 안 붙은 환경(에디터·WebGL·App ID 미발급)은 전부 English로 폴백한다** — 옛 "한국어 고정" 규칙은 없어졌다.
+  - ⚠️ **이 분기를 지키는 건 `option.language`가 아니라 `option.language.default-version`이다**(현재 `DefaultVersion = 1`). 저장된 언어가 **있는지 보지 않으므로**, 이 키가 없던 기존 플레이어는 다음 실행에 **골라둔 언어가 Steam 언어로 한 번 덮인다.** 코드 주석의 "최초 실행에만"은 그런 뜻이 아니니 믿지 말 것 — **`DefaultVersion`을 올리면 전원의 선택이 다시 덮인다.** 기본값 로직만 고치고 싶을 땐 이 상수를 올리지 말 것.
 - `[RuntimeInitializeOnLoadMethod(BeforeSceneLoad)]`로 실행마다 한 번 읽고, 같은 자리에서 JSON도 읽는다. static 필드는 Play를 멈춰도 남을 수 있어 초기화 지점을 명시해 둔 것이다.
 
 ⚠️ **전환은 타이틀에서만 해야 한다.** `CardName`이 곧 타이핑 매칭 키라서, 런 도중에 바꾸면 사전·손패·체인·쌓인 공격이 전부 바뀐 언어의 이름을 갖게 된다. 이 게임엔 저장이 없어 타이틀로 돌아가면 런이 초기화되므로(`StageManager.Start` → `GrantStartingWords`), **타이틀에서만 바꾸는 한 마이그레이션이 필요 없다.** 일시정지 메뉴에 언어 전환을 붙이지 말 것.
@@ -828,8 +829,11 @@ Steam 도전과제 **19종**. ⭐ **무엇이 있고 언제 달성되는지는 �
 - **enum을 이름으로 적는다**(`"condition": "ClearInLanguage"`). 카드 JSON과 같은 규칙이라 enum 순서를 바꿔도 안전하다.
 - ⭐ **로드 시점 검증이 이 시스템의 유일한 안전망이다.** 도전과제는 조건이 맞을 때까지 아무 일도 안 일어나므로 **설정이 틀려도 "아직 못 깬 것"과 구분되지 않는다.** 그래서 `AchievementDatabase`가 id 중복·조건 이름 오타·`threshold` 0·`addedRule` 누락을 전부 **에러**로 낸다(경고가 아니다).
 - **시너지(Synergy) = `Category != Action && != Command`.** `CardView`가 프레임을 액션(분홍)/그 외(남색) 둘로만 가르는 것과 같은 기준이다.
-- **Steam 호출은 `#if !DISABLESTEAMWORKS && (UNITY_STANDALONE || UNITY_EDITOR)` 안에만 있다.** WebGL·패키지 미설치에서는 판정 로직은 그대로 돌고 올리는 것만 no-op이 된다(`HangulImeMode`와 같은 구조). `DISABLESTEAMWORKS`는 Steamworks.NET 자신이 쓰는 이름이다.
+- **Steam 호출은 `#if STEAM_ENABLED` 안에만 있다.** WebGL·패키지 미설치에서는 판정 로직은 그대로 돌고 올리는 것만 no-op이 된다(`HangulImeMode`와 같은 구조). `DISABLESTEAMWORKS`는 Steamworks.NET 자신이 쓰는 이름이다.
+  - ⚠️ **`STEAM_ENABLED`는 프로젝트 설정이 아니라 파일 맨 위에서 만들어지는 이름이다** — `SteamAchievementService.cs`와 `SteamRuntime.cs`가 각자 `#if !DISABLESTEAMWORKS && (UNITY_STANDALONE || UNITY_EDITOR)` → `#define STEAM_ENABLED`를 적어두고 그 뒤로는 짧은 이름만 쓴다. **두 파일의 조건이 어긋나면 컴파일이 깨지므로 한쪽만 고치지 말 것.** `#define`은 `using`보다도 앞, 파일의 첫 토큰이어야 한다. 코드를 찾을 땐 긴 조건이 아니라 `STEAM_ENABLED`로 grep할 것.
+  - Player Settings의 `Scripting Define Symbols`는 지금 **Standalone `STEAMWORKS_WIN;STEAMWORKS_NET` · WebGL `STEAMWORKS_WIN`**이다. 위 가드가 `UNITY_STANDALONE || UNITY_EDITOR`라 **WebGL에서는 Steam이 통째로 빠진다.**
 - **`id`는 Steam 파트너 사이트의 API Name과 글자 그대로 같아야 한다.** 다르면 `SetAchievement`가 false를 돌려주는 것 말고는 아무 증상이 없어서, 그 반환값을 반드시 본다.
+- ⚠️ **저장소 루트의 `steam_appid.txt`가 아직 `480`(Valve의 테스트 앱 Spacewar)이다.** 그래서 지금 올라가는 도전과제는 이 게임 것이 아니며 **위 19개 id는 Spacewar에 없으므로 실제로는 아무것도 해금되지 않는다**(초기화·콜백은 정상적으로 돈다). 진짜 App ID를 받으면 이 파일과 파트너 사이트의 API Name을 함께 맞출 것.
 
 ⚠️ **`SkillResolver.ActionsThisTurn`을 읽어 "한 턴에 액션 n회"를 판정하지 말 것.** 그 값은 `Resolve` 맨 끝에서 증가하는데 `Resolve`를 부르는 `DeckManager.HandleChainCompleted`도 `OnChainCompleted` 구독자다 — **스크립트 실행 순서 설정이 없어** 누가 먼저 불릴지 정해져 있지 않아 값이 1 차이로 흔들린다. `AchievementManager`가 자체 카운터를 센다.
 
@@ -847,7 +851,7 @@ Steam 도전과제 **19종**. ⭐ **무엇이 있고 언제 달성되는지는 �
 
 ### 에디터 도구 — 이제 없다
 
-한때 `02_Scripts/DeckManager/Editor/`에 카드 24장을 손으로 드래그하다 빠뜨리는 사고를 막는 1회성 도구 둘이 있었다(실제로 어퍼컷 11중복 + 3장 누락이 났던 적 있다). **24장이 다 만들어지고 `WordUnlockManager`에 다 들어간 뒤 둘 다 삭제됐고, `02_Scripts/` 밑에는 `Editor/` 폴더가 하나도 없다.** (저장소 전체로는 `03_Prefabs/UI/UIStyle/Editor/`에 UIStyle 패키지의 에디터 스크립트 둘이 남아 있다 — 터미널 컴파일 검증에서 `/Editor/`를 걸러내야 하는 이유가 이것이다.)
+한때 `02_Scripts/DeckManager/Editor/`에 카드 24장을 손으로 드래그하다 빠뜨리는 사고를 막는 1회성 도구 둘이 있었다(실제로 어퍼컷 11중복 + 3장 누락이 났던 적 있다). **24장이 다 만들어지고 `WordUnlockManager`에 다 들어간 뒤 둘 다 삭제됐다.** ⚠️ 다만 **`02_Scripts/` 밑에 `Editor/` 폴더가 하나도 없다는 옛 서술은 더 이상 맞지 않는다** — `02_Scripts/Achievements/Editor/AchievementDebugMenu.cs`(위 도전과제 절의 `Tools > Achievements`)가 생겼다. 터미널 컴파일 검증의 `/Editor/` 필터가 지금 걸러내는 건 **3개**다(그 파일 + `03_Prefabs/UI/UIStyle/Editor/` 둘).
 
 - `CardDataSeeder`(`Tools > Deck Manager > Seed Missing Word Cards`) — 카드 `.asset`을 `AssetDatabase`로 생성했다. **지금은 카드가 에셋이 아니라 JSON 행이라 이 도구 자체가 의미가 없다** — 카드를 추가하려면 JSON에 행을 하나 더 적으면 된다.
 - `WordUnlockPopulator`(`Tools > Deck Manager > Populate Word Unlock Manager`) — 씬의 `WordUnlockManager` 목록을 채웠다.
@@ -941,7 +945,7 @@ Steam 도전과제 **19종**. ⭐ **무엇이 있고 언제 달성되는지는 �
 - **컴파일이 한 파일에 걸려 통째로 멈춘 적이 있다 — 해결됨.** `CameraShake.cs`에 `= 1.5 f;`(숫자와 `f` 접미사 사이 공백)가 커밋된 적이 있고(`cfc7957`), 단일 어셈블리라 **그 파일 하나 때문에 모든 스크립트가 컴파일되지 않았다.** CI도 터미널 컴파일 경로도 없어 에디터를 열기 전까지 드러나지 않는 종류의 사고다 — 스크립트를 고친 뒤에는 에디터 콘솔에서 컴파일 통과를 눈으로 확인할 것.
 
 - **머지가 남긴 잔재들.** 브랜치 4개가 같은 씬·프리팹을 건드리다 보니 아래가 쌓였다. 전부 지금 당장 깨지진 않지만, "왜 이게 두 개지?" 싶을 때 여기를 먼저 볼 것.
-  - `Assets/_Recovery/`의 크래시 복구 씬 두 개(`0.unity`, `0 (1).unity`)가 커밋되어 있다. 죽은 에셋의 마지막 참조가 여기 남아 "아직 쓰인다"고 착각하게 만든다.
+  - `Assets/_Recovery/`의 크래시 복구 씬 **4개**(`0.unity` ~ `0 (3).unity`)가 커밋되어 있다. 죽은 에셋의 마지막 참조가 여기 남아 "아직 쓰인다"고 착각하게 만든다.
   - `Assets/03_Prefabs/Actions.prefab`은 **아무 씬·프리팹도 참조하지 않는다**(대체품은 `ThinkingBubble.prefab`). 같이 죽어 있던 `StatusEffectView.cs`는 삭제했다.
   - `StageManager.prefab`의 `enemyPrefabs` 기본값(3칸) 중 2번째 항목이 삭제된 `strongEnemy`의 **깨진 GUID**다(씬 인스턴스가 배열 크기를 6으로 덮어써 `Dragon1~6.prefab`으로 대체되어 있어 가려져 있다).
   - ~~`EventManager`의 영문 대사 배열이 비어 있다~~ — **해결됨.** 대사가 전부 `DialogueLocalization.json`으로 옮겨져 5개국어가 된다. 프리팹에 있던 `플레이스홀더텍스트0/1`도 같이 사라졌다(그건 **씬 오버라이드에 가려 화면에 나온 적이 없던** 값이다).

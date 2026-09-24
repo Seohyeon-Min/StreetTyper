@@ -104,6 +104,11 @@ public class BattleManager : MonoBehaviour
     //   추가: 대기열 상태 확인용 변수
     private bool isWaitingForDragonEnd = false;
 
+    // 마더 드래곤의 체력이 <b>스파링이 끝나서</b> 0이 되었는가. FinishMotherDragonBattle이
+    // 체력을 강제로 0으로 만들어 CheckGameState의 "적이 쓰러졌다" 분기로 보내는데, 그건
+    // 플레이어가 엄마를 쓰러뜨린 게 아니다 - OnEnemyDefeated가 둘을 구분해 알리는 데 쓴다.
+    private bool motherDragonSparringEnded = false;
+
     public event Action OnBattleEnded;
 
     /// <summary>가장 마지막에 띄운 결과의 종류. <see cref="OnBattleEnded"/>를 받은 자리에서
@@ -112,7 +117,11 @@ public class BattleManager : MonoBehaviour
     public ResultKind LastResultKind => lastResultKind;
 
     /// <summary>
-    /// 적이 쓰러졌다. 인자는 <b>(그 순간 플레이어 HP, 그 적이 마더 드래곤인가)</b>.
+    /// 적이 쓰러졌다. 인자는 <b>(그 순간 플레이어 HP, 플레이어가 마더 드래곤을 쓰러뜨렸는가)</b>.
+    ///
+    /// ⚠️ 두 번째 인자는 "마더 드래곤인가"가 아니다. 스파링 3턴을 채워 체력이 강제로 0이 된
+    /// 경우(FinishMotherDragonBattle)는 false다 - 공격·화상으로 체력을 실제로 0까지 깎았을
+    /// 때만 true다(도전과제 패륜아가 이걸 본다).
     ///
     /// 적 하나당 정확히 한 번만 발생한다 - <c>isEventTriggered</c> 안쪽에서 쏘고, 그 플래그는
     /// 스테이지마다 리셋된다. 사망 <b>연출</b>이 끝나는 시점(FinishEnemyDeathAfterEffect)이
@@ -351,6 +360,8 @@ public class BattleManager : MonoBehaviour
         if (enemyManager != null && enemyManager.currentEnemy != null)
         {
             savedMDDamage = enemyManager.currentEnemy.maxHP - enemyManager.currentEnemy.currentHP;
+            // 아래 UpdateUI -> CheckGameState보다 먼저 세워야 OnEnemyDefeated가 "스파링 종료"로 알린다.
+            motherDragonSparringEnded = true;
             enemyManager.currentEnemy.currentHP = 0;
             isWaitingForDragonEnd = false;
 
@@ -393,6 +404,7 @@ public class BattleManager : MonoBehaviour
         mdIntentString = MotherDragonLine(0);
         savedMDDamage = 0;
         isWaitingForDragonEnd = false; //   추가됨
+        motherDragonSparringEnded = false;
 
         ResetMotherHealthTracking();
         HideResultUI();
@@ -615,7 +627,7 @@ public class BattleManager : MonoBehaviour
                 // 아래 분기(마더 드래곤은 대사, 일반 적은 사망 연출)로 갈라지기 전에 알린다 -
                 // 어느 쪽으로 가든 "적이 쓰러졌다"는 사실은 같고, 플레이어 HP도 아직 이 턴 값이다.
                 // 이 분기는 player가 살아 있을 때만 도달한다(위 if가 null/사망을 이미 걸러낸다).
-                OnEnemyDefeated?.Invoke(player.currentHP, isMD);
+                OnEnemyDefeated?.Invoke(player.currentHP, isMD && !motherDragonSparringEnded);
 
                 if (isMD)
                 {

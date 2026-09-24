@@ -15,10 +15,12 @@ public class TimerManager : MonoBehaviour
              "쪼개는 게 아니라 BaseDuration의 분기를 늘릴 것.")]
     [SerializeField] private float nonKoreanBaseDuration = 15f;
 
-    [Tooltip("난이도가 한 단계 어려워질 때마다 줄어드는 제한 시간(초). 쉬움은 같은 만큼 늘어난다.\n" +
-             "⚠️ 위 언어별 기준 <b>위에</b> 얹힌다 - 3초면 한국어가 13/10/7초, 그 외가 18/15/12초다. " +
-             "한국어 어려움이 꽤 빡빡하니 실제로 쳐보고 조정할 것.")]
-    [SerializeField] private float secondsLostPerDifficultyStep = 3f;
+    [Tooltip("쉬움에서 늘어나는 제한 시간(초). 위 언어별 기준 <b>위에</b> 얹힌다.")]
+    [SerializeField] private float secondsGainedOnEasy = 3f;
+
+    [Tooltip("어려움에서 줄어드는 제한 시간(초). 3초면 한국어 7초 / 그 외 12초다.\n" +
+             "⚠️ 한국어 어려움이 이미 꽤 빡빡하다 - 올리기 전에 실제로 쳐볼 것.")]
+    [SerializeField] private float secondsLostOnHard = 3f;
 
     private bool _running;
     private bool _expiredFired;
@@ -45,7 +47,7 @@ public class TimerManager : MonoBehaviour
         get
         {
             var byLanguage = LanguageSettings.IsKorean ? baseDuration : nonKoreanBaseDuration;
-            var byDifficulty = byLanguage - DifficultySettings.Step * secondsLostPerDifficultyStep;
+            var byDifficulty = byLanguage - DifficultySettings.StepAmount(secondsGainedOnEasy, secondsLostOnHard);
 
             // 스텝을 크게 잡으면 0초나 음수가 나와 턴이 시작하자마자 끝난다.
             return Mathf.Max(1f, byDifficulty);

@@ -57,15 +57,19 @@ public class StageManager : MonoBehaviour
     public float enemyDefenseGainPercentIncreaseAfterBoss = 0f;
 
     [Header("난이도 스케일링")]
-    [Tooltip("난이도가 한 단계 어려워질 때마다 적 최대 체력에 곱해지는 비율(%). 20이면 " +
-             "쉬움 x0.8 / 보통 x1.0 / 어려움 x1.2다.\n" +
+    [Tooltip("쉬움에서 적 최대 체력을 줄이는 비율(%). 20이면 x0.8이다.\n" +
              "곱셈이라 위 체력 곡선의 <b>모양은 그대로 두고 높이만</b> 바뀐다.")]
-    public float enemyHPPercentPerDifficultyStep = 20f;
+    public float enemyHPPercentCutOnEasy = 20f;
 
-    [Tooltip("난이도가 한 단계 어려워질 때마다 위 공격력·방어력 <b>증가 비율(%)</b>에 더해지는 값(%p). " +
-             "5면 쉬움 15% / 보통 20% / 어려움 25%다.\n" +
+    [Tooltip("어려움에서 적 최대 체력을 늘리는 비율(%). 40이면 x1.4다.")]
+    public float enemyHPPercentAddedOnHard = 40f;
+
+    [Tooltip("쉬움에서 위 공격력·방어력 <b>증가 비율(%)</b>에서 빼는 값(%p). 5면 15%다.\n" +
              "증가율을 건드리므로 <b>첫 스테이지는 세 난이도가 똑같고</b> 뒤로 갈수록 벌어진다.")]
-    public float enemyGrowthPercentPerDifficultyStep = 5f;
+    public float enemyGrowthPercentCutOnEasy = 5f;
+
+    [Tooltip("어려움에서 위 공격력·방어력 <b>증가 비율(%)</b>에 더하는 값(%p). 10이면 30%다.")]
+    public float enemyGrowthPercentAddedOnHard = 10f;
 
     [Header("References")]
     public BattleManager battleManager;
@@ -469,7 +473,7 @@ public class StageManager : MonoBehaviour
             //
             // 체력은 곡선 <b>높이</b>를 곱으로 바꾸고, 공격력·방어력은 <b>증가율 자체</b>에 더한다.
             // 그래서 첫 스테이지는 세 난이도의 공격력이 같고 뒤로 갈수록 벌어진다.
-            var growthStep = DifficultySettings.Step * enemyGrowthPercentPerDifficultyStep;
+            var growthStep = DifficultySettings.StepAmount(enemyGrowthPercentCutOnEasy, enemyGrowthPercentAddedOnHard);
 
             scaledHP = Mathf.Max(1, Mathf.RoundToInt(
                 ComputeEnemyMaxHP(currentBattleIndex) * DifficultyHPMultiplier));
@@ -719,10 +723,10 @@ public class StageManager : MonoBehaviour
     ///
     /// <para>⚠️ 보스전 자체는 이 값을 쓰지 않는다(LoadStage가 0을 넘긴다). 보스는 체력이 아니라
     /// 턴 수로 끝나는 스파링이다.</para></summary>
-    /// <summary>난이도가 적 최대 체력에 거는 배수. 쉬움 0.8 / 보통 1.0 / 어려움 1.2(기본값 기준).
-    /// 0 이하로는 내려가지 않게 막는다 - 스텝을 100 이상으로 잡으면 체력이 0이나 음수가 된다.</summary>
+    /// <summary>난이도가 적 최대 체력에 거는 배수. 쉬움 0.8 / 보통 1.0 / 어려움 1.4(기본값 기준).
+    /// 0 이하로는 내려가지 않게 막는다 - 쉬움 값을 100 이상으로 잡으면 체력이 0이나 음수가 된다.</summary>
     private float DifficultyHPMultiplier =>
-        Mathf.Max(0.01f, 1f + DifficultySettings.Step * enemyHPPercentPerDifficultyStep / 100f);
+        Mathf.Max(0.01f, 1f + DifficultySettings.StepAmount(enemyHPPercentCutOnEasy, enemyHPPercentAddedOnHard) / 100f);
 
     private int ComputeEnemyMaxHP(int battleIndex)
     {
@@ -788,20 +792,22 @@ public class StageManager : MonoBehaviour
         return Mathf.Max(0f, 1f + percent / 100f);
     }
 
-    public void RestartStage()
+    /// <summary>
+    /// 결과 화면의 "다시하기" - <b>1스테이지부터 새 런</b>을 시작한다.
+    ///
+    /// 제자리 초기화가 아니라 전투 씬을 통째로 다시 읽는다. 런 단위 상태가 여러 곳에 흩어져
+    /// 있어서(사전·덱 증감 카운터, StatisticsManager의 통계, SkillResolver의 어썸 누적,
+    /// AchievementManager의 턴 카운터, 플레이어 HP·방어) 하나씩 되돌리면 빠뜨린 값이 조용히
+    /// 다음 런으로 넘어간다 - 예전엔 죽은 스테이지만 다시 열어서 받은 피해가 남아 무피해
+    /// 클리어(금강불괴)가 영영 뜨지 않았다. 씬을 다시 읽으면 Start()가 GrantStartingWords와
+    /// ResetRun을 부르는 평소 런 시작 경로를 그대로 탄다. 인트로는 다시 보여주지 않는다.
+    /// </summary>
+    public void RestartRun()
     {
-        if (player != null)
-        {
-            player.ResetVisualState();
-            player.currentHP = player.maxHP;
-            player.defense = 0;
-            player.gameObject.SetActive(true);
-            LoadStage(currentBattleIndex);
-        }
-        else
-        {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        }
+        // 결과 화면에서는 일시정지가 막혀 있지만, 씬을 넘어가도 timeScale은 유지되므로 확실히 되돌린다.
+        Time.timeScale = 1f;
+
+        SceneManager.LoadScene(GameScenes.Battle);
     }
 
     // 적이 등장한 뒤 잠깐 두었다가 플레이어 턴을 연다 - 적 턴 이후의 대기와 같은 목적이다.
@@ -872,6 +878,15 @@ public class StageManager : MonoBehaviour
         // (OnBattleEnded가 kind가 바뀔 때도 나가게 되면서 이 경로가 생겼다 - ShowResult 참조.)
         if (battleManager != null && battleManager.IsFinalResult)
             return;
+
+        // 마지막 <b>전투</b>를 이겼으면 보상 창을 띄우지 않는다. 다음은 엔딩 스테이지인데,
+        // 거기는 싸우지 않고 곧바로 엔딩 대사로 넘어가므로(LoadStage의 isEndingBoss 분기)
+        // 여기서 고른 카드를 쓸 곳이 없다. FinishReward가 자동 진행을 걸어 엔딩으로 넘긴다.
+        if (currentBattleIndex + 1 >= totalBattles - 1)
+        {
+            FinishReward();
+            return;
+        }
 
         // ⚠️ wordUnlockManager가 없다고 여기서 리턴하면 안 된다. 그 경우에도 BeginRewardRound가
         // FinishReward로 빠져 자동 진행을 걸어주는데, 여기서 끊으면 보상도 자동 진행도 없이

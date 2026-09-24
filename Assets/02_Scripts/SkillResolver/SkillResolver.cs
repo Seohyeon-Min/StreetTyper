@@ -21,15 +21,18 @@ public class SkillResolver : MonoBehaviour
     [SerializeField] private bool logLuckyRolls = true;
 
     [Header("난이도")]
-    [Tooltip("난이도가 한 단계 어려워질 때마다 럭키의 기본 확률에서 빼는 값(%p). 쉬움은 같은 만큼 " +
-             "더한다. 10이면 쉬움 30% / 보통 20% / 어려움 10%다(카드 JSON의 chancePercent가 20일 때).\n" +
+    [Tooltip("쉬움에서 럭키의 기본 확률에 더하는 값(%p). 10이면 30%다(카드 JSON의 chancePercent가 20일 때).\n" +
              "⚠️ 쓸수록 오르는 폭(chanceGainPerUse)과 상한(maxChancePercent)은 건드리지 않는다 - " +
              "출발점만 옮긴다.")]
-    [SerializeField] private float luckyChanceLostPerDifficultyStep = 10f;
+    [SerializeField] private float luckyChanceGainedOnEasy = 10f;
+
+    [Tooltip("어려움에서 럭키의 기본 확률에서 빼는 값(%p). 15면 5%다(chancePercent가 20일 때).")]
+    [SerializeField] private float luckyChanceLostOnHard = 15f;
 
     // LuckyChance가 static이라(카드 에셋이 씬 컴포넌트를 참조할 수 없다) 인스펙터 값을 Awake에서
     // 밀어 넣는다 - timerManager를 _timer로 넘기는 것과 같은 패턴이다.
-    private static float _luckyChancePerDifficultyStep = 10f;
+    private static float _luckyChanceGainedOnEasy = 10f;
+    private static float _luckyChanceLostOnHard = 15f;
 
     /// <summary>
     /// 어썸(<see cref="ModifierEffectType.ScalingStatBonus"/>)이 지금 더해주는 값 =
@@ -113,12 +116,13 @@ public class SkillResolver : MonoBehaviour
         if (_debugLuckyChance100)
             return 100f;
 
-        // 난이도는 <b>출발점만</b> 옮긴다(쉬움 +10 / 어려움 -10). 쓸수록 오르는 폭과 상한은
+        // 난이도는 <b>출발점만</b> 옮긴다(쉬움 +10 / 어려움 -15). 쓸수록 오르는 폭과 상한은
         // 그대로 둔다 - "쓸수록 오른다"는 규칙 자체는 난이도와 무관하기 때문이다.
         //
         // ⚠️ 아래 ceiling 계산보다 <b>먼저</b> 더해야 한다. 상한이 기본 확률보다 작을 때
         // 상한을 무시하는 규칙이 난이도가 얹힌 값 기준으로 판단돼야 한다.
-        basePercent = Mathf.Max(0f, basePercent - DifficultySettings.Step * _luckyChancePerDifficultyStep);
+        basePercent = Mathf.Max(0f, basePercent -
+            DifficultySettings.StepAmount(_luckyChanceGainedOnEasy, _luckyChanceLostOnHard));
 
         // ⚠️ 상한이 기본 확률보다 작으면 상한을 무시한다. 안 그러면 "기본 100%"로 두고 시험할 때
         // 상한(기본 50%)이 조용히 잘라내서 "확률을 100으로 했는데 안 걸린다"가 된다 - 실제로
@@ -222,7 +226,8 @@ public class SkillResolver : MonoBehaviour
         _timer = timerManager;
 
         // LuckyChance는 static이라(카드 에셋이 씬 컴포넌트를 못 본다) 인스펙터 값을 여기서 넘긴다.
-        _luckyChancePerDifficultyStep = luckyChanceLostPerDifficultyStep;
+        _luckyChanceGainedOnEasy = luckyChanceGainedOnEasy;
+        _luckyChanceLostOnHard = luckyChanceLostOnHard;
 
         if (timerManager == null)
             Debug.LogWarning($"{nameof(SkillResolver)}: {nameof(timerManager)}가 연결되지 않아 " +

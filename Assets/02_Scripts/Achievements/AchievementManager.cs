@@ -113,11 +113,13 @@ public class AchievementManager : MonoBehaviour
         Unlock(AchievementCondition.BossEncountered);
     }
 
-    private void HandleEnemyDefeated(int playerHP, bool isMotherDragon)
+    // ⚠️ 두 번째 인자는 "마더 드래곤인가"가 아니라 "플레이어가 쓰러뜨렸는가"다. 스파링 3턴을
+    // 채워 끝난 경우는 false로 온다 - 그걸로 패륜아를 주면 보스를 만나기만 해도 달성된다.
+    private void HandleEnemyDefeated(int playerHP, bool killedMotherDragon)
     {
         Unlock(AchievementCondition.EnemyDefeated);
 
-        if (isMotherDragon)
+        if (killedMotherDragon)
             Unlock(AchievementCondition.BossDefeated);
 
         UnlockIfAtMost(AchievementCondition.PlayerHPAtKillAtMost, playerHP);

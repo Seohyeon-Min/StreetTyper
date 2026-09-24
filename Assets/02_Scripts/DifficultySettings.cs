@@ -53,9 +53,9 @@ public class DifficultyLabels
 /// static 클래스로 둔다 - 씬 오브젝트도 DontDestroyOnLoad도 없으니 인스펙터 배선이 늘지 않는다.
 ///
 /// ⭐ <b>난이도별 수치를 여기 모아두지 않는다.</b> 각 값은 그것을 쓰는 매니저가
-/// "보통 기준값 + <see cref="Step"/> × 1단계분"으로 계산하고, 1단계분만 자기 인스펙터에 든다
-/// (TimerManager의 초, StageManager의 %, SkillResolver의 확률). 난이도별로 값을 3벌씩 들면
-/// StageManager에만 칸이 9개 생기고, 곡선을 손볼 때마다 세 벌을 같이 고쳐야 한다.
+/// "보통 기준값 + <see cref="StepAmount"/>(쉬움 폭, 어려움 폭)"으로 계산하고, 그 두 폭만 자기
+/// 인스펙터에 든다(TimerManager의 초, StageManager의 %, SkillResolver의 확률). 보통은 곧
+/// 기준값이라 따로 칸이 없다 - 난이도별로 값을 3벌씩 들면 곡선을 손볼 때마다 세 벌을 같이 고쳐야 한다.
 ///
 /// ⚠️ <b>전환은 타이틀에서만 해야 한다.</b> 런 도중에 바뀌면 이미 스폰된 적과 다음 적의 기준이
 /// 달라지고, 시작 카드는 이미 지급된 뒤다. 옵션 창이 타이틀에만 있어 지금은 자동으로 성립하지만,
@@ -75,11 +75,22 @@ public static class DifficultySettings
     /// <summary>
     /// 보통을 0으로 둔 난이도 단계. <b>어려울수록 +1</b>이다(쉬움 -1 / 보통 0 / 어려움 +1).
     ///
-    /// 쓰는 쪽은 "보통 기준값 + Step × 1단계분"으로 계산하되, <b>필드 이름이 방향을 말하게</b> 한다
-    /// (<c>secondsLostPerDifficultyStep</c>처럼). 인스펙터에 음수를 넣게 만들면 읽는 사람이
+    /// 쓰는 쪽은 보통 이걸 직접 곱하지 않고 <see cref="StepAmount"/>로 쉬움·어려움 폭을 따로 받는다.
+    /// <b>필드 이름이 방향을 말하게</b> 한다(<c>secondsLostOnHard</c>처럼). 인스펙터에 음수를 넣게 만들면 읽는 사람이
     /// 부호를 두 번 뒤집어 생각해야 한다.
     /// </summary>
     public static int Step => (int)_current - (int)GameDifficulty.Normal;
+
+    /// <summary>
+    /// 지금 난이도가 보통보다 <b>얼마나 어려운가</b> - 쉬움이면 <c>-perEasyStep</c>, 보통이면 0,
+    /// 어려움이면 <c>+perHardStep</c>. 쓰는 쪽은 <see cref="Step"/> 대신 이걸 곱해 쓴다.
+    ///
+    /// 쉬움과 어려움의 폭을 따로 받는 이유: 한 칸이면 "어려움만 더 어렵게"가 불가능하다 -
+    /// 어려움을 올리면 쉬움도 같은 만큼 쉬워진다. 두 칸 다 양수로 받고 부호는 여기서만 붙인다
+    /// (필드 이름이 방향을 말하게 하는 규칙은 그대로다).
+    /// </summary>
+    public static float StepAmount(float perEasyStep, float perHardStep) =>
+        Step < 0 ? Step * perEasyStep : Step * perHardStep;
 
     /// <summary>난이도가 바뀐 순간 화면에 붙은 라벨들이 스스로 갱신하도록 알린다.</summary>
     public static event Action OnChanged;

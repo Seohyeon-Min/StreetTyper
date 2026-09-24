@@ -345,8 +345,8 @@ public class DeckManager : MonoBehaviour
             // 손패를 그냥 비우는 대신 카드마다 시차를 두고 무너지듯 떨어뜨린다. 슬롯 데이터는
             // 건드리지 않는다 - EmptyAllSlots()가 쏘는 OnSlotChanged(null)는 CardSlotView의
             // PlaySwap을 다시 불러 방금 시작한 무너짐 코루틴을 그 자리에서 끊어버린다.
-            // 슬롯 데이터는 재시작 시 StageManager.RestartStage -> RefillAll이 통째로 새로
-            // 채우므로 여기서 비워둘 필요가 없다.
+            // 슬롯 데이터는 재시작 시 StageManager.RestartRun이 전투 씬을 다시 읽으며 통째로
+            // 새로 만들므로 여기서 비워둘 필요가 없다.
             if (handFanLayout != null)
             {
                 var cards = handFanLayout.Cards;

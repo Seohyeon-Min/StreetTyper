@@ -151,7 +151,7 @@ public class ResultInputHandler : CommandWordReceiver
                     return;
                 }
 
-                stageManager.RestartStage();
+                stageManager.RestartRun();
                 break;
 
             case TitleIndex:
